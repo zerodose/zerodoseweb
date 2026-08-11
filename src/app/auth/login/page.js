@@ -17,6 +17,15 @@ export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState("");
 
+  const dashboardRoutes = {
+    admin: "/dashboard",
+    worker: "/worker",
+    supervisor: "/supervisor",
+    ucmo: "/ucmo",
+    otherStaff: "/otherstaff",
+    vaccinator: "/vaccinator",
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -57,12 +66,20 @@ export default function LoginPage() {
         password,
       });
 
-      console.log("Login successful:", response);
+      // console.log("Login successful:", response);
 
-      // JWT HttpOnly cookie already set by backend.
-      // User ko dashboard par bhej dein.
-      // router.push("/dashboard");
-      router.push("/");
+      const { user } = response.data;
+
+      // const designation = response.data.user.designation;
+      // console.log("User detail:", user);
+      const route = dashboardRoutes[user.designation];
+
+      if (!route) {
+        throw new Error("Invalid user designation.");
+      }
+
+      // console.log("Redirecting to:", route);
+      router.replace(route);
     } catch (error) {
       console.error("Login error:", error);
 

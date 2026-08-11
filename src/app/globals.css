@@ -1,21 +1,126 @@
 @import "tailwindcss";
 
 :root {
+  /* Main */
+  --primary: #40a5fe;
+  --primary-foreground: #ffffff;
+
+  /* Blue family */
+  --primary-light: #eaf6ff;
+  --primary-soft: #c2e9fb;
+  --primary-dark: #2088e8;
+
+  /* Backgrounds */
   --background: #ffffff;
-  --foreground: #171717;
+  --surface: #f8fafc;
+  --surface-blue: #f3f9ff;
+
+  /* Text */
+  --foreground: #11181c;
+  --text: #11181c;
+  --text-secondary: #687076;
+
+  /* Gray */
+  --gray-light: #e5e7eb;
+  --gray: #9ba1a6;
+  --gray-dark: #687076;
+
+  /* Icons */
+  --icon: #687076;
+  --icon-selected: #40a5fe;
+
+  /* Form */
+  --input-background: #ffffff;
+  --input-placeholder: #9ba1a6;
+
+  /* Border */
+  --border: #dce3e8;
+
+  /* Muted */
+  --muted: #687076;
 }
 
 @theme inline {
+  /* Background */
   --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-blue: var(--surface-blue);
+
+  /* Primary */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-light: var(--primary-light);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-dark: var(--primary-dark);
+
+  /* Text */
   --color-foreground: var(--foreground);
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+
+  /* Gray */
+  --color-gray-light: var(--gray-light);
+  --color-gray: var(--gray);
+  --color-gray-dark: var(--gray-dark);
+
+  /* Icons */
+  --color-icon: var(--icon);
+  --color-icon-selected: var(--icon-selected);
+
+  /* Form */
+  --color-input-background: var(--input-background);
+  --color-input-placeholder: var(--input-placeholder);
+
+  /* Border */
+  --color-border: var(--border);
+
+  /* Muted */
+  --color-muted: var(--muted);
+
+  /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Main */
+    --primary: #40a5fe;
+    --primary-foreground: #ffffff;
+
+    /* Blue family */
+    --primary-light: #102a3d;
+    --primary-soft: #164a70;
+    --primary-dark: #69b9ff;
+
+    /* Backgrounds */
+    --background: #151718;
+    --surface: #1c2022;
+    --surface-blue: #182631;
+
+    /* Text */
+    --foreground: #ecedee;
+    --text: #ecedee;
+    --text-secondary: #9ba1a6;
+
+    /* Gray */
+    --gray-light: #2f3437;
+    --gray: #687076;
+    --gray-dark: #9ba1a6;
+
+    /* Icons */
+    --icon: #9ba1a6;
+    --icon-selected: #40a5fe;
+
+    /* Form */
+    --input-background: #1c2022;
+    --input-placeholder: #687076;
+
+    /* Border */
+    --border: #30363a;
+
+    /* Muted */
+    --muted: #9ba1a6;
   }
 }
 
@@ -24,3 +129,90 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Primary:
+
+bg-primary
+text-primary
+border-primary
+
+Primary variations:
+
+bg-primary-light
+bg-primary-soft
+bg-primary-dark
+
+text-primary-light
+text-primary-dark
+
+border-primary
+
+Background:
+
+bg-background
+bg-surface
+bg-surface-blue
+
+Text:
+
+text-foreground
+text-text
+text-text-secondary
+
+Gray:
+
+bg-gray-light
+bg-gray
+bg-gray-dark
+
+text-gray
+text-gray-dark
+
+Form:
+
+bg-input-background
+text-input-placeholder
+
+Border:
+
+border-border
+
+Icons:
+
+text-icon
+
+text-icon-selected
+
+Muted:
+
+text-muted
+Example — tumhara Login button
+
+Ab:
+
+<button className="bg-primary text-primary-foreground hover:bg-primary-dark">
+  Sign In
+</button>
+
+Input:
+
+<input
+  className="
+    bg-input-background
+    text-text
+    placeholder:text-input-placeholder
+    border-border
+    focus:border-primary
+    focus:ring-primary-light
+  "
+/>
+
+Card:
+
+<div className="bg-background border border-border">
+
+Page:
+
+<main className="bg-surface text-text">
+
+Is approach ka faida ye hai ke components mein actual hex colors kahin nahi honge. Agar future mein Zerodose ka blue #40A5FE se change karke kisi aur blue par karna ho, sirf global.css change hoga aur poori web app update ho jayegi. */

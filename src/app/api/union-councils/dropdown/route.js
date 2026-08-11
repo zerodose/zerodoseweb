@@ -62,8 +62,8 @@ export async function GET(request) {
       .sort({ name: 1 })
       .lean();
 
-    console.log("Selected townId:", townId);
-    console.log("Union Councils found:", unionCouncils);
+    // console.log("Selected townId:", townId);
+    // console.log("Union Councils found:", unionCouncils);
 
     return NextResponse.json(
       {

@@ -30,6 +30,18 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
+    emailVerificationCode: {
+      type: String,
+      default: null,
+      select: false,
+    },
+
+    emailVerificationExpires: {
+      type: Date,
+      default: null,
+      select: false,
+    },
+
     contactNumber: {
       type: String,
       required: [true, 'Contact number is required'],

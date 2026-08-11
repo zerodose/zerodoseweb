@@ -1,13 +1,4 @@
-import { NextResponse } from "next/server";
-import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
-
-import { connectDB } from "@/lib/db";
-import User from "@/models/User";
-import District from "@/models/District";
-import Town from "@/models/Town";
-import UnionCouncil from "@/models/UnionCouncil";
-
+import { NextResponse } from "next/server"; import mongoose from "mongoose"; import bcrypt from "bcryptjs"; import { connectDB } from "@/lib/db"; import User from "@/models/User"; import District from "@/models/District"; import Town from "@/models/Town"; import UnionCouncil from "@/models/UnionCouncil"; import { sendVerificationEmail } from "@/lib/mail/sendVerificationEmail"; import { generateVerificationCode, hashVerificationCode, } from "@/lib/auth/generateVerificationCode";
 // =====================================================
 // GET ALL USERS
 // GET /api/users
@@ -295,7 +286,8 @@ export async function POST(request) {
       return NextResponse.json(
         {
           success: false,
-          message: "Town does not belong to selected district or is inactive",
+          message:
+            "Town does not belong to selected district or is inactive",
         },
         { status: 400 },
       );
@@ -324,7 +316,9 @@ export async function POST(request) {
     // Email validation
     // =================================================
 
-    if (designation !== "worker" && !email?.trim()) {
+    const normalizedEmail = email?.trim().toLowerCase() || null;
+
+    if (designation !== "worker" && !normalizedEmail) {
       return NextResponse.json(
         {
           success: false,
@@ -420,9 +414,9 @@ export async function POST(request) {
     // Check duplicate email
     // =================================================
 
-    if (email?.trim()) {
+    if (normalizedEmail) {
       const existingEmail = await User.findOne({
-        email: email.trim().toLowerCase(),
+        email: normalizedEmail,
       })
         .select("_id")
         .lean();
@@ -442,8 +436,10 @@ export async function POST(request) {
     // Check duplicate contact
     // =================================================
 
+    const normalizedContactNumber = contactNumber.trim();
+
     const existingContact = await User.findOne({
-      contactNumber: contactNumber.trim(),
+      contactNumber: normalizedContactNumber,
     })
       .select("_id")
       .lean();
@@ -493,13 +489,40 @@ export async function POST(request) {
     }
 
     // =================================================
+    // Email Verification
+    // =================================================
+
+    let verificationCode = null;
+    let hashedVerificationCode = null;
+    let verificationExpires = null;
+
+    if (normalizedEmail) {
+      verificationCode = generateVerificationCode();
+
+      hashedVerificationCode =
+        hashVerificationCode(verificationCode);
+
+      verificationExpires = new Date(
+        Date.now() + 10 * 60 * 1000,
+      );
+    }
+
+    // =================================================
     // Create user
     // =================================================
 
     const user = await User.create({
       name: name.trim(),
-      email: email?.trim().toLowerCase() || undefined,
-      contactNumber: contactNumber.trim(),
+
+      email: normalizedEmail || undefined,
+
+      emailVerified: normalizedEmail ? false : false,
+
+      emailVerificationCode: hashedVerificationCode,
+
+      emailVerificationExpires: verificationExpires,
+
+      contactNumber: normalizedContactNumber,
 
       district,
       town,
@@ -512,31 +535,78 @@ export async function POST(request) {
           ? supervisorCode.trim().toUpperCase()
           : null,
 
-      supervisor: designation === "worker" ? supervisor : null,
+      supervisor:
+        designation === "worker"
+          ? supervisor
+          : null,
 
-      teamNumber: designation === "worker" ? Number(teamNumber) : null,
+      teamNumber:
+        designation === "worker"
+          ? Number(teamNumber)
+          : null,
 
       password: hashedPassword,
 
-      isActive: typeof isActive === "boolean" ? isActive : true,
+      isActive:
+        typeof isActive === "boolean"
+          ? isActive
+          : true,
     });
 
     // =================================================
-    // Response without password
+    // Send Verification Email
+    // =================================================
+
+    if (normalizedEmail && verificationCode) {
+      try {
+        await sendVerificationEmail({
+          email: normalizedEmail,
+          name: name.trim(),
+          code: verificationCode,
+        });
+      } catch (emailError) {
+        console.error(
+          "Verification email error:",
+          emailError,
+        );
+
+        // User create ho chuka hai, lekin email send nahi hui.
+        // Verification code database mein available hai.
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "Account was created, but verification email could not be sent. Please request a new verification code.",
+          },
+          { status: 500 },
+        );
+      }
+    }
+
+    // =================================================
+    // Response without password / verification fields
     // =================================================
 
     const createdUser = await User.findById(user._id)
-      .select("-password")
+      .select(
+        "-password -emailVerificationCode -emailVerificationExpires",
+      )
       .populate("district", "_id name code")
       .populate("town", "_id name code")
       .populate("unionCouncil", "_id name code")
       .populate("supervisor", "_id name contactNumber")
       .lean();
 
+    // =================================================
+    // Response
+    // =================================================
+
     return NextResponse.json(
       {
         success: true,
-        message: "User created successfully",
+        message: normalizedEmail
+          ? "User created successfully. A verification code has been sent to your email."
+          : "User created successfully.",
         data: createdUser,
       },
       { status: 201 },
@@ -544,9 +614,13 @@ export async function POST(request) {
   } catch (error) {
     console.error("Create user error:", error);
 
+    // =================================================
     // Duplicate key
+    // =================================================
+
     if (error?.code === 11000) {
-      const duplicateField = Object.keys(error.keyPattern || {})[0];
+      const duplicateField =
+        Object.keys(error.keyPattern || {})[0];
 
       return NextResponse.json(
         {
@@ -557,10 +631,36 @@ export async function POST(request) {
       );
     }
 
+    // =================================================
+    // Mongoose validation error
+    // =================================================
+
+    if (error?.name === "ValidationError") {
+      const messages = Object.values(error.errors || {}).map(
+        (item) => item.message,
+      );
+
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            messages.length > 0
+              ? messages.join(", ")
+              : "Validation failed",
+        },
+        { status: 400 },
+      );
+    }
+
+    // =================================================
+    // General error
+    // =================================================
+
     return NextResponse.json(
       {
         success: false,
-        message: error?.message || "Failed to create user",
+        message:
+          error?.message || "Failed to create user",
       },
       { status: 500 },
     );

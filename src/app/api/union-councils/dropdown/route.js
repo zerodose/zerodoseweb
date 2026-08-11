@@ -1,22 +1,9 @@
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 
 import { connectDB } from "@/lib/db";
 import UnionCouncil from "@/models/UnionCouncil";
-
-// =====================================================
-// GET - Union Council Dropdown
-//
-// Returns only:
-//
-// _id
-// name
-//
-// Optional:
-//
-// ?districtId=...
-// ?townId=...
-// ?search=...
-// =====================================================
+import Town from "@/models/Town";
 
 export async function GET(request) {
   try {
@@ -24,47 +11,59 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
 
-    const districtId = searchParams.get("districtId")?.trim() || "";
-
+    // Frontend sends only townId
     const townId = searchParams.get("townId")?.trim() || "";
 
-    const search = searchParams.get("search")?.trim() || "";
+    if (!townId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Town is required",
+        },
+        { status: 400 },
+      );
+    }
 
-    const filter = {
+    // Validate MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(townId)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid town ID",
+        },
+        { status: 400 },
+      );
+    }
+
+    // Make sure selected town exists and is active
+    const town = await Town.findOne({
+      _id: townId,
       isActive: true,
-    };
+    })
+      .select("_id")
+      .lean();
 
-    // -----------------------------
-    // District filter
-    // -----------------------------
-
-    if (districtId) {
-      filter.district = districtId;
+    if (!town) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Town not found or inactive",
+        },
+        { status: 404 },
+      );
     }
 
-    // -----------------------------
-    // Town filter
-    // -----------------------------
-
-    if (townId) {
-      filter.town = townId;
-    }
-
-    // -----------------------------
-    // Search
-    // -----------------------------
-
-    if (search) {
-      filter.name = {
-        $regex: search,
-        $options: "i",
-      };
-    }
-
-    const unionCouncils = await UnionCouncil.find(filter)
-      .select("_id name")
+    // Get ONLY Union Councils belonging to selected town
+    const unionCouncils = await UnionCouncil.find({
+      town: townId,
+      isActive: true,
+    })
+      .select("_id name code town district")
       .sort({ name: 1 })
       .lean();
+
+    console.log("Selected townId:", townId);
+    console.log("Union Councils found:", unionCouncils);
 
     return NextResponse.json(
       {
@@ -79,7 +78,7 @@ export async function GET(request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to fetch Union Council dropdown",
+        message: "Failed to fetch Union Councils",
       },
       { status: 500 },
     );

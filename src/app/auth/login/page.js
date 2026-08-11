@@ -3,15 +3,19 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { loginUser } from "@/api/authApi";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
-    email: "",
+    mobile: "",
     password: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,13 +29,47 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setLoading(true);
+    setError("");
+
+    const mobile = formData.mobile.trim();
+    const password = formData.password;
+
+    if (!mobile) {
+      setError("Mobile number is required.");
+      return;
+    }
+
+    if (!/^03\d{9}$/.test(mobile)) {
+      setError("Please enter a valid Pakistani mobile number.");
+      return;
+    }
+
+    if (!password) {
+      setError("Password is required.");
+      return;
+    }
 
     try {
-      // Backend API baad mein connect karenge
-      console.log("Login data:", formData);
+      setLoading(true);
+
+      const response = await loginUser({
+        mobile,
+        password,
+      });
+
+      console.log("Login successful:", response);
+
+      // JWT HttpOnly cookie already set by backend.
+      // User ko dashboard par bhej dein.
+      // router.push("/dashboard");
+      router.push("/");
     } catch (error) {
       console.error("Login error:", error);
+
+      setError(
+        error?.response?.data?.message ||
+        "Invalid mobile number or password.",
+      );
     } finally {
       setLoading(false);
     }
@@ -58,23 +96,24 @@ export default function LoginPage() {
         {/* Card */}
         <div className="bg-background rounded-2xl shadow-sm border border-border p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email */}
+            {/* Mobile Number */}
             <div>
               <label
-                htmlFor="email"
+                htmlFor="mobile"
                 className="block text-sm font-medium text-text mb-2"
               >
-                Email
+                Mobile Number
               </label>
 
               <input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
+                id="mobile"
+                name="mobile"
+                type="tel"
+                value={formData.mobile}
                 onChange={handleChange}
-                placeholder="Enter your email"
-                autoComplete="email"
+                placeholder="Enter your mobile number"
+                autoComplete="tel"
+                inputMode="tel"
                 required
                 className="w-full rounded-lg border border-border bg-input-background px-4 py-3 text-sm text-text placeholder:text-muted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary-light"
               />

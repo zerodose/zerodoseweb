@@ -46,7 +46,11 @@ export const permanentlyDeleteUnionCouncil = async (id) => {
 
 // Dropdown
 export const getUnionCouncilDropdown = async (townId) => {
-  const response = await api.get(`/union-councils/dropdown?townId=${townId}`);
+  const response = await api.get("/union-councils/dropdown", {
+    params: {
+      townId,
+    },
+  });
 
   return response.data;
 };

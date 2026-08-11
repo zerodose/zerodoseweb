@@ -17,6 +17,11 @@ const Select = forwardRef(function Select(
     required = false,
     error = "",
     className = "",
+
+    // Code settings
+    showCode = false,
+    codePrefix = "",
+
     ...props
   },
   ref,
@@ -30,6 +35,22 @@ const Select = forwardRef(function Select(
   const selectedOption = options.find(
     (option) => String(option.value) === String(value),
   );
+
+  // =====================================================
+  // Format Option Label
+  // =====================================================
+
+  const getOptionLabel = (option) => {
+    if (!option) return "";
+
+    if (showCode && option.code) {
+      const prefix = codePrefix ? `${codePrefix}-` : "";
+
+      return `(${prefix}${option.code}) ${option.label}`;
+    }
+
+    return option.label;
+  };
 
   // =====================================================
   // Close when clicking outside
@@ -89,6 +110,7 @@ const Select = forwardRef(function Select(
   return (
     <div ref={containerRef} className={`w-full ${className}`}>
       {/* Label */}
+
       {label && (
         <label
           htmlFor={name}
@@ -101,8 +123,10 @@ const Select = forwardRef(function Select(
       )}
 
       {/* Dropdown */}
+
       <div className="relative">
         {/* Trigger */}
+
         <button
           ref={ref}
           id={name}
@@ -156,13 +180,23 @@ const Select = forwardRef(function Select(
           {...props}
         >
           {/* Selected value */}
+
           <span
-            className={selectedOption ? "text-text capitalize" : "text-input-placeholder capitalize"}
+            className={
+              selectedOption
+                ? "text-text capitalize"
+                : "text-input-placeholder capitalize"
+            }
           >
-            {loading ? "Loading..." : selectedOption?.label || placeholder}
+            {loading
+              ? "Loading..."
+              : selectedOption
+                ? getOptionLabel(selectedOption)
+                : placeholder}
           </span>
 
           {/* Arrow */}
+
           <ChevronDown
             size={18}
             strokeWidth={2}
@@ -178,6 +212,7 @@ const Select = forwardRef(function Select(
         </button>
 
         {/* Dropdown Menu */}
+
         {open && !isDisabled && (
           <div
             className="
@@ -200,6 +235,7 @@ const Select = forwardRef(function Select(
             role="listbox"
           >
             {/* Placeholder */}
+
             {!value && (
               <div
                 className="
@@ -214,6 +250,7 @@ const Select = forwardRef(function Select(
             )}
 
             {/* Options */}
+
             {options.length > 0 ? (
               options.map((option) => {
                 const isSelected = String(option.value) === String(value);
@@ -253,13 +290,13 @@ const Select = forwardRef(function Select(
                       }
                     `}
                   >
-                    <span className="truncate">{option.label}</span>
+                    <span className="truncate">{getOptionLabel(option)}</span>
 
                     {isSelected && (
                       <Check
                         size={17}
                         strokeWidth={2.5}
-                        className="ml-3 shrink-0 text-primary capitalize"
+                        className="ml-3 shrink-0 text-primary"
                       />
                     )}
                   </button>
@@ -283,6 +320,7 @@ const Select = forwardRef(function Select(
       </div>
 
       {/* Error */}
+
       {error && <p className="mt-1.5 text-xs text-red-500">{error}</p>}
     </div>
   );

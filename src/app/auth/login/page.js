@@ -186,7 +186,8 @@ export default function LoginPage() {
                 alt="Zerodose Logo"
                 width={100}
                 height={100}
-                loading="eager"
+                className="h-auto w-[100px]"
+                priority
               />
 
               <p className="mt-2 text-sm text-text-secondary">

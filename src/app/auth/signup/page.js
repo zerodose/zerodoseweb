@@ -1,19 +1,20 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import Select from "@/components/ui/Select";
+import Loader from "@/components/ui/Loader";
+import VerifyEmailModal from "@/components/auth/VerifyEmailModal";
 
 import { getDistrictDropdown } from "@/api/districtApi";
 import { getTownDropdown } from "@/api/townApi";
 import { getUnionCouncilDropdown } from "@/api/unionCouncilApi";
 import { createUser } from "@/api/userApi";
-import { useRouter } from "next/navigation";
-import Loader from "@/components/ui/Loader";
-import VerifyEmailModal from "@/components/auth/VerifyEmailModal";
 
 import {
   verifyEmail,
@@ -21,18 +22,11 @@ import {
 } from "@/api/authApi";
 
 export default function SignupPage() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    contactNumber: "",
-    district: "",
-    town: "",
-    unionCouncil: "",
-    designation: "",
-    supervisorCode: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const router = useRouter();
+
+  // =====================================================
+  // Designations
+  // =====================================================
 
   const DESIGNATIONS = [
     { value: "ucmo", label: "UCMO" },
@@ -42,16 +36,61 @@ export default function SignupPage() {
     { value: "admin", label: "Admin" },
     // { value: "worker", label: "Worker" },
   ];
-  const router = useRouter();
+
+  // =====================================================
+  // Dashboard Routes
+  // =====================================================
 
   const dashboardRoutes = {
     admin: "/dashboard",
     worker: "/worker",
     supervisor: "/supervisor",
     ucmo: "/ucmo",
-    otherStaff: "/otherstaff",
+    otherStaff: "/otherStaff",
     vaccinator: "/vaccinator",
   };
+
+  // =====================================================
+  // React Hook Form
+  // =====================================================
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    clearErrors,
+    formState: { errors },
+  } = useForm({
+    mode: "onBlur",
+    reValidateMode: "onChange",
+
+    defaultValues: {
+      name: "",
+      email: "",
+      contactNumber: "",
+      district: "",
+      town: "",
+      unionCouncil: "",
+      designation: "",
+      supervisorCode: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  // =====================================================
+  // Watched Values
+  // =====================================================
+
+  const selectedDistrict = watch("district");
+  const selectedTown = watch("town");
+  const selectedDesignation = watch("designation");
+  const password = watch("password");
+
+  const isSupervisor =
+    selectedDesignation === "supervisor";
 
   // =====================================================
   // Dropdown Data
@@ -62,7 +101,7 @@ export default function SignupPage() {
   const [unionCouncils, setUnionCouncils] = useState([]);
 
   // =====================================================
-  // Loading States
+  // Dropdown Loading
   // =====================================================
 
   const [districtLoading, setDistrictLoading] = useState(true);
@@ -75,18 +114,34 @@ export default function SignupPage() {
 
   const [loading, setLoading] = useState(false);
 
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [verificationEmail, setVerificationEmail] = useState("");
-  const [verificationLoading, setVerificationLoading] = useState(false);
-  const [verificationError, setVerificationError] = useState("");
-  const [resendLoading, setResendLoading] = useState(false);
+  // =====================================================
+  // Verification Modal
+  // =====================================================
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] =
+    useState(false);
 
-  const [error, setError] = useState("");
+  const [verificationEmail, setVerificationEmail] =
+    useState("");
 
-  const isSupervisor = formData.designation === "supervisor";
+  const [verificationLoading, setVerificationLoading] =
+    useState(false);
+
+  const [verificationError, setVerificationError] =
+    useState("");
+
+  const [resendLoading, setResendLoading] =
+    useState(false);
+
+  // =====================================================
+  // Password Visibility
+  // =====================================================
+
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState(false);
 
   // =====================================================
   // Load Districts
@@ -96,17 +151,25 @@ export default function SignupPage() {
     const loadDistricts = async () => {
       try {
         setDistrictLoading(true);
-        setError("");
 
-        const response = await getDistrictDropdown();
+        const response =
+          await getDistrictDropdown();
 
-        setDistricts(response.data || []);
+        setDistricts(response?.data || []);
       } catch (error) {
-        console.error("Get districts error:", error);
+        console.error(
+          "Get districts error:",
+          error,
+        );
 
         setDistricts([]);
 
-        setError(error?.response?.data?.message || "Failed to load districts.");
+        toast.error("Failed to load districts", {
+          description:
+            error?.response?.data?.message ||
+            error?.message ||
+            "Please try again.",
+        });
       } finally {
         setDistrictLoading(false);
       }
@@ -121,7 +184,7 @@ export default function SignupPage() {
 
   useEffect(() => {
     const loadTowns = async () => {
-      if (!formData.district) {
+      if (!selectedDistrict) {
         setTowns([]);
         setUnionCouncils([]);
         return;
@@ -129,24 +192,34 @@ export default function SignupPage() {
 
       try {
         setTownLoading(true);
-        setError("");
 
-        const response = await getTownDropdown(formData.district);
+        const response =
+          await getTownDropdown(
+            selectedDistrict,
+          );
 
-        setTowns(response.data || []);
+        setTowns(response?.data || []);
       } catch (error) {
-        console.error("Get towns error:", error);
+        console.error(
+          "Get towns error:",
+          error,
+        );
 
         setTowns([]);
 
-        setError(error?.response?.data?.message || "Failed to load towns.");
+        toast.error("Failed to load towns", {
+          description:
+            error?.response?.data?.message ||
+            error?.message ||
+            "Please try again.",
+        });
       } finally {
         setTownLoading(false);
       }
     };
 
     loadTowns();
-  }, [formData.district]);
+  }, [selectedDistrict]);
 
   // =====================================================
   // Load Union Councils When Town Changes
@@ -154,27 +227,43 @@ export default function SignupPage() {
 
   useEffect(() => {
     const loadUnionCouncils = async () => {
-      if (!formData.town) {
+      if (!selectedTown) {
         setUnionCouncils([]);
         return;
       }
 
       try {
         setUcLoading(true);
-        setError("");
 
-        const response = await getUnionCouncilDropdown(formData.town);
+        const response =
+          await getUnionCouncilDropdown(
+            selectedTown,
+          );
 
-        console.log("UC RESPONSE:", response);
+        console.log(
+          "UC RESPONSE:",
+          response,
+        );
 
-        setUnionCouncils(response.data || []);
+        setUnionCouncils(
+          response?.data || [],
+        );
       } catch (error) {
-        console.error("Get union councils error:", error);
+        console.error(
+          "Get union councils error:",
+          error,
+        );
 
         setUnionCouncils([]);
 
-        setError(
-          error?.response?.data?.message || "Failed to load Union Councils.",
+        toast.error(
+          "Failed to load Union Councils",
+          {
+            description:
+              error?.response?.data?.message ||
+              error?.message ||
+              "Please try again.",
+          },
         );
       } finally {
         setUcLoading(false);
@@ -182,117 +271,44 @@ export default function SignupPage() {
     };
 
     loadUnionCouncils();
-  }, [formData.town]);
+  }, [selectedTown]);
 
   // =====================================================
-  // Handle Change
+  // Clear Supervisor Code When Designation Changes
   // =====================================================
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    setError("");
-
-    // District changed
-    if (name === "district") {
-      setFormData((prev) => ({
-        ...prev,
-        district: value,
-        town: "",
-        unionCouncil: "",
-      }));
-
-      // Clear dependent dropdowns immediately
-      setTowns([]);
-      setUnionCouncils([]);
-
-      return;
+  useEffect(() => {
+    if (!isSupervisor) {
+      setValue("supervisorCode", "");
+      clearErrors("supervisorCode");
     }
+  }, [
+    isSupervisor,
+    setValue,
+    clearErrors,
+  ]);
 
-    // Town changed
-    if (name === "town") {
-      setFormData((prev) => ({
-        ...prev,
-        town: value,
-        unionCouncil: "",
-      }));
+  // =====================================================
+  // Helper: Get First Form Error
+  // =====================================================
 
-      // Clear dependent UC immediately
-      setUnionCouncils([]);
+  const getFirstError = (formErrors) => {
+    const firstError = Object.values(
+      formErrors,
+    )[0];
 
-      return;
-    }
-
-    // Normal field
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    return (
+      firstError?.message ||
+      "Please check the highlighted fields."
+    );
   };
 
   // =====================================================
   // Submit
   // =====================================================
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (loading) return;
-
-    setError("");
-
-    if (!formData.name.trim()) {
-      setError("Full name is required.");
-      return;
-    }
-
-    if (!formData.contactNumber) {
-      setError("Contact number is required.");
-      return;
-    }
-
-    if (!formData.email) {
-      setError("Email is required.");
-      return;
-    }
-
-    if (!formData.district) {
-      setError("Please select a district.");
-      return;
-    }
-
-    if (!formData.town) {
-      setError("Please select a town.");
-      return;
-    }
-
-    if (!formData.unionCouncil) {
-      setError("Please select a Union Council.");
-      return;
-    }
-
-    if (!formData.designation) {
-      setError("Please select a designation.");
-      return;
-    }
-
-    if (isSupervisor && !formData.supervisorCode) {
-      setError("Supervisor code is required.");
-      return;
-    }
-
-    if (!formData.password) {
-      setError("Password is required.");
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match.");
+  const onSubmit = async (data) => {
+    if (loading) {
       return;
     }
 
@@ -300,49 +316,126 @@ export default function SignupPage() {
       setLoading(true);
 
       const payload = {
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        contactNumber: formData.contactNumber,
-        district: formData.district,
-        town: formData.town,
-        unionCouncil: formData.unionCouncil,
-        designation: formData.designation,
-        supervisorCode: isSupervisor ? formData.supervisorCode.trim() : null,
-        password: formData.password,
+        name: data.name.trim(),
+
+        email: data.email
+          .trim()
+          .toLowerCase(),
+
+        contactNumber:
+          data.contactNumber,
+
+        district: data.district,
+
+        town: data.town,
+
+        unionCouncil:
+          data.unionCouncil,
+
+        designation:
+          data.designation,
+
+        supervisorCode: isSupervisor
+          ? data.supervisorCode.trim()
+          : null,
+
+        password: data.password,
       };
 
-      const response = await createUser(payload);
+      const response =
+        await createUser(payload);
 
       if (response?.success) {
-        setVerificationEmail(
-          response?.data?.email || formData.email.trim().toLowerCase(),
-        );
+        const email =
+          response?.data?.email ||
+          data.email
+            .trim()
+            .toLowerCase();
+
+        setVerificationEmail(email);
 
         setVerificationError("");
+
         setShowVerifyModal(true);
+
+        toast.info("Verification code sent!", {
+          description:
+            "Please check your email and enter the verification code.",
+        });
+      } else {
+        toast.error(
+          "Unable to create account",
+          {
+            description:
+              response?.message ||
+              "Please try again.",
+          },
+        );
       }
-
     } catch (error) {
-      console.error("Signup error:", error);
-      console.error("Response:", error?.response?.data);
+      console.error(
+        "Signup error:",
+        error,
+      );
 
-      setError(
+      console.error(
+        "Response:",
+        error?.response?.data,
+      );
+
+      const message =
         error?.response?.data?.message ||
         error?.message ||
-        "Failed to create account.",
+        "Failed to create account.";
+
+      toast.error(
+        "Registration failed",
+        {
+          description: message,
+        },
       );
     } finally {
       setLoading(false);
     }
   };
 
+  // =====================================================
+  // Submit Validation Error
+  // =====================================================
+
+  const onInvalid = (formErrors) => {
+    const message =
+      getFirstError(formErrors);
+
+    toast.error(
+      "Please fix the form errors",
+      {
+        description: message,
+      },
+    );
+  };
+
   return (
     <>
-      {loading && <Loader text="Creating account..." />}
+      {/* =====================================================
+          Page Loader
+      ===================================================== */}
+
+      {loading && (
+        <Loader text="Creating your account..." />
+      )}
+
+      {/* =====================================================
+          Main
+      ===================================================== */}
+
       <main className="min-h-screen bg-surface px-4 py-10">
         <div className="mx-auto w-full max-w-2xl">
-
           <div className="rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8">
+
+            {/* =================================================
+                Logo
+            ================================================= */}
 
             <div className="mb-8 flex flex-col items-center justify-center gap-2 text-center">
               <Image
@@ -358,15 +451,22 @@ export default function SignupPage() {
               </p>
             </div>
 
-            {/* Error */}
+            {/* =================================================
+                Form
+            ================================================= */}
 
-            {error && (
-              <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                {error}
-              </div>
-            )}
+            <form
+              onSubmit={handleSubmit(
+                onSubmit,
+                onInvalid,
+              )}
+              className="space-y-6"
+              noValidate
+            >
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* =================================================
+                  Personal Information
+              ================================================= */}
 
               <section>
                 <h2 className="text-lg font-semibold text-text">
@@ -374,7 +474,10 @@ export default function SignupPage() {
                 </h2>
 
                 <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  {/* Full Name */}
+
+                  {/* =================================================
+                      Full Name
+                  ================================================= */}
 
                   <div className="sm:col-span-2">
                     <label
@@ -382,25 +485,53 @@ export default function SignupPage() {
                       className="mb-2 block text-sm font-medium text-text"
                     >
                       Full Name
-                      <span className="ml-1 text-red-500">*</span>
+                      <span className="ml-1 text-red-500">
+                        *
+                      </span>
                     </label>
 
                     <input
                       id="name"
-                      name="name"
                       type="text"
-                      value={formData.name}
-                      onChange={handleChange}
                       placeholder="Enter your full name"
-                      minLength={2}
-                      maxLength={100}
-                      required
+                      autoComplete="name"
                       disabled={loading}
-                      className="w-full rounded-lg border border-border bg-input-background px-4 py-3 text-sm text-text outline-none transition placeholder:text-input-placeholder focus:border-primary focus:ring-2 focus:ring-primary-light disabled:cursor-not-allowed disabled:opacity-60"
+                      {...register("name", {
+                        required:
+                          "Full name is required.",
+
+                        minLength: {
+                          value: 2,
+                          message:
+                            "Name must be at least 2 characters.",
+                        },
+
+                        maxLength: {
+                          value: 100,
+                          message:
+                            "Name cannot exceed 100 characters.",
+                        },
+
+                        validate: (value) =>
+                          value.trim().length >= 2 ||
+                          "Please enter a valid full name.",
+                      })}
+                      className={`w-full rounded-lg border bg-input-background px-4 py-3 text-sm text-text outline-none transition placeholder:text-input-placeholder focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${errors.name
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                        : "border-border focus:border-primary focus:ring-primary-light"
+                        }`}
                     />
+
+                    {errors.name && (
+                      <p className="mt-1.5 text-xs text-red-500">
+                        {errors.name.message}
+                      </p>
+                    )}
                   </div>
 
-                  {/* Contact Number */}
+                  {/* =================================================
+                      Contact Number
+                  ================================================= */}
 
                   <div>
                     <label
@@ -408,26 +539,53 @@ export default function SignupPage() {
                       className="mb-2 block text-sm font-medium text-text"
                     >
                       Contact Number
-                      <span className="ml-1 text-red-500">*</span>
+                      <span className="ml-1 text-red-500">
+                        *
+                      </span>
                     </label>
 
                     <input
                       id="contactNumber"
-                      name="contactNumber"
                       type="tel"
-                      value={formData.contactNumber}
-                      onChange={handleChange}
                       placeholder="03XXXXXXXXX"
-                      pattern="03[0-9]{9}"
                       maxLength={11}
                       inputMode="tel"
-                      required
+                      autoComplete="tel"
                       disabled={loading}
-                      className="w-full rounded-lg border border-border bg-input-background px-4 py-3 text-sm text-text outline-none transition placeholder:text-input-placeholder focus:border-primary focus:ring-2 focus:ring-primary-light disabled:cursor-not-allowed disabled:opacity-60"
+                      {...register(
+                        "contactNumber",
+                        {
+                          required:
+                            "Contact number is required.",
+
+                          pattern: {
+                            value:
+                              /^03[0-9]{9}$/,
+                            message:
+                              "Enter a valid Pakistani mobile number.",
+                          },
+                        },
+                      )}
+                      className={`w-full rounded-lg border bg-input-background px-4 py-3 text-sm text-text outline-none transition placeholder:text-input-placeholder focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${errors.contactNumber
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                        : "border-border focus:border-primary focus:ring-primary-light"
+                        }`}
                     />
+
+                    {errors.contactNumber && (
+                      <p className="mt-1.5 text-xs text-red-500">
+                        {
+                          errors
+                            .contactNumber
+                            .message
+                        }
+                      </p>
+                    )}
                   </div>
 
-                  {/* Email */}
+                  {/* =================================================
+                      Email
+                  ================================================= */}
 
                   <div>
                     <label
@@ -435,24 +593,46 @@ export default function SignupPage() {
                       className="mb-2 block text-sm font-medium text-text"
                     >
                       Email
-                      <span className="ml-1 text-red-500">*</span>
+                      <span className="ml-1 text-red-500">
+                        *
+                      </span>
                     </label>
 
                     <input
                       id="email"
-                      name="email"
                       type="email"
-                      value={formData.email}
-                      onChange={handleChange}
                       placeholder="Enter your email"
                       autoComplete="email"
-                      required
                       disabled={loading}
-                      className="w-full rounded-lg border border-border bg-input-background px-4 py-3 text-sm text-text outline-none transition placeholder:text-input-placeholder focus:border-primary focus:ring-2 focus:ring-primary-light disabled:cursor-not-allowed disabled:opacity-60"
+                      {...register("email", {
+                        required:
+                          "Email is required.",
+
+                        pattern: {
+                          value:
+                            /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                          message:
+                            "Enter a valid email address.",
+                        },
+                      })}
+                      className={`w-full rounded-lg border bg-input-background px-4 py-3 text-sm text-text outline-none transition placeholder:text-input-placeholder focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${errors.email
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                        : "border-border focus:border-primary focus:ring-primary-light"
+                        }`}
                     />
+
+                    {errors.email && (
+                      <p className="mt-1.5 text-xs text-red-500">
+                        {errors.email.message}
+                      </p>
+                    )}
                   </div>
                 </div>
               </section>
+
+              {/* =================================================
+                  Work Information
+              ================================================= */}
 
               <section>
                 <h2 className="text-lg font-semibold text-text">
@@ -460,22 +640,47 @@ export default function SignupPage() {
                 </h2>
 
                 <div className="mt-4">
-                  {/* Designation */}
 
-                  <Select
-                    label="Designation"
+                  {/* =================================================
+                      Designation
+                  ================================================= */}
+
+                  <Controller
                     name="designation"
-                    value={formData.designation}
-                    onChange={handleChange}
-                    options={DESIGNATIONS}
-                    placeholder="Select designation"
-                    loading={false}
-                    disabled={loading}
-                    required
+                    control={control}
+                    rules={{
+                      required: "Please select a designation.",
+                    }}
+                    render={({ field }) => (
+                      <Select
+                        label="Designation"
+                        name={field.name}
+                        value={field.value}
+                        onChange={field.onChange}
+                        options={DESIGNATIONS}
+                        placeholder="Select designation"
+                        loading={false}
+                        disabled={loading}
+                        required
+                        error={errors.designation?.message}
+                      />
+                    )}
                   />
+
+                  {/* {errors.designation && (
+                    <p className="mt-1.5 text-xs text-red-500">
+                      {
+                        errors
+                          .designation
+                          .message
+                      }
+                    </p>
+                  )} */}
                 </div>
 
-                {/* Supervisor Code */}
+                {/* =================================================
+                    Supervisor Code
+                ================================================= */}
 
                 {isSupervisor && (
                   <div className="mt-5">
@@ -484,95 +689,300 @@ export default function SignupPage() {
                       className="mb-2 block text-sm font-medium text-text"
                     >
                       Supervisor Code
-                      <span className="ml-1 text-red-500">*</span>
+                      <span className="ml-1 text-red-500">
+                        *
+                      </span>
                     </label>
 
                     <input
                       id="supervisorCode"
-                      name="supervisorCode"
                       type="text"
-                      value={formData.supervisorCode}
-                      onChange={handleChange}
                       placeholder="Enter supervisor code"
-                      required
                       disabled={loading}
-                      className="w-full rounded-lg border border-border bg-input-background px-4 py-3 text-sm uppercase text-text outline-none transition placeholder:text-input-placeholder focus:border-primary focus:ring-2 focus:ring-primary-light disabled:cursor-not-allowed disabled:opacity-60"
+                      {...register(
+                        "supervisorCode",
+                        {
+                          required:
+                            "Supervisor code is required.",
+
+                          validate: (value) =>
+                            value.trim().length >
+                            0 ||
+                            "Supervisor code is required.",
+                        },
+                      )}
+                      className={`w-full rounded-lg border bg-input-background px-4 py-3 text-sm uppercase text-text outline-none transition placeholder:text-input-placeholder focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${errors.supervisorCode
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                        : "border-border focus:border-primary focus:ring-primary-light"
+                        }`}
                     />
+
+                    {errors.supervisorCode && (
+                      <p className="mt-1.5 text-xs text-red-500">
+                        {
+                          errors
+                            .supervisorCode
+                            .message
+                        }
+                      </p>
+                    )}
                   </div>
                 )}
               </section>
 
+              {/* =================================================
+                  Location
+              ================================================= */}
+
               <section>
-                <h2 className="text-lg font-semibold text-text">Location</h2>
+                <h2 className="text-lg font-semibold text-text">
+                  Location
+                </h2>
 
                 <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
-                  {/* District */}
 
-                  <Select
-                    label="District"
-                    name="district"
-                    value={formData.district}
-                    onChange={handleChange}
-                    options={districts.map((district) => ({
-                      value: district._id,
-                      label: district.name,
-                    }))}
-                    placeholder="Select district"
-                    loading={districtLoading}
-                    disabled={loading}
-                    required
-                  />
+                  {/* =================================================
+                      District
+                  ================================================= */}
 
-                  {/* Town */}
+                  <div>
+                    <Controller
+                      name="district"
+                      control={control}
+                      rules={{
+                        required:
+                          "Please select a district.",
+                      }}
+                      render={({
+                        field,
+                      }) => (
+                        <Select
+                          label="District"
+                          name={field.name}
+                          value={
+                            field.value
+                          }
+                          onChange={(
+                            e,
+                          ) => {
+                            field.onChange(
+                              e,
+                            );
 
-                  <Select
-                    label="Town"
-                    name="town"
-                    value={formData.town}
-                    onChange={handleChange}
-                    options={towns.map((town) => ({
-                      value: town._id,
-                      label: town.name,
-                    }))}
-                    placeholder={
-                      !formData.district ? "Select district first" : "Select town"
-                    }
-                    loading={townLoading}
-                    disabled={loading || !formData.district}
-                    required
-                  />
+                            setValue(
+                              "town",
+                              "",
+                            );
 
-                  {/* Union Council */}
+                            setValue(
+                              "unionCouncil",
+                              "",
+                            );
 
-                  <Select
-                    label="Union Council"
-                    name="unionCouncil"
-                    value={formData.unionCouncil}
-                    onChange={handleChange}
-                    options={unionCouncils.map((unionCouncil) => ({
-                      value: unionCouncil._id,
-                      label: unionCouncil.name,
-                      code: unionCouncil.code,
-                    }))}
-                    placeholder={
-                      !formData.town
-                        ? "Select town first"
-                        : "Select Union Council"
-                    }
-                    loading={ucLoading}
-                    disabled={loading || !formData.town}
-                    showCode
-                    codePrefix="UC"
-                    required
-                  />
+                            setTowns(
+                              [],
+                            );
+
+                            setUnionCouncils(
+                              [],
+                            );
+
+                            clearErrors([
+                              "town",
+                              "unionCouncil",
+                            ]);
+                          }}
+                          options={districts.map(
+                            (
+                              district,
+                            ) => ({
+                              value:
+                                district._id,
+                              label:
+                                district.name,
+                            }),
+                          )}
+                          placeholder="Select district"
+                          loading={
+                            districtLoading
+                          }
+                          disabled={
+                            loading
+                          }
+                          required
+                        />
+                      )}
+                    />
+
+                    {errors.district && (
+                      <p className="mt-1.5 text-xs text-red-500">
+                        {
+                          errors
+                            .district
+                            .message
+                        }
+                      </p>
+                    )}
+                  </div>
+
+                  {/* =================================================
+                      Town
+                  ================================================= */}
+
+                  <div>
+                    <Controller
+                      name="town"
+                      control={control}
+                      rules={{
+                        required:
+                          "Please select a town.",
+                      }}
+                      render={({
+                        field,
+                      }) => (
+                        <Select
+                          label="Town"
+                          name={field.name}
+                          value={
+                            field.value
+                          }
+                          onChange={(
+                            e,
+                          ) => {
+                            field.onChange(
+                              e,
+                            );
+
+                            setValue(
+                              "unionCouncil",
+                              "",
+                            );
+
+                            setUnionCouncils(
+                              [],
+                            );
+
+                            clearErrors(
+                              "unionCouncil",
+                            );
+                          }}
+                          options={towns.map(
+                            (town) => ({
+                              value:
+                                town._id,
+                              label:
+                                town.name,
+                            }),
+                          )}
+                          placeholder={
+                            !selectedDistrict
+                              ? "Select district first"
+                              : "Select town"
+                          }
+                          loading={
+                            townLoading
+                          }
+                          disabled={
+                            loading ||
+                            !selectedDistrict
+                          }
+                          required
+                        />
+                      )}
+                    />
+
+                    {errors.town && (
+                      <p className="mt-1.5 text-xs text-red-500">
+                        {
+                          errors.town
+                            .message
+                        }
+                      </p>
+                    )}
+                  </div>
+
+                  {/* =================================================
+                      Union Council
+                  ================================================= */}
+
+                  <div>
+                    <Controller
+                      name="unionCouncil"
+                      control={control}
+                      rules={{
+                        required:
+                          "Please select a Union Council.",
+                      }}
+                      render={({
+                        field,
+                      }) => (
+                        <Select
+                          label="Union Council"
+                          name={field.name}
+                          value={
+                            field.value
+                          }
+                          onChange={
+                            field.onChange
+                          }
+                          options={unionCouncils.map(
+                            (
+                              unionCouncil,
+                            ) => ({
+                              value:
+                                unionCouncil._id,
+                              label:
+                                unionCouncil.name,
+                              code:
+                                unionCouncil.code,
+                            }),
+                          )}
+                          placeholder={
+                            !selectedTown
+                              ? "Select town first"
+                              : "Select Union Council"
+                          }
+                          loading={
+                            ucLoading
+                          }
+                          disabled={
+                            loading ||
+                            !selectedTown
+                          }
+                          showCode
+                          codePrefix="UC"
+                          required
+                        />
+                      )}
+                    />
+
+                    {errors.unionCouncil && (
+                      <p className="mt-1.5 text-xs text-red-500">
+                        {
+                          errors
+                            .unionCouncil
+                            .message
+                        }
+                      </p>
+                    )}
+                  </div>
                 </div>
               </section>
 
+              {/* =================================================
+                  Security
+              ================================================= */}
+
               <section>
-                <h2 className="text-lg font-semibold text-text">Security</h2>
+                <h2 className="text-lg font-semibold text-text">
+                  Security
+                </h2>
 
                 <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  {/* Password */}
+
+                  {/* =================================================
+                      Password
+                  ================================================= */}
 
                   <div>
                     <label
@@ -580,36 +990,72 @@ export default function SignupPage() {
                       className="mb-2 block text-sm font-medium text-text"
                     >
                       Password
-                      <span className="ml-1 text-red-500">*</span>
+                      <span className="ml-1 text-red-500">
+                        *
+                      </span>
                     </label>
 
                     <div className="relative">
                       <input
                         id="password"
-                        name="password"
-                        type={showPassword ? "text" : "password"}
-                        value={formData.password}
-                        onChange={handleChange}
+                        type={
+                          showPassword
+                            ? "text"
+                            : "password"
+                        }
                         placeholder="Minimum 8 characters"
-                        minLength={8}
-                        required
                         autoComplete="new-password"
                         disabled={loading}
-                        className="w-full rounded-lg border border-border bg-input-background px-4 py-3 pr-16 text-sm text-text outline-none transition placeholder:text-input-placeholder focus:border-primary focus:ring-2 focus:ring-primary-light disabled:cursor-not-allowed disabled:opacity-60"
+                        {...register(
+                          "password",
+                          {
+                            required:
+                              "Password is required.",
+
+                            minLength: {
+                              value: 8,
+                              message:
+                                "Password must be at least 8 characters.",
+                            },
+                          },
+                        )}
+                        className={`w-full rounded-lg border bg-input-background px-4 py-3 pr-16 text-sm text-text outline-none transition placeholder:text-input-placeholder focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${errors.password
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                          : "border-border focus:border-primary focus:ring-primary-light"
+                          }`}
                       />
 
                       <button
                         type="button"
-                        onClick={() => setShowPassword((prev) => !prev)}
+                        onClick={() =>
+                          setShowPassword(
+                            (prev) =>
+                              !prev,
+                          )
+                        }
                         disabled={loading}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-text-secondary transition hover:text-text disabled:opacity-50"
                       >
-                        {showPassword ? "Hide" : "Show"}
+                        {showPassword
+                          ? "Hide"
+                          : "Show"}
                       </button>
                     </div>
+
+                    {errors.password && (
+                      <p className="mt-1.5 text-xs text-red-500">
+                        {
+                          errors
+                            .password
+                            .message
+                        }
+                      </p>
+                    )}
                   </div>
 
-                  {/* Confirm Password */}
+                  {/* =================================================
+                      Confirm Password
+                  ================================================= */}
 
                   <div>
                     <label
@@ -617,48 +1063,104 @@ export default function SignupPage() {
                       className="mb-2 block text-sm font-medium text-text"
                     >
                       Confirm Password
-                      <span className="ml-1 text-red-500">*</span>
+                      <span className="ml-1 text-red-500">
+                        *
+                      </span>
                     </label>
 
                     <div className="relative">
                       <input
                         id="confirmPassword"
-                        name="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
+                        type={
+                          showConfirmPassword
+                            ? "text"
+                            : "password"
+                        }
                         placeholder="Confirm password"
-                        minLength={8}
-                        required
                         autoComplete="new-password"
                         disabled={loading}
-                        className="w-full rounded-lg border border-border bg-input-background px-4 py-3 pr-16 text-sm text-text outline-none transition placeholder:text-input-placeholder focus:border-primary focus:ring-2 focus:ring-primary-light disabled:cursor-not-allowed disabled:opacity-60"
+                        {...register(
+                          "confirmPassword",
+                          {
+                            required:
+                              "Please confirm your password.",
+
+                            minLength: {
+                              value: 8,
+                              message:
+                                "Password must be at least 8 characters.",
+                            },
+
+                            validate:
+                              (value) =>
+                                value ===
+                                password ||
+                                "Passwords do not match.",
+                          },
+                        )}
+                        className={`w-full rounded-lg border bg-input-background px-4 py-3 pr-16 text-sm text-text outline-none transition placeholder:text-input-placeholder focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${errors.confirmPassword
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                          : "border-border focus:border-primary focus:ring-primary-light"
+                          }`}
                       />
 
                       <button
                         type="button"
-                        onClick={() => setShowConfirmPassword((prev) => !prev)}
+                        onClick={() =>
+                          setShowConfirmPassword(
+                            (prev) =>
+                              !prev,
+                          )
+                        }
                         disabled={loading}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-text-secondary transition hover:text-text disabled:opacity-50"
                       >
-                        {showConfirmPassword ? "Hide" : "Show"}
+                        {showConfirmPassword
+                          ? "Hide"
+                          : "Show"}
                       </button>
                     </div>
+
+                    {errors.confirmPassword && (
+                      <p className="mt-1.5 text-xs text-red-500">
+                        {
+                          errors
+                            .confirmPassword
+                            .message
+                        }
+                      </p>
+                    )}
                   </div>
                 </div>
               </section>
 
+              {/* =================================================
+                  Submit Button
+              ================================================= */}
+
               <button
                 type="submit"
-                disabled={loading || districtLoading || townLoading || ucLoading}
+                disabled={
+                  loading ||
+                  districtLoading ||
+                  townLoading ||
+                  ucLoading
+                }
                 className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {loading ? "Creating account..." : "Create Account"}
+                {loading
+                  ? "Creating account..."
+                  : "Create Account"}
               </button>
             </form>
 
+            {/* =================================================
+                Login Link
+            ================================================= */}
+
             <div className="mt-6 text-center text-sm text-text-secondary">
               Already have an account?{" "}
+
               <Link
                 href="/auth/login"
                 className="font-semibold text-primary transition hover:text-primary-dark"
@@ -668,78 +1170,183 @@ export default function SignupPage() {
             </div>
           </div>
         </div>
+
+        {/* =====================================================
+            Verify Email Modal
+        ===================================================== */}
+
         <VerifyEmailModal
           open={showVerifyModal}
           email={verificationEmail}
           loading={verificationLoading}
           error={verificationError}
           resendLoading={resendLoading}
+
           onClose={() => {
             if (!verificationLoading) {
               setShowVerifyModal(false);
             }
           }}
+
+          // ===================================================
+          // Verify Email
+          // ===================================================
+
           onVerify={async (code) => {
             try {
               setVerificationLoading(true);
               setVerificationError("");
 
-              const response = await verifyEmail({
-                email: verificationEmail,
-                code,
-              });
+              const response =
+                await verifyEmail({
+                  email:
+                    verificationEmail,
+                  code,
+                });
 
               if (response?.success) {
-                setShowVerifyModal(false);
+                toast.success(
+                  "Email verified successfully!",
+                  {
+                    description:
+                      "Your account has been verified.",
+                  },
+                );
 
-                // Account successfully created
+                setShowVerifyModal(
+                  false,
+                );
+
                 router.push(
-                  dashboardRoutes[formData.designation] || "/dashboard",
+                  dashboardRoutes[
+                  selectedDesignation
+                  ] ||
+                  "/dashboard",
+                );
+              } else {
+                const message =
+                  response?.message ||
+                  "Email verification failed.";
+
+                setVerificationError(
+                  message,
+                );
+
+                toast.error(
+                  "Verification failed",
+                  {
+                    description:
+                      message,
+                  },
                 );
               }
             } catch (error) {
-              console.error("Email verification error:", error);
+              console.error(
+                "Email verification error:",
+                error,
+              );
+
+              const message =
+                error?.response
+                  ?.data?.message ||
+                error?.message ||
+                "Invalid verification code.";
 
               setVerificationError(
-                error?.response?.data?.message ||
-                error?.message ||
-                "Invalid verification code.",
+                message,
+              );
+
+              toast.error(
+                "Verification failed",
+                {
+                  description:
+                    message,
+                },
               );
             } finally {
-              setVerificationLoading(false);
+              setVerificationLoading(
+                false,
+              );
             }
           }}
+
+          // ===================================================
+          // Resend Verification
+          // ===================================================
+
           onResend={async () => {
             try {
               setResendLoading(true);
               setVerificationError("");
 
-              const response = await resendVerification({
-                email: verificationEmail,
-              });
+              const response =
+                await resendVerification({
+                  email:
+                    verificationEmail,
+                });
 
               if (response?.success) {
                 setVerificationError("");
 
-                // Agar modal mein success message
-                // separate support nahi karta to kuch nahi karna.
-                console.log("Verification code resent successfully.");
+                toast.success(
+                  "Verification code sent!",
+                  {
+                    description:
+                      `A new verification code was sent to ${verificationEmail}.`,
+                  },
+                );
+              } else {
+                const message =
+                  response?.message ||
+                  "Failed to resend verification code.";
+
+                setVerificationError(
+                  message,
+                );
+
+                toast.error(
+                  "Failed to resend code",
+                  {
+                    description:
+                      message,
+                  },
+                );
               }
             } catch (error) {
-              console.error("Resend verification error:", error);
-              console.error("Response:", error?.response?.data);
+              console.error(
+                "Resend verification error:",
+                error,
+              );
+
+              console.error(
+                "Response:",
+                error?.response?.data,
+              );
+
+              const message =
+                error?.response
+                  ?.data?.message ||
+                error?.message ||
+                "Failed to resend verification code.";
 
               setVerificationError(
-                error?.response?.data?.message ||
-                error?.message ||
-                "Failed to resend verification code.",
+                message,
+              );
+
+              toast.error(
+                "Failed to resend code",
+                {
+                  description:
+                    message,
+                },
               );
             } finally {
-              setResendLoading(false);
+              setResendLoading(
+                false,
+              );
             }
           }}
         />
-
       </main>
     </>
   );

@@ -3,6 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+
 import { loginUser } from "@/api/authApi";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/ui/Loader";
@@ -10,14 +13,10 @@ import Loader from "@/components/ui/Loader";
 export default function LoginPage() {
   const router = useRouter();
 
-  const [formData, setFormData] = useState({
-    mobile: "",
-    password: "",
-  });
+  const [showPassword, setShowPassword] =
+    useState(false);
 
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   // =====================================================
   // Dashboard Routes
@@ -28,73 +27,53 @@ export default function LoginPage() {
     worker: "/worker",
     supervisor: "/supervisor",
     ucmo: "/ucmo",
-    otherStaff: "/otherstaff",
+    otherStaff: "/otherStaff",
     vaccinator: "/vaccinator",
   };
 
   // =====================================================
-  // Handle Change
+  // React Hook Form
   // =====================================================
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    setError("");
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      mobile: "",
+      password: "",
+    },
+    mode: "onBlur",
+    reValidateMode: "onChange",
+  });
 
   // =====================================================
-  // Handle Submit
+  // Submit
   // =====================================================
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit = async (data) => {
+    if (loading) return;
 
-    if (loading) {
-      return;
-    }
-
-    setError("");
-
-    const mobile = formData.mobile.trim();
-    const password = formData.password;
-
-    // =====================================================
-    // Validation
-    // =====================================================
-
-    if (!mobile) {
-      setError("Mobile number is required.");
-      return;
-    }
-
-    if (!/^03\d{9}$/.test(mobile)) {
-      setError("Please enter a valid Pakistani mobile number.");
-      return;
-    }
-
-    if (!password) {
-      setError("Password is required.");
-      return;
-    }
+    const mobile = data.mobile.trim();
+    const password = data.password;
 
     try {
-      // =====================================================
+      // =================================================
       // Start Loading
-      // =====================================================
+      // =================================================
 
       setLoading(true);
 
       // Give browser time to render loader
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) =>
+        setTimeout(resolve, 100),
+      );
 
-      // =====================================================
+      // =================================================
       // Login API
-      // =====================================================
+      // =================================================
 
       const response = await loginUser({
         mobile,
@@ -103,66 +82,78 @@ export default function LoginPage() {
 
       console.log("Login response:", response);
 
-      // =====================================================
+      // =================================================
       // Get User
-      // =====================================================
+      // =================================================
 
       const user = response?.data?.user;
 
       if (!user) {
-        throw new Error("User information was not returned.");
+        throw new Error(
+          "User information was not returned.",
+        );
       }
 
       console.log("Logged in user:", user);
 
-      // =====================================================
+      // =================================================
       // Get Route According To Designation
-      // =====================================================
+      // =================================================
 
       const designation = user?.designation;
-      const route = dashboardRoutes[designation];
 
-      console.log("User designation:", designation);
-      console.log("Dashboard route:", route);
+      const route =
+        dashboardRoutes[designation];
+
+      console.log(
+        "User designation:",
+        designation,
+      );
+
+      console.log(
+        "Dashboard route:",
+        route,
+      );
 
       if (!route) {
         throw new Error(
-          `No dashboard route found for designation: ${designation || "unknown"}`,
+          `No dashboard route found for designation: ${designation || "unknown"
+          }`,
         );
       }
 
-      // =====================================================
+      // =================================================
       // Successful Login
-      // =====================================================
+      // =================================================
 
-      // Loader ko intentionally false nahi kar rahe.
-      // Router page ko replace karega aur loader automatically
-      // unmount ho jayega.
+      toast.success("Login successful!", {
+        description: "Welcome back.",
+      });
+
+      // Loader intentionally remains active.
+      // Router will replace the page.
       router.replace(route);
-
     } catch (error) {
       console.error("Login error:", error);
 
-      // =====================================================
-      // Stop Loading On Error
-      // =====================================================
+      const message =
+        error?.response?.data?.message ||
+        "Invalid mobile number or password.";
+
+      // Show toast
+      toast.error("Login failed", {
+        description: message,
+      });
+
+      // Show error under password
+      setError("password", {
+        type: "server",
+        message,
+      });
 
       setLoading(false);
-
-      // =====================================================
-      // Get Backend Error
-      // =====================================================
-
-      const backendMessage =
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        error?.message;
-
-      setError(
-        backendMessage || "Unable to sign in. Please try again.",
-      );
     }
-  };
+  }
 
   // =====================================================
   // Render
@@ -170,24 +161,24 @@ export default function LoginPage() {
 
   return (
     <>
-      {/* =====================================================
+      {/* =================================================
           Loading Overlay
-      ====================================================== */}
+      ================================================= */}
 
-      {loading && <Loader text="Creating your account..." />}
+      {loading && (
+        <Loader text="Signing in..." />
+      )}
 
       <main className="flex min-h-screen items-center justify-center bg-surface px-4 py-10">
         <div className="w-full max-w-md">
-
-          {/* =====================================================
-              Logo
-          ====================================================== */}
-
-          {/* =====================================================
+          {/* =================================================
               Card
-          ====================================================== */}
+          ================================================= */}
 
           <div className="rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8">
+            {/* =================================================
+                Logo
+            ================================================= */}
 
             <div className="mb-8 flex flex-col items-center justify-center gap-2 text-center">
               <Image
@@ -203,28 +194,18 @@ export default function LoginPage() {
               </p>
             </div>
 
-            {/* =====================================================
-                Error
-            ====================================================== */}
-
-            {error && (
-              <div
-                role="alert"
-                className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600"
-              >
-                {error}
-              </div>
-            )}
-
-            {/* =====================================================
+            {/* =================================================
                 Form
-            ====================================================== */}
+            ================================================= */}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-
-              {/* =====================================================
+            <form
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-5"
+              noValidate
+            >
+              {/* =================================================
                   Mobile Number
-              ====================================================== */}
+              ================================================= */}
 
               <div>
                 <label
@@ -232,97 +213,126 @@ export default function LoginPage() {
                   className="mb-2 block text-sm font-medium text-text"
                 >
                   Mobile Number
+                  <span className="ml-1 text-red-500">
+                    *
+                  </span>
                 </label>
 
                 <input
                   id="mobile"
-                  name="mobile"
                   type="tel"
-                  value={formData.mobile}
-                  onChange={handleChange}
                   placeholder="03123456789"
                   autoComplete="tel"
                   inputMode="tel"
                   maxLength={11}
-                  required
                   disabled={loading}
-                  className="w-full rounded-lg border border-border bg-input-background px-4 py-3 text-sm text-text outline-none transition placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary-light disabled:cursor-not-allowed disabled:opacity-60"
+                  {...register("mobile", {
+                    required:
+                      "Mobile number is required.",
+
+                    validate: {
+                      validPakistaniMobile: (
+                        value,
+                      ) =>
+                        /^03\d{9}$/.test(
+                          value.trim(),
+                        ) ||
+                        "Please enter a valid Pakistani mobile number.",
+                    },
+                  })}
+                  className={`w-full rounded-lg border bg-input-background px-4 py-3 text-sm text-text outline-none transition placeholder:text-muted focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${errors.mobile
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                    : "border-border focus:border-primary focus:ring-primary-light"
+                    }`}
                 />
+
+                {/* =================================================
+                    Mobile Error
+                ================================================= */}
+
+                {errors.mobile && (
+                  <p className="mt-1.5 text-xs text-red-500">
+                    {errors.mobile.message}
+                  </p>
+                )}
               </div>
 
-              {/* =====================================================
+              {/* =================================================
                   Password
-              ====================================================== */}
+              ================================================= */}
 
               <div>
-                <div className="mb-2 flex items-center justify-between">
-
+                <div>
                   <label
                     htmlFor="password"
-                    className="block text-sm font-medium text-text"
+                    className="mb-2 block text-sm font-medium text-text"
                   >
                     Password
+                    <span className="ml-1 text-red-500">*</span>
                   </label>
 
-                  <Link
-                    href="/auth/forgot-password"
-                    aria-disabled={loading}
-                    onClick={(e) => {
-                      if (loading) {
-                        e.preventDefault();
+                  <div className="relative">
+                    <input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      autoComplete="current-password"
+                      disabled={loading}
+                      {...register("password", {
+                        required: "Password is required.",
+                        minLength: {
+                          value: 8,
+                          message:
+                            "Password must be at least 8 characters.",
+                        },
+                      })}
+                      className={`w-full rounded-lg border bg-input-background px-4 py-3 pr-20 text-sm text-text outline-none transition placeholder:text-muted focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${errors.password
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                        : "border-border focus:border-primary focus:ring-primary-light"
+                        }`}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowPassword((prev) => !prev)
                       }
-                    }}
-                    className="text-sm text-primary transition hover:text-primary-dark aria-disabled:pointer-events-none aria-disabled:opacity-50"
-                  >
-                    Forgot password?
-                  </Link>
+                      disabled={loading}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted transition hover:text-text disabled:opacity-50"
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
+
+                  {/* SERVER + VALIDATION ERROR */}
+
+                  {errors.password && (
+                    <p className="mt-1.5 text-xs text-red-500">
+                      {errors.password.message}
+                    </p>
+                  )}
                 </div>
 
-                <div className="relative">
-
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Enter your password"
-                    autoComplete="current-password"
-                    required
-                    disabled={loading}
-                    className="w-full rounded-lg border border-border bg-input-background px-4 py-3 pr-20 text-sm text-text outline-none transition placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary-light disabled:cursor-not-allowed disabled:opacity-60"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowPassword((prev) => !prev)
-                    }
-                    disabled={loading}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted transition hover:text-text disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {showPassword ? "Hide" : "Show"}
-                  </button>
-
-                </div>
               </div>
 
-              {/* =====================================================
+              {/* =================================================
                   Submit
-              ====================================================== */}
+              ================================================= */}
 
               <button
                 type="submit"
                 disabled={loading}
                 className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {loading ? "Signing in..." : "Sign In"}
+                {loading
+                  ? "Signing in..."
+                  : "Sign In"}
               </button>
             </form>
 
-            {/* =====================================================
+            {/* =================================================
                 Signup
-            ====================================================== */}
+            ================================================= */}
 
             <div className="mt-6 text-center text-sm text-text-secondary">
               Don't have an account?{" "}
@@ -340,7 +350,6 @@ export default function LoginPage() {
                 Create account
               </Link>
             </div>
-
           </div>
         </div>
       </main>

@@ -221,7 +221,7 @@ export default function LoginPage() {
                 <input
                   id="mobile"
                   type="tel"
-                  placeholder="03123456789"
+                  placeholder="03XXXXXXXXX"
                   autoComplete="tel"
                   inputMode="tel"
                   maxLength={11}

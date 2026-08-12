@@ -28,8 +28,6 @@ const districtSchema = new mongoose.Schema(
 );
 
 // Search / sorting ke liye
-districtSchema.index({ name: 1 });
-districtSchema.index({ code: 1 });
 districtSchema.index({ isActive: 1 });
 districtSchema.index({ createdAt: -1 });
 

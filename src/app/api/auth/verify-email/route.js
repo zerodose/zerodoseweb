@@ -4,6 +4,11 @@ import crypto from "crypto";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 
+import {
+    getPendingRegistration,
+    deletePendingRegistration,
+} from "@/lib/pendingRegistrations";
+
 // ============================================================
 // Hash Verification Code
 // ============================================================
@@ -17,6 +22,18 @@ function hashVerificationCode(code) {
 
 // ============================================================
 // POST /api/auth/verify-email
+//
+// Flow:
+//
+// PendingRegistration
+//       ↓
+// OTP verify
+//       ↓
+// User.create()
+//       ↓
+// PendingRegistration delete
+//
+// User DB mein OTP verification se pehle save nahi hota.
 // ============================================================
 
 export async function POST(request) {
@@ -63,44 +80,28 @@ export async function POST(request) {
         }
 
         // ============================================================
-        // Find User
+        // Get Pending Registration
         // ============================================================
 
-        const user = await User.findOne({
-            email,
-        }).select(
-            "+emailVerificationCode +emailVerificationExpires",
-        );
+        const pendingRegistration =
+            getPendingRegistration(email);
 
-        if (!user) {
+        if (!pendingRegistration) {
             return NextResponse.json(
                 {
                     success: false,
-                    message: "User not found.",
+                    message:
+                        "No pending registration found for this email. Please register again.",
                 },
                 { status: 404 },
             );
         }
 
         // ============================================================
-        // Already Verified
+        // Check Verification Code Exists
         // ============================================================
 
-        if (user.emailVerified) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    message: "Email is already verified.",
-                },
-                { status: 400 },
-            );
-        }
-
-        // ============================================================
-        // Check Verification Code
-        // ============================================================
-
-        if (!user.emailVerificationCode) {
+        if (!pendingRegistration.emailVerificationCode) {
             return NextResponse.json(
                 {
                     success: false,
@@ -116,14 +117,18 @@ export async function POST(request) {
         // ============================================================
 
         if (
-            !user.emailVerificationExpires ||
-            user.emailVerificationExpires < new Date()
+            !pendingRegistration.emailVerificationExpires ||
+            new Date(
+                pendingRegistration.emailVerificationExpires,
+            ) < new Date()
         ) {
+            deletePendingRegistration(email);
+
             return NextResponse.json(
                 {
                     success: false,
                     message:
-                        "Verification code has expired. Please request a new code.",
+                        "Verification code has expired. Please register again.",
                 },
                 { status: 400 },
             );
@@ -133,13 +138,17 @@ export async function POST(request) {
         // Hash Entered Code
         // ============================================================
 
-        const hashedCode = hashVerificationCode(code);
+        const hashedCode =
+            hashVerificationCode(code);
 
         // ============================================================
         // Compare Code
         // ============================================================
 
-        if (hashedCode !== user.emailVerificationCode) {
+        if (
+            hashedCode !==
+            pendingRegistration.emailVerificationCode
+        ) {
             return NextResponse.json(
                 {
                     success: false,
@@ -150,36 +159,148 @@ export async function POST(request) {
         }
 
         // ============================================================
-        // Verify Email
+        // OTP CORRECT
+        //
+        // Ab final duplicate checks karenge.
         // ============================================================
 
-        user.emailVerified = true;
+        // ------------------------------------------------------------
+        // Final duplicate email check
+        // ------------------------------------------------------------
 
-        user.emailVerificationCode = null;
-        user.emailVerificationExpires = null;
+        const existingEmail = await User.findOne({
+            email: pendingRegistration.email,
+        })
+            .select("_id")
+            .lean();
 
-        await user.save();
+        if (existingEmail) {
+            deletePendingRegistration(email);
+
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Email already exists.",
+                },
+                { status: 409 },
+            );
+        }
+
+        // ------------------------------------------------------------
+        // Final duplicate contact check
+        // ------------------------------------------------------------
+
+        const existingContact = await User.findOne({
+            contactNumber:
+                pendingRegistration.contactNumber,
+        })
+            .select("_id")
+            .lean();
+
+        if (existingContact) {
+            deletePendingRegistration(email);
+
+            return NextResponse.json(
+                {
+                    success: false,
+                    message:
+                        "Contact number already exists.",
+                },
+                { status: 409 },
+            );
+        }
 
         // ============================================================
-        // Response
+        // Create User
+        //
+        // OTP successfully verified hone ke baad hi
+        // User collection mein save hoga.
         // ============================================================
-        const verifiedUser = {
-            id: user._id.toString(),
-            name: user.name,
-            email: user.email || null,
-            contactNumber: user.contactNumber,
-            district: user.district,
-            town: user.town,
-            unionCouncil: user.unionCouncil,
-            designation: user.designation,
-            emailVerified: user.emailVerified,
-            isActive: user.isActive,
-        };
+
+        const user = await User.create({
+            name: pendingRegistration.name,
+
+            email: pendingRegistration.email,
+
+            emailVerified: true,
+
+            emailVerificationCode: null,
+
+            emailVerificationExpires: null,
+
+            contactNumber:
+                pendingRegistration.contactNumber,
+
+            district:
+                pendingRegistration.district,
+
+            town:
+                pendingRegistration.town,
+
+            unionCouncil:
+                pendingRegistration.unionCouncil,
+
+            designation:
+                pendingRegistration.designation,
+
+            supervisorCode:
+                pendingRegistration.supervisorCode,
+
+            supervisor:
+                pendingRegistration.supervisor,
+
+            teamNumber:
+                pendingRegistration.teamNumber,
+
+            password:
+                pendingRegistration.password,
+
+            isActive:
+                pendingRegistration.isActive,
+        });
+
+        // ============================================================
+        // Delete Pending Registration
+        // ============================================================
+
+        deletePendingRegistration(email);
+
+        // ============================================================
+        // Get Created User
+        // ============================================================
+
+        const verifiedUser =
+            await User.findById(user._id)
+                .select(
+                    "-password -emailVerificationCode -emailVerificationExpires",
+                )
+                .populate(
+                    "district",
+                    "_id name code",
+                )
+                .populate(
+                    "town",
+                    "_id name code",
+                )
+                .populate(
+                    "unionCouncil",
+                    "_id name code",
+                )
+                .populate(
+                    "supervisor",
+                    "_id name contactNumber",
+                )
+                .lean();
+
+        // ============================================================
+        // Success Response
+        // ============================================================
 
         return NextResponse.json(
             {
                 success: true,
-                message: "Email verified successfully.",
+                message:
+                    "Email verified and account created successfully.",
                 data: {
                     user: verifiedUser,
                 },
@@ -187,13 +308,63 @@ export async function POST(request) {
             { status: 200 },
         );
     } catch (error) {
-        console.error("Verify email error:", error);
+        console.error(
+            "Verify email error:",
+            error,
+        );
+
+        // ============================================================
+        // Duplicate Key
+        // ============================================================
+
+        if (error?.code === 11000) {
+            const duplicateField =
+                Object.keys(error.keyPattern || {})[0];
+
+            return NextResponse.json(
+                {
+                    success: false,
+                    message:
+                        (duplicateField || "Field") +
+                        " already exists.",
+                },
+                { status: 409 },
+            );
+        }
+
+        // ============================================================
+        // Mongoose Validation Error
+        // ============================================================
+
+        if (error?.name === "ValidationError") {
+            const messages = Object.values(
+                error.errors || {},
+            ).map(
+                (item) => item.message,
+            );
+
+            return NextResponse.json(
+                {
+                    success: false,
+                    message:
+                        messages.length > 0
+                            ? messages.join(", ")
+                            : "Validation failed.",
+                },
+                { status: 400 },
+            );
+        }
+
+        // ============================================================
+        // General Error
+        // ============================================================
 
         return NextResponse.json(
             {
                 success: false,
                 message:
-                    error?.message || "Failed to verify email.",
+                    error?.message ||
+                    "Failed to verify email.",
             },
             { status: 500 },
         );

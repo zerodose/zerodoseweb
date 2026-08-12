@@ -1,4 +1,21 @@
-import { NextResponse } from "next/server"; import mongoose from "mongoose"; import bcrypt from "bcryptjs"; import { connectDB } from "@/lib/db"; import User from "@/models/User"; import District from "@/models/District"; import Town from "@/models/Town"; import UnionCouncil from "@/models/UnionCouncil"; import { sendVerificationEmail } from "@/lib/mail/sendVerificationEmail"; import { generateVerificationCode, hashVerificationCode, } from "@/lib/auth/generateVerificationCode";
+import { NextResponse } from "next/server";
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
+import { connectDB } from "@/lib/db";
+import User from "@/models/User";
+import District from "@/models/District";
+import Town from "@/models/Town";
+import UnionCouncil from "@/models/UnionCouncil";
+import { generateVerificationCode, hashVerificationCode, } from "@/lib/auth/generateVerificationCode";
+import { sendVerificationEmail } from "@/lib/mail/sendVerificationEmail";
+
+import {
+  setPendingRegistration,
+  getPendingRegistration,
+  hasPendingRegistration,
+  deletePendingRegistration,
+} from "@/lib/pendingRegistrations";
+
 // =====================================================
 // GET ALL USERS
 // GET /api/users
@@ -131,7 +148,7 @@ export async function GET(request) {
 // =====================================================
 // CREATE USER
 // POST /api/users
-// =====================================================
+// =====================================================```js
 
 export async function POST(request) {
   try {
@@ -313,10 +330,21 @@ export async function POST(request) {
     }
 
     // =================================================
-    // Email validation
+    // Normalize data
     // =================================================
 
-    const normalizedEmail = email?.trim().toLowerCase() || null;
+    const normalizedEmail =
+      email?.trim().toLowerCase() || null;
+
+    const normalizedContactNumber =
+      contactNumber.trim();
+
+    // =================================================
+    // Email validation
+    //
+    // Worker -> email NOT required
+    // Other designations -> email REQUIRED
+    // =================================================
 
     if (designation !== "worker" && !normalizedEmail) {
       return NextResponse.json(
@@ -330,6 +358,9 @@ export async function POST(request) {
 
     // =================================================
     // Password validation
+    //
+    // Worker -> password NOT required
+    // Other designations -> password REQUIRED
     // =================================================
 
     if (designation !== "worker") {
@@ -347,7 +378,8 @@ export async function POST(request) {
         return NextResponse.json(
           {
             success: false,
-            message: "Password must be at least 8 characters",
+            message:
+              "Password must be at least 8 characters",
           },
           { status: 400 },
         );
@@ -379,7 +411,8 @@ export async function POST(request) {
         return NextResponse.json(
           {
             success: false,
-            message: "Supervisor is required for workers",
+            message:
+              "Supervisor is required for workers",
           },
           { status: 400 },
         );
@@ -403,7 +436,8 @@ export async function POST(request) {
         return NextResponse.json(
           {
             success: false,
-            message: "Team number is required for workers",
+            message:
+              "Team number is required for workers",
           },
           { status: 400 },
         );
@@ -411,7 +445,7 @@ export async function POST(request) {
     }
 
     // =================================================
-    // Check duplicate email
+    // Check duplicate email in User
     // =================================================
 
     if (normalizedEmail) {
@@ -433,10 +467,30 @@ export async function POST(request) {
     }
 
     // =================================================
-    // Check duplicate contact
+    // Check pending registration
+    //
+    // No PendingUser DB collection.
+    // Temporary registration exists only in server memory.
     // =================================================
 
-    const normalizedContactNumber = contactNumber.trim();
+    if (
+      normalizedEmail &&
+      designation !== "worker" &&
+      hasPendingRegistration(normalizedEmail)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "This email already has a pending verification. Please verify your email or request a new verification code.",
+        },
+        { status: 409 },
+      );
+    }
+
+    // =================================================
+    // Check duplicate contact in User
+    // =================================================
 
     const existingContact = await User.findOne({
       contactNumber: normalizedContactNumber,
@@ -471,7 +525,8 @@ export async function POST(request) {
         return NextResponse.json(
           {
             success: false,
-            message: "Valid active supervisor not found",
+            message:
+              "Valid active supervisor not found",
           },
           { status: 400 },
         );
@@ -482,47 +537,128 @@ export async function POST(request) {
     // Hash password
     // =================================================
 
-    let hashedPassword;
+    let hashedPassword = null;
 
     if (password) {
-      hashedPassword = await bcrypt.hash(password, 12);
-    }
-
-    // =================================================
-    // Email Verification
-    // =================================================
-
-    let verificationCode = null;
-    let hashedVerificationCode = null;
-    let verificationExpires = null;
-
-    if (normalizedEmail) {
-      verificationCode = generateVerificationCode();
-
-      hashedVerificationCode =
-        hashVerificationCode(verificationCode);
-
-      verificationExpires = new Date(
-        Date.now() + 10 * 60 * 1000,
+      hashedPassword = await bcrypt.hash(
+        password,
+        12,
       );
     }
 
     // =================================================
-    // Create user
+    // WORKER
+    //
+    // Worker does NOT require email verification.
+    // Worker can directly be created in User.
     // =================================================
 
-    const user = await User.create({
+    if (designation === "worker") {
+      const user = await User.create({
+        name: name.trim(),
+
+        email: undefined,
+
+        emailVerified: true,
+
+        emailVerificationCode: null,
+
+        emailVerificationExpires: null,
+
+        contactNumber:
+          normalizedContactNumber,
+
+        district,
+        town,
+        unionCouncil,
+
+        designation,
+
+        supervisor,
+
+        supervisorCode: null,
+
+        teamNumber: Number(teamNumber),
+
+        password: hashedPassword,
+
+        isActive:
+          typeof isActive === "boolean"
+            ? isActive
+            : true,
+      });
+
+      // =================================================
+      // Worker response
+      // =================================================
+
+      const createdUser =
+        await User.findById(user._id)
+          .select(
+            "-password -emailVerificationCode -emailVerificationExpires",
+          )
+          .populate(
+            "district",
+            "_id name code",
+          )
+          .populate(
+            "town",
+            "_id name code",
+          )
+          .populate(
+            "unionCouncil",
+            "_id name code",
+          )
+          .populate(
+            "supervisor",
+            "_id name contactNumber",
+          )
+          .lean();
+
+      return NextResponse.json(
+        {
+          success: true,
+          message:
+            "Worker account created successfully.",
+          data: createdUser,
+        },
+        { status: 201 },
+      );
+    }
+
+    // =================================================
+    // NON-WORKER
+    //
+    // IMPORTANT:
+    // User.create() WILL NOT happen here.
+    //
+    // Data is temporarily stored in server memory.
+    // User will only be created after email verification.
+    // =================================================
+
+    const verificationCode =
+      generateVerificationCode();
+
+    const hashedVerificationCode =
+      hashVerificationCode(
+        verificationCode,
+      );
+
+    const verificationExpires = new Date(
+      Date.now() + 10 * 60 * 1000,
+    );
+
+    // =================================================
+    // Store temporary registration
+    // =================================================
+
+    const pendingData = {
       name: name.trim(),
 
-      email: normalizedEmail || undefined,
+      email: normalizedEmail,
 
-      emailVerified: normalizedEmail ? false : false,
-
-      emailVerificationCode: hashedVerificationCode,
-
-      emailVerificationExpires: verificationExpires,
-
-      contactNumber: normalizedContactNumber,
+      contactNumber:
+        normalizedContactNumber,
 
       district,
       town,
@@ -532,18 +668,14 @@ export async function POST(request) {
 
       supervisorCode:
         designation === "supervisor"
-          ? supervisorCode.trim().toUpperCase()
+          ? supervisorCode
+            .trim()
+            .toUpperCase()
           : null,
 
-      supervisor:
-        designation === "worker"
-          ? supervisor
-          : null,
+      supervisor: null,
 
-      teamNumber:
-        designation === "worker"
-          ? Number(teamNumber)
-          : null,
+      teamNumber: null,
 
       password: hashedPassword,
 
@@ -551,68 +683,74 @@ export async function POST(request) {
         typeof isActive === "boolean"
           ? isActive
           : true,
-    });
+
+      emailVerificationCode:
+        hashedVerificationCode,
+
+      emailVerificationExpires:
+        verificationExpires,
+
+      createdAt: Date.now(),
+    };
+
+    setPendingRegistration(
+      normalizedEmail,
+      pendingData,
+    );
 
     // =================================================
-    // Send Verification Email
+    // Send verification email
     // =================================================
 
-    if (normalizedEmail && verificationCode) {
-      try {
-        await sendVerificationEmail({
-          email: normalizedEmail,
-          name: name.trim(),
-          code: verificationCode,
-        });
-      } catch (emailError) {
-        console.error(
-          "Verification email error:",
-          emailError,
-        );
+    try {
+      await sendVerificationEmail({
+        email: normalizedEmail,
+        name: name.trim(),
+        code: verificationCode,
+      });
+    } catch (emailError) {
+      console.error(
+        "Verification email error:",
+        emailError,
+      );
 
-        // User create ho chuka hai, lekin email send nahi hui.
-        // Verification code database mein available hai.
-        return NextResponse.json(
-          {
-            success: false,
-            message:
-              "Account was created, but verification email could not be sent. Please request a new verification code.",
-          },
-          { status: 500 },
-        );
-      }
+      // Remove temporary data because email failed
+      deletePendingRegistration(
+        normalizedEmail,
+      );
+
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Verification email could not be sent. Please try again.",
+        },
+        { status: 500 },
+      );
     }
 
     // =================================================
-    // Response without password / verification fields
-    // =================================================
-
-    const createdUser = await User.findById(user._id)
-      .select(
-        "-password -emailVerificationCode -emailVerificationExpires",
-      )
-      .populate("district", "_id name code")
-      .populate("town", "_id name code")
-      .populate("unionCouncil", "_id name code")
-      .populate("supervisor", "_id name contactNumber")
-      .lean();
-
-    // =================================================
-    // Response
+    // IMPORTANT
+    //
+    // NO User.create() HERE
     // =================================================
 
     return NextResponse.json(
       {
         success: true,
-        message: normalizedEmail
-          ? "User created successfully. A verification code has been sent to your email."
-          : "User created successfully.",
-        data: createdUser,
+        message:
+          "Verification code has been sent to your email. Please verify your email to complete registration.",
+        data: {
+          email: normalizedEmail,
+        },
       },
       { status: 201 },
     );
   } catch (error) {
-    console.error("Create user error:", error);
+    console.error(
+      "Create user error:",
+      error,
+    );
 
     // =================================================
     // Duplicate key
@@ -620,12 +758,15 @@ export async function POST(request) {
 
     if (error?.code === 11000) {
       const duplicateField =
-        Object.keys(error.keyPattern || {})[0];
+        Object.keys(
+          error.keyPattern || {},
+        )[0];
 
       return NextResponse.json(
         {
           success: false,
-          message: `${duplicateField || "Field"} already exists`,
+          message: `${duplicateField || "Field"
+            } already exists`,
         },
         { status: 409 },
       );
@@ -635,8 +776,12 @@ export async function POST(request) {
     // Mongoose validation error
     // =================================================
 
-    if (error?.name === "ValidationError") {
-      const messages = Object.values(error.errors || {}).map(
+    if (
+      error?.name === "ValidationError"
+    ) {
+      const messages = Object.values(
+        error.errors || {},
+      ).map(
         (item) => item.message,
       );
 
@@ -660,7 +805,8 @@ export async function POST(request) {
       {
         success: false,
         message:
-          error?.message || "Failed to create user",
+          error?.message ||
+          "Failed to create user",
       },
       { status: 500 },
     );

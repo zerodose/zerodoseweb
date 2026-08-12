@@ -1,11 +1,11 @@
-import React from 'react'
-
-function page() {
+export default function DashboardPage() {
   return (
     <div>
-      Dashboard
-    </div>
-  )
-}
+      <h1 className="text-2xl font-bold text-text">Dashboard</h1>
 
-export default page
+      <p className="mt-2 text-sm text-text-secondary">
+        Welcome to Zerodose Dashboard.
+      </p>
+    </div>
+  );
+}

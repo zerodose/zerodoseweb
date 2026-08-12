@@ -2,7 +2,7 @@
 
 export default function Loader({ text = "Please wait..." }) {
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/40 backdrop-blur-xs">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/20 backdrop-blur-xs">
       <div className="flex min-w-[240px] flex-col items-center rounded-2xl bg-background px-8 py-7 shadow-xl">
         
         <div className="relative h-10 w-10">

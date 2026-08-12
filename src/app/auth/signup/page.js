@@ -11,13 +11,14 @@ import { getDistrictDropdown } from "@/api/districtApi";
 import { getTownDropdown } from "@/api/townApi";
 import { getUnionCouncilDropdown } from "@/api/unionCouncilApi";
 import { createUser } from "@/api/userApi";
-import VerifyEmailModal from "@/components/auth/VerifyEmailModal";
-import {
-  verifyEmail,
-  resendVerificationCode,
-} from "@/api/authApi";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/ui/Loader";
+import VerifyEmailModal from "@/components/auth/VerifyEmailModal";
+
+import {
+  verifyEmail,
+  resendVerification,
+} from "@/api/authApi";
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -53,16 +54,6 @@ export default function SignupPage() {
   };
 
   // =====================================================
-  // Email Verification Data
-  // =====================================================
-
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [verificationEmail, setVerificationEmail] = useState("");
-  const [verificationLoading, setVerificationLoading] = useState(false);
-  const [verificationError, setVerificationError] = useState("");
-  const [resendLoading, setResendLoading] = useState(false);
-
-  // =====================================================
   // Dropdown Data
   // =====================================================
 
@@ -83,6 +74,12 @@ export default function SignupPage() {
   // =====================================================
 
   const [loading, setLoading] = useState(false);
+
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const [verificationError, setVerificationError] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -316,16 +313,15 @@ export default function SignupPage() {
 
       const response = await createUser(payload);
 
-      // console.log("User created successfully:", response);
-      // =====================================================
-      // Email Verification Modal
-      // =====================================================
+      if (response?.success) {
+        setVerificationEmail(
+          response?.data?.email || formData.email.trim().toLowerCase(),
+        );
 
-      setVerificationEmail(formData.email.trim().toLowerCase());
-      setVerificationError("");
-      setShowVerifyModal(true);
+        setVerificationError("");
+        setShowVerifyModal(true);
+      }
 
-      // Yahan baad mein login/dashboard redirect kar sakte hain.
     } catch (error) {
       console.error("Signup error:", error);
       console.error("Response:", error?.response?.data);
@@ -345,29 +341,23 @@ export default function SignupPage() {
       {loading && <Loader text="Creating account..." />}
       <main className="min-h-screen bg-surface px-4 py-10">
         <div className="mx-auto w-full max-w-2xl">
-          {/* =====================================================
-            Logo / Header
-        ====================================================== */}
-
-          <div className="mb-8 flex flex-col items-center justify-center gap-2 text-center">
-            <Image
-              src="/images/logo.png"
-              alt="Zerodose Logo"
-              width={100}
-              height={100}
-              loading="eager"
-            />
-
-            <p className="mt-2 text-sm text-text-secondary">
-              Register your account to get started
-            </p>
-          </div>
-
-          {/* =====================================================
-            Card
-        ====================================================== */}
 
           <div className="rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8">
+
+            <div className="mb-8 flex flex-col items-center justify-center gap-2 text-center">
+              <Image
+                src="/images/logo.png"
+                alt="Zerodose Logo"
+                width={100}
+                height={100}
+                loading="eager"
+              />
+
+              <p className="mt-2 text-sm text-text-secondary">
+                Register your account to get started
+              </p>
+            </div>
+
             {/* Error */}
 
             {error && (
@@ -377,9 +367,6 @@ export default function SignupPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* =====================================================
-                Personal Information
-            ====================================================== */}
 
               <section>
                 <h2 className="text-lg font-semibold text-text">
@@ -467,10 +454,6 @@ export default function SignupPage() {
                 </div>
               </section>
 
-              {/* =====================================================
-                Work Information
-            ====================================================== */}
-
               <section>
                 <h2 className="text-lg font-semibold text-text">
                   Work Information
@@ -518,10 +501,6 @@ export default function SignupPage() {
                   </div>
                 )}
               </section>
-
-              {/* =====================================================
-                Location
-            ====================================================== */}
 
               <section>
                 <h2 className="text-lg font-semibold text-text">Location</h2>
@@ -588,10 +567,6 @@ export default function SignupPage() {
                   />
                 </div>
               </section>
-
-              {/* =====================================================
-                Security
-            ====================================================== */}
 
               <section>
                 <h2 className="text-lg font-semibold text-text">Security</h2>
@@ -673,10 +648,6 @@ export default function SignupPage() {
                 </div>
               </section>
 
-              {/* =====================================================
-                Submit
-            ====================================================== */}
-
               <button
                 type="submit"
                 disabled={loading || districtLoading || townLoading || ucLoading}
@@ -685,10 +656,6 @@ export default function SignupPage() {
                 {loading ? "Creating account..." : "Create Account"}
               </button>
             </form>
-
-            {/* =====================================================
-              Login
-          ====================================================== */}
 
             <div className="mt-6 text-center text-sm text-text-secondary">
               Already have an account?{" "}
@@ -722,23 +689,14 @@ export default function SignupPage() {
                 code,
               });
 
-              console.log("Email verification successful:", response);
+              if (response?.success) {
+                setShowVerifyModal(false);
 
-              const { user } = response.data;
-
-              console.log("Verified user:", user);
-
-              const route = dashboardRoutes[user.designation];
-
-              if (!route) {
-                throw new Error("Invalid user designation.");
+                // Account successfully created
+                router.push(
+                  dashboardRoutes[formData.designation] || "/dashboard",
+                );
               }
-
-              console.log("Redirecting to:", route);
-
-              setShowVerifyModal(false);
-
-              router.replace(route);
             } catch (error) {
               console.error("Email verification error:", error);
 
@@ -756,13 +714,20 @@ export default function SignupPage() {
               setResendLoading(true);
               setVerificationError("");
 
-              const response = await resendVerificationCode({
+              const response = await resendVerification({
                 email: verificationEmail,
               });
 
-              console.log("Verification code resent:", response);
+              if (response?.success) {
+                setVerificationError("");
+
+                // Agar modal mein success message
+                // separate support nahi karta to kuch nahi karna.
+                console.log("Verification code resent successfully.");
+              }
             } catch (error) {
               console.error("Resend verification error:", error);
+              console.error("Response:", error?.response?.data);
 
               setVerificationError(
                 error?.response?.data?.message ||

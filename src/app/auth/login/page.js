@@ -183,25 +183,25 @@ export default function LoginPage() {
               Logo
           ====================================================== */}
 
-          <div className="mb-8 flex flex-col items-center justify-center gap-2 text-center">
-            <Image
-              src="/images/logo.png"
-              alt="Zerodose Logo"
-              width={100}
-              height={100}
-              loading="eager"
-            />
-
-            <p className="mt-2 text-sm text-text-secondary">
-              Sign in to your account
-            </p>
-          </div>
-
           {/* =====================================================
               Card
           ====================================================== */}
 
           <div className="rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8">
+
+            <div className="mb-8 flex flex-col items-center justify-center gap-2 text-center">
+              <Image
+                src="/images/logo.png"
+                alt="Zerodose Logo"
+                width={100}
+                height={100}
+                loading="eager"
+              />
+
+              <p className="mt-2 text-sm text-text-secondary">
+                Sign in to your account
+              </p>
+            </div>
 
             {/* =====================================================
                 Error

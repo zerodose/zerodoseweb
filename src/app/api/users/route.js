@@ -1,25 +1,494 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+
 import { connectDB } from "@/lib/db";
+
 import User from "@/models/User";
-import District from "@/models/District";
-import Town from "@/models/Town";
-import UnionCouncil from "@/models/UnionCouncil";
-import { generateVerificationCode, hashVerificationCode, } from "@/lib/auth/generateVerificationCode";
+
+import {
+  generateVerificationCode,
+  hashVerificationCode,
+} from "@/lib/auth/generateVerificationCode";
+
 import { sendVerificationEmail } from "@/lib/mail/sendVerificationEmail";
 
 import {
   setPendingRegistration,
-  getPendingRegistration,
-  hasPendingRegistration,
   deletePendingRegistration,
 } from "@/lib/pendingRegistrations";
 
-// =====================================================
-// GET ALL USERS
-// GET /api/users
-// =====================================================
+export async function POST(request) {
+  try {
+    await connectDB();
+
+    const body = await request.json();
+
+    const {
+      name,
+      email,
+      contactNumber,
+      district,
+      town,
+      unionCouncil,
+      designation,
+      supervisorCode,
+      supervisor,
+      teamNumber,
+      password,
+      isActive,
+    } = body;
+
+    // ============================================================
+    // Normalize Data
+    // ============================================================
+
+    const normalizedName =
+      name?.trim();
+
+    const normalizedEmail =
+      email?.trim().toLowerCase() || null;
+
+    const normalizedContactNumber =
+      contactNumber?.trim();
+
+    const normalizedSupervisorCode =
+      supervisorCode?.trim() || null;
+
+    // ============================================================
+    // Duplicate Email Check
+    //
+    // User collection mein email already exist karta hai ya nahi.
+    // ============================================================
+
+    if (normalizedEmail) {
+      const existingEmail =
+        await User.findOne({
+          email: normalizedEmail,
+        })
+          .select("_id")
+          .lean();
+
+      if (existingEmail) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Email already exists.",
+          },
+          { status: 409 },
+        );
+      }
+    }
+
+    // ============================================================
+    // Duplicate Contact Number
+    // ============================================================
+
+    const existingContact =
+      await User.findOne({
+        contactNumber:
+          normalizedContactNumber,
+      })
+        .select("_id")
+        .lean();
+
+    if (existingContact) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Contact number already exists.",
+        },
+        { status: 409 },
+      );
+    }
+
+    // ============================================================
+    // Worker Supervisor Check
+    //
+    // Worker ke liye supervisor User collection se verify hoga.
+    // ============================================================
+
+    if (designation === "worker") {
+      if (
+        !mongoose.Types.ObjectId.isValid(
+          supervisor,
+        )
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "Invalid supervisor ID.",
+          },
+          { status: 400 },
+        );
+      }
+
+      const supervisorDoc =
+        await User.findOne({
+          _id: supervisor,
+          designation: "supervisor",
+          isActive: true,
+        })
+          .select("_id")
+          .lean();
+
+      if (!supervisorDoc) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "Valid active supervisor not found.",
+          },
+          { status: 400 },
+        );
+      }
+    }
+
+    // ============================================================
+    // Hash Password
+    // ============================================================
+
+    let hashedPassword = null;
+
+    if (password) {
+      hashedPassword =
+        await bcrypt.hash(
+          password,
+          12,
+        );
+    }
+
+    // ============================================================
+    // WORKER
+    //
+    // Worker email verification ke baghair
+    // direct User collection mein create hoga.
+    // ============================================================
+
+    if (designation === "worker") {
+      const user =
+        await User.create({
+          name: normalizedName,
+
+          email: undefined,
+
+          emailVerified: true,
+
+          emailVerificationCode:
+            null,
+
+          emailVerificationExpires:
+            null,
+
+          contactNumber:
+            normalizedContactNumber,
+
+          // ObjectId
+          district,
+
+          // ObjectId
+          town,
+
+          // ObjectId
+          unionCouncil,
+
+          designation,
+
+          supervisor,
+
+          supervisorCode: null,
+
+          teamNumber:
+            Number(teamNumber),
+
+          password:
+            hashedPassword,
+
+          isActive:
+            typeof isActive === "boolean"
+              ? isActive
+              : true,
+        });
+
+      // ==========================================================
+      // Get Created Worker
+      // ==========================================================
+
+      const createdUser =
+        await User.findById(
+          user._id,
+        )
+          .select(
+            "-password -emailVerificationCode -emailVerificationExpires",
+          )
+          .populate(
+            "district",
+            "_id name code",
+          )
+          .populate(
+            "town",
+            "_id name code",
+          )
+          .populate(
+            "unionCouncil",
+            "_id name code",
+          )
+          .populate(
+            "supervisor",
+            "_id name contactNumber",
+          )
+          .lean();
+
+      return NextResponse.json(
+        {
+          success: true,
+
+          message:
+            "Worker account created successfully.",
+
+          data: createdUser,
+        },
+        { status: 201 },
+      );
+    }
+
+    // ============================================================
+    // NON-WORKER
+    //
+    // IMPORTANT:
+    //
+    // Yahan User.create() nahi hoga.
+    //
+    // Pehle temporary registration save hogi.
+    // Phir OTP email jayegi.
+    // OTP verify hone ke baad /api/auth/verify-email
+    // User.create() karega.
+    // ============================================================
+
+    // ============================================================
+    // Generate Verification Code
+    // ============================================================
+
+    const verificationCode =
+      generateVerificationCode();
+
+    // ============================================================
+    // Hash Verification Code
+    // ============================================================
+
+    const hashedVerificationCode =
+      hashVerificationCode(
+        verificationCode,
+      );
+
+    // ============================================================
+    // Verification Expiry
+    //
+    // OTP 10 minutes valid hai.
+    // ============================================================
+
+    const verificationExpires =
+      new Date(
+        Date.now() +
+        10 * 60 * 1000,
+      );
+
+    // ============================================================
+    // Temporary Registration Data
+    //
+    // District, Town aur Union Council ki IDs
+    // yahan directly save hongi.
+    // ============================================================
+
+    const pendingData = {
+      name: normalizedName,
+
+      email: normalizedEmail,
+
+      contactNumber:
+        normalizedContactNumber,
+
+      // ObjectId
+      district,
+
+      // ObjectId
+      town,
+
+      // ObjectId
+      unionCouncil,
+
+      designation,
+
+      supervisorCode:
+        designation === "supervisor"
+          ? normalizedSupervisorCode
+          : null,
+
+      supervisor: null,
+
+      teamNumber: null,
+
+      password:
+        hashedPassword,
+
+      isActive:
+        typeof isActive === "boolean"
+          ? isActive
+          : true,
+
+      emailVerificationCode:
+        hashedVerificationCode,
+
+      emailVerificationExpires:
+        verificationExpires,
+
+      createdAt: Date.now(),
+    };
+
+    // ============================================================
+    // Store Pending Registration
+    //
+    // User abhi MongoDB User collection mein nahi jayega.
+    // ============================================================
+
+    setPendingRegistration(
+      normalizedEmail,
+      pendingData,
+    );
+
+    // ============================================================
+    // Send Verification Email
+    //
+    // Backend se email jayegi.
+    // ============================================================
+
+    try {
+      await sendVerificationEmail({
+        email: normalizedEmail,
+        name: normalizedName,
+        code: verificationCode,
+      });
+    } catch (emailError) {
+      console.error(
+        "Verification email error:",
+        emailError,
+      );
+
+      // Email send fail ho gayi,
+      // temporary registration remove kar dein.
+
+      deletePendingRegistration(
+        normalizedEmail,
+      );
+
+      setPendingRegistration(
+        normalizedEmail,
+        pendingData,
+      );
+
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Verification email could not be sent. Please try again.",
+        },
+        { status: 500 },
+      );
+    }
+
+    // ============================================================
+    // SUCCESS
+    //
+    // User abhi User collection mein create nahi hua.
+    //
+    // Frontend is response ke baad
+    // VerifyEmailModal open karega.
+    // ============================================================
+
+    return NextResponse.json(
+      {
+        success: true,
+
+        message:
+          "Verification code has been sent to your email.",
+
+        data: {
+          email: normalizedEmail,
+        },
+      },
+      { status: 201 },
+    );
+  } catch (error) {
+    console.error(
+      "Create user error:",
+      error,
+    );
+
+    // ============================================================
+    // Duplicate Key
+    // ============================================================
+
+    if (error?.code === 11000) {
+      const duplicateField =
+        Object.keys(
+          error.keyPattern || {},
+        )[0];
+
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            `${duplicateField || "Field"} already exists.`,
+        },
+        { status: 409 },
+      );
+    }
+
+    // ============================================================
+    // Mongoose Validation Error
+    // ============================================================
+
+    if (
+      error?.name ===
+      "ValidationError"
+    ) {
+      const messages =
+        Object.values(
+          error.errors || {},
+        ).map(
+          (item) =>
+            item.message,
+        );
+
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            messages.length > 0
+              ? messages.join(", ")
+              : "Validation failed.",
+        },
+        { status: 400 },
+      );
+    }
+
+    // ============================================================
+    // General Error
+    // ============================================================
+
+    return NextResponse.json(
+      {
+        success: false,
+        message:
+          error?.message ||
+          "Failed to create user.",
+      },
+      { status: 500 },
+    );
+  }
+}
 
 export async function GET(request) {
   try {
@@ -139,674 +608,6 @@ export async function GET(request) {
       {
         success: false,
         message: "Failed to fetch users",
-      },
-      { status: 500 },
-    );
-  }
-}
-
-// =====================================================
-// CREATE USER
-// POST /api/users
-// =====================================================```js
-
-export async function POST(request) {
-  try {
-    await connectDB();
-
-    const body = await request.json();
-
-    const {
-      name,
-      email,
-      contactNumber,
-      district,
-      town,
-      unionCouncil,
-      designation,
-      supervisorCode,
-      supervisor,
-      teamNumber,
-      password,
-      isActive,
-    } = body;
-
-    // =================================================
-    // Required fields
-    // =================================================
-
-    if (!name?.trim()) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Name is required",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!contactNumber?.trim()) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Contact number is required",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!district) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "District is required",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!town) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Town is required",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!unionCouncil) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Union Council is required",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!designation) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Designation is required",
-        },
-        { status: 400 },
-      );
-    }
-
-    // =================================================
-    // Validate ObjectIds
-    // =================================================
-
-    if (!mongoose.Types.ObjectId.isValid(district)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid district ID",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(town)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid town ID",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(unionCouncil)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid Union Council ID",
-        },
-        { status: 400 },
-      );
-    }
-
-    // =================================================
-    // Validate location hierarchy
-    // District -> Town -> Union Council
-    // =================================================
-
-    const districtDoc = await District.findOne({
-      _id: district,
-      isActive: true,
-    })
-      .select("_id")
-      .lean();
-
-    if (!districtDoc) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "District not found or inactive",
-        },
-        { status: 404 },
-      );
-    }
-
-    const townDoc = await Town.findOne({
-      _id: town,
-      district: district,
-      isActive: true,
-    })
-      .select("_id district")
-      .lean();
-
-    if (!townDoc) {
-      return NextResponse.json(
-        {
-          success: false,
-          message:
-            "Town does not belong to selected district or is inactive",
-        },
-        { status: 400 },
-      );
-    }
-
-    const unionCouncilDoc = await UnionCouncil.findOne({
-      _id: unionCouncil,
-      town: town,
-      isActive: true,
-    })
-      .select("_id town district")
-      .lean();
-
-    if (!unionCouncilDoc) {
-      return NextResponse.json(
-        {
-          success: false,
-          message:
-            "Union Council does not belong to selected town or is inactive",
-        },
-        { status: 400 },
-      );
-    }
-
-    // =================================================
-    // Normalize data
-    // =================================================
-
-    const normalizedEmail =
-      email?.trim().toLowerCase() || null;
-
-    const normalizedContactNumber =
-      contactNumber.trim();
-
-    // =================================================
-    // Email validation
-    //
-    // Worker -> email NOT required
-    // Other designations -> email REQUIRED
-    // =================================================
-
-    if (designation !== "worker" && !normalizedEmail) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Email is required",
-        },
-        { status: 400 },
-      );
-    }
-
-    // =================================================
-    // Password validation
-    //
-    // Worker -> password NOT required
-    // Other designations -> password REQUIRED
-    // =================================================
-
-    if (designation !== "worker") {
-      if (!password) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Password is required",
-          },
-          { status: 400 },
-        );
-      }
-
-      if (password.length < 8) {
-        return NextResponse.json(
-          {
-            success: false,
-            message:
-              "Password must be at least 8 characters",
-          },
-          { status: 400 },
-        );
-      }
-    }
-
-    // =================================================
-    // Supervisor validation
-    // =================================================
-
-    if (designation === "supervisor") {
-      if (!supervisorCode?.trim()) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Supervisor code is required",
-          },
-          { status: 400 },
-        );
-      }
-    }
-
-    // =================================================
-    // Worker validation
-    // =================================================
-
-    if (designation === "worker") {
-      if (!supervisor) {
-        return NextResponse.json(
-          {
-            success: false,
-            message:
-              "Supervisor is required for workers",
-          },
-          { status: 400 },
-        );
-      }
-
-      if (!mongoose.Types.ObjectId.isValid(supervisor)) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Invalid supervisor ID",
-          },
-          { status: 400 },
-        );
-      }
-
-      if (
-        teamNumber === null ||
-        teamNumber === undefined ||
-        teamNumber === ""
-      ) {
-        return NextResponse.json(
-          {
-            success: false,
-            message:
-              "Team number is required for workers",
-          },
-          { status: 400 },
-        );
-      }
-    }
-
-    // =================================================
-    // Check duplicate email in User
-    // =================================================
-
-    if (normalizedEmail) {
-      const existingEmail = await User.findOne({
-        email: normalizedEmail,
-      })
-        .select("_id")
-        .lean();
-
-      if (existingEmail) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Email already exists",
-          },
-          { status: 409 },
-        );
-      }
-    }
-
-    // =================================================
-    // Check pending registration
-    //
-    // No PendingUser DB collection.
-    // Temporary registration exists only in server memory.
-    // =================================================
-
-    if (
-      normalizedEmail &&
-      designation !== "worker" &&
-      hasPendingRegistration(normalizedEmail)
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          message:
-            "This email already has a pending verification. Please verify your email or request a new verification code.",
-        },
-        { status: 409 },
-      );
-    }
-
-    // =================================================
-    // Check duplicate contact in User
-    // =================================================
-
-    const existingContact = await User.findOne({
-      contactNumber: normalizedContactNumber,
-    })
-      .select("_id")
-      .lean();
-
-    if (existingContact) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Contact number already exists",
-        },
-        { status: 409 },
-      );
-    }
-
-    // =================================================
-    // Validate supervisor
-    // =================================================
-
-    if (designation === "worker") {
-      const supervisorDoc = await User.findOne({
-        _id: supervisor,
-        designation: "supervisor",
-        isActive: true,
-      })
-        .select("_id")
-        .lean();
-
-      if (!supervisorDoc) {
-        return NextResponse.json(
-          {
-            success: false,
-            message:
-              "Valid active supervisor not found",
-          },
-          { status: 400 },
-        );
-      }
-    }
-
-    // =================================================
-    // Hash password
-    // =================================================
-
-    let hashedPassword = null;
-
-    if (password) {
-      hashedPassword = await bcrypt.hash(
-        password,
-        12,
-      );
-    }
-
-    // =================================================
-    // WORKER
-    //
-    // Worker does NOT require email verification.
-    // Worker can directly be created in User.
-    // =================================================
-
-    if (designation === "worker") {
-      const user = await User.create({
-        name: name.trim(),
-
-        email: undefined,
-
-        emailVerified: true,
-
-        emailVerificationCode: null,
-
-        emailVerificationExpires: null,
-
-        contactNumber:
-          normalizedContactNumber,
-
-        district,
-        town,
-        unionCouncil,
-
-        designation,
-
-        supervisor,
-
-        supervisorCode: null,
-
-        teamNumber: Number(teamNumber),
-
-        password: hashedPassword,
-
-        isActive:
-          typeof isActive === "boolean"
-            ? isActive
-            : true,
-      });
-
-      // =================================================
-      // Worker response
-      // =================================================
-
-      const createdUser =
-        await User.findById(user._id)
-          .select(
-            "-password -emailVerificationCode -emailVerificationExpires",
-          )
-          .populate(
-            "district",
-            "_id name code",
-          )
-          .populate(
-            "town",
-            "_id name code",
-          )
-          .populate(
-            "unionCouncil",
-            "_id name code",
-          )
-          .populate(
-            "supervisor",
-            "_id name contactNumber",
-          )
-          .lean();
-
-      return NextResponse.json(
-        {
-          success: true,
-          message:
-            "Worker account created successfully.",
-          data: createdUser,
-        },
-        { status: 201 },
-      );
-    }
-
-    // =================================================
-    // NON-WORKER
-    //
-    // IMPORTANT:
-    // User.create() WILL NOT happen here.
-    //
-    // Data is temporarily stored in server memory.
-    // User will only be created after email verification.
-    // =================================================
-
-    const verificationCode =
-      generateVerificationCode();
-
-    const hashedVerificationCode =
-      hashVerificationCode(
-        verificationCode,
-      );
-
-    const verificationExpires = new Date(
-      Date.now() + 10 * 60 * 1000,
-    );
-
-    // =================================================
-    // Store temporary registration
-    // =================================================
-
-    const pendingData = {
-      name: name.trim(),
-
-      email: normalizedEmail,
-
-      contactNumber:
-        normalizedContactNumber,
-
-      district,
-      town,
-      unionCouncil,
-
-      designation,
-
-      supervisorCode:
-        designation === "supervisor"
-          ? supervisorCode
-            .trim()
-            .toUpperCase()
-          : null,
-
-      supervisor: null,
-
-      teamNumber: null,
-
-      password: hashedPassword,
-
-      isActive:
-        typeof isActive === "boolean"
-          ? isActive
-          : true,
-
-      emailVerificationCode:
-        hashedVerificationCode,
-
-      emailVerificationExpires:
-        verificationExpires,
-
-      createdAt: Date.now(),
-    };
-
-    setPendingRegistration(
-      normalizedEmail,
-      pendingData,
-    );
-
-    // =================================================
-    // Send verification email
-    // =================================================
-
-    try {
-      await sendVerificationEmail({
-        email: normalizedEmail,
-        name: name.trim(),
-        code: verificationCode,
-      });
-    } catch (emailError) {
-      console.error(
-        "Verification email error:",
-        emailError,
-      );
-
-      // Remove temporary data because email failed
-      deletePendingRegistration(
-        normalizedEmail,
-      );
-
-      return NextResponse.json(
-        {
-          success: false,
-          message:
-            "Verification email could not be sent. Please try again.",
-        },
-        { status: 500 },
-      );
-    }
-
-    // =================================================
-    // IMPORTANT
-    //
-    // NO User.create() HERE
-    // =================================================
-
-    return NextResponse.json(
-      {
-        success: true,
-        message:
-          "Verification code has been sent to your email. Please verify your email to complete registration.",
-        data: {
-          email: normalizedEmail,
-        },
-      },
-      { status: 201 },
-    );
-  } catch (error) {
-    console.error(
-      "Create user error:",
-      error,
-    );
-
-    // =================================================
-    // Duplicate key
-    // =================================================
-
-    if (error?.code === 11000) {
-      const duplicateField =
-        Object.keys(
-          error.keyPattern || {},
-        )[0];
-
-      return NextResponse.json(
-        {
-          success: false,
-          message: `${duplicateField || "Field"
-            } already exists`,
-        },
-        { status: 409 },
-      );
-    }
-
-    // =================================================
-    // Mongoose validation error
-    // =================================================
-
-    if (
-      error?.name === "ValidationError"
-    ) {
-      const messages = Object.values(
-        error.errors || {},
-      ).map(
-        (item) => item.message,
-      );
-
-      return NextResponse.json(
-        {
-          success: false,
-          message:
-            messages.length > 0
-              ? messages.join(", ")
-              : "Validation failed",
-        },
-        { status: 400 },
-      );
-    }
-
-    // =================================================
-    // General error
-    // =================================================
-
-    return NextResponse.json(
-      {
-        success: false,
-        message:
-          error?.message ||
-          "Failed to create user",
       },
       { status: 500 },
     );

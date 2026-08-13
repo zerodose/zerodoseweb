@@ -19,8 +19,10 @@ import Pagination from "./Pagination";
 
 export default function Table({
   data = [],
+
   hiddenColumns = [],
   columnTitles = {},
+
   onRowClick,
   rowKey = "_id",
 
@@ -46,6 +48,36 @@ export default function Table({
   onAdd,
 
   // ============================================================
+  // Filters
+  //
+  // Example:
+  //
+  // filterOptions={[
+  //   {
+  //     key: "designation",
+  //     label: "Role",
+  //     type: "select",
+  //     column: "designation",
+  //   },
+  //   {
+  //     key: "district",
+  //     label: "District",
+  //     type: "select",
+  //     column: "district",
+  //   },
+  //   {
+  //     key: "dateRange",
+  //     label: "Date",
+  //     type: "dateRange",
+  //     column: "createdAt",
+  //   },
+  // ]}
+  //
+  // ============================================================
+
+  filterOptions = [],
+
+  // ============================================================
   // Export
   // ============================================================
 
@@ -59,6 +91,10 @@ export default function Table({
 
   actions = [],
 }) {
+  // ============================================================
+  // States
+  // ============================================================
+
   const [search, setSearch] = useState("");
 
   const [sortConfig, setSortConfig] = useState({
@@ -131,98 +167,22 @@ export default function Table({
   };
 
   // ============================================================
-  // Detect Date Column
+  // Date Parser
   // ============================================================
 
-  const dateColumns = useMemo(() => {
-    return columns.filter((column) => {
-      const key = column.toLowerCase();
+  const parseDate = (value) => {
+    if (!value) {
+      return null;
+    }
 
-      return (
-        key.includes("date") ||
-        key.includes("createdat") ||
-        key.includes("updatedat")
-      );
-    });
-  }, [columns]);
+    const date = new Date(value);
 
-  // ============================================================
-  // Get Unique Values
-  // ============================================================
+    if (Number.isNaN(date.getTime())) {
+      return null;
+    }
 
-  const getUniqueValues = (column) => {
-    const values = data
-      .map((row) => row[column])
-      .filter(
-        (value) =>
-          value !== null && value !== undefined && String(value).trim() !== "",
-      )
-      .map((value) => String(value));
-
-    return [...new Set(values)].sort((a, b) =>
-      a.localeCompare(b, undefined, {
-        numeric: true,
-        sensitivity: "base",
-      }),
-    );
+    return date;
   };
-
-  // ============================================================
-  // Detect Filterable Columns
-  // ============================================================
-
-  const filterableColumns = useMemo(() => {
-    return columns.filter((column) => {
-      const uniqueValues = getUniqueValues(column);
-
-      return uniqueValues.length > 0;
-    });
-  }, [columns, data]);
-
-  // ============================================================
-  // Available Years
-  // ============================================================
-
-  const availableYears = useMemo(() => {
-    const years = [];
-
-    dateColumns.forEach((column) => {
-      data.forEach((row) => {
-        const value = row[column];
-
-        if (!value) {
-          return;
-        }
-
-        const date = new Date(value);
-
-        if (!Number.isNaN(date.getTime())) {
-          years.push(date.getFullYear());
-        }
-      });
-    });
-
-    return [...new Set(years)].sort((a, b) => b - a);
-  }, [data, dateColumns]);
-
-  // ============================================================
-  // Months
-  // ============================================================
-
-  const months = [
-    { value: 0, label: "January" },
-    { value: 1, label: "February" },
-    { value: 2, label: "March" },
-    { value: 3, label: "April" },
-    { value: 4, label: "May" },
-    { value: 5, label: "June" },
-    { value: 6, label: "July" },
-    { value: 7, label: "August" },
-    { value: 8, label: "September" },
-    { value: 9, label: "October" },
-    { value: 10, label: "November" },
-    { value: 11, label: "December" },
-  ];
 
   // ============================================================
   // Search
@@ -245,125 +205,70 @@ export default function Table({
   }, [data, search, columns]);
 
   // ============================================================
-  // Apply Filters
+  // Filter Data
   // ============================================================
 
   const filteredData = useMemo(() => {
-    return searchedData.filter((row) => {
-      // ----------------------------------------------------------
-      // Normal column filters
-      // ----------------------------------------------------------
+    let result = [...searchedData];
 
-      for (const column of filterableColumns) {
-        const selectedValues = filterValues[column];
+    filterOptions.forEach((filter) => {
+      const value = filterValues[filter.key];
 
-        if (Array.isArray(selectedValues) && selectedValues.length > 0) {
-          const rowValue = String(row[column] ?? "");
+      // --------------------------------------------------------
+      // Select Filter
+      // --------------------------------------------------------
 
-          if (!selectedValues.includes(rowValue)) {
-            return false;
-          }
+      if (filter.type === "select") {
+        if (!Array.isArray(value) || value.length === 0) {
+          return;
         }
+
+        result = result.filter((row) => {
+          const rowValue = formatValue(row[filter.column]);
+
+          return value.includes(rowValue);
+        });
       }
 
-      // ----------------------------------------------------------
-      // Date Range
-      // ----------------------------------------------------------
+      // --------------------------------------------------------
+      // Date Range Filter
+      // --------------------------------------------------------
 
-      const dateRange = filterValues.__dateRange;
-
-      if (dateRange?.column) {
-        const value = row[dateRange.column];
-
+      if (filter.type === "dateRange") {
         if (!value) {
-          return false;
+          return;
         }
 
-        const rowDate = new Date(value);
+        const from = value.from ? new Date(`${value.from}T00:00:00`) : null;
 
-        if (Number.isNaN(rowDate.getTime())) {
-          return false;
+        const to = value.to ? new Date(`${value.to}T23:59:59.999`) : null;
+
+        if (!from && !to) {
+          return;
         }
 
-        if (dateRange.from) {
-          const fromDate = new Date(`${dateRange.from}T00:00:00`);
+        result = result.filter((row) => {
+          const rowDate = parseDate(row[filter.column]);
 
-          if (rowDate < fromDate) {
+          if (!rowDate) {
             return false;
           }
-        }
 
-        if (dateRange.to) {
-          const toDate = new Date(`${dateRange.to}T23:59:59`);
-
-          if (rowDate > toDate) {
+          if (from && rowDate < from) {
             return false;
           }
-        }
+
+          if (to && rowDate > to) {
+            return false;
+          }
+
+          return true;
+        });
       }
-
-      // ----------------------------------------------------------
-      // Year
-      // ----------------------------------------------------------
-
-      const selectedYear = filterValues.__year;
-
-      if (
-        selectedYear !== undefined &&
-        selectedYear !== null &&
-        selectedYear !== ""
-      ) {
-        const yearColumn = filterValues.__yearColumn;
-
-        if (yearColumn) {
-          const value = row[yearColumn];
-
-          if (!value) {
-            return false;
-          }
-
-          const date = new Date(value);
-
-          if (
-            Number.isNaN(date.getTime()) ||
-            date.getFullYear() !== Number(selectedYear)
-          ) {
-            return false;
-          }
-        }
-      }
-
-      // ----------------------------------------------------------
-      // Months
-      // ----------------------------------------------------------
-
-      const selectedMonths = filterValues.__months;
-
-      if (Array.isArray(selectedMonths) && selectedMonths.length > 0) {
-        const monthColumn = filterValues.__monthColumn;
-
-        if (monthColumn) {
-          const value = row[monthColumn];
-
-          if (!value) {
-            return false;
-          }
-
-          const date = new Date(value);
-
-          if (Number.isNaN(date.getTime())) {
-            return false;
-          }
-
-          if (!selectedMonths.includes(date.getMonth())) {
-            return false;
-          }
-        }
-      }
-
-      return true;
     });
-  }, [searchedData, filterableColumns, filterValues]);
+
+    return result;
+  }, [searchedData, filterOptions, filterValues]);
 
   // ============================================================
   // Sorting
@@ -481,7 +386,7 @@ export default function Table({
   };
 
   // ============================================================
-  // Current Page Selection
+  // Current Page Selected
   // ============================================================
 
   const currentPageIds = paginatedData.map((row, index) =>
@@ -492,18 +397,24 @@ export default function Table({
     currentPageIds.length > 0 &&
     currentPageIds.every((id) => selectedRows.includes(id));
 
+  // ============================================================
+  // Select All Current Page
+  // ============================================================
+
   const toggleSelectAll = () => {
     if (allCurrentSelected) {
       setSelectedRows((prev) =>
         prev.filter((id) => !currentPageIds.includes(id)),
       );
-    } else {
-      setSelectedRows((prev) => [...new Set([...prev, ...currentPageIds])]);
+
+      return;
     }
+
+    setSelectedRows((prev) => [...new Set([...prev, ...currentPageIds])]);
   };
 
   // ============================================================
-  // Selected Data
+  // Get Selected Rows
   // ============================================================
 
   const selectedData = useMemo(() => {
@@ -511,15 +422,20 @@ export default function Table({
       return [];
     }
 
-    return sortedData.filter((row, index) => {
+    return data.filter((row, index) => {
       const id = getRowId(row, index);
 
       return selectedRows.includes(id);
     });
-  }, [sortedData, selectedRows]);
+  }, [data, selectedRows]);
 
   // ============================================================
-  // Download Data
+  // Data To Download
+  //
+  // Selected rows have priority.
+  //
+  // If nothing is selected:
+  // current filtered data is downloaded.
   // ============================================================
 
   const dataToDownload = selectedRows.length > 0 ? selectedData : sortedData;
@@ -528,31 +444,79 @@ export default function Table({
   // Filter Helpers
   // ============================================================
 
-  const setColumnFilter = (column, values) => {
-    setFilterValues((prev) => ({
-      ...prev,
-      [column]: values,
-    }));
+  const getUniqueFilterValues = (filter) => {
+    const values = data
+      .map((row) => formatValue(row[filter.column]))
+      .filter((value) => value !== "-" && value.trim() !== "");
 
-    setPage(1);
+    return [...new Set(values)].sort((a, b) =>
+      String(a).localeCompare(String(b), undefined, {
+        numeric: true,
+        sensitivity: "base",
+      }),
+    );
   };
 
-  const toggleMonth = (month) => {
-    setFilterValues((prev) => {
-      const current = prev.__months || [];
+  // ============================================================
+  // Set Select Filter
+  // ============================================================
 
-      const exists = current.includes(month);
+  const toggleFilterValue = (filterKey, value) => {
+    setFilterValues((prev) => {
+      const current = prev[filterKey] || [];
+
+      const exists = current.includes(value);
+
+      const next = exists
+        ? current.filter((item) => item !== value)
+        : [...current, value];
 
       return {
         ...prev,
-        __months: exists
-          ? current.filter((item) => item !== month)
-          : [...current, month],
+        [filterKey]: next,
       };
     });
 
     setPage(1);
   };
+
+  // ============================================================
+  // Set Date Range
+  // ============================================================
+
+  const setDateRange = (filterKey, field, value) => {
+    setFilterValues((prev) => ({
+      ...prev,
+      [filterKey]: {
+        ...(prev[filterKey] || {}),
+        [field]: value,
+      },
+    }));
+
+    setPage(1);
+  };
+
+  // ============================================================
+  // Remove Filter
+  // ============================================================
+
+  const removeFilter = (filter) => {
+    setFilterValues((prev) => {
+      const next = {
+        ...prev,
+      };
+
+      delete next[filter.key];
+
+      return next;
+    });
+
+    setPage(1);
+  };
+
+  // ============================================================
+  // Clear All Filters
+  // ============================================================
 
   const clearFilters = () => {
     setFilterValues({});
@@ -565,22 +529,24 @@ export default function Table({
   // ============================================================
 
   const activeFilterCount = useMemo(() => {
-    return Object.entries(filterValues).filter(([key, value]) => {
-      if (key === "__dateRange") {
-        return value?.from || value?.to;
+    return filterOptions.reduce((count, filter) => {
+      const value = filterValues[filter.key];
+
+      if (
+        filter.type === "select" &&
+        Array.isArray(value) &&
+        value.length > 0
+      ) {
+        return count + 1;
       }
 
-      if (key === "__year") {
-        return value !== undefined && value !== "";
+      if (filter.type === "dateRange" && value && (value.from || value.to)) {
+        return count + 1;
       }
 
-      if (key === "__months") {
-        return Array.isArray(value) && value.length > 0;
-      }
-
-      return Array.isArray(value) && value.length > 0;
-    }).length;
-  }, [filterValues]);
+      return count;
+    }, 0);
+  }, [filterOptions, filterValues]);
 
   // ============================================================
   // Loading
@@ -603,7 +569,7 @@ export default function Table({
   // ============================================================
 
   return (
-    <div className="bg-background border-border overflow-hidden rounded-lg border shadow-sm">
+    <div className="bg-background border-border min-h-screen overflow-hidden rounded-lg border shadow-sm">
       {/* ======================================================
           Toolbar
       ====================================================== */}
@@ -638,6 +604,14 @@ export default function Table({
         ================================================== */}
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Selected */}
+
+          {selectedRows.length > 0 && (
+            <div className="bg-primary-light text-primary flex h-10 min-w-28 items-center justify-center rounded-lg px-3 text-xs font-medium">
+              {selectedRows.length} selected
+            </div>
+          )}
+
           {/* =================================================
               Add
           ================================================= */}
@@ -673,375 +647,248 @@ export default function Table({
           ))}
 
           {/* =================================================
+              Active Filter Buttons
+          ================================================= */}
+
+          {filterOptions.map((filter) => {
+            const value = filterValues[filter.key];
+
+            // ---------------------------------------------
+            // Select Filter Button
+            // ---------------------------------------------
+
+            if (filter.type === "select") {
+              if (!Array.isArray(value) || value.length === 0) {
+                return null;
+              }
+
+              return (
+                <button
+                  key={filter.key}
+                  type="button"
+                  onClick={() => setActiveFilter(filter.key)}
+                  className="text-text hover:bg-surface border-border flex h-10 max-w-48 min-w-28 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium transition"
+                >
+                  <span className="truncate">{filter.label}</span>
+
+                  <span className="text-text-secondary">{value.length}</span>
+
+                  <X
+                    size={14}
+                    onClick={(event) => {
+                      event.stopPropagation();
+
+                      removeFilter(filter);
+                    }}
+                  />
+                </button>
+              );
+            }
+
+            // ---------------------------------------------
+            // Date Range Buttons
+            // ---------------------------------------------
+
+            if (filter.type === "dateRange") {
+              if (!value || (!value.from && !value.to)) {
+                return null;
+              }
+
+              return (
+                <div key={filter.key} className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveFilter(filter.key)}
+                    className="text-text hover:bg-surface border-border flex h-10 min-w-28 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium transition"
+                  >
+                    <Calendar size={15} />
+
+                    <span>{value.from || "Start Date"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveFilter(filter.key)}
+                    className="text-text hover:bg-surface border-border flex h-10 min-w-28 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium transition"
+                  >
+                    <Calendar size={15} />
+
+                    <span>{value.to || "End Date"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => removeFilter(filter)}
+                    className="text-text-secondary hover:text-text"
+                    aria-label="Remove date filter"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              );
+            }
+
+            return null;
+          })}
+
+          {/* =================================================
               Filter
           ================================================= */}
 
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                setFilterOpen((prev) => !prev);
-                setDownloadOpen(false);
-              }}
-              className="text-text hover:bg-surface border-border flex h-10 min-w-28 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition"
-            >
-              <SlidersHorizontal size={16} />
+          {filterOptions.length > 0 && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterOpen((prev) => !prev);
 
-              <span>Filter</span>
+                  setDownloadOpen(false);
+                }}
+                className="text-text hover:bg-surface border-border flex h-10 min-w-28 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition"
+              >
+                <SlidersHorizontal size={16} />
 
-              {activeFilterCount > 0 && (
-                <span className="bg-primary flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] text-white">
-                  {activeFilterCount}
-                </span>
-              )}
+                <span>Filter</span>
 
-              <ChevronDown
-                size={15}
-                className={`transition-transform ${
-                  filterOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
+                {activeFilterCount > 0 && (
+                  <span className="bg-primary flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] text-white">
+                    {activeFilterCount}
+                  </span>
+                )}
 
-            {filterOpen && (
-              <div className="border-border bg-background absolute top-12 right-0 z-50 w-80 rounded-xl border p-3 shadow-xl">
-                {/* Filter Header */}
+                <ChevronDown
+                  size={15}
+                  className={`transition-transform ${
+                    filterOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
 
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="text-text text-sm font-semibold">Filter Data</p>
+              {filterOpen && (
+                <div className="border-border bg-background absolute top-12 right-0 z-50 w-72 rounded-xl border p-2 shadow-xl">
+                  <div className="flex items-center justify-between px-2 py-2">
+                    <p className="text-text text-sm font-semibold">
+                      Filter Data
+                    </p>
 
-                  {activeFilterCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={clearFilters}
-                      className="text-primary text-xs font-medium hover:underline"
-                    >
-                      Clear All
-                    </button>
-                  )}
-                </div>
-
-                {/* Filter Options */}
-
-                <div className="max-h-[420px] space-y-2 overflow-y-auto">
-                  {/* Date Range */}
-
-                  {dateColumns.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveFilter(
-                          activeFilter === "date" ? null : "date",
-                        );
-                      }}
-                      className="border-border text-text hover:bg-surface flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-sm"
-                    >
-                      <span className="flex items-center gap-2">
-                        <Calendar size={16} />
-                        Date Range
-                      </span>
-
-                      <ChevronDown
-                        size={15}
-                        className={`transition-transform ${
-                          activeFilter === "date" ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-                  )}
-
-                  {activeFilter === "date" && (
-                    <div className="bg-surface space-y-3 rounded-lg p-3">
-                      <div>
-                        <label className="text-text-secondary mb-1 block text-xs">
-                          Date Column
-                        </label>
-
-                        <select
-                          value={filterValues.__dateRange?.column || ""}
-                          onChange={(event) =>
-                            setFilterValues((prev) => ({
-                              ...prev,
-                              __dateRange: {
-                                ...prev.__dateRange,
-                                column: event.target.value,
-                              },
-                            }))
-                          }
-                          className="border-border bg-background text-text h-9 w-full rounded-lg border px-2 text-sm outline-none"
-                        >
-                          <option value="">Select date column</option>
-
-                          {dateColumns.map((column) => (
-                            <option key={column} value={column}>
-                              {getColumnTitle(column)}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="text-text-secondary mb-1 block text-xs">
-                          From Date
-                        </label>
-
-                        <input
-                          type="date"
-                          value={filterValues.__dateRange?.from || ""}
-                          onChange={(event) =>
-                            setFilterValues((prev) => ({
-                              ...prev,
-                              __dateRange: {
-                                ...prev.__dateRange,
-                                from: event.target.value,
-                              },
-                            }))
-                          }
-                          className="border-border bg-background text-text h-9 w-full rounded-lg border px-2 text-sm outline-none"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-text-secondary mb-1 block text-xs">
-                          To Date
-                        </label>
-
-                        <input
-                          type="date"
-                          value={filterValues.__dateRange?.to || ""}
-                          onChange={(event) =>
-                            setFilterValues((prev) => ({
-                              ...prev,
-                              __dateRange: {
-                                ...prev.__dateRange,
-                                to: event.target.value,
-                              },
-                            }))
-                          }
-                          className="border-border bg-background text-text h-9 w-full rounded-lg border px-2 text-sm outline-none"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Year */}
-
-                  {dateColumns.length > 0 && availableYears.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveFilter(
-                          activeFilter === "year" ? null : "year",
-                        );
-                      }}
-                      className="border-border text-text hover:bg-surface flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-sm"
-                    >
-                      <span>Year</span>
-
-                      <ChevronDown
-                        size={15}
-                        className={`transition-transform ${
-                          activeFilter === "year" ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-                  )}
-
-                  {activeFilter === "year" && (
-                    <div className="bg-surface space-y-3 rounded-lg p-3">
-                      <select
-                        value={filterValues.__yearColumn || ""}
-                        onChange={(event) =>
-                          setFilterValues((prev) => ({
-                            ...prev,
-                            __yearColumn: event.target.value,
-                          }))
-                        }
-                        className="border-border bg-background text-text h-9 w-full rounded-lg border px-2 text-sm outline-none"
-                      >
-                        <option value="">Select date column</option>
-
-                        {dateColumns.map((column) => (
-                          <option key={column} value={column}>
-                            {getColumnTitle(column)}
-                          </option>
-                        ))}
-                      </select>
-
-                      <select
-                        value={filterValues.__year || ""}
-                        onChange={(event) => {
-                          setFilterValues((prev) => ({
-                            ...prev,
-                            __year: event.target.value,
-                          }));
-
-                          setPage(1);
-                        }}
-                        className="border-border bg-background text-text h-9 w-full rounded-lg border px-2 text-sm outline-none"
-                      >
-                        <option value="">Select Year</option>
-
-                        {availableYears.map((year) => (
-                          <option key={year} value={year}>
-                            {year}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {/* Month */}
-
-                  {dateColumns.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveFilter(
-                          activeFilter === "month" ? null : "month",
-                        );
-                      }}
-                      className="border-border text-text hover:bg-surface flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-sm"
-                    >
-                      <span>Month</span>
-
-                      <ChevronDown
-                        size={15}
-                        className={`transition-transform ${
-                          activeFilter === "month" ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-                  )}
-
-                  {activeFilter === "month" && (
-                    <div className="bg-surface space-y-3 rounded-lg p-3">
-                      <select
-                        value={filterValues.__monthColumn || ""}
-                        onChange={(event) =>
-                          setFilterValues((prev) => ({
-                            ...prev,
-                            __monthColumn: event.target.value,
-                          }))
-                        }
-                        className="border-border bg-background text-text h-9 w-full rounded-lg border px-2 text-sm outline-none"
-                      >
-                        <option value="">Select date column</option>
-
-                        {dateColumns.map((column) => (
-                          <option key={column} value={column}>
-                            {getColumnTitle(column)}
-                          </option>
-                        ))}
-                      </select>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        {months.map((month) => {
-                          const selected = filterValues.__months?.includes(
-                            month.value,
-                          );
-
-                          return (
-                            <label
-                              key={month.value}
-                              className="border-border bg-background text-text flex cursor-pointer items-center gap-2 rounded-lg border px-2 py-2 text-xs"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={Boolean(selected)}
-                                onChange={() => toggleMonth(month.value)}
-                                className="accent-primary h-3.5 w-3.5"
-                              />
-
-                              {month.label}
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Normal Columns */}
-
-                  {filterableColumns.map((column) => {
-                    if (dateColumns.includes(column)) {
-                      return null;
-                    }
-
-                    const values = getUniqueValues(column);
-
-                    if (!values.length) {
-                      return null;
-                    }
-
-                    const selected = filterValues[column] || [];
-
-                    return (
+                    {activeFilterCount > 0 && (
                       <button
                         type="button"
-                        key={column}
-                        onClick={() => {
-                          setActiveFilter(
-                            activeFilter === column ? null : column,
-                          );
-                        }}
-                        className="border-border text-text hover:bg-surface flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-sm"
+                        onClick={clearFilters}
+                        className="text-primary text-xs font-medium hover:underline"
                       >
-                        <span className="truncate">
-                          {getColumnTitle(column)}
-                        </span>
-
-                        <ChevronDown
-                          size={15}
-                          className={`shrink-0 transition-transform ${
-                            activeFilter === column ? "rotate-180" : ""
-                          }`}
-                        />
+                        Clear All
                       </button>
-                    );
-                  })}
-
-                  {/* Normal Column Values */}
-
-                  {activeFilter &&
-                    filterableColumns.includes(activeFilter) &&
-                    !dateColumns.includes(activeFilter) && (
-                      <div className="bg-surface max-h-56 space-y-2 overflow-y-auto rounded-lg p-3">
-                        {getUniqueValues(activeFilter).map((value) => {
-                          const selected =
-                            filterValues[activeFilter]?.includes(value);
-
-                          return (
-                            <label
-                              key={value}
-                              className="text-text flex cursor-pointer items-center gap-2 text-sm"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={Boolean(selected)}
-                                onChange={() => {
-                                  const current =
-                                    filterValues[activeFilter] || [];
-
-                                  const next = current.includes(value)
-                                    ? current.filter((item) => item !== value)
-                                    : [...current, value];
-
-                                  setColumnFilter(activeFilter, next);
-                                }}
-                                className="accent-primary h-4 w-4"
-                              />
-
-                              <span className="truncate">{value}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
                     )}
+                  </div>
+
+                  <div className="max-h-[420px] space-y-2 overflow-y-auto">
+                    {filterOptions.map((filter) => {
+                      const isActive = activeFilter === filter.key;
+
+                      return (
+                        <div key={filter.key}>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setActiveFilter(isActive ? null : filter.key)
+                            }
+                            className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-between rounded-lg border px-3 text-sm font-medium transition"
+                          >
+                            <span className="truncate">{filter.label}</span>
+
+                            <ChevronDown
+                              size={15}
+                              className={`shrink-0 transition-transform ${
+                                isActive ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+
+                          {/* =================================
+                                Select Options
+                            ================================= */}
+
+                          {isActive && filter.type === "select" && (
+                            <div className="bg-surface mt-1 max-h-52 space-y-2 overflow-y-auto rounded-lg p-3">
+                              {getUniqueFilterValues(filter).map((option) => {
+                                const selected =
+                                  filterValues[filter.key]?.includes(option);
+
+                                return (
+                                  <label
+                                    key={option}
+                                    className="text-text flex cursor-pointer items-center gap-2 text-sm"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={Boolean(selected)}
+                                      onChange={() =>
+                                        toggleFilterValue(filter.key, option)
+                                      }
+                                      className="accent-primary h-4 w-4"
+                                    />
+
+                                    <span className="truncate">{option}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* =================================
+                                Date Range
+                            ================================= */}
+
+                          {isActive && filter.type === "dateRange" && (
+                            <div className="bg-surface mt-1 space-y-3 rounded-lg p-3">
+                              <div>
+                                <label className="text-text-secondary mb-1 block text-xs">
+                                  Start Date
+                                </label>
+
+                                <input
+                                  type="date"
+                                  value={filterValues[filter.key]?.from || ""}
+                                  onChange={(event) =>
+                                    setDateRange(
+                                      filter.key,
+                                      "from",
+                                      event.target.value,
+                                    )
+                                  }
+                                  className="border-border bg-background text-text h-10 w-full rounded-lg border px-3 text-sm outline-none"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="text-text-secondary mb-1 block text-xs">
+                                  End Date
+                                </label>
+
+                                <input
+                                  type="date"
+                                  value={filterValues[filter.key]?.to || ""}
+                                  onChange={(event) =>
+                                    setDateRange(
+                                      filter.key,
+                                      "to",
+                                      event.target.value,
+                                    )
+                                  }
+                                  className="border-border bg-background text-text h-10 w-full rounded-lg border px-3 text-sm outline-none"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* =================================================
               Download
@@ -1141,7 +988,7 @@ export default function Table({
                     <button
                       type="button"
                       onClick={() => handleSort(column)}
-                      className="hover:text-text group flex items-center gap-2 transition"
+                      className="hover:text-text flex items-center gap-2 transition"
                     >
                       <span>{getColumnTitle(column)}</span>
 

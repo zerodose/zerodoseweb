@@ -1,107 +1,71 @@
 "use client";
 
 import { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { UserPlus, Users, Phone, Hash, ShieldCheck } from "lucide-react";
+import { createWorker } from "@/api/supervisorApi";
+import Select from "@/components/ui/Select";
 
 export default function Page() {
   const router = useRouter();
-
-  const [formData, setFormData] = useState({
-    name: "",
-    contactNumber: "",
-    teamNumber: "",
-    workerRole: "",
-  });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      name: "",
+      contactNumber: "",
+      teamNumber: "",
+      workerRole: "",
+    },
+  });
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    setError("");
-    setSuccess("");
-
-    if (!formData.name.trim()) {
-      setError("Worker name is required.");
-      return;
-    }
-
-    if (!formData.contactNumber.trim()) {
-      setError("Contact number is required.");
-      return;
-    }
-
-    if (!/^03\d{9}$/.test(formData.contactNumber.trim())) {
-      setError("Please enter a valid Pakistani mobile number.");
-      return;
-    }
-
-    if (!formData.teamNumber) {
-      setError("Team number is required.");
-      return;
-    }
-
-    if (!formData.workerRole) {
-      setError("Please select worker role.");
-      return;
-    }
-
+  const onSubmit = async (data) => {
     try {
       setLoading(true);
+      setError("");
+      setSuccess("");
 
-      const response = await fetch("/api/supervisor/workers", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          contactNumber: formData.contactNumber.trim(),
-          teamNumber: Number(formData.teamNumber),
-          workerRole: formData.workerRole,
-        }),
+      const response = await createWorker({
+        name: data.name.trim(),
+        contactNumber: data.contactNumber.trim(),
+        teamNumber: Number(data.teamNumber),
+        workerRole: data.workerRole,
       });
 
-      const result = await response.json();
+      setSuccess(response.message || "Worker added successfully.");
 
-      if (!response.ok) {
-        throw new Error(result.message || "Failed to add worker.");
-      }
-
-      setSuccess("Worker added successfully.");
-
-      setFormData({
-        name: "",
-        contactNumber: "",
-        teamNumber: "",
-        workerRole: "",
-      });
+      reset();
 
       setTimeout(() => {
         router.push("/supervisor");
       }, 1000);
     } catch (error) {
-      setError(error.message || "Something went wrong.");
+      setError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Something went wrong.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-full p-4 md:p-6">
-      {/* Header */}
+    <div className="min-h-screen p-4 md:p-6 bg-surface">
+      {/* =====================================================
+          Header
+      ===================================================== */}
+
       <div className="mb-6 md:mb-7">
         <div className="mb-3 flex items-center gap-3">
           <div className="bg-primary/10 text-primary flex h-11 w-11 items-center justify-center rounded-xl">
@@ -114,17 +78,23 @@ export default function Page() {
             </h1>
 
             <p className="text-text-secondary mt-1 text-sm">
-              Add a new worker to your team
+              Add a worker to your team
             </p>
           </div>
         </div>
       </div>
 
-      {/* Form */}
-      <div className="mx-auto max-w-3xl">
-        <div className="bg-surface border-border rounded-2xl border p-5 md:p-6">
-          <form onSubmit={handleSubmit}>
-            {/* Worker Information */}
+      {/* =====================================================
+          Form
+      ===================================================== */}
+
+      <div className="mx-auto max-w-3xl bg-background">
+        <div className=" border-border rounded-2xl border p-5 md:p-6">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {/* =================================================
+                Worker Information
+            ================================================= */}
+
             <div className="mb-6">
               <div className="mb-4 flex items-center gap-2">
                 <Users size={18} className="text-primary" />
@@ -135,7 +105,10 @@ export default function Page() {
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {/* Name */}
+                {/* =================================================
+                    Worker Name
+                ================================================= */}
+
                 <div>
                   <label
                     htmlFor="name"
@@ -153,17 +126,31 @@ export default function Page() {
 
                     <input
                       id="name"
-                      name="name"
                       type="text"
-                      value={formData.name}
-                      onChange={handleChange}
                       placeholder="Enter worker name"
+                      disabled={loading}
+                      {...register("name", {
+                        required: "Worker name is required.",
+                        minLength: {
+                          value: 2,
+                          message: "Name must be at least 2 characters.",
+                        },
+                      })}
                       className="bg-background border-border text-text placeholder:text-text-secondary focus:border-primary focus:ring-primary/20 h-11 w-full rounded-lg border pr-3 pl-10 text-sm transition outline-none focus:ring-2"
                     />
                   </div>
+
+                  {errors.name && (
+                    <p className="mt-1.5 text-xs text-red-500">
+                      {errors.name.message}
+                    </p>
+                  )}
                 </div>
 
-                {/* Contact */}
+                {/* =================================================
+                    Contact Number
+                ================================================= */}
+
                 <div>
                   <label
                     htmlFor="contactNumber"
@@ -181,22 +168,33 @@ export default function Page() {
 
                     <input
                       id="contactNumber"
-                      name="contactNumber"
                       type="tel"
-                      value={formData.contactNumber}
-                      onChange={handleChange}
                       placeholder="03XXXXXXXXX"
                       maxLength={11}
+                      disabled={loading}
+                      {...register("contactNumber", {
+                        required: "Contact number is required.",
+                        pattern: {
+                          value: /^03\d{9}$/,
+                          message:
+                            "Please enter a valid Pakistani mobile number.",
+                        },
+                      })}
                       className="bg-background border-border text-text placeholder:text-text-secondary focus:border-primary focus:ring-primary/20 h-11 w-full rounded-lg border pr-3 pl-10 text-sm transition outline-none focus:ring-2"
                     />
                   </div>
 
-                  <p className="text-text-secondary mt-1 text-[11px]">
-                    Example: 03001234567
-                  </p>
+                  {errors.contactNumber && (
+                    <p className="mt-1.5 text-xs text-red-500">
+                      {errors.contactNumber.message}
+                    </p>
+                  )}
                 </div>
 
-                {/* Team Number */}
+                {/* =================================================
+                    Team Number
+                ================================================= */}
+
                 <div>
                   <label
                     htmlFor="teamNumber"
@@ -214,52 +212,76 @@ export default function Page() {
 
                     <input
                       id="teamNumber"
-                      name="teamNumber"
                       type="number"
                       min="1"
-                      value={formData.teamNumber}
-                      onChange={handleChange}
                       placeholder="Enter team number"
+                      disabled={loading}
+                      {...register("teamNumber", {
+                        required: "Team number is required.",
+                        min: {
+                          value: 1,
+                          message: "Team number must be at least 1.",
+                        },
+                        valueAsNumber: true,
+                      })}
                       className="bg-background border-border text-text placeholder:text-text-secondary focus:border-primary focus:ring-primary/20 h-11 w-full rounded-lg border pr-3 pl-10 text-sm transition outline-none focus:ring-2"
                     />
                   </div>
+
+                  {errors.teamNumber && (
+                    <p className="mt-1.5 text-xs text-red-500">
+                      {errors.teamNumber.message}
+                    </p>
+                  )}
                 </div>
 
-                {/* Worker Role */}
+                {/* =================================================
+                    Worker Role
+                ================================================= */}
+
                 <div>
-                  <label
-                    htmlFor="workerRole"
-                    className="text-text mb-1.5 block text-sm font-medium"
-                  >
-                    Team Role
-                    <span className="text-red-500"> *</span>
-                  </label>
+                  <Controller
+                    name="workerRole"
+                    control={control}
+                    rules={{
+                      required: "Please select a team role.",
+                    }}
+                    render={({ field }) => (
+                      <Select
+                        label="Team Role"
+                        name={field.name}
+                        value={field.value}
+                        onChange={(e) => field.onChange(e)}
+                        options={[
+                          {
+                            value: "teamLeader",
+                            label: "Team Leader",
+                          },
+                          {
+                            value: "teamMember",
+                            label: "Team Member",
+                          },
+                        ]}
+                        placeholder="Select team role"
+                        disabled={loading}
+                        required
+                      />
+                    )}
+                  />
 
-                  <div className="relative">
-                    <ShieldCheck
-                      size={17}
-                      className="text-text-secondary absolute top-1/2 left-3 -translate-y-1/2"
-                    />
-
-                    <select
-                      id="workerRole"
-                      name="workerRole"
-                      value={formData.workerRole}
-                      onChange={handleChange}
-                      className="bg-background border-border text-text focus:border-primary focus:ring-primary/20 h-11 w-full appearance-none rounded-lg border pr-3 pl-10 text-sm transition outline-none focus:ring-2"
-                    >
-                      <option value="">Select team role</option>
-
-                      <option value="teamLeader">Team Leader</option>
-
-                      <option value="teamMember">Team Member</option>
-                    </select>
-                  </div>
+                  {errors.workerRole && (
+                    <p className="mt-1.5 text-xs text-red-500">
+                      {errors.workerRole.message}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Auto Assigned Information */}
+            {/* =====================================================
+                Automatically Assigned
+            ===================================================== */}
+
             <div className="bg-primary/5 border-primary/10 mb-6 rounded-xl border p-4">
               <div className="mb-2 flex items-center gap-2">
                 <ShieldCheck size={17} className="text-primary" />
@@ -270,28 +292,36 @@ export default function Page() {
               </div>
 
               <p className="text-text-secondary text-xs leading-5">
-                District, Town, Union Council, UCMO and Supervisor will
-                automatically be assigned according to your current supervisor
-                account. The worker designation will also be assigned
-                automatically.
+                District, Town, Union Council, UCMO and Supervisor will be
+                automatically assigned according to your account. Worker
+                designation will also be assigned automatically.
               </p>
             </div>
 
-            {/* Error */}
+            {/* =====================================================
+                Error
+            ===================================================== */}
+
             {error && (
               <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
                 {error}
               </div>
             )}
 
-            {/* Success */}
+            {/* =====================================================
+                Success
+            ===================================================== */}
+
             {success && (
               <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-600">
                 {success}
               </div>
             )}
 
-            {/* Buttons */}
+            {/* =====================================================
+                Buttons
+            ===================================================== */}
+
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button
                 type="button"

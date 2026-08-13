@@ -80,6 +80,39 @@ const userSchema = new mongoose.Schema(
     },
 
     // =====================================================
+    // UCMO
+    // Worker only
+    // =====================================================
+
+    ucmo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+
+      default: null,
+
+      validate: {
+        validator: async function (value) {
+          if (this.designation === "worker") {
+            if (!value) {
+              return false;
+            }
+
+            const ucmo = await mongoose.model("User").findOne({
+              _id: value,
+              designation: "ucmo",
+              isActive: true,
+            });
+
+            return !!ucmo;
+          }
+
+          return !value;
+        },
+
+        message: "A valid active UCMO is required only for workers.",
+      },
+    },
+    // =====================================================
     // Designation
     // =====================================================
 

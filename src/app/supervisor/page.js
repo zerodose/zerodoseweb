@@ -11,9 +11,16 @@ import {
   History,
   ChevronDown,
 } from "lucide-react";
-import { currentCampaign, currentData, previousCampaigns } from "@/content/data";
+import {
+  currentCampaign,
+  currentData,
+  previousCampaigns,
+} from "@/content/data";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
+  const router = useRouter();
+
   const [activeTab, setActiveTab] = useState("current");
 
   const [selectedYear, setSelectedYear] = useState("2026");
@@ -58,9 +65,7 @@ export default function Page() {
     <div className="min-h-full p-4 md:p-6">
       {/* Page Header */}
       <div className="mb-6 md:mb-7">
-        <h1 className="text-text text-2xl font-bold md:text-3xl">
-          Supervisor
-        </h1>
+        <h1 className="text-text text-2xl font-bold md:text-3xl">Supervisor</h1>
 
         <p className="text-text-secondary mt-1 text-sm">
           Manage teams and campaign-wise Zerodose records
@@ -124,6 +129,7 @@ export default function Page() {
       <div className="mb-6 flex flex-wrap gap-3">
         <button
           type="button"
+          onClick={() => router.push("/supervisor/addworker")}
           className="bg-primary hover:bg-primary/90 flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-white transition"
         >
           <UserPlus size={17} />
@@ -132,15 +138,11 @@ export default function Page() {
 
         <button
           type="button"
-          onClick={() => setActiveTab("previous")}
-          className={`border-border flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
-            activeTab === "previous"
-              ? "bg-primary/10 text-primary border-primary/20"
-              : "bg-surface text-text hover:bg-background"
-          }`}
+          onClick={() => router.push("/supervisor/workers")}
+          className="border-border bg-surface text-text hover:bg-background flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition"
         >
-          <History size={17} />
-          Previous Campaigns
+          <Users size={17} />
+          Workers
         </button>
       </div>
 
@@ -156,7 +158,6 @@ export default function Page() {
           }`}
         >
           Current Campaign
-
           {activeTab === "current" && (
             <span className="bg-primary absolute right-0 bottom-0 left-0 h-0.5 rounded-full" />
           )}
@@ -172,7 +173,6 @@ export default function Page() {
           }`}
         >
           Previous Campaigns
-
           {activeTab === "previous" && (
             <span className="bg-primary absolute right-0 bottom-0 left-0 h-0.5 rounded-full" />
           )}
@@ -372,8 +372,7 @@ export default function Page() {
             </h3>
 
             <p className="text-text-secondary mt-1 text-xs md:text-sm">
-              Select year, month and campaign to view previous Zerodose
-              records.
+              Select year, month and campaign to view previous Zerodose records.
             </p>
           </div>
 

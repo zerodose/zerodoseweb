@@ -10,25 +10,91 @@ export async function POST(request) {
 
     const body = await request.json();
 
-    const {
-      name,
-      email,
-      contactNumber,
-      district,
-      town,
-      unionCouncil,
-      supervisor,
-      teamNumber,
-      isActive,
-    } = body;
+    const { name, contactNumber, teamNumber, workerRole } = body;
+
+    // ============================================================
+    // Get Logged-in Supervisor ID
+    // ============================================================
+    //
+    // IMPORTANT:
+    // Yahan apne project ke actual authentication method ke
+    // mutabiq supervisor ID lena hoga.
+    //
+    // Filhal frontend se supervisorId nahi li ja rahi.
+    // Header se example ke taur par li ja rahi hai.
+    //
+    // ============================================================
+
+    const supervisorId = request.headers.get("x-user-id");
+
+    const authUser = JSON.parse(localStorage.getItem("authUser"));
+
+    const response = await api.post(
+      "/supervisor/workers",
+      {
+        name: data.name.trim(),
+        contactNumber: data.contactNumber.trim(),
+        teamNumber: Number(data.teamNumber),
+        workerRole: data.workerRole,
+      },
+      {
+        headers: {
+          "x-user-id": authUser.id,
+        },
+      },
+    );
+
+    if (!supervisorId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Supervisor authentication is required.",
+        },
+        { status: 401 },
+      );
+    }
+
+    // ============================================================
+    // Validate Supervisor ID
+    // ============================================================
+
+    if (!mongoose.Types.ObjectId.isValid(supervisorId)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid supervisor ID.",
+        },
+        { status: 400 },
+      );
+    }
+
+    // ============================================================
+    // Find Active UCMO For Supervisor's Union Council
+    // ============================================================
+
+    const activeUcmo = await User.findOne({
+      designation: "ucmo",
+      unionCouncil: supervisorDoc.unionCouncil,
+      isActive: true,
+    })
+      .select("_id name")
+      .lean();
+
+    if (!activeUcmo) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No active UCMO found for this Union Council.",
+        },
+        { status: 400 },
+      );
+    }
 
     // ============================================================
     // Normalize Data
     // ============================================================
 
     const normalizedName = name?.trim();
-
-    const normalizedEmail = email?.trim().toLowerCase() || null;
 
     const normalizedContactNumber = contactNumber?.trim();
 
@@ -56,46 +122,6 @@ export async function POST(request) {
       );
     }
 
-    if (!district) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "District is required.",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!town) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Town is required.",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!unionCouncil) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Union Council is required.",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!supervisor) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Supervisor is required.",
-        },
-        { status: 400 },
-      );
-    }
-
     if (teamNumber === undefined || teamNumber === null || teamNumber === "") {
       return NextResponse.json(
         {
@@ -106,93 +132,28 @@ export async function POST(request) {
       );
     }
 
-    // ============================================================
-    // Validate ObjectIds
-    // ============================================================
-
-    const objectIdFields = [
-      {
-        value: district,
-        name: "district",
-      },
-      {
-        value: town,
-        name: "town",
-      },
-      {
-        value: unionCouncil,
-        name: "unionCouncil",
-      },
-      {
-        value: supervisor,
-        name: "supervisor",
-      },
-    ];
-
-    for (const field of objectIdFields) {
-      if (!mongoose.Types.ObjectId.isValid(field.value)) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Invalid ${field.name} ID.`,
-          },
-          { status: 400 },
-        );
-      }
-    }
-
-    // ============================================================
-    // Validate Supervisor
-    // ============================================================
-
-    const supervisorDoc = await User.findOne({
-      _id: supervisor,
-      designation: "supervisor",
-      isActive: true,
-    })
-      .select("_id name district town unionCouncil")
-      .lean();
-
-    if (!supervisorDoc) {
+    if (!workerRole) {
       return NextResponse.json(
         {
           success: false,
-          message: "Valid active supervisor not found.",
+          message: "Worker role is required.",
         },
         { status: 400 },
       );
     }
 
     // ============================================================
-    // Make Sure Worker Belongs To Supervisor's Area
+    // Validate Worker Role
     // ============================================================
 
-    if (supervisorDoc.district.toString() !== district.toString()) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Worker district does not match supervisor district.",
-        },
-        { status: 400 },
-      );
-    }
+    const allowedWorkerRoles = ["teamLeader", "teamMember"];
 
-    if (supervisorDoc.town.toString() !== town.toString()) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Worker town does not match supervisor town.",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (supervisorDoc.unionCouncil.toString() !== unionCouncil.toString()) {
+    if (!allowedWorkerRoles.includes(workerRole)) {
       return NextResponse.json(
         {
           success: false,
           message:
-            "Worker Union Council does not match supervisor Union Council.",
+            "Invalid worker role. Role must be teamLeader or teamMember.",
         },
         { status: 400 },
       );
@@ -211,6 +172,147 @@ export async function POST(request) {
           message: "Team number must be a valid positive number.",
         },
         { status: 400 },
+      );
+    }
+
+    // ============================================================
+    // Validate Contact Number
+    // ============================================================
+
+    if (!/^03\d{9}$/.test(normalizedContactNumber)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Please enter a valid Pakistani mobile number.",
+        },
+        { status: 400 },
+      );
+    }
+
+    // ============================================================
+    // Get Logged-in Supervisor
+    // ============================================================
+
+    const supervisorDoc = await User.findOne({
+      _id: supervisorId,
+      designation: "supervisor",
+      isActive: true,
+    })
+      .select("_id name contactNumber district town unionCouncil")
+      .lean();
+
+    if (!supervisorDoc) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Valid active supervisor not found.",
+        },
+        { status: 404 },
+      );
+    }
+
+    // ============================================================
+    // Supervisor Area
+    // ============================================================
+    //
+    // Worker ko ye values frontend se nahi milengi.
+    // Supervisor ke account se automatically aayengi.
+    //
+    // ============================================================
+
+    const district = supervisorDoc.district;
+
+    const town = supervisorDoc.town;
+
+    const unionCouncil = supervisorDoc.unionCouncil;
+
+    const supervisor = supervisorDoc._id;
+
+    // ============================================================
+    // Make Sure Supervisor Has Complete Area
+    // ============================================================
+
+    if (!district) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Supervisor district is not assigned.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!town) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Supervisor town is not assigned.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!unionCouncil) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Supervisor Union Council is not assigned.",
+        },
+        { status: 400 },
+      );
+    }
+
+    // ============================================================
+    // Check Team Role
+    // ============================================================
+    //
+    // 1 Team = maximum 2 workers
+    // 1 Team Leader
+    // 1 Team Member
+    //
+    // ============================================================
+
+    const existingTeamWorkers = await User.find({
+      supervisor: supervisor,
+      teamNumber: parsedTeamNumber,
+      designation: "worker",
+      isActive: true,
+    })
+      .select("_id name workerRole teamNumber")
+      .lean();
+
+    // ============================================================
+    // Maximum 2 Workers Per Team
+    // ============================================================
+
+    if (existingTeamWorkers.length >= 2) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "This team already has two workers.",
+        },
+        { status: 409 },
+      );
+    }
+
+    // ============================================================
+    // Prevent Duplicate Team Role
+    // ============================================================
+
+    const existingRole = existingTeamWorkers.find(
+      (worker) => worker.workerRole === workerRole,
+    );
+
+    if (existingRole) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            workerRole === "teamLeader"
+              ? "This team already has a Team Leader."
+              : "This team already has a Team Member.",
+        },
+        { status: 409 },
       );
     }
 
@@ -235,37 +337,11 @@ export async function POST(request) {
     }
 
     // ============================================================
-    // Duplicate Email
-    // Email is OPTIONAL for worker
-    // ============================================================
-
-    if (normalizedEmail) {
-      const existingEmail = await User.findOne({
-        email: normalizedEmail,
-      })
-        .select("_id")
-        .lean();
-
-      if (existingEmail) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Email already exists.",
-          },
-          { status: 409 },
-        );
-      }
-    }
-
-    // ============================================================
     // Create Worker
     // ============================================================
 
     const worker = await User.create({
       name: normalizedName,
-
-      // Worker email optional hai.
-      email: normalizedEmail || undefined,
 
       emailVerified: true,
       emailVerificationCode: null,
@@ -273,22 +349,42 @@ export async function POST(request) {
 
       contactNumber: normalizedContactNumber,
 
-      district,
-      town,
-      unionCouncil,
+      // ========================================================
+      // Automatically From Supervisor
+      // ========================================================
+
+      district: supervisorDoc.district,
+      town: supervisorDoc.town,
+      unionCouncil: supervisorDoc.unionCouncil,
+
+      // ========================================================
+      // Automatically Active UCMO Of This UC
+      // ========================================================
+
+      ucmo: activeUcmo._id,
+
+      // ========================================================
+      // Worker
+      // ========================================================
 
       designation: "worker",
 
-      supervisor,
+      supervisor: supervisorDoc._id,
 
-      supervisorCode: null,
+      // ========================================================
+      // Team
+      // ========================================================
 
       teamNumber: parsedTeamNumber,
+      workerRole,
 
-      // Worker ke liye password required nahi hai.
+      // ========================================================
+      // Worker Status
+      // ========================================================
+
+      isActive: true,
+
       password: undefined,
-
-      isActive: typeof isActive === "boolean" ? isActive : true,
     });
 
     // ============================================================

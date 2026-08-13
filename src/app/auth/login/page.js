@@ -13,8 +13,7 @@ import Loader from "@/components/ui/Loader";
 export default function LoginPage() {
   const router = useRouter();
 
-  const [showPassword, setShowPassword] =
-    useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
@@ -67,9 +66,7 @@ export default function LoginPage() {
       setLoading(true);
 
       // Give browser time to render loader
-      await new Promise((resolve) =>
-        setTimeout(resolve, 100),
-      );
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // =================================================
       // Login API
@@ -89,9 +86,7 @@ export default function LoginPage() {
       const user = response?.data?.user;
 
       if (!user) {
-        throw new Error(
-          "User information was not returned.",
-        );
+        throw new Error("User information was not returned.");
       }
 
       console.log("Logged in user:", user);
@@ -102,25 +97,32 @@ export default function LoginPage() {
 
       const designation = user?.designation;
 
-      const route =
-        dashboardRoutes[designation];
+      const route = dashboardRoutes[designation];
 
-      console.log(
-        "User designation:",
-        designation,
-      );
+      console.log("User designation:", designation);
 
-      console.log(
-        "Dashboard route:",
-        route,
-      );
+      console.log("Dashboard route:", route);
 
       if (!route) {
         throw new Error(
-          `No dashboard route found for designation: ${designation || "unknown"
+          `No dashboard route found for designation: ${
+            designation || "unknown"
           }`,
         );
       }
+
+      // =================================================
+      // Save Logged-in User
+      // =================================================
+
+      localStorage.setItem(
+        "authUser",
+        JSON.stringify({
+          id: user?._id,
+          name: user?.name,
+          designation: user?.designation,
+        }),
+      );
 
       // =================================================
       // Successful Login
@@ -137,8 +139,7 @@ export default function LoginPage() {
       console.error("Login error:", error);
 
       const message =
-        error?.response?.data?.message ||
-        "Invalid mobile number or password.";
+        error?.response?.data?.message || "Invalid mobile number or password.";
 
       // Show toast
       toast.error("Login failed", {
@@ -153,7 +154,7 @@ export default function LoginPage() {
 
       setLoading(false);
     }
-  }
+  };
 
   // =====================================================
   // Render
@@ -165,17 +166,15 @@ export default function LoginPage() {
           Loading Overlay
       ================================================= */}
 
-      {loading && (
-        <Loader text="Signing in..." />
-      )}
+      {loading && <Loader text="Signing in..." />}
 
-      <main className="flex min-h-screen items-center justify-center bg-surface px-4 py-10">
+      <main className="bg-surface flex min-h-screen items-center justify-center px-4 py-10">
         <div className="w-full max-w-md">
           {/* =================================================
               Card
           ================================================= */}
 
-          <div className="rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8">
+          <div className="border-border bg-background rounded-2xl border p-6 shadow-sm sm:p-8">
             {/* =================================================
                 Logo
             ================================================= */}
@@ -190,7 +189,7 @@ export default function LoginPage() {
                 priority
               />
 
-              <p className="mt-2 text-sm text-text-secondary">
+              <p className="text-text-secondary mt-2 text-sm">
                 Sign in to your account
               </p>
             </div>
@@ -211,12 +210,10 @@ export default function LoginPage() {
               <div>
                 <label
                   htmlFor="mobile"
-                  className="mb-2 block text-sm font-medium text-text"
+                  className="text-text mb-2 block text-sm font-medium"
                 >
                   Mobile Number
-                  <span className="ml-1 text-red-500">
-                    *
-                  </span>
+                  <span className="ml-1 text-red-500">*</span>
                 </label>
 
                 <input
@@ -228,23 +225,19 @@ export default function LoginPage() {
                   maxLength={11}
                   disabled={loading}
                   {...register("mobile", {
-                    required:
-                      "Mobile number is required.",
+                    required: "Mobile number is required.",
 
                     validate: {
-                      validPakistaniMobile: (
-                        value,
-                      ) =>
-                        /^03\d{9}$/.test(
-                          value.trim(),
-                        ) ||
+                      validPakistaniMobile: (value) =>
+                        /^03\d{9}$/.test(value.trim()) ||
                         "Please enter a valid Pakistani mobile number.",
                     },
                   })}
-                  className={`w-full rounded-lg border bg-input-background px-4 py-3 text-sm text-text outline-none transition placeholder:text-muted focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${errors.mobile
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-100"
-                    : "border-border focus:border-primary focus:ring-primary-light"
-                    }`}
+                  className={`bg-input-background text-text placeholder:text-muted w-full rounded-lg border px-4 py-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                    errors.mobile
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                      : "border-border focus:border-primary focus:ring-primary-light"
+                  }`}
                 />
 
                 {/* =================================================
@@ -266,7 +259,7 @@ export default function LoginPage() {
                 <div>
                   <label
                     htmlFor="password"
-                    className="mb-2 block text-sm font-medium text-text"
+                    className="text-text mb-2 block text-sm font-medium"
                   >
                     Password
                     <span className="ml-1 text-red-500">*</span>
@@ -283,23 +276,21 @@ export default function LoginPage() {
                         required: "Password is required.",
                         minLength: {
                           value: 8,
-                          message:
-                            "Password must be at least 8 characters.",
+                          message: "Password must be at least 8 characters.",
                         },
                       })}
-                      className={`w-full rounded-lg border bg-input-background px-4 py-3 pr-20 text-sm text-text outline-none transition placeholder:text-muted focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${errors.password
-                        ? "border-red-500 focus:border-red-500 focus:ring-red-100"
-                        : "border-border focus:border-primary focus:ring-primary-light"
-                        }`}
+                      className={`bg-input-background text-text placeholder:text-muted w-full rounded-lg border px-4 py-3 pr-20 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                        errors.password
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                          : "border-border focus:border-primary focus:ring-primary-light"
+                      }`}
                     />
 
                     <button
                       type="button"
-                      onClick={() =>
-                        setShowPassword((prev) => !prev)
-                      }
+                      onClick={() => setShowPassword((prev) => !prev)}
                       disabled={loading}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted transition hover:text-text disabled:opacity-50"
+                      className="text-muted hover:text-text absolute top-1/2 right-3 -translate-y-1/2 text-sm font-medium transition disabled:opacity-50"
                     >
                       {showPassword ? "Hide" : "Show"}
                     </button>
@@ -313,7 +304,6 @@ export default function LoginPage() {
                     </p>
                   )}
                 </div>
-
               </div>
 
               {/* =================================================
@@ -323,11 +313,9 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
+                className="bg-primary text-primary-foreground hover:bg-primary-dark w-full rounded-lg px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {loading
-                  ? "Signing in..."
-                  : "Sign In"}
+                {loading ? "Signing in..." : "Sign In"}
               </button>
             </form>
 
@@ -335,9 +323,8 @@ export default function LoginPage() {
                 Signup
             ================================================= */}
 
-            <div className="mt-6 text-center text-sm text-text-secondary">
+            <div className="text-text-secondary mt-6 text-center text-sm">
               Don't have an account?{" "}
-
               <Link
                 href="/auth/signup"
                 aria-disabled={loading}
@@ -346,7 +333,7 @@ export default function LoginPage() {
                     e.preventDefault();
                   }
                 }}
-                className="font-semibold text-primary transition hover:text-primary-dark aria-disabled:pointer-events-none aria-disabled:opacity-50"
+                className="text-primary hover:text-primary-dark font-semibold transition aria-disabled:pointer-events-none aria-disabled:opacity-50"
               >
                 Create account
               </Link>

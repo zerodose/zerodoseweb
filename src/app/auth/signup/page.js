@@ -33,7 +33,7 @@ export default function SignupPage() {
     { value: "supervisor", label: "Supervisor" },
     { value: "vaccinator", label: "Vaccinator" },
     { value: "otherStaff", label: "Other Staff" },
-    { value: "admin", label: "Admin" },
+    // { value: "admin", label: "Admin" },
     // { value: "worker", label: "Worker" },
   ];
 

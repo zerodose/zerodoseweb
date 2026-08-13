@@ -1,14 +1,52 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { getGlobalCount } from "@/api/dashboardApi";
 
 export default function Home() {
+  const [counts, setCounts] = useState({
+    campaigns: 0,
+    teams: 0,
+    supervisors: 0,
+    zerodose: 0,
+  });
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const response = await getGlobalCount("supervisors,teams,zerodose");
+
+        const data = response?.data || {};
+
+        setCounts({
+          campaigns: 0,
+          teams: data.teams ?? 0,
+          supervisors: data.supervisors ?? 0,
+          zerodose: data.zerodose ?? 0,
+        });
+      } catch (error) {
+        console.error("Failed to fetch dashboard counts:", error);
+
+        setCounts({
+          campaigns: 0,
+          teams: 0,
+          supervisors: 0,
+          zerodose: 0,
+        });
+      }
+    };
+
+    fetchCounts();
+  }, []);
+
   return (
     <main className="bg-surface flex min-h-screen items-center justify-center px-4 py-8">
       <div className="w-full max-w-5xl">
         <div className="bg-background border-border overflow-hidden rounded-3xl border shadow-sm">
           <div className="grid md:grid-cols-2">
-            {/* Left Content */}
             {/* Left Content */}
             <div className="flex flex-col justify-center p-8 md:p-10 lg:p-12">
               <div className="mb-7 flex justify-center md:justify-start">
@@ -22,7 +60,6 @@ export default function Home() {
               </div>
 
               <div className="mb-4 flex items-center gap-2">
-                {/* <span className="bg-primary h-1.5 w-8 rounded-full"></span> */}
                 <span className="text-primary text-sm font-semibold tracking-wide">
                   ZERODOSE
                 </span>
@@ -40,7 +77,7 @@ export default function Home() {
 
               <div className="mt-8">
                 <Link
-                  href="auth/login"
+                  href="/auth/login"
                   className="bg-primary hover:bg-primary-dark inline-flex items-center justify-center gap-2 rounded-xl px-7 py-3.5 font-semibold text-white shadow-sm transition-all duration-200 hover:shadow-md"
                 >
                   Login
@@ -68,24 +105,40 @@ export default function Home() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
+                    {/* Campaigns */}
                     <div className="bg-surface rounded-xl p-4">
                       <p className="text-text-secondary text-xs">Campaigns</p>
-                      <p className="text-text mt-1 text-2xl font-bold">--</p>
+
+                      <p className="text-text mt-1 text-2xl font-bold">
+                        {counts.campaigns}
+                      </p>
                     </div>
 
+                    {/* Teams */}
                     <div className="bg-surface rounded-xl p-4">
                       <p className="text-text-secondary text-xs">Teams</p>
-                      <p className="text-text mt-1 text-2xl font-bold">--</p>
+
+                      <p className="text-text mt-1 text-2xl font-bold">
+                        {counts.teams}
+                      </p>
                     </div>
 
+                    {/* Supervisors */}
                     <div className="bg-surface rounded-xl p-4">
                       <p className="text-text-secondary text-xs">Supervisors</p>
-                      <p className="text-text mt-1 text-2xl font-bold">--</p>
+
+                      <p className="text-text mt-1 text-2xl font-bold">
+                        {counts.supervisors}
+                      </p>
                     </div>
 
+                    {/* Zerodose */}
                     <div className="bg-surface rounded-xl p-4">
                       <p className="text-text-secondary text-xs">Zerodose</p>
-                      <p className="text-text mt-1 text-2xl font-bold">--</p>
+
+                      <p className="text-text mt-1 text-2xl font-bold">
+                        {counts.zerodose}
+                      </p>
                     </div>
                   </div>
                 </div>

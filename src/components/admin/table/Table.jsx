@@ -593,7 +593,7 @@ export default function Table({
 
   if (loading) {
     return (
-      <div className="bg-background border-border flex h-64 items-center justify-center rounded-lg border shadow-sm">
+      <div className="bg-background border-border flex h-64 items-center justify-center rounded-2xl border shadow-sm">
         <div className="flex items-center gap-3">
           <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
 

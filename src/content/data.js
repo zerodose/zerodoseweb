@@ -23,21 +23,26 @@ export const dashboardSidebar = [
   // Users
   // =====================================================
 
+  // {
+  //   title: "Users",
+  //   icon: Users,
+  //   children: [
+  //     {
+  //       title: "All Users",
+  //       href: "/dashboard/users",
+  //       icon: Users,
+  //     },
+  //     {
+  //       title: "Add User",
+  //       href: "/dashboard/users/create",
+  //       icon: Users,
+  //     },
+  //   ],
+  // },
   {
     title: "Users",
+    href: "/dashboard/users",
     icon: Users,
-    children: [
-      {
-        title: "All Users",
-        href: "/dashboard/users",
-        icon: Users,
-      },
-      {
-        title: "Add User",
-        href: "/dashboard/users/create",
-        icon: Users,
-      },
-    ],
   },
 
   // =====================================================

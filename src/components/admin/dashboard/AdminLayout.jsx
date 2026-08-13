@@ -122,7 +122,7 @@ export default function AdminLayout({ children }) {
         {/* Page Content */}
 
         <main className="min-h-0 flex-1 overflow-y-auto bg-surface">
-          <div className="p-4 sm:p-4 md:p-6">{children}</div>
+          <div className="p-4 ">{children}</div>
         </main>
       </div>
     </div>

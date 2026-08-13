@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
@@ -47,34 +47,6 @@ export default function Table({
   addButtonText = "Add",
   onAdd,
 
-  // ============================================================
-  // Filters
-  //
-  // Example:
-  //
-  // filterOptions={[
-  //   {
-  //     key: "designation",
-  //     label: "Role",
-  //     type: "select",
-  //     column: "designation",
-  //   },
-  //   {
-  //     key: "district",
-  //     label: "District",
-  //     type: "select",
-  //     column: "district",
-  //   },
-  //   {
-  //     key: "dateRange",
-  //     label: "Date",
-  //     type: "dateRange",
-  //     column: "createdAt",
-  //   },
-  // ]}
-  //
-  // ============================================================
-
   filterOptions = [],
 
   // ============================================================
@@ -115,6 +87,27 @@ export default function Table({
   const [activeFilter, setActiveFilter] = useState(null);
 
   const [filterValues, setFilterValues] = useState({});
+
+  const filterRef = useRef(null);
+
+  useEffect(() => {
+    if (!filterOpen) {
+      return;
+    }
+
+    const handleOutsideClick = (event) => {
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setFilterOpen(false);
+        setActiveFilter(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [filterOpen]);
 
   // ============================================================
   // Columns
@@ -647,96 +640,11 @@ export default function Table({
           ))}
 
           {/* =================================================
-              Active Filter Buttons
-          ================================================= */}
-
-          {filterOptions.map((filter) => {
-            const value = filterValues[filter.key];
-
-            // ---------------------------------------------
-            // Select Filter Button
-            // ---------------------------------------------
-
-            if (filter.type === "select") {
-              if (!Array.isArray(value) || value.length === 0) {
-                return null;
-              }
-
-              return (
-                <button
-                  key={filter.key}
-                  type="button"
-                  onClick={() => setActiveFilter(filter.key)}
-                  className="text-text hover:bg-surface border-border flex h-10 max-w-48 min-w-28 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium transition"
-                >
-                  <span className="truncate">{filter.label}</span>
-
-                  <span className="text-text-secondary">{value.length}</span>
-
-                  <X
-                    size={14}
-                    onClick={(event) => {
-                      event.stopPropagation();
-
-                      removeFilter(filter);
-                    }}
-                  />
-                </button>
-              );
-            }
-
-            // ---------------------------------------------
-            // Date Range Buttons
-            // ---------------------------------------------
-
-            if (filter.type === "dateRange") {
-              if (!value || (!value.from && !value.to)) {
-                return null;
-              }
-
-              return (
-                <div key={filter.key} className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setActiveFilter(filter.key)}
-                    className="text-text hover:bg-surface border-border flex h-10 min-w-28 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium transition"
-                  >
-                    <Calendar size={15} />
-
-                    <span>{value.from || "Start Date"}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveFilter(filter.key)}
-                    className="text-text hover:bg-surface border-border flex h-10 min-w-28 items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium transition"
-                  >
-                    <Calendar size={15} />
-
-                    <span>{value.to || "End Date"}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => removeFilter(filter)}
-                    className="text-text-secondary hover:text-text"
-                    aria-label="Remove date filter"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              );
-            }
-
-            return null;
-          })}
-
-          {/* =================================================
               Filter
           ================================================= */}
 
           {filterOptions.length > 0 && (
-            <div className="relative">
+            <div ref={filterRef} className="relative">
               <button
                 type="button"
                 onClick={() => {
@@ -930,7 +838,11 @@ export default function Table({
                     onClick={() => {
                       setDownloadOpen(false);
 
-                      onExportPDF?.(dataToDownload);
+                      onExportPDF?.({
+                        data: dataToDownload,
+                        columns,
+                        columnTitles,
+                      });
                     }}
                     className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
                   >
@@ -944,7 +856,11 @@ export default function Table({
                     onClick={() => {
                       setDownloadOpen(false);
 
-                      onExportExcel?.(dataToDownload);
+                      onExportExcel?.({
+                        data: dataToDownload,
+                        columns,
+                        columnTitles,
+                      });
                     }}
                     className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
                   >

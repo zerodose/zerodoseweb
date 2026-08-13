@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import Table from "@/components/admin/table/Table";
+import exportPDF from "@/utils/export/exportPDF";
+import exportExcel from "@/utils/export/exportExcel";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -77,12 +79,14 @@ export default function DashboardPage() {
       addButton
       addButtonText="Add User"
       onAdd={() => router.push("/dashboard/users/add")}
-      onExportPDF={(data) => {
-        console.log("PDF Data:", data);
-      }}
-      onExportExcel={(data) => {
-        console.log("Excel Data:", data);
-      }}
+      // onExportPDF={(data) => {
+      //   console.log("PDF Data:", data);
+      // }}
+      // onExportExcel={(data) => {
+      //   console.log("Excel Data:", data);
+      // }}
+      onExportPDF={exportPDF}
+      onExportExcel={exportExcel}
     />
   );
 }

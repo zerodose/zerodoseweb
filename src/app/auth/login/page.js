@@ -136,11 +136,11 @@ export default function LoginPage() {
       // Router will replace the page.
       router.replace(route);
     } catch (error) {
-      console.error("Login error:", error);
+      // console.error("Login error:", error);
 
       const message =
-        error?.response?.data?.message || "Invalid mobile number or password.";
-
+        // error?.response?.data?.message || "Invalid mobile number or password.";
+        error?.response?.data?.message || "Login failed. Please try again.";
       // Show toast
       toast.error("Login failed", {
         description: message,

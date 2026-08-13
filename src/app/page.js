@@ -114,21 +114,20 @@ export default function Home() {
                       </p>
                     </div>
 
-                    {/* Teams */}
-                    <div className="bg-surface rounded-xl p-4">
-                      <p className="text-text-secondary text-xs">Teams</p>
-
-                      <p className="text-text mt-1 text-2xl font-bold">
-                        {counts.teams}
-                      </p>
-                    </div>
-
                     {/* Supervisors */}
                     <div className="bg-surface rounded-xl p-4">
                       <p className="text-text-secondary text-xs">Supervisors</p>
 
                       <p className="text-text mt-1 text-2xl font-bold">
                         {counts.supervisors}
+                      </p>
+                    </div>
+                    {/* Teams */}
+                    <div className="bg-surface rounded-xl p-4">
+                      <p className="text-text-secondary text-xs">Teams</p>
+
+                      <p className="text-text mt-1 text-2xl font-bold">
+                        {counts.teams}
                       </p>
                     </div>
 

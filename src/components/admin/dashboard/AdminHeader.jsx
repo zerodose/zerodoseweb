@@ -159,7 +159,7 @@ export default function AdminHeader({ onMenuClick }) {
               {user.name}
             </p>
 
-            <p className="text-text-secondary max-w-32 truncate text-xs capitalize">
+            <p className="text-text-secondary uppercase max-w-32 truncate text-xs capitalize">
               {user.designation}
             </p>
           </div>

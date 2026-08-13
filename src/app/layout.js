@@ -26,7 +26,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-full flex flex-col">
 
         {children}
-        <Toaster position="top-right" richColors closeButton />
+        <Toaster position="top-right" richColors closeButton duration={2000} />
       </body>
     </html>
   );

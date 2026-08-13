@@ -2,17 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-
 import { Menu, User, Settings, LogOut, ChevronDown } from "lucide-react";
 
-export default function AdminHeader({ onMenuClick }) {
+export default function Header({
+  onMenuClick,
+  title = "Zerodose",
+  dashboardRoute = "/dashboard",
+}) {
   const router = useRouter();
 
   const [profileOpen, setProfileOpen] = useState(false);
-
-  // ============================================================
-  // User
-  // ============================================================
 
   const [user, setUser] = useState({
     name: "User",
@@ -83,7 +82,7 @@ export default function AdminHeader({ onMenuClick }) {
       return user.name.charAt(0).toUpperCase();
     }
 
-    return "A";
+    return "U";
   };
 
   // ============================================================
@@ -109,11 +108,11 @@ export default function AdminHeader({ onMenuClick }) {
   return (
     <header className="border-border bg-background relative z-30 flex h-16 shrink-0 items-center justify-between border-b px-3 sm:px-5 md:px-6">
       {/* ======================================================
-          Left Side
+          Left
       ====================================================== */}
 
       <div className="flex min-w-0 items-center gap-2">
-        {/* Mobile Menu */}
+        {/* Mobile Sidebar Button */}
 
         <button
           type="button"
@@ -124,18 +123,18 @@ export default function AdminHeader({ onMenuClick }) {
           <Menu size={22} />
         </button>
 
-        {/* Page Title */}
+        {/* Title */}
 
         <h1
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push(dashboardRoute)}
           className="text-text cursor-pointer truncate text-base font-semibold sm:text-lg"
         >
-          Zerodose Dashboard
+          {title}
         </h1>
       </div>
 
       {/* ======================================================
-          Right Side - Profile
+          Right - Profile
       ====================================================== */}
 
       <div ref={profileRef} className="relative ml-auto">
@@ -152,7 +151,7 @@ export default function AdminHeader({ onMenuClick }) {
             {getAvatar()}
           </div>
 
-          {/* Desktop User Info */}
+          {/* Desktop User */}
 
           <div className="hidden text-left lg:block">
             <p className="text-text max-w-32 truncate text-sm font-semibold">
@@ -163,8 +162,6 @@ export default function AdminHeader({ onMenuClick }) {
               {user.designation}
             </p>
           </div>
-
-          {/* Desktop Arrow */}
 
           <ChevronDown
             size={16}

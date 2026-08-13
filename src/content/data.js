@@ -1,4 +1,11 @@
-import { LayoutDashboard, Users, MapPin, Settings } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  MapPin,
+  Settings,
+  Megaphone,
+  Database,
+} from "lucide-react";
 
 export const dashboardSidebar = [
   // =====================================================
@@ -62,6 +69,61 @@ export const dashboardSidebar = [
     title: "Settings",
     href: "/dashboard/settings",
     icon: Settings,
+  },
+];
+
+export const ucmoSidebar = [
+  {
+    title: "Dashboard",
+    href: "/ucmo",
+    icon: LayoutDashboard,
+  },
+
+  {
+    title: "Campaigns",
+    icon: Megaphone,
+    children: [
+      {
+        title: "Current Campaign",
+        href: "/ucmo/campaign",
+      },
+      {
+        title: "Previous Campaigns",
+        href: "/ucmo/campaigns/previous",
+      },
+    ],
+  },
+
+  {
+    title: "Supervisors",
+    href: "/ucmo/supervisors",
+    icon: Users,
+  },
+
+  {
+    title: "Zerodose",
+    href: "/ucmo/zerodose",
+    icon: Database,
+  },
+];
+
+export const supervisorSidebar = [
+  {
+    title: "Dashboard",
+    href: "/supervisor",
+    icon: LayoutDashboard,
+  },
+
+  {
+    title: "Workers",
+    href: "/supervisor/workers",
+    icon: Users,
+  },
+
+  {
+    title: "Zerodose",
+    href: "/supervisor/zerodose",
+    icon: Database,
   },
 ];
 

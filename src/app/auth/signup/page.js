@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { Eye, EyeClosed, EyeOff } from "lucide-react";
 
 import Select from "@/components/ui/Select";
 import Loader from "@/components/ui/Loader";
@@ -1007,6 +1008,7 @@ export default function SignupPage() {
                         placeholder="Minimum 8 characters"
                         autoComplete="new-password"
                         disabled={loading}
+                        
                         {...register(
                           "password",
                           {
@@ -1037,9 +1039,7 @@ export default function SignupPage() {
                         disabled={loading}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-text-secondary transition hover:text-text disabled:opacity-50"
                       >
-                        {showPassword
-                          ? "Hide"
-                          : "Show"}
+                        {showPassword ? <EyeClosed size={20} /> : <Eye size={20} />}
                       </button>
                     </div>
 
@@ -1117,8 +1117,7 @@ export default function SignupPage() {
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-text-secondary transition hover:text-text disabled:opacity-50"
                       >
                         {showConfirmPassword
-                          ? "Hide"
-                          : "Show"}
+                       ? <EyeClosed size={20} /> : <Eye size={20} />}
                       </button>
                     </div>
 

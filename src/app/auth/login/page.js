@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-
+import { Eye, EyeClosed, EyeOff } from "lucide-react";
 import { loginUser } from "@/api/authApi";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/ui/Loader";
@@ -290,9 +290,12 @@ export default function LoginPage() {
                       type="button"
                       onClick={() => setShowPassword((prev) => !prev)}
                       disabled={loading}
-                      className="text-muted hover:text-text absolute top-1/2 right-3 -translate-y-1/2 text-sm font-medium transition disabled:opacity-50"
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                      className="text-text-secondary hover:text-text absolute top-1/2 right-3 -translate-y-1/2 transition disabled:opacity-50"
                     >
-                      {showPassword ? "Hide" : "Show"}
+                      {showPassword ? <EyeClosed size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
 

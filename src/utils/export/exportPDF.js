@@ -6,10 +6,17 @@ export default function exportPDF({
   columns = [],
   columnTitles = {},
   fileName = "data",
+
+  // Dynamic filter information
+  filters = [],
 }) {
   if (!data.length) {
     return;
   }
+
+  // ============================================================
+  // Column Title
+  // ============================================================
 
   const getColumnTitle = (key) => {
     if (columnTitles[key]) {
@@ -22,6 +29,10 @@ export default function exportPDF({
       .replace(/\b\w/g, (char) => char.toUpperCase())
       .trim();
   };
+
+  // ============================================================
+  // Format Value
+  // ============================================================
 
   const formatValue = (value) => {
     if (value === null || value === undefined) {
@@ -43,11 +54,24 @@ export default function exportPDF({
     return String(value);
   };
 
-  const headers = columns.map((column) => getColumnTitle(column));
+  // ============================================================
+  // Headers
+  // ============================================================
 
-  const rows = data.map((row) =>
-    columns.map((column) => formatValue(row[column])),
-  );
+  const headers = ["S.No", ...columns.map((column) => getColumnTitle(column))];
+
+  // ============================================================
+  // Rows
+  // ============================================================
+
+  const rows = data.map((row, index) => [
+    index + 1,
+    ...columns.map((column) => formatValue(row[column])),
+  ]);
+
+  // ============================================================
+  // PDF
+  // ============================================================
 
   const doc = new jsPDF({
     orientation: columns.length > 6 ? "landscape" : "portrait",
@@ -55,19 +79,105 @@ export default function exportPDF({
     format: "a4",
   });
 
-  doc.setFontSize(16);
-  doc.text(getColumnTitle(fileName), 14, 15);
+  // ============================================================
+  // Current Date & Time
+  // ============================================================
 
-  doc.setFontSize(9);
-  doc.setTextColor(100);
+  const now = new Date();
 
-  doc.text(`Total Records: ${data.length}`, 14, 21);
+  const currentDateTime = now.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  // ============================================================
+  // Zerodose Logo / Main Heading
+  // ============================================================
+
+  doc.setTextColor(64, 165, 254);
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+
+  doc.text("Zerodose", 10, 13);
+
+  // ============================================================
+  // Current Date & Time
+  // ============================================================
+
+  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  doc.text(currentDateTime, pageWidth - 10, 13, {
+    align: "right",
+  });
+
+  // ============================================================
+  // Report Heading - Center
+  // ============================================================
+
+  doc.setTextColor(30, 30, 30);
+  doc.setFontSize(13);
+  doc.setFont("helvetica", "bold");
+
+  doc.text("Zerodose Report", pageWidth / 2, 22, {
+    align: "center",
+  });
+
+  // ============================================================
+  // Filters - Single Row
+  // ============================================================
+
+  let filterY = 29;
+
+  if (filters.length > 0) {
+    doc.setTextColor(70, 70, 70);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+
+    const filterText = filters
+      .map((filter) => `${filter.label}: ${filter.value}`)
+      .join("    |    ");
+
+    doc.text(filterText, pageWidth / 2, filterY, {
+      align: "center",
+      maxWidth: pageWidth - 20,
+    });
+
+    filterY += 6;
+  }
+
+  // ============================================================
+  // Total Records
+  // ============================================================
+
+  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+
+  doc.text(`Total Records: ${data.length}`, 10, filterY);
+
+  // ============================================================
+  // Table Start Position
+  // ============================================================
+
+  const tableStartY = filterY + 6;
+
+  // ============================================================
+  // Table
+  // ============================================================
 
   autoTable(doc, {
     head: [headers],
     body: rows,
 
-    startY: 27,
+    startY: tableStartY,
 
     theme: "grid",
 
@@ -78,7 +188,13 @@ export default function exportPDF({
       valign: "middle",
     },
 
+    // ==========================================================
+    // Primary Color
+    // ==========================================================
+
     headStyles: {
+      fillColor: [64, 165, 254],
+      textColor: [255, 255, 255],
       fontSize: 8,
       fontStyle: "bold",
       halign: "left",
@@ -86,24 +202,39 @@ export default function exportPDF({
 
     bodyStyles: {
       fontSize: 8,
+      textColor: [30, 30, 30],
     },
 
-    alternateRowStyles: {
-      // Default jsPDF styling
-    },
+    alternateRowStyles: {},
 
     margin: {
-      top: 27,
+      top: 10,
       right: 10,
       bottom: 15,
       left: 10,
     },
 
+    // ==========================================================
+    // S.No Column
+    // ==========================================================
+
+    columnStyles: {
+      0: {
+        cellWidth: 14,
+        halign: "center",
+      },
+    },
+
+    // ==========================================================
+    // Page Number
+    // ==========================================================
+
     didDrawPage: (pageData) => {
       const pageNumber = doc.internal.getNumberOfPages();
 
       doc.setFontSize(8);
-      doc.setTextColor(120);
+      doc.setTextColor(120, 120, 120);
+      doc.setFont("helvetica", "normal");
 
       doc.text(
         `Page ${pageNumber}`,
@@ -113,10 +244,18 @@ export default function exportPDF({
     },
   });
 
+  // ============================================================
+  // Safe File Name
+  // ============================================================
+
   const safeFileName =
     String(fileName)
       .replace(/[<>:"/\\|?*]+/g, "_")
       .trim() || "data";
+
+  // ============================================================
+  // Save
+  // ============================================================
 
   doc.save(`${safeFileName}.pdf`);
 }

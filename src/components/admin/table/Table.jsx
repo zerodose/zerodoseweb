@@ -434,6 +434,52 @@ export default function Table({
   const dataToDownload = selectedRows.length > 0 ? selectedData : sortedData;
 
   // ============================================================
+  // Export Filters
+  // ============================================================
+
+  const exportFilters = useMemo(() => {
+    return filterOptions
+      .map((filter) => {
+        const value = filterValues[filter.key];
+
+        if (filter.type === "select") {
+          if (!Array.isArray(value) || value.length === 0) {
+            return null;
+          }
+
+          return {
+            label: filter.label,
+            value: value.join(", "),
+          };
+        }
+
+        if (filter.type === "dateRange") {
+          if (!value || (!value.from && !value.to)) {
+            return null;
+          }
+
+          let dateValue = "";
+
+          if (value.from && value.to) {
+            dateValue = `${value.from} to ${value.to}`;
+          } else if (value.from) {
+            dateValue = `From ${value.from}`;
+          } else if (value.to) {
+            dateValue = `Until ${value.to}`;
+          }
+
+          return {
+            label: filter.label,
+            value: dateValue,
+          };
+        }
+
+        return null;
+      })
+      .filter(Boolean);
+  }, [filterOptions, filterValues]);
+
+  // ============================================================
   // Filter Helpers
   // ============================================================
 
@@ -842,6 +888,7 @@ export default function Table({
                         data: dataToDownload,
                         columns,
                         columnTitles,
+                        filters: exportFilters,
                       });
                     }}
                     className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
@@ -860,6 +907,7 @@ export default function Table({
                         data: dataToDownload,
                         columns,
                         columnTitles,
+                        filters: exportFilters,
                       });
                     }}
                     className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"

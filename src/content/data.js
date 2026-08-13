@@ -5,6 +5,7 @@ import {
   Settings,
   Megaphone,
   Database,
+  Ad,
 } from "lucide-react";
 
 export const dashboardSidebar = [
@@ -43,6 +44,11 @@ export const dashboardSidebar = [
   // Locations
   // =====================================================
 
+  {
+    title: "Campaigns",
+    href: "/dashboard/campaigns",
+    icon: Megaphone,
+  },
   {
     title: "Districts",
     href: "/dashboard/districts",
@@ -256,5 +262,26 @@ export const previousCampaigns = [
         visitZerodose: 2,
       },
     ],
+  },
+];
+
+export const tableData = [
+  {
+    _id: "1",
+    name: "Ali",
+    email: "ali@gmail.com",
+    designation: "Supervisor",
+    district: "Karachi",
+    teamNumber: 5,
+    zerodose: 20,
+  },
+  {
+    _id: "2",
+    name: "Ahmed",
+    email: "ahmed@gmail.com",
+    designation: "Supervisor",
+    district: "Lahore",
+    teamNumber: 2,
+    zerodose: 35,
   },
 ];

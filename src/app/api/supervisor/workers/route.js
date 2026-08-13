@@ -3,6 +3,9 @@ import mongoose from "mongoose";
 
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
+import District from "@/models/District";
+import Town from "@/models/Town";
+import UnionCouncil from "@/models/UnionCouncil";
 
 export async function POST(request) {
   try {
@@ -13,36 +16,10 @@ export async function POST(request) {
     const { name, contactNumber, teamNumber, workerRole } = body;
 
     // ============================================================
-    // Get Logged-in Supervisor ID
-    // ============================================================
-    //
-    // IMPORTANT:
-    // Yahan apne project ke actual authentication method ke
-    // mutabiq supervisor ID lena hoga.
-    //
-    // Filhal frontend se supervisorId nahi li ja rahi.
-    // Header se example ke taur par li ja rahi hai.
-    //
+    // Get Logged-in User ID
     // ============================================================
 
     const supervisorId = request.headers.get("x-user-id");
-
-    const authUser = JSON.parse(localStorage.getItem("authUser"));
-
-    const response = await api.post(
-      "/supervisor/workers",
-      {
-        name: data.name.trim(),
-        contactNumber: data.contactNumber.trim(),
-        teamNumber: Number(data.teamNumber),
-        workerRole: data.workerRole,
-      },
-      {
-        headers: {
-          "x-user-id": authUser.id,
-        },
-      },
-    );
 
     if (!supervisorId) {
       return NextResponse.json(
@@ -55,7 +32,7 @@ export async function POST(request) {
     }
 
     // ============================================================
-    // Validate Supervisor ID
+    // Validate User ID
     // ============================================================
 
     if (!mongoose.Types.ObjectId.isValid(supervisorId)) {
@@ -69,7 +46,63 @@ export async function POST(request) {
     }
 
     // ============================================================
-    // Find Active UCMO For Supervisor's Union Council
+    // Get Logged-in Supervisor
+    // ============================================================
+
+    const supervisorDoc = await User.findOne({
+      _id: supervisorId,
+      designation: "supervisor",
+      isActive: true,
+    })
+      .select("_id name district town unionCouncil")
+      .lean();
+
+    if (!supervisorDoc) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Valid active supervisor not found.",
+        },
+        { status: 404 },
+      );
+    }
+
+    // ============================================================
+    // Validate Supervisor Area
+    // ============================================================
+
+    if (!supervisorDoc.district) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Supervisor district is not assigned.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!supervisorDoc.town) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Supervisor town is not assigned.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!supervisorDoc.unionCouncil) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Supervisor Union Council is not assigned.",
+        },
+        { status: 400 },
+      );
+    }
+
+    // ============================================================
+    // Get Active UCMO For Supervisor's Union Council
     // ============================================================
 
     const activeUcmo = await User.findOne({
@@ -190,90 +223,11 @@ export async function POST(request) {
     }
 
     // ============================================================
-    // Get Logged-in Supervisor
-    // ============================================================
-
-    const supervisorDoc = await User.findOne({
-      _id: supervisorId,
-      designation: "supervisor",
-      isActive: true,
-    })
-      .select("_id name contactNumber district town unionCouncil")
-      .lean();
-
-    if (!supervisorDoc) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Valid active supervisor not found.",
-        },
-        { status: 404 },
-      );
-    }
-
-    // ============================================================
-    // Supervisor Area
-    // ============================================================
-    //
-    // Worker ko ye values frontend se nahi milengi.
-    // Supervisor ke account se automatically aayengi.
-    //
-    // ============================================================
-
-    const district = supervisorDoc.district;
-
-    const town = supervisorDoc.town;
-
-    const unionCouncil = supervisorDoc.unionCouncil;
-
-    const supervisor = supervisorDoc._id;
-
-    // ============================================================
-    // Make Sure Supervisor Has Complete Area
-    // ============================================================
-
-    if (!district) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Supervisor district is not assigned.",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!town) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Supervisor town is not assigned.",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!unionCouncil) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Supervisor Union Council is not assigned.",
-        },
-        { status: 400 },
-      );
-    }
-
-    // ============================================================
-    // Check Team Role
-    // ============================================================
-    //
-    // 1 Team = maximum 2 workers
-    // 1 Team Leader
-    // 1 Team Member
-    //
+    // Check Existing Team Workers
     // ============================================================
 
     const existingTeamWorkers = await User.find({
-      supervisor: supervisor,
+      supervisor: supervisorDoc._id,
       teamNumber: parsedTeamNumber,
       designation: "worker",
       isActive: true,
@@ -343,48 +297,30 @@ export async function POST(request) {
     const worker = await User.create({
       name: normalizedName,
 
-      emailVerified: true,
-      emailVerificationCode: null,
-      emailVerificationExpires: null,
-
       contactNumber: normalizedContactNumber,
 
-      // ========================================================
-      // Automatically From Supervisor
-      // ========================================================
-
+      // Supervisor ki location automatically
       district: supervisorDoc.district,
       town: supervisorDoc.town,
       unionCouncil: supervisorDoc.unionCouncil,
 
-      // ========================================================
-      // Automatically Active UCMO Of This UC
-      // ========================================================
-
+      // Active UCMO automatically
       ucmo: activeUcmo._id,
 
-      // ========================================================
-      // Worker
-      // ========================================================
-
-      designation: "worker",
-
+      // Logged-in supervisor automatically
       supervisor: supervisorDoc._id,
 
-      // ========================================================
-      // Team
-      // ========================================================
+      // Fixed designation
+      designation: "worker",
 
+      // Team information
       teamNumber: parsedTeamNumber,
       workerRole,
 
-      // ========================================================
-      // Worker Status
-      // ========================================================
+      // Worker ke liye email/password nahi chahiye
+      emailVerified: true,
 
       isActive: true,
-
-      password: undefined,
     });
 
     // ============================================================
@@ -397,6 +333,7 @@ export async function POST(request) {
       .populate("town", "_id name code")
       .populate("unionCouncil", "_id name code")
       .populate("supervisor", "_id name contactNumber")
+      .populate("ucmo", "_id name contactNumber")
       .lean();
 
     return NextResponse.json(

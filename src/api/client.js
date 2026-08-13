@@ -8,6 +8,10 @@ const API_URLS = [
 
 let activeBaseURL = null;
 
+// ============================================================
+// Detect API URL
+// ============================================================
+
 export const detectApiURL = async () => {
   if (activeBaseURL) {
     return activeBaseURL;
@@ -34,14 +38,42 @@ export const detectApiURL = async () => {
   throw new Error("No working API server found.");
 };
 
+// ============================================================
+// Axios
+// ============================================================
+
 export const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-api.interceptors.request.use(async (config) => {
-  config.baseURL = await detectApiURL();
+// ============================================================
+// Request Interceptor
+// ============================================================
 
-  return config;
-});
+api.interceptors.request.use(
+  async (config) => {
+    config.baseURL = await detectApiURL();
+
+    if (typeof window !== "undefined") {
+      const authUser = localStorage.getItem("authUser");
+
+      if (authUser) {
+        try {
+          const user = JSON.parse(authUser);
+
+          if (user?.id) {
+            config.headers = config.headers || {};
+            config.headers["x-user-id"] = user.id;
+          }
+        } catch (error) {
+          console.error("Invalid authUser data:", error);
+        }
+      }
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error),
+);

@@ -118,9 +118,9 @@ export default function LoginPage() {
       localStorage.setItem(
         "authUser",
         JSON.stringify({
-          id: user?._id,
-          name: user?.name,
-          designation: user?.designation,
+          id: user._id || user.id,
+          name: user.name,
+          designation: user.designation,
         }),
       );
 

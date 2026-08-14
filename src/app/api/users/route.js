@@ -590,6 +590,7 @@ export async function GET(request) {
       .populate("town", "_id name code")
       .populate("unionCouncil", "_id name code")
       .populate("supervisor", "_id name contactNumber")
+      .populate("ucmo", "_id name contactNumber")
       .sort({ createdAt: -1 })
       .lean();
 

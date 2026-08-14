@@ -198,6 +198,10 @@ export default function exportPDF({
       fontSize: 8,
       fontStyle: "bold",
       halign: "left",
+
+      // Header borders
+      lineWidth: 0.3,
+      lineColor: [180, 180, 180],
     },
 
     bodyStyles: {

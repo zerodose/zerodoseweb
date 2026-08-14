@@ -17,6 +17,8 @@ import {
 
 import Pagination from "./Pagination";
 
+import TableSkeleton from "./TableSkeleton";
+
 export default function Table({
   data = [],
 
@@ -588,22 +590,6 @@ export default function Table({
   }, [filterOptions, filterValues]);
 
   // ============================================================
-  // Loading
-  // ============================================================
-
-  if (loading) {
-    return (
-      <div className="bg-background border-border flex h-64 items-center justify-center rounded-2xl border shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" />
-
-          <span className="text-text-secondary text-sm">Loading data...</span>
-        </div>
-      </div>
-    );
-  }
-
-  // ============================================================
   // Render
   // ============================================================
 
@@ -985,7 +971,9 @@ export default function Table({
           </thead>
 
           <tbody>
-            {paginatedData.length > 0 ? (
+            {loading ? (
+              <TableSkeleton columns={columns.length || 8} rows={8} />
+            ) : paginatedData.length > 0 ? (
               paginatedData.map((row, index) => {
                 const absoluteIndex = (currentPage - 1) * pageSize + index;
 

@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import AuthGuard from "@/components/auth/AuthGuard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,9 +24,8 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-
-        {children}
+      <body className="flex min-h-full flex-col">
+        <AuthGuard>{children}</AuthGuard>
         <Toaster position="top-right" richColors closeButton duration={2000} />
       </body>
     </html>

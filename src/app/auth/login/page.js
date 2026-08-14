@@ -114,6 +114,7 @@ export default function LoginPage() {
       // =================================================
       // Save Logged-in User
       // =================================================
+      const expiresAt = Date.now() + 6 * 60 * 60 * 1000; // 6 hours
 
       localStorage.setItem(
         "authUser",
@@ -121,6 +122,7 @@ export default function LoginPage() {
           id: user._id || user.id,
           name: user.name,
           designation: user.designation,
+          expiresAt,
         }),
       );
 
@@ -295,7 +297,11 @@ export default function LoginPage() {
                       }
                       className="text-text-secondary hover:text-text absolute top-1/2 right-3 -translate-y-1/2 transition disabled:opacity-50"
                     >
-                      {showPassword ? <EyeClosed size={20} /> : <Eye size={20} />}
+                      {showPassword ? (
+                        <EyeClosed size={20} />
+                      ) : (
+                        <Eye size={20} />
+                      )}
                     </button>
                   </div>
 

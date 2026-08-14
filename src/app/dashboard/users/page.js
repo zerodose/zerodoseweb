@@ -48,16 +48,36 @@ export default function DashboardPage() {
       data={users}
       loading={loading}
       hiddenColumns={["_id", "__v", "password", "createdAt", "updatedAt"]}
+
       columnTitles={{
         name: "Name",
         email: "Email",
         designation: "Role",
         district: "District",
         town: "Town",
+        unionCouncil: "Union Council",
+        supervisor: "Supervisor",
+        ucmo: "UCMO",
         teamNumber: "Team",
         zerodose: "Zerodose",
+        isActive: "Active",
         createdAt: "Created Date",
       }}
+
+      columnOptions={[
+        "name",
+        "email",
+        "designation",
+        "district",
+        "town",
+        "unionCouncil",
+        "supervisor",
+        "ucmo",
+        "teamNumber",
+        "zerodose",
+        "isActive",
+      ]}
+
       filterOptions={[
         {
           key: "dateRange",
@@ -90,12 +110,15 @@ export default function DashboardPage() {
           column: "isActive",
         },
       ]}
+
       onRowClick={(user) => {
         router.push(`/dashboard/users/${user._id}`);
       }}
+
       addButton
       addButtonText="Add User"
       onAdd={() => router.push("/dashboard/users/addUser")}
+
       onExportPDF={exportPDF}
       onExportExcel={exportExcel}
     />

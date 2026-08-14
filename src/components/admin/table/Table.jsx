@@ -4,19 +4,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
-  Calendar,
   ChevronDown,
+  Columns3,
   Download,
   FileSpreadsheet,
   FileText,
   Plus,
   Search,
   SlidersHorizontal,
-  X,
 } from "lucide-react";
 
 import Pagination from "./Pagination";
-
 import TableSkeleton from "./TableSkeleton";
 
 export default function Table({
@@ -24,6 +22,7 @@ export default function Table({
 
   hiddenColumns = [],
   columnTitles = {},
+  columnOptions = [],
 
   onRowClick,
   rowKey = "_id",
@@ -86,21 +85,42 @@ export default function Table({
 
   const [downloadOpen, setDownloadOpen] = useState(false);
 
+  const [showColumnMenu, setShowColumnMenu] = useState(false);
+
   const [activeFilter, setActiveFilter] = useState(null);
 
   const [filterValues, setFilterValues] = useState({});
 
+  // ============================================================
+  // Refs
+  // ============================================================
+
   const filterRef = useRef(null);
 
-  useEffect(() => {
-    if (!filterOpen) {
-      return;
-    }
+  const columnRef = useRef(null);
 
+  const downloadRef = useRef(null);
+
+  // ============================================================
+  // Outside Click
+  // ============================================================
+
+  useEffect(() => {
     const handleOutsideClick = (event) => {
+      // Filter
       if (filterRef.current && !filterRef.current.contains(event.target)) {
         setFilterOpen(false);
         setActiveFilter(null);
+      }
+
+      // Columns
+      if (columnRef.current && !columnRef.current.contains(event.target)) {
+        setShowColumnMenu(false);
+      }
+
+      // Download
+      if (downloadRef.current && !downloadRef.current.contains(event.target)) {
+        setDownloadOpen(false);
       }
     };
 
@@ -109,7 +129,7 @@ export default function Table({
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
     };
-  }, [filterOpen]);
+  }, []);
 
   // ============================================================
   // Columns
@@ -124,6 +144,62 @@ export default function Table({
 
     return keys.filter((key) => !hiddenColumns.includes(key));
   }, [data, hiddenColumns]);
+
+  // ============================================================
+  // Visible Columns
+  //
+  // columnOptions:
+  // Jo columns parent page se diye jayenge,
+  // woh page load par checked/show honge.
+  // ============================================================
+
+  const [visibleColumns, setVisibleColumns] = useState([]);
+
+  useEffect(() => {
+    if (columnOptions.length > 0) {
+      setVisibleColumns(
+        columnOptions.filter((column) => columns.includes(column)),
+      );
+    } else {
+      setVisibleColumns(columns);
+    }
+  }, [columnOptions, columns]);
+
+  // ============================================================
+  // Toggle Column
+  // ============================================================
+
+  const toggleColumn = (column) => {
+    setVisibleColumns((prev) => {
+      if (prev.includes(column)) {
+        return prev.filter((item) => item !== column);
+      }
+
+      return [...prev, column];
+    });
+  };
+
+  // ============================================================
+  // Reset Columns
+  // ============================================================
+
+  const resetColumns = () => {
+    if (columnOptions.length > 0) {
+      setVisibleColumns(
+        columnOptions.filter((column) => columns.includes(column)),
+      );
+    } else {
+      setVisibleColumns(columns);
+    }
+  };
+
+  // ============================================================
+  // Show All Columns
+  // ============================================================
+
+  const showAllColumns = () => {
+    setVisibleColumns(columns);
+  };
 
   // ============================================================
   // Column Title
@@ -278,6 +354,7 @@ export default function Table({
 
     sorted.sort((a, b) => {
       const first = a[sortConfig.key];
+
       const second = b[sortConfig.key];
 
       if (first === null || first === undefined) {
@@ -289,6 +366,7 @@ export default function Table({
       }
 
       const firstNumber = Number(first);
+
       const secondNumber = Number(second);
 
       let comparison;
@@ -430,7 +508,7 @@ export default function Table({
   // Selected rows have priority.
   //
   // If nothing is selected:
-  // current filtered data is downloaded.
+  // current filtered/sorted data is downloaded.
   // ============================================================
 
   const dataToDownload = selectedRows.length > 0 ? selectedData : sortedData;
@@ -561,7 +639,9 @@ export default function Table({
 
   const clearFilters = () => {
     setFilterValues({});
+
     setActiveFilter(null);
+
     setPage(1);
   };
 
@@ -600,7 +680,9 @@ export default function Table({
       ====================================================== */}
 
       <div className="border-border flex flex-col gap-3 border-b p-4 lg:flex-row lg:items-center lg:justify-between">
-        {/* Search */}
+        {/* ==================================================
+            Search
+        ================================================== */}
 
         {searchable ? (
           <div className="relative w-full lg:max-w-sm">
@@ -629,7 +711,9 @@ export default function Table({
         ================================================== */}
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* Selected */}
+          {/* =================================================
+              Selected
+          ================================================= */}
 
           {selectedRows.length > 0 && (
             <div className="bg-primary-light text-primary flex h-10 min-w-28 items-center justify-center rounded-lg px-3 text-xs font-medium">
@@ -652,6 +736,94 @@ export default function Table({
               <span>{addButtonText}</span>
             </button>
           )}
+
+          {/* =================================================
+              Columns
+          ================================================= */}
+
+          <div ref={columnRef} className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setShowColumnMenu((prev) => !prev);
+
+                setFilterOpen(false);
+                setActiveFilter(null);
+
+                setDownloadOpen(false);
+              }}
+              className="text-text hover:bg-surface border-border flex h-10 min-w-28 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition"
+            >
+              <Columns3 size={16} />
+
+              <span>Columns</span>
+
+              <ChevronDown
+                size={15}
+                className={`transition-transform ${
+                  showColumnMenu ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {showColumnMenu && (
+              <div className="border-border bg-background absolute top-12 right-0 z-50 w-72 rounded-xl border p-2 shadow-xl">
+                {/* Header */}
+
+                <div className="flex items-center justify-between px-2 py-2">
+                  <p className="text-text text-sm font-semibold">
+                    Show Columns
+                  </p>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={showAllColumns}
+                      className="text-primary text-xs font-medium hover:underline"
+                    >
+                      All
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={resetColumns}
+                      className="text-text-secondary hover:text-text text-xs font-medium hover:underline"
+                    >
+                      Reset
+                    </button>
+                  </div>
+                </div>
+
+                {/* Columns */}
+
+                <div className="max-h-72 space-y-1 overflow-y-auto">
+                  {(columnOptions.length > 0 ? columnOptions : columns)
+                    .filter((column) => columns.includes(column))
+                    .map((column) => {
+                      const checked = visibleColumns.includes(column);
+
+                      return (
+                        <label
+                          key={column}
+                          className="hover:bg-surface flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleColumn(column)}
+                            className="accent-primary h-4 w-4 cursor-pointer"
+                          />
+
+                          <span className="text-text">
+                            {getColumnTitle(column)}
+                          </span>
+                        </label>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* =================================================
               Extra Actions
@@ -681,6 +853,8 @@ export default function Table({
                 type="button"
                 onClick={() => {
                   setFilterOpen((prev) => !prev);
+
+                  setShowColumnMenu(false);
 
                   setDownloadOpen(false);
                 }}
@@ -746,8 +920,8 @@ export default function Table({
                           </button>
 
                           {/* =================================
-                                Select Options
-                            ================================= */}
+                                  Select Options
+                              ================================= */}
 
                           {isActive && filter.type === "select" && (
                             <div className="bg-surface mt-1 max-h-52 space-y-2 overflow-y-auto rounded-lg p-3">
@@ -777,8 +951,8 @@ export default function Table({
                           )}
 
                           {/* =================================
-                                Date Range
-                            ================================= */}
+                                  Date Range
+                              ================================= */}
 
                           {isActive && filter.type === "dateRange" && (
                             <div className="bg-surface mt-1 space-y-3 rounded-lg p-3">
@@ -835,13 +1009,16 @@ export default function Table({
           ================================================= */}
 
           {exportButton && (
-            <div className="relative">
+            <div ref={downloadRef} className="relative">
               <button
                 type="button"
                 onClick={() => {
                   setDownloadOpen((prev) => !prev);
 
                   setFilterOpen(false);
+                  setActiveFilter(null);
+
+                  setShowColumnMenu(false);
                 }}
                 className="text-text hover:bg-surface border-border flex h-10 min-w-28 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition"
               >
@@ -865,6 +1042,8 @@ export default function Table({
                       : `${sortedData.length} filtered records`}
                   </div>
 
+                  {/* PDF */}
+
                   <button
                     type="button"
                     onClick={() => {
@@ -872,8 +1051,12 @@ export default function Table({
 
                       onExportPDF?.({
                         data: dataToDownload,
-                        columns,
+
+                        // Only visible columns
+                        columns: visibleColumns,
+
                         columnTitles,
+
                         filters: exportFilters,
                       });
                     }}
@@ -884,6 +1067,8 @@ export default function Table({
                     <span>Download PDF</span>
                   </button>
 
+                  {/* Excel */}
+
                   <button
                     type="button"
                     onClick={() => {
@@ -891,8 +1076,12 @@ export default function Table({
 
                       onExportExcel?.({
                         data: dataToDownload,
-                        columns,
+
+                        // Only visible columns
+                        columns: visibleColumns,
+
                         columnTitles,
+
                         filters: exportFilters,
                       });
                     }}
@@ -927,7 +1116,7 @@ export default function Table({
                 />
               </th>
 
-              {columns.map((column) => {
+              {visibleColumns.map((column) => {
                 const isSorted = sortConfig.key === column;
 
                 return (
@@ -972,7 +1161,7 @@ export default function Table({
 
           <tbody>
             {loading ? (
-              <TableSkeleton columns={columns.length || 8} rows={8} />
+              <TableSkeleton columns={visibleColumns.length || 8} rows={8} />
             ) : paginatedData.length > 0 ? (
               paginatedData.map((row, index) => {
                 const absoluteIndex = (currentPage - 1) * pageSize + index;
@@ -991,6 +1180,8 @@ export default function Table({
                         : "hover:bg-surface"
                     } ${selected ? "bg-primary-light/40" : ""}`}
                   >
+                    {/* Checkbox */}
+
                     <td
                       className="px-4 py-3"
                       onClick={(event) => event.stopPropagation()}
@@ -1004,7 +1195,9 @@ export default function Table({
                       />
                     </td>
 
-                    {columns.map((column) => (
+                    {/* Visible Columns */}
+
+                    {visibleColumns.map((column) => (
                       <td
                         key={column}
                         className="text-text max-w-xs px-4 py-3 text-sm"
@@ -1020,7 +1213,7 @@ export default function Table({
             ) : (
               <tr>
                 <td
-                  colSpan={columns.length + 1}
+                  colSpan={visibleColumns.length + 1}
                   className="text-text-secondary px-4 py-16 text-center"
                 >
                   <div className="flex flex-col items-center gap-2">

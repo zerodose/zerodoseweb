@@ -51,6 +51,11 @@ const defaultStats = [
 
 export default function DashboardStats({ stats = {} }) {
   const [animated, setAnimated] = useState(false);
+  const [displayValues, setDisplayValues] = useState({});
+
+  // =====================================================
+  // Card animation
+  // =====================================================
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -60,11 +65,62 @@ export default function DashboardStats({ stats = {} }) {
     return () => clearTimeout(timer);
   }, []);
 
+  // =====================================================
+  // Number Counter Animation
+  // =====================================================
+
+  // =====================================================
+  // Fast Number Loading Animation
+  // =====================================================
+
+  useEffect(() => {
+    const duration = 700;
+    const startTime = performance.now();
+
+    const targets = {};
+
+    defaultStats.forEach((item) => {
+      targets[item.key] = Number(stats[item.key] ?? 0);
+    });
+
+    const animateNumbers = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      const nextValues = {};
+
+      defaultStats.forEach((item) => {
+        const target = targets[item.key];
+
+        if (progress < 1) {
+          // Fast loading/rolling feel
+          const randomMax = Math.max(Math.floor(target * 1.2), 100);
+
+          nextValues[item.key] = Math.floor(Math.random() * randomMax);
+        } else {
+          // Exact DB value at the end
+          nextValues[item.key] = target;
+        }
+      });
+
+      setDisplayValues(nextValues);
+
+      if (progress < 1) {
+        requestAnimationFrame(animateNumbers);
+      } else {
+        setDisplayValues(targets);
+      }
+    };
+
+    requestAnimationFrame(animateNumbers);
+  }, [stats]);
+
   return (
     <div className="grid grid-cols-2 gap-3 pb-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       {defaultStats.map((item, index) => {
         const Icon = item.icon;
-        const value = stats[item.key] ?? 0;
+
+        const value = Number(displayValues[item.key] ?? 0);
 
         return (
           <div
@@ -76,11 +132,19 @@ export default function DashboardStats({ stats = {} }) {
               transitionDelay: `${index * 100}ms`,
             }}
           >
+            {/* =================================================
+                Icon
+            ================================================= */}
+
             <div className="flex items-start justify-between">
               <div className="bg-primary-light flex h-10 w-10 items-center justify-center rounded-xl">
                 <Icon className="text-primary h-5 w-5" />
               </div>
             </div>
+
+            {/* =================================================
+                Count
+            ================================================= */}
 
             <div className="mt-4">
               <p className="text-text-secondary text-xs font-medium">
@@ -88,7 +152,7 @@ export default function DashboardStats({ stats = {} }) {
               </p>
 
               <p className="text-text mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
-                {Number(value).toLocaleString()}
+                {value.toLocaleString()}
               </p>
             </div>
           </div>

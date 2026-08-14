@@ -674,7 +674,7 @@ export default function Table({
   // ============================================================
 
   return (
-    <div className="bg-background border-border min-h-screen overflow-hidden rounded-lg border shadow-sm">
+    <div className="bg-background border-border min-h-full overflow-hidden rounded-lg border shadow-sm">
       {/* ======================================================
           Toolbar
       ====================================================== */}

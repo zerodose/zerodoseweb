@@ -63,24 +63,27 @@ export default async function DashboardPage() {
           <CampaignChart />
         </ChartAnimation>
 
-        {/* District */}
-        <ChartAnimation delay={250}>
-          <DistrictChart />
-        </ChartAnimation>
-
         {/* Status */}
         <ChartAnimation delay={400}>
           <StatusChart />
         </ChartAnimation>
 
-        {/* Team */}
-        <ChartAnimation delay={550}>
-          <TeamChart />
-        </ChartAnimation>
-
         {/* Recorded vs Covered */}
         <ChartAnimation delay={700}>
           <RecordedCoveredChart />
+        </ChartAnimation>
+        {/* District */}
+        <ChartAnimation delay={250}>
+          <DistrictChart />
+        </ChartAnimation>
+
+        {/* User Designation */}
+        <ChartAnimation delay={1300}>
+          <UserDesignationChart />
+        </ChartAnimation>
+        {/* Team */}
+        <ChartAnimation delay={550}>
+          <TeamChart />
         </ChartAnimation>
 
         {/* Campaign Comparison */}
@@ -96,11 +99,6 @@ export default async function DashboardPage() {
         {/* Zerodose Trend */}
         <ChartAnimation delay={1150}>
           <ZerodoseTrendChart />
-        </ChartAnimation>
-
-        {/* User Designation */}
-        <ChartAnimation delay={1300}>
-          <UserDesignationChart />
         </ChartAnimation>
 
         {/* Coverage */}

@@ -1,90 +1,97 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
 import Table from "@/components/admin/table/Table";
 import exportPDF from "@/utils/export/exportPDF";
 import exportExcel from "@/utils/export/exportExcel";
+import { api } from "@/api/client";
 
-export default function DashboardPage() {
+export default function CampaignsPage() {
   const router = useRouter();
 
-  const users = [
-    {
-      _id: "1",
-      name: "Ali",
-      email: "ali@gmail.com",
-      designation: "Supervisor",
-      district: "Karachi",
-      town: "Gulshan",
-      teamNumber: 5,
-      zerodose: 20,
-      createdAt: "2026-08-10",
-    },
-    {
-      _id: "2",
-      name: "Ahmed",
-      email: "ahmed@gmail.com",
-      designation: "UCMO",
-      district: "Lahore",
-      town: "Model Town",
-      teamNumber: 2,
-      zerodose: 35,
-      createdAt: "2026-08-12",
-    },
-  ];
+  const [campaigns, setCampaigns] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const getCampaigns = async () => {
+    try {
+      setLoading(true);
+
+      const response = await api.get("/campaigns");
+
+      setCampaigns(response.data.data || []);
+    } catch (error) {
+      console.error("Get campaigns error:", error);
+      setCampaigns([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getCampaigns();
+  }, []);
 
   return (
     <Table
-      data={users}
-      hiddenColumns={["_id"]}
+      data={campaigns}
+      loading={loading}
+      hiddenColumns={["_id", "__v", "createdAt", "updatedAt"]}
       columnTitles={{
-        name: "Name",
-        email: "Email",
-        designation: "Role",
-        district: "District",
-        town: "Town",
-        teamNumber: "Team",
-        zerodose: "Zerodose",
-        createdAt: "Created Date",
+        name: "Campaign",
+        year: "Year",
+        month: "Month",
+        startDate: "Start Date",
+        endDate: "End Date",
+        isActive: "Active",
       }}
+      columnOptions={[
+        "name",
+        "year",
+        "month",
+        "startDate",
+        "endDate",
+        "isActive",
+      ]}
       filterOptions={[
         {
+          key: "name",
+          label: "Campaign",
+          type: "select",
+          column: "name",
+        },
+        {
+          key: "year",
+          label: "Year",
+          type: "select",
+          column: "year",
+        },
+        {
+          key: "month",
+          label: "Month",
+          type: "select",
+          column: "month",
+        },
+        {
+          key: "isActive",
+          label: "IsActive",
+          type: "select",
+          column: "isActive",
+        },
+        {
           key: "dateRange",
-          label: "Date",
+          label: "Start Date",
           type: "dateRange",
-          column: "createdAt",
-        },
-        {
-          key: "designation",
-          label: "Role",
-          type: "select",
-          column: "designation",
-        },
-        {
-          key: "district",
-          label: "District",
-          type: "select",
-          column: "district",
-        },
-        {
-          key: "town",
-          label: "Town",
-          type: "select",
-          column: "town",
+          column: "startDate",
         },
       ]}
-      onRowClick={(user) => {
-        router.push(`/dashboard/users/${user._id}`);
+      onRowClick={(campaign) => {
+        router.push(`/dashboard/campaigns/${campaign._id}`);
       }}
       addButton
-      addButtonText="Add User"
-      onAdd={() => router.push("/dashboard/users/addUser")}
-      // onExportPDF={(data) => {
-      //   console.log("PDF Data:", data);
-      // }}
-      // onExportExcel={(data) => {
-      //   console.log("Excel Data:", data);
-      // }}
+      addButtonText="Add Campaign"
+      onAdd={() => router.push("/dashboard/campaigns/addCampaign")}
       onExportPDF={exportPDF}
       onExportExcel={exportExcel}
     />

@@ -11,16 +11,13 @@ import { Eye, EyeClosed, EyeOff } from "lucide-react";
 import Select from "@/components/ui/Select";
 import Loader from "@/components/ui/Loader";
 import VerifyEmailModal from "@/components/auth/VerifyEmailModal";
-
+import { usePathname } from "next/navigation";
 import { getDistrictDropdown } from "@/api/districtApi";
 import { getTownDropdown } from "@/api/townApi";
 import { getUnionCouncilDropdown } from "@/api/unionCouncilApi";
 import { createUser } from "@/api/userApi";
 
-import {
-  verifyEmail,
-  resendVerification,
-} from "@/api/authApi";
+import { verifyEmail, resendVerification } from "@/api/authApi";
 
 export default function SignupForm() {
   const router = useRouter();
@@ -29,14 +26,29 @@ export default function SignupForm() {
   // Designations
   // =====================================================
 
+  const pathname = usePathname();
+
   const DESIGNATIONS = [
     { value: "ucmo", label: "UCMO" },
     { value: "supervisor", label: "Supervisor" },
     { value: "vaccinator", label: "Vaccinator" },
     { value: "otherStaff", label: "Other Staff" },
-    // { value: "admin", label: "Admin" },
     // { value: "worker", label: "Worker" },
   ];
+
+  const FROMADMINDESIGNATIONS = [
+    { value: "ucmo", label: "UCMO" },
+    { value: "supervisor", label: "Supervisor" },
+    { value: "vaccinator", label: "Vaccinator" },
+    { value: "otherStaff", label: "Other Staff" },
+    { value: "admin", label: "Admin" },
+    // { value: "worker", label: "Worker" },
+  ];
+
+  const designationOptions =
+    pathname === "/dashboard/users/addUser"
+      ? FROMADMINDESIGNATIONS
+      : DESIGNATIONS;
 
   // =====================================================
   // Dashboard Routes
@@ -90,8 +102,7 @@ export default function SignupForm() {
   const selectedDesignation = watch("designation");
   const password = watch("password");
 
-  const isSupervisor =
-    selectedDesignation === "supervisor";
+  const isSupervisor = selectedDesignation === "supervisor";
 
   // =====================================================
   // Dropdown Data
@@ -119,30 +130,23 @@ export default function SignupForm() {
   // Verification Modal
   // =====================================================
 
-  const [showVerifyModal, setShowVerifyModal] =
-    useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
 
-  const [verificationEmail, setVerificationEmail] =
-    useState("");
+  const [verificationEmail, setVerificationEmail] = useState("");
 
-  const [verificationLoading, setVerificationLoading] =
-    useState(false);
+  const [verificationLoading, setVerificationLoading] = useState(false);
 
-  const [verificationError, setVerificationError] =
-    useState("");
+  const [verificationError, setVerificationError] = useState("");
 
-  const [resendLoading, setResendLoading] =
-    useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   // =====================================================
   // Password Visibility
   // =====================================================
 
-  const [showPassword, setShowPassword] =
-    useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // =====================================================
   // Load Districts
@@ -153,15 +157,11 @@ export default function SignupForm() {
       try {
         setDistrictLoading(true);
 
-        const response =
-          await getDistrictDropdown();
+        const response = await getDistrictDropdown();
 
         setDistricts(response?.data || []);
       } catch (error) {
-        console.error(
-          "Get districts error:",
-          error,
-        );
+        console.error("Get districts error:", error);
 
         setDistricts([]);
 
@@ -194,17 +194,11 @@ export default function SignupForm() {
       try {
         setTownLoading(true);
 
-        const response =
-          await getTownDropdown(
-            selectedDistrict,
-          );
+        const response = await getTownDropdown(selectedDistrict);
 
         setTowns(response?.data || []);
       } catch (error) {
-        console.error(
-          "Get towns error:",
-          error,
-        );
+        console.error("Get towns error:", error);
 
         setTowns([]);
 
@@ -236,36 +230,22 @@ export default function SignupForm() {
       try {
         setUcLoading(true);
 
-        const response =
-          await getUnionCouncilDropdown(
-            selectedTown,
-          );
+        const response = await getUnionCouncilDropdown(selectedTown);
 
-        console.log(
-          "UC RESPONSE:",
-          response,
-        );
+        console.log("UC RESPONSE:", response);
 
-        setUnionCouncils(
-          response?.data || [],
-        );
+        setUnionCouncils(response?.data || []);
       } catch (error) {
-        console.error(
-          "Get union councils error:",
-          error,
-        );
+        console.error("Get union councils error:", error);
 
         setUnionCouncils([]);
 
-        toast.error(
-          "Failed to load Union Councils",
-          {
-            description:
-              error?.response?.data?.message ||
-              error?.message ||
-              "Please try again.",
-          },
-        );
+        toast.error("Failed to load Union Councils", {
+          description:
+            error?.response?.data?.message ||
+            error?.message ||
+            "Please try again.",
+        });
       } finally {
         setUcLoading(false);
       }
@@ -283,25 +263,16 @@ export default function SignupForm() {
       setValue("supervisorCode", "");
       clearErrors("supervisorCode");
     }
-  }, [
-    isSupervisor,
-    setValue,
-    clearErrors,
-  ]);
+  }, [isSupervisor, setValue, clearErrors]);
 
   // =====================================================
   // Helper: Get First Form Error
   // =====================================================
 
   const getFirstError = (formErrors) => {
-    const firstError = Object.values(
-      formErrors,
-    )[0];
+    const firstError = Object.values(formErrors)[0];
 
-    return (
-      firstError?.message ||
-      "Please check the highlighted fields."
-    );
+    return firstError?.message || "Please check the highlighted fields.";
   };
 
   // =====================================================
@@ -319,39 +290,27 @@ export default function SignupForm() {
       const payload = {
         name: data.name.trim(),
 
-        email: data.email
-          .trim()
-          .toLowerCase(),
+        email: data.email.trim().toLowerCase(),
 
-        contactNumber:
-          data.contactNumber,
+        contactNumber: data.contactNumber,
 
         district: data.district,
 
         town: data.town,
 
-        unionCouncil:
-          data.unionCouncil,
+        unionCouncil: data.unionCouncil,
 
-        designation:
-          data.designation,
+        designation: data.designation,
 
-        supervisorCode: isSupervisor
-          ? data.supervisorCode.trim()
-          : null,
+        supervisorCode: isSupervisor ? data.supervisorCode.trim() : null,
 
         password: data.password,
       };
 
-      const response =
-        await createUser(payload);
+      const response = await createUser(payload);
 
       if (response?.success) {
-        const email =
-          response?.data?.email ||
-          data.email
-            .trim()
-            .toLowerCase();
+        const email = response?.data?.email || data.email.trim().toLowerCase();
 
         setVerificationEmail(email);
 
@@ -364,37 +323,23 @@ export default function SignupForm() {
             "Please check your email and enter the verification code.",
         });
       } else {
-        toast.error(
-          "Unable to create account",
-          {
-            description:
-              response?.message ||
-              "Please try again.",
-          },
-        );
+        toast.error("Unable to create account", {
+          description: response?.message || "Please try again.",
+        });
       }
     } catch (error) {
-      console.error(
-        "Signup error:",
-        error,
-      );
+      console.error("Signup error:", error);
 
-      console.error(
-        "Response:",
-        error?.response?.data,
-      );
+      console.error("Response:", error?.response?.data);
 
       const message =
         error?.response?.data?.message ||
         error?.message ||
         "Failed to create account.";
 
-      toast.error(
-        "Registration failed",
-        {
-          description: message,
-        },
-      );
+      toast.error("Registration failed", {
+        description: message,
+      });
     } finally {
       setLoading(false);
     }
@@ -405,15 +350,11 @@ export default function SignupForm() {
   // =====================================================
 
   const onInvalid = (formErrors) => {
-    const message =
-      getFirstError(formErrors);
+    const message = getFirstError(formErrors);
 
-    toast.error(
-      "Please fix the form errors",
-      {
-        description: message,
-      },
-    );
+    toast.error("Please fix the form errors", {
+      description: message,
+    });
   };
 
   return (
@@ -422,18 +363,15 @@ export default function SignupForm() {
           Page Loader
       ===================================================== */}
 
-      {loading && (
-        <Loader text="Creating your account..." />
-      )}
+      {loading && <Loader text="Creating your account..." />}
 
       {/* =====================================================
           Main
       ===================================================== */}
 
-      <main className="min-h-screen bg-surface px-4 py-10">
+      <main className="bg-surface min-h-screen px-4 py-10">
         <div className="mx-auto w-full max-w-2xl">
-          <div className="rounded-2xl border border-border bg-background p-6 shadow-sm sm:p-8">
-
+          <div className="border-border bg-background rounded-2xl border p-6 shadow-sm sm:p-8">
             {/* =================================================
                 Logo
             ================================================= */}
@@ -448,7 +386,7 @@ export default function SignupForm() {
                 priority
               />
 
-              <p className="mt-2 text-sm text-text-secondary">
+              <p className="text-text-secondary mt-2 text-sm">
                 Register your account to get started
               </p>
             </div>
@@ -458,25 +396,20 @@ export default function SignupForm() {
             ================================================= */}
 
             <form
-              onSubmit={handleSubmit(
-                onSubmit,
-                onInvalid,
-              )}
+              onSubmit={handleSubmit(onSubmit, onInvalid)}
               className="space-y-6"
               noValidate
             >
-
               {/* =================================================
                   Personal Information
               ================================================= */}
 
               <section>
-                <h2 className="text-lg font-semibold text-text">
+                <h2 className="text-text text-lg font-semibold">
                   Personal Information
                 </h2>
 
                 <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
-
                   {/* =================================================
                       Full Name
                   ================================================= */}
@@ -484,12 +417,10 @@ export default function SignupForm() {
                   <div className="sm:col-span-2">
                     <label
                       htmlFor="name"
-                      className="mb-2 block text-sm font-medium text-text"
+                      className="text-text mb-2 block text-sm font-medium"
                     >
                       Full Name
-                      <span className="ml-1 text-red-500">
-                        *
-                      </span>
+                      <span className="ml-1 text-red-500">*</span>
                     </label>
 
                     <input
@@ -499,29 +430,27 @@ export default function SignupForm() {
                       autoComplete="name"
                       disabled={loading}
                       {...register("name", {
-                        required:
-                          "Full name is required.",
+                        required: "Full name is required.",
 
                         minLength: {
                           value: 2,
-                          message:
-                            "Name must be at least 2 characters.",
+                          message: "Name must be at least 2 characters.",
                         },
 
                         maxLength: {
                           value: 100,
-                          message:
-                            "Name cannot exceed 100 characters.",
+                          message: "Name cannot exceed 100 characters.",
                         },
 
                         validate: (value) =>
                           value.trim().length >= 2 ||
                           "Please enter a valid full name.",
                       })}
-                      className={`w-full rounded-lg border bg-input-background px-4 py-3 text-sm text-text outline-none transition placeholder:text-input-placeholder focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${errors.name
-                        ? "border-red-500 focus:border-red-500 focus:ring-red-100"
-                        : "border-border focus:border-primary focus:ring-primary-light"
-                        }`}
+                      className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-lg border px-4 py-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                        errors.name
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                          : "border-border focus:border-primary focus:ring-primary-light"
+                      }`}
                     />
 
                     {errors.name && (
@@ -538,12 +467,10 @@ export default function SignupForm() {
                   <div>
                     <label
                       htmlFor="contactNumber"
-                      className="mb-2 block text-sm font-medium text-text"
+                      className="text-text mb-2 block text-sm font-medium"
                     >
                       Contact Number
-                      <span className="ml-1 text-red-500">
-                        *
-                      </span>
+                      <span className="ml-1 text-red-500">*</span>
                     </label>
 
                     <input
@@ -554,33 +481,24 @@ export default function SignupForm() {
                       inputMode="tel"
                       autoComplete="tel"
                       disabled={loading}
-                      {...register(
-                        "contactNumber",
-                        {
-                          required:
-                            "Contact number is required.",
+                      {...register("contactNumber", {
+                        required: "Contact number is required.",
 
-                          pattern: {
-                            value:
-                              /^03[0-9]{9}$/,
-                            message:
-                              "Enter a valid Pakistani mobile number.",
-                          },
+                        pattern: {
+                          value: /^03[0-9]{9}$/,
+                          message: "Enter a valid Pakistani mobile number.",
                         },
-                      )}
-                      className={`w-full rounded-lg border bg-input-background px-4 py-3 text-sm text-text outline-none transition placeholder:text-input-placeholder focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${errors.contactNumber
-                        ? "border-red-500 focus:border-red-500 focus:ring-red-100"
-                        : "border-border focus:border-primary focus:ring-primary-light"
-                        }`}
+                      })}
+                      className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-lg border px-4 py-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                        errors.contactNumber
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                          : "border-border focus:border-primary focus:ring-primary-light"
+                      }`}
                     />
 
                     {errors.contactNumber && (
                       <p className="mt-1.5 text-xs text-red-500">
-                        {
-                          errors
-                            .contactNumber
-                            .message
-                        }
+                        {errors.contactNumber.message}
                       </p>
                     )}
                   </div>
@@ -592,12 +510,10 @@ export default function SignupForm() {
                   <div>
                     <label
                       htmlFor="email"
-                      className="mb-2 block text-sm font-medium text-text"
+                      className="text-text mb-2 block text-sm font-medium"
                     >
                       Email
-                      <span className="ml-1 text-red-500">
-                        *
-                      </span>
+                      <span className="ml-1 text-red-500">*</span>
                     </label>
 
                     <input
@@ -607,20 +523,18 @@ export default function SignupForm() {
                       autoComplete="email"
                       disabled={loading}
                       {...register("email", {
-                        required:
-                          "Email is required.",
+                        required: "Email is required.",
 
                         pattern: {
-                          value:
-                            /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                          message:
-                            "Enter a valid email address.",
+                          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                          message: "Enter a valid email address.",
                         },
                       })}
-                      className={`w-full rounded-lg border bg-input-background px-4 py-3 text-sm text-text outline-none transition placeholder:text-input-placeholder focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${errors.email
-                        ? "border-red-500 focus:border-red-500 focus:ring-red-100"
-                        : "border-border focus:border-primary focus:ring-primary-light"
-                        }`}
+                      className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-lg border px-4 py-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                        errors.email
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                          : "border-border focus:border-primary focus:ring-primary-light"
+                      }`}
                     />
 
                     {errors.email && (
@@ -637,12 +551,11 @@ export default function SignupForm() {
               ================================================= */}
 
               <section>
-                <h2 className="text-lg font-semibold text-text">
+                <h2 className="text-text text-lg font-semibold">
                   Work Information
                 </h2>
 
                 <div className="mt-4">
-
                   {/* =================================================
                       Designation
                   ================================================= */}
@@ -659,7 +572,7 @@ export default function SignupForm() {
                         name={field.name}
                         value={field.value}
                         onChange={field.onChange}
-                        options={DESIGNATIONS}
+                        options={designationOptions}
                         placeholder="Select designation"
                         loading={false}
                         disabled={loading}
@@ -688,12 +601,10 @@ export default function SignupForm() {
                   <div className="mt-5">
                     <label
                       htmlFor="supervisorCode"
-                      className="mb-2 block text-sm font-medium text-text"
+                      className="text-text mb-2 block text-sm font-medium"
                     >
                       Supervisor Code
-                      <span className="ml-1 text-red-500">
-                        *
-                      </span>
+                      <span className="ml-1 text-red-500">*</span>
                     </label>
 
                     <input
@@ -701,31 +612,23 @@ export default function SignupForm() {
                       type="text"
                       placeholder="Enter supervisor code"
                       disabled={loading}
-                      {...register(
-                        "supervisorCode",
-                        {
-                          required:
-                            "Supervisor code is required.",
+                      {...register("supervisorCode", {
+                        required: "Supervisor code is required.",
 
-                          validate: (value) =>
-                            value.trim().length >
-                            0 ||
-                            "Supervisor code is required.",
-                        },
-                      )}
-                      className={`w-full rounded-lg border bg-input-background px-4 py-3 text-sm uppercase text-text outline-none transition placeholder:text-input-placeholder focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${errors.supervisorCode
-                        ? "border-red-500 focus:border-red-500 focus:ring-red-100"
-                        : "border-border focus:border-primary focus:ring-primary-light"
-                        }`}
+                        validate: (value) =>
+                          value.trim().length > 0 ||
+                          "Supervisor code is required.",
+                      })}
+                      className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-lg border px-4 py-3 text-sm uppercase transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                        errors.supervisorCode
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                          : "border-border focus:border-primary focus:ring-primary-light"
+                      }`}
                     />
 
                     {errors.supervisorCode && (
                       <p className="mt-1.5 text-xs text-red-500">
-                        {
-                          errors
-                            .supervisorCode
-                            .message
-                        }
+                        {errors.supervisorCode.message}
                       </p>
                     )}
                   </div>
@@ -737,12 +640,9 @@ export default function SignupForm() {
               ================================================= */}
 
               <section>
-                <h2 className="text-lg font-semibold text-text">
-                  Location
-                </h2>
+                <h2 className="text-text text-lg font-semibold">Location</h2>
 
                 <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
-
                   {/* =================================================
                       District
                   ================================================= */}
@@ -752,65 +652,33 @@ export default function SignupForm() {
                       name="district"
                       control={control}
                       rules={{
-                        required:
-                          "Please select a district.",
+                        required: "Please select a district.",
                       }}
-                      render={({
-                        field,
-                      }) => (
+                      render={({ field }) => (
                         <Select
                           label="District"
                           name={field.name}
-                          value={
-                            field.value
-                          }
-                          onChange={(
-                            e,
-                          ) => {
-                            field.onChange(
-                              e,
-                            );
+                          value={field.value}
+                          onChange={(e) => {
+                            field.onChange(e);
 
-                            setValue(
-                              "town",
-                              "",
-                            );
+                            setValue("town", "");
 
-                            setValue(
-                              "unionCouncil",
-                              "",
-                            );
+                            setValue("unionCouncil", "");
 
-                            setTowns(
-                              [],
-                            );
+                            setTowns([]);
 
-                            setUnionCouncils(
-                              [],
-                            );
+                            setUnionCouncils([]);
 
-                            clearErrors([
-                              "town",
-                              "unionCouncil",
-                            ]);
+                            clearErrors(["town", "unionCouncil"]);
                           }}
-                          options={districts.map(
-                            (
-                              district,
-                            ) => ({
-                              value:
-                                district._id,
-                              label:
-                                district.name,
-                            }),
-                          )}
+                          options={districts.map((district) => ({
+                            value: district._id,
+                            label: district.name,
+                          }))}
                           placeholder="Select district"
-                          loading={
-                            districtLoading
-                          }
-                          disabled={
-                            loading
-                          }
+                          loading={districtLoading}
+                          disabled={loading}
                           required
                         />
                       )}
@@ -818,11 +686,7 @@ export default function SignupForm() {
 
                     {errors.district && (
                       <p className="mt-1.5 text-xs text-red-500">
-                        {
-                          errors
-                            .district
-                            .message
-                        }
+                        {errors.district.message}
                       </p>
                     )}
                   </div>
@@ -836,58 +700,33 @@ export default function SignupForm() {
                       name="town"
                       control={control}
                       rules={{
-                        required:
-                          "Please select a town.",
+                        required: "Please select a town.",
                       }}
-                      render={({
-                        field,
-                      }) => (
+                      render={({ field }) => (
                         <Select
                           label="Town"
                           name={field.name}
-                          value={
-                            field.value
-                          }
-                          onChange={(
-                            e,
-                          ) => {
-                            field.onChange(
-                              e,
-                            );
+                          value={field.value}
+                          onChange={(e) => {
+                            field.onChange(e);
 
-                            setValue(
-                              "unionCouncil",
-                              "",
-                            );
+                            setValue("unionCouncil", "");
 
-                            setUnionCouncils(
-                              [],
-                            );
+                            setUnionCouncils([]);
 
-                            clearErrors(
-                              "unionCouncil",
-                            );
+                            clearErrors("unionCouncil");
                           }}
-                          options={towns.map(
-                            (town) => ({
-                              value:
-                                town._id,
-                              label:
-                                town.name,
-                            }),
-                          )}
+                          options={towns.map((town) => ({
+                            value: town._id,
+                            label: town.name,
+                          }))}
                           placeholder={
                             !selectedDistrict
                               ? "Select district first"
                               : "Select town"
                           }
-                          loading={
-                            townLoading
-                          }
-                          disabled={
-                            loading ||
-                            !selectedDistrict
-                          }
+                          loading={townLoading}
+                          disabled={loading || !selectedDistrict}
                           required
                         />
                       )}
@@ -895,10 +734,7 @@ export default function SignupForm() {
 
                     {errors.town && (
                       <p className="mt-1.5 text-xs text-red-500">
-                        {
-                          errors.town
-                            .message
-                        }
+                        {errors.town.message}
                       </p>
                     )}
                   </div>
@@ -912,45 +748,26 @@ export default function SignupForm() {
                       name="unionCouncil"
                       control={control}
                       rules={{
-                        required:
-                          "Please select a Union Council.",
+                        required: "Please select a Union Council.",
                       }}
-                      render={({
-                        field,
-                      }) => (
+                      render={({ field }) => (
                         <Select
                           label="Union Council"
                           name={field.name}
-                          value={
-                            field.value
-                          }
-                          onChange={
-                            field.onChange
-                          }
-                          options={unionCouncils.map(
-                            (
-                              unionCouncil,
-                            ) => ({
-                              value:
-                                unionCouncil._id,
-                              label:
-                                unionCouncil.name,
-                              code:
-                                unionCouncil.code,
-                            }),
-                          )}
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={unionCouncils.map((unionCouncil) => ({
+                            value: unionCouncil._id,
+                            label: unionCouncil.name,
+                            code: unionCouncil.code,
+                          }))}
                           placeholder={
                             !selectedTown
                               ? "Select town first"
                               : "Select Union Council"
                           }
-                          loading={
-                            ucLoading
-                          }
-                          disabled={
-                            loading ||
-                            !selectedTown
-                          }
+                          loading={ucLoading}
+                          disabled={loading || !selectedTown}
                           showCode
                           codePrefix="UC"
                           required
@@ -960,11 +777,7 @@ export default function SignupForm() {
 
                     {errors.unionCouncil && (
                       <p className="mt-1.5 text-xs text-red-500">
-                        {
-                          errors
-                            .unionCouncil
-                            .message
-                        }
+                        {errors.unionCouncil.message}
                       </p>
                     )}
                   </div>
@@ -976,12 +789,9 @@ export default function SignupForm() {
               ================================================= */}
 
               <section>
-                <h2 className="text-lg font-semibold text-text">
-                  Security
-                </h2>
+                <h2 className="text-text text-lg font-semibold">Security</h2>
 
                 <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
-
                   {/* =================================================
                       Password
                   ================================================= */}
@@ -989,67 +799,52 @@ export default function SignupForm() {
                   <div>
                     <label
                       htmlFor="password"
-                      className="mb-2 block text-sm font-medium text-text"
+                      className="text-text mb-2 block text-sm font-medium"
                     >
                       Password
-                      <span className="ml-1 text-red-500">
-                        *
-                      </span>
+                      <span className="ml-1 text-red-500">*</span>
                     </label>
 
                     <div className="relative">
                       <input
                         id="password"
-                        type={
-                          showPassword
-                            ? "text"
-                            : "password"
-                        }
+                        type={showPassword ? "text" : "password"}
                         placeholder="Minimum 8 characters"
                         autoComplete="new-password"
                         disabled={loading}
-                        
-                        {...register(
-                          "password",
-                          {
-                            required:
-                              "Password is required.",
 
-                            minLength: {
-                              value: 8,
-                              message:
-                                "Password must be at least 8 characters.",
-                            },
+                        {...register("password", {
+                          required: "Password is required.",
+
+                          minLength: {
+                            value: 8,
+                            message: "Password must be at least 8 characters.",
                           },
-                        )}
-                        className={`w-full rounded-lg border bg-input-background px-4 py-3 pr-16 text-sm text-text outline-none transition placeholder:text-input-placeholder focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${errors.password
-                          ? "border-red-500 focus:border-red-500 focus:ring-red-100"
-                          : "border-border focus:border-primary focus:ring-primary-light"
-                          }`}
+                        })}
+                        className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-lg border px-4 py-3 pr-16 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                          errors.password
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                            : "border-border focus:border-primary focus:ring-primary-light"
+                        }`}
                       />
 
                       <button
                         type="button"
-                        onClick={() =>
-                          setShowPassword(
-                            (prev) =>
-                              !prev,
-                          )
-                        }
+                        onClick={() => setShowPassword((prev) => !prev)}
                         disabled={loading}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-text-secondary transition hover:text-text disabled:opacity-50"
+                        className="text-text-secondary hover:text-text absolute top-1/2 right-3 -translate-y-1/2 text-sm font-medium transition disabled:opacity-50"
                       >
-                        {showPassword ? <EyeClosed size={20} /> : <Eye size={20} />}
+                        {showPassword ? (
+                          <EyeClosed size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
                       </button>
                     </div>
 
                     {errors.password && (
                       <p className="mt-1.5 text-xs text-red-500">
-                        {
-                          errors
-                            .password
-                            .message
-                        }
+                        {errors.password.message}
                       </p>
                     )}
                   </div>
@@ -1061,73 +856,54 @@ export default function SignupForm() {
                   <div>
                     <label
                       htmlFor="confirmPassword"
-                      className="mb-2 block text-sm font-medium text-text"
+                      className="text-text mb-2 block text-sm font-medium"
                     >
                       Confirm Password
-                      <span className="ml-1 text-red-500">
-                        *
-                      </span>
+                      <span className="ml-1 text-red-500">*</span>
                     </label>
 
                     <div className="relative">
                       <input
                         id="confirmPassword"
-                        type={
-                          showConfirmPassword
-                            ? "text"
-                            : "password"
-                        }
+                        type={showConfirmPassword ? "text" : "password"}
                         placeholder="Confirm password"
                         autoComplete="new-password"
                         disabled={loading}
-                        {...register(
-                          "confirmPassword",
-                          {
-                            required:
-                              "Please confirm your password.",
+                        {...register("confirmPassword", {
+                          required: "Please confirm your password.",
 
-                            minLength: {
-                              value: 8,
-                              message:
-                                "Password must be at least 8 characters.",
-                            },
-
-                            validate:
-                              (value) =>
-                                value ===
-                                password ||
-                                "Passwords do not match.",
+                          minLength: {
+                            value: 8,
+                            message: "Password must be at least 8 characters.",
                           },
-                        )}
-                        className={`w-full rounded-lg border bg-input-background px-4 py-3 pr-16 text-sm text-text outline-none transition placeholder:text-input-placeholder focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${errors.confirmPassword
-                          ? "border-red-500 focus:border-red-500 focus:ring-red-100"
-                          : "border-border focus:border-primary focus:ring-primary-light"
-                          }`}
+
+                          validate: (value) =>
+                            value === password || "Passwords do not match.",
+                        })}
+                        className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-lg border px-4 py-3 pr-16 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                          errors.confirmPassword
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                            : "border-border focus:border-primary focus:ring-primary-light"
+                        }`}
                       />
 
                       <button
                         type="button"
-                        onClick={() =>
-                          setShowConfirmPassword(
-                            (prev) =>
-                              !prev,
-                          )
-                        }
+                        onClick={() => setShowConfirmPassword((prev) => !prev)}
                         disabled={loading}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-medium text-text-secondary transition hover:text-text disabled:opacity-50"
+                        className="text-text-secondary hover:text-text absolute top-1/2 right-3 -translate-y-1/2 text-sm font-medium transition disabled:opacity-50"
                       >
-                        {showConfirmPassword
-                       ? <EyeClosed size={20} /> : <Eye size={20} />}
+                        {showConfirmPassword ? (
+                          <EyeClosed size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
                       </button>
                     </div>
 
                     {errors.confirmPassword && (
                       <p className="mt-1.5 text-xs text-red-500">
-                        {
-                          errors
-                            .confirmPassword
-                            .message
-                        }
+                        {errors.confirmPassword.message}
                       </p>
                     )}
                   </div>
@@ -1141,16 +917,11 @@ export default function SignupForm() {
               <button
                 type="submit"
                 disabled={
-                  loading ||
-                  districtLoading ||
-                  townLoading ||
-                  ucLoading
+                  loading || districtLoading || townLoading || ucLoading
                 }
-                className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
+                className="bg-primary text-primary-foreground hover:bg-primary-dark w-full rounded-lg px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {loading
-                  ? "Creating account..."
-                  : "Create Account"}
+                {loading ? "Creating account..." : "Create Account"}
               </button>
             </form>
 
@@ -1158,12 +929,11 @@ export default function SignupForm() {
                 Login Link
             ================================================= */}
 
-            <div className="mt-6 text-center text-sm text-text-secondary">
+            <div className="text-text-secondary mt-6 text-center text-sm">
               Already have an account?{" "}
-
               <Link
                 href="/auth/login"
-                className="font-semibold text-primary transition hover:text-primary-dark"
+                className="text-primary hover:text-primary-dark font-semibold transition"
               >
                 Sign In
               </Link>
@@ -1197,76 +967,51 @@ export default function SignupForm() {
               setVerificationLoading(true);
               setVerificationError("");
 
-              const response =
-                await verifyEmail({
-                  email:
-                    verificationEmail,
-                  code,
-                });
+              const response = await verifyEmail({
+                email: verificationEmail,
+                code,
+              });
 
               if (response?.success) {
-                toast.success(
-                  "Email verified successfully!",
-                  {
-                    description:
-                      "Your account has been verified.",
-                  },
-                );
+                toast.success("Email verified successfully!", {
+                  description: "Your account has been verified.",
+                });
 
-                setShowVerifyModal(
-                  false,
-                );
+                setShowVerifyModal(false);
+
+                if (pathname === "/dashboard/users/addUser") {
+                  router.back();
+                  return;
+                }
 
                 router.push(
-                  dashboardRoutes[
-                  selectedDesignation
-                  ] ||
-                  "/dashboard",
+                  dashboardRoutes[selectedDesignation] || "/dashboard",
                 );
               } else {
                 const message =
-                  response?.message ||
-                  "Email verification failed.";
+                  response?.message || "Email verification failed.";
 
-                setVerificationError(
-                  message,
-                );
+                setVerificationError(message);
 
-                toast.error(
-                  "Verification failed",
-                  {
-                    description:
-                      message,
-                  },
-                );
+                toast.error("Verification failed", {
+                  description: message,
+                });
               }
             } catch (error) {
-              console.error(
-                "Email verification error:",
-                error,
-              );
+              console.error("Email verification error:", error);
 
               const message =
-                error?.response
-                  ?.data?.message ||
+                error?.response?.data?.message ||
                 error?.message ||
                 "Invalid verification code.";
 
-              setVerificationError(
-                message,
-              );
+              setVerificationError(message);
 
-              toast.error(
-                "Verification failed",
-                {
-                  description:
-                    message,
-                },
-              );
+              toast.error("Verification failed", {
+                description: message,
+              });
             } finally {
-              setVerificationLoading(
-                false,
-              );
+              setVerificationLoading(false);
             }
           }}
 
@@ -1279,71 +1024,43 @@ export default function SignupForm() {
               setResendLoading(true);
               setVerificationError("");
 
-              const response =
-                await resendVerification({
-                  email:
-                    verificationEmail,
-                });
+              const response = await resendVerification({
+                email: verificationEmail,
+              });
 
               if (response?.success) {
                 setVerificationError("");
 
-                toast.success(
-                  "Verification code sent!",
-                  {
-                    description:
-                      `A new verification code was sent to ${verificationEmail}.`,
-                  },
-                );
+                toast.success("Verification code sent!", {
+                  description: `A new verification code was sent to ${verificationEmail}.`,
+                });
               } else {
                 const message =
-                  response?.message ||
-                  "Failed to resend verification code.";
+                  response?.message || "Failed to resend verification code.";
 
-                setVerificationError(
-                  message,
-                );
+                setVerificationError(message);
 
-                toast.error(
-                  "Failed to resend code",
-                  {
-                    description:
-                      message,
-                  },
-                );
+                toast.error("Failed to resend code", {
+                  description: message,
+                });
               }
             } catch (error) {
-              console.error(
-                "Resend verification error:",
-                error,
-              );
+              console.error("Resend verification error:", error);
 
-              console.error(
-                "Response:",
-                error?.response?.data,
-              );
+              console.error("Response:", error?.response?.data);
 
               const message =
-                error?.response
-                  ?.data?.message ||
+                error?.response?.data?.message ||
                 error?.message ||
                 "Failed to resend verification code.";
 
-              setVerificationError(
-                message,
-              );
+              setVerificationError(message);
 
-              toast.error(
-                "Failed to resend code",
-                {
-                  description:
-                    message,
-                },
-              );
+              toast.error("Failed to resend code", {
+                description: message,
+              });
             } finally {
-              setResendLoading(
-                false,
-              );
+              setResendLoading(false);
             }
           }}
         />

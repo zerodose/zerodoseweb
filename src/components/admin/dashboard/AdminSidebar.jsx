@@ -97,7 +97,7 @@ export default function AdminSidebar({
             }`}
           >
             {/* Logo */}
-            <div className="text-primary-foreground flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-sm font-bold">
+            <div className="text-primary-foreground flex  shrink-0 items-center justify-center rounded-lg text-sm font-bold">
               <Image
                 src="/images/logo.png"
                 alt="Zerodose Logo"

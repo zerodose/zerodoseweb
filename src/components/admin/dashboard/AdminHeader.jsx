@@ -69,21 +69,11 @@ export default function AdminHeader({ onMenuClick }) {
   // ============================================================
 
   const getAvatar = () => {
-    if (user?.image) {
-      return (
-        <img
-          src={user.image}
-          alt={user.name}
-          className="h-full w-full object-cover"
-        />
-      );
-    }
-
     if (user?.name) {
       return user.name.charAt(0).toUpperCase();
     }
 
-    return "A";
+    return "U";
   };
 
   // ============================================================
@@ -159,7 +149,7 @@ export default function AdminHeader({ onMenuClick }) {
               {user.name}
             </p>
 
-            <p className="text-text-secondary uppercase max-w-32 truncate text-xs capitalize">
+            <p className="text-text-secondary max-w-32 truncate text-xs capitalize uppercase">
               {user.designation}
             </p>
           </div>

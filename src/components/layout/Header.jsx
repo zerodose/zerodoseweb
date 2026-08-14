@@ -68,16 +68,6 @@ export default function Header({
   // ============================================================
 
   const getAvatar = () => {
-    if (user?.image) {
-      return (
-        <img
-          src={user.image}
-          alt={user.name}
-          className="h-full w-full object-cover"
-        />
-      );
-    }
-
     if (user?.name) {
       return user.name.charAt(0).toUpperCase();
     }
@@ -111,7 +101,7 @@ export default function Header({
           Left
       ====================================================== */}
 
-      <div className="flex min-w-0 items-center gap-2 ">
+      <div className="flex min-w-0 items-center gap-2">
         {/* Mobile Sidebar Button */}
 
         <button
@@ -143,7 +133,7 @@ export default function Header({
           onClick={() => setProfileOpen((prev) => !prev)}
           aria-expanded={profileOpen}
           aria-label="Open profile menu"
-          className="hover:bg-surface flex items-center gap-2 rounded-xl p-1 transition "
+          className="hover:bg-surface flex items-center gap-2 rounded-xl p-1 transition"
         >
           {/* Avatar */}
 
@@ -158,7 +148,7 @@ export default function Header({
               {user.name}
             </p>
 
-            <p className="text-text-secondary uppercase max-w-32 truncate text-xs capitalize">
+            <p className="text-text-secondary max-w-32 truncate text-xs capitalize uppercase">
               {user.designation}
             </p>
           </div>

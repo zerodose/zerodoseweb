@@ -10,10 +10,18 @@ export default function AuthGuard({ children }) {
   useEffect(() => {
     const authUser = localStorage.getItem("authUser");
 
+    const publicRoutes = [
+      "/auth/login",
+      "/auth/signup",
+      "/auth/verify-email",
+      "/",
+    ];
+
     if (!authUser) {
-      if (pathname !== "/auth/login") {
+      if (!publicRoutes.includes(pathname)) {
         router.replace("/auth/login");
       }
+
       return;
     }
 

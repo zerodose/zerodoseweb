@@ -6,12 +6,12 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+
 import {
   ArrowLeft,
   Eye,
   EyeClosed,
   Save,
-  UserPlus,
   UserRound,
 } from "lucide-react";
 

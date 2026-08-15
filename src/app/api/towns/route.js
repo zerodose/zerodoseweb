@@ -117,12 +117,17 @@ export async function GET(request) {
       .limit(limit)
       .lean();
 
+    const formattedTowns = towns.map((town) => ({
+      ...town,
+      districtName: town.district?.name || "-",
+    }));
+
     const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json(
       {
         success: true,
-        data: towns,
+        data: formattedTowns,
 
         pagination: {
           page,

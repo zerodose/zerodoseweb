@@ -19,7 +19,7 @@ export default function Pagination({
 }) {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
-  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const safeCurrentPage = Math.max(1, Math.min(currentPage, totalPages));
 
   // ============================================================
   // Pagination Items
@@ -65,6 +65,10 @@ export default function Pagination({
 
   const changePage = (newPage) => {
     const page = Math.max(1, Math.min(newPage, totalPages));
+
+    if (page === safeCurrentPage) {
+      return;
+    }
 
     onPageChange?.(page);
   };
@@ -139,7 +143,7 @@ export default function Pagination({
 
           <button
             type="button"
-            disabled={safeCurrentPage === 1}
+            disabled={safeCurrentPage <= 1}
             onClick={() => changePage(1)}
             className="text-text hover:bg-surface flex h-9 w-9 items-center justify-center rounded-lg transition disabled:cursor-not-allowed disabled:text-gray-300"
           >
@@ -150,7 +154,7 @@ export default function Pagination({
 
           <button
             type="button"
-            disabled={safeCurrentPage === 1}
+            disabled={safeCurrentPage <= 1}
             onClick={() => changePage(safeCurrentPage - 1)}
             className="text-text hover:bg-surface flex h-9 w-9 items-center justify-center rounded-lg transition disabled:cursor-not-allowed disabled:text-gray-300"
           >
@@ -195,7 +199,7 @@ export default function Pagination({
 
           <button
             type="button"
-            disabled={safeCurrentPage === totalPages}
+            disabled={safeCurrentPage >= totalPages}
             onClick={() => changePage(safeCurrentPage + 1)}
             className="text-text hover:bg-surface flex h-9 w-9 items-center justify-center rounded-lg transition disabled:cursor-not-allowed disabled:text-gray-300"
           >
@@ -206,7 +210,7 @@ export default function Pagination({
 
           <button
             type="button"
-            disabled={safeCurrentPage === totalPages}
+            disabled={safeCurrentPage >= totalPages}
             onClick={() => changePage(totalPages)}
             className="text-text hover:bg-surface flex h-9 w-9 items-center justify-center rounded-lg transition disabled:cursor-not-allowed disabled:text-gray-300"
           >

@@ -16,6 +16,7 @@ import {
 
 import Pagination from "./Pagination";
 import TableSkeleton from "./TableSkeleton";
+import SearchInput from "./SearchInput";
 
 export default function Table({
   data = [],
@@ -29,16 +30,23 @@ export default function Table({
 
   searchable = true,
   searchPlaceholder = "Search...",
-
+  onSearchChange,
   loading = false,
   emptyMessage = "No data found",
 
   // ============================================================
-  // Pagination
+  // Server Pagination
   // ============================================================
 
   pageSizeOptions = [10, 20, 30, 50],
   defaultPageSize = 10,
+  serverPagination = false,
+  currentPage: externalCurrentPage,
+  totalItems: externalTotalItems,
+  pageSize: externalPageSize,
+  totalPages: externalTotalPages,
+  onPageChange,
+  onPageSizeChange,
 
   // ============================================================
   // Add Button
@@ -69,7 +77,7 @@ export default function Table({
   // ============================================================
 
   const [search, setSearch] = useState("");
-
+  const [searchQuery, setSearchQuery] = useState("");
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: null,
@@ -276,11 +284,15 @@ export default function Table({
   // ============================================================
 
   const searchedData = useMemo(() => {
-    if (!search.trim()) {
+    if (serverPagination) {
       return data;
     }
 
-    const query = search.toLowerCase().trim();
+    if (!searchQuery.trim()) {
+      return data;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
 
     return data.filter((row) =>
       columns.some((column) => {
@@ -289,7 +301,7 @@ export default function Table({
         return value.includes(query);
       }),
     );
-  }, [data, search, columns]);
+  }, [data, searchQuery, columns, serverPagination]);
 
   // ============================================================
   // Filter Data
@@ -411,15 +423,23 @@ export default function Table({
   // Pagination
   // ============================================================
 
-  const totalPages = Math.max(1, Math.ceil(sortedData.length / pageSize));
+  const totalPages = serverPagination
+    ? externalTotalPages
+    : Math.max(1, Math.ceil(sortedData.length / pageSize));
 
-  const currentPage = Math.min(page, totalPages);
+  const currentPage = serverPagination
+    ? externalCurrentPage
+    : Math.min(page, totalPages);
 
   const paginatedData = useMemo(() => {
+    if (serverPagination) {
+      return sortedData;
+    }
+
     const start = (currentPage - 1) * pageSize;
 
     return sortedData.slice(start, start + pageSize);
-  }, [sortedData, currentPage, pageSize]);
+  }, [serverPagination, sortedData, currentPage, pageSize]);
 
   // ============================================================
   // Sorting
@@ -665,23 +685,23 @@ export default function Table({
   // Active Filter Count
   // ============================================================
 
-const formatDate = (value) => {
-  if (!value) {
-    return "-";
-  }
+  const formatDate = (value) => {
+    if (!value) {
+      return "-";
+    }
 
-  const date = new Date(value);
+    const date = new Date(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
+    if (Number.isNaN(date.getTime())) {
+      return "-";
+    }
 
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-};
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
 
   const activeFilterCount = useMemo(() => {
     return filterOptions.reduce((count, filter) => {
@@ -719,23 +739,23 @@ const formatDate = (value) => {
         ================================================== */}
 
         {searchable ? (
-          <div className="relative w-full lg:max-w-sm">
-            <Search
-              size={18}
-              className="text-text-secondary absolute top-1/2 left-3 -translate-y-1/2"
-            />
+          <SearchInput
+            value={search}
+            placeholder={searchPlaceholder}
+            onChange={(value) => {
+              setSearch(value);
+            }}
+            onSearch={(value) => {
+              setSearch(value);
 
-            <input
-              type="text"
-              value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                setPage(1);
-              }}
-              placeholder={searchPlaceholder}
-              className="border-border bg-background text-text placeholder:text-text-secondary focus:border-primary focus:ring-primary-light h-10 w-full rounded-lg border pr-3 pl-10 text-sm transition outline-none focus:ring-2"
-            />
-          </div>
+              if (serverPagination) {
+                onSearchChange?.(value);
+                return;
+              }
+
+              setPage(1);
+            }}
+          />
         ) : (
           <div />
         )}
@@ -1278,14 +1298,17 @@ const formatDate = (value) => {
 
       <Pagination
         currentPage={currentPage}
-        totalItems={sortedData.length}
-        pageSize={pageSize}
-        onPageChange={setPage}
-        onPageSizeChange={(newSize) => {
-          setPageSize(Math.min(newSize, 50));
-
-          setPage(1);
-        }}
+        totalItems={serverPagination ? externalTotalItems : sortedData.length}
+        pageSize={serverPagination ? externalPageSize : pageSize}
+        onPageChange={serverPagination ? onPageChange : setPage}
+        onPageSizeChange={
+          serverPagination
+            ? onPageSizeChange
+            : (newSize) => {
+                setPageSize(Math.min(newSize, 50));
+                setPage(1);
+              }
+        }
         pageSizeOptions={pageSizeOptions}
         maxPageSize={50}
       />

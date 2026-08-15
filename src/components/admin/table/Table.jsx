@@ -1161,7 +1161,7 @@ export default function Table({
         <table className="w-full min-w-max border-collapse">
           <thead>
             <tr className="bg-surface border-border border-b">
-              {/* <th className="w-12 px-4 py-3 text-left">
+              <th className="w-12 px-4 py-3 text-left">
                 <input
                   type="checkbox"
                   checked={allCurrentSelected}
@@ -1169,20 +1169,6 @@ export default function Table({
                   className="accent-primary h-4 w-4 cursor-pointer"
                   aria-label="Select all"
                 />
-              </th> */}
-
-              <th className="w-12 px-4 py-3 text-left">
-                {loading ? (
-                  <div className="bg-gray h-4 w-4 animate-pulse rounded" />
-                ) : (
-                  <input
-                    type="checkbox"
-                    checked={allCurrentSelected}
-                    onChange={toggleSelectAll}
-                    className="accent-primary h-4 w-4 cursor-pointer"
-                    aria-label="Select all"
-                  />
-                )}
               </th>
 
               {visibleColumns.map((column) => {

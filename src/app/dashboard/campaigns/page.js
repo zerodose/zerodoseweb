@@ -38,6 +38,8 @@ export default function CampaignsPage() {
       data={campaigns}
       loading={loading}
       hiddenColumns={["_id", "__v", "createdAt", "updatedAt"]}
+      dateColumns={["createdAt", "recordDate", "visitDate"]}
+
       columnTitles={{
         name: "Campaign",
         year: "Year",

@@ -226,6 +226,32 @@ export default function Table({
   };
 
   // ============================================================
+  // Format Date
+  // ============================================================
+
+  const formatDate = (value) => {
+    if (!value) {
+      return "-";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "-";
+    }
+
+    const day = String(date.getDate()).padStart(2, "0");
+
+    const month = date.toLocaleString("en-US", {
+      month: "short",
+    });
+
+    const year = date.getFullYear();
+
+    return `${day} ${month} ${year}`;
+  };
+
+  // ============================================================
   // Format Value
   // ============================================================
 
@@ -245,13 +271,7 @@ export default function Table({
         !Number.isNaN(Date.parse(value)) &&
         value.includes("T"))
     ) {
-      const date = new Date(value);
-
-      return date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
+      return formatDate(value);
     }
 
     if (typeof value === "object") {
@@ -260,7 +280,6 @@ export default function Table({
 
     return String(value);
   };
-
   // ============================================================
   // Date Parser
   // ============================================================
@@ -684,24 +703,6 @@ export default function Table({
   // ============================================================
   // Active Filter Count
   // ============================================================
-
-  const formatDate = (value) => {
-    if (!value) {
-      return "-";
-    }
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return "-";
-    }
-
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
 
   const activeFilterCount = useMemo(() => {
     return filterOptions.reduce((count, filter) => {
@@ -1160,7 +1161,7 @@ export default function Table({
         <table className="w-full min-w-max border-collapse">
           <thead>
             <tr className="bg-surface border-border border-b">
-              <th className="w-12 px-4 py-3 text-left">
+              {/* <th className="w-12 px-4 py-3 text-left">
                 <input
                   type="checkbox"
                   checked={allCurrentSelected}
@@ -1168,6 +1169,20 @@ export default function Table({
                   className="accent-primary h-4 w-4 cursor-pointer"
                   aria-label="Select all"
                 />
+              </th> */}
+
+              <th className="w-12 px-4 py-3 text-left">
+                {loading ? (
+                  <div className="bg-gray h-4 w-4 animate-pulse rounded" />
+                ) : (
+                  <input
+                    type="checkbox"
+                    checked={allCurrentSelected}
+                    onChange={toggleSelectAll}
+                    className="accent-primary h-4 w-4 cursor-pointer"
+                    aria-label="Select all"
+                  />
+                )}
               </th>
 
               {visibleColumns.map((column) => {

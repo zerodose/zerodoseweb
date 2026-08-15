@@ -5,6 +5,9 @@ import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 
 import User from "@/models/User";
+import District from "@/models/District";
+import Town from "@/models/Town";
+import UnionCouncil from "@/models/UnionCouncil";
 
 import {
   generateVerificationCode,
@@ -43,17 +46,13 @@ export async function POST(request) {
     // Normalize Data
     // ============================================================
 
-    const normalizedName =
-      name?.trim();
+    const normalizedName = name?.trim();
 
-    const normalizedEmail =
-      email?.trim().toLowerCase() || null;
+    const normalizedEmail = email?.trim().toLowerCase() || null;
 
-    const normalizedContactNumber =
-      contactNumber?.trim();
+    const normalizedContactNumber = contactNumber?.trim();
 
-    const normalizedSupervisorCode =
-      supervisorCode?.trim() || null;
+    const normalizedSupervisorCode = supervisorCode?.trim() || null;
 
     // ============================================================
     // Duplicate Email Check
@@ -62,12 +61,11 @@ export async function POST(request) {
     // ============================================================
 
     if (normalizedEmail) {
-      const existingEmail =
-        await User.findOne({
-          email: normalizedEmail,
-        })
-          .select("_id")
-          .lean();
+      const existingEmail = await User.findOne({
+        email: normalizedEmail,
+      })
+        .select("_id")
+        .lean();
 
       if (existingEmail) {
         return NextResponse.json(
@@ -84,20 +82,17 @@ export async function POST(request) {
     // Duplicate Contact Number
     // ============================================================
 
-    const existingContact =
-      await User.findOne({
-        contactNumber:
-          normalizedContactNumber,
-      })
-        .select("_id")
-        .lean();
+    const existingContact = await User.findOne({
+      contactNumber: normalizedContactNumber,
+    })
+      .select("_id")
+      .lean();
 
     if (existingContact) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Contact number already exists.",
+          message: "Contact number already exists.",
         },
         { status: 409 },
       );
@@ -110,36 +105,29 @@ export async function POST(request) {
     // ============================================================
 
     if (designation === "worker") {
-      if (
-        !mongoose.Types.ObjectId.isValid(
-          supervisor,
-        )
-      ) {
+      if (!mongoose.Types.ObjectId.isValid(supervisor)) {
         return NextResponse.json(
           {
             success: false,
-            message:
-              "Invalid supervisor ID.",
+            message: "Invalid supervisor ID.",
           },
           { status: 400 },
         );
       }
 
-      const supervisorDoc =
-        await User.findOne({
-          _id: supervisor,
-          designation: "supervisor",
-          isActive: true,
-        })
-          .select("_id")
-          .lean();
+      const supervisorDoc = await User.findOne({
+        _id: supervisor,
+        designation: "supervisor",
+        isActive: true,
+      })
+        .select("_id")
+        .lean();
 
       if (!supervisorDoc) {
         return NextResponse.json(
           {
             success: false,
-            message:
-              "Valid active supervisor not found.",
+            message: "Valid active supervisor not found.",
           },
           { status: 400 },
         );
@@ -153,11 +141,7 @@ export async function POST(request) {
     let hashedPassword = null;
 
     if (password) {
-      hashedPassword =
-        await bcrypt.hash(
-          password,
-          12,
-        );
+      hashedPassword = await bcrypt.hash(password, 12);
     }
 
     // ============================================================
@@ -168,85 +152,58 @@ export async function POST(request) {
     // ============================================================
 
     if (designation === "worker") {
-      const user =
-        await User.create({
-          name: normalizedName,
+      const user = await User.create({
+        name: normalizedName,
 
-          email: undefined,
+        email: undefined,
 
-          emailVerified: true,
+        emailVerified: true,
 
-          emailVerificationCode:
-            null,
+        emailVerificationCode: null,
 
-          emailVerificationExpires:
-            null,
+        emailVerificationExpires: null,
 
-          contactNumber:
-            normalizedContactNumber,
+        contactNumber: normalizedContactNumber,
 
-          // ObjectId
-          district,
+        // ObjectId
+        district,
 
-          // ObjectId
-          town,
+        // ObjectId
+        town,
 
-          // ObjectId
-          unionCouncil,
+        // ObjectId
+        unionCouncil,
 
-          designation,
+        designation,
 
-          supervisor,
+        supervisor,
 
-          supervisorCode: null,
+        supervisorCode: null,
 
-          teamNumber:
-            Number(teamNumber),
+        teamNumber: Number(teamNumber),
 
-          password:
-            hashedPassword,
+        password: hashedPassword,
 
-          isActive:
-            typeof isActive === "boolean"
-              ? isActive
-              : true,
-        });
+        isActive: typeof isActive === "boolean" ? isActive : true,
+      });
 
       // ==========================================================
       // Get Created Worker
       // ==========================================================
 
-      const createdUser =
-        await User.findById(
-          user._id,
-        )
-          .select(
-            "-password -emailVerificationCode -emailVerificationExpires",
-          )
-          .populate(
-            "district",
-            "_id name code",
-          )
-          .populate(
-            "town",
-            "_id name code",
-          )
-          .populate(
-            "unionCouncil",
-            "_id name code",
-          )
-          .populate(
-            "supervisor",
-            "_id name contactNumber",
-          )
-          .lean();
+      const createdUser = await User.findById(user._id)
+        .select("-password -emailVerificationCode -emailVerificationExpires")
+        .populate("district", "_id name code")
+        .populate("town", "_id name code")
+        .populate("unionCouncil", "_id name code")
+        .populate("supervisor", "_id name contactNumber")
+        .lean();
 
       return NextResponse.json(
         {
           success: true,
 
-          message:
-            "Worker account created successfully.",
+          message: "Worker account created successfully.",
 
           data: createdUser,
         },
@@ -271,17 +228,13 @@ export async function POST(request) {
     // Generate Verification Code
     // ============================================================
 
-    const verificationCode =
-      generateVerificationCode();
+    const verificationCode = generateVerificationCode();
 
     // ============================================================
     // Hash Verification Code
     // ============================================================
 
-    const hashedVerificationCode =
-      hashVerificationCode(
-        verificationCode,
-      );
+    const hashedVerificationCode = hashVerificationCode(verificationCode);
 
     // ============================================================
     // Verification Expiry
@@ -289,11 +242,7 @@ export async function POST(request) {
     // OTP 10 minutes valid hai.
     // ============================================================
 
-    const verificationExpires =
-      new Date(
-        Date.now() +
-        10 * 60 * 1000,
-      );
+    const verificationExpires = new Date(Date.now() + 10 * 60 * 1000);
 
     // ============================================================
     // Temporary Registration Data
@@ -307,8 +256,7 @@ export async function POST(request) {
 
       email: normalizedEmail,
 
-      contactNumber:
-        normalizedContactNumber,
+      contactNumber: normalizedContactNumber,
 
       // ObjectId
       district,
@@ -322,27 +270,19 @@ export async function POST(request) {
       designation,
 
       supervisorCode:
-        designation === "supervisor"
-          ? normalizedSupervisorCode
-          : null,
+        designation === "supervisor" ? normalizedSupervisorCode : null,
 
       supervisor: null,
 
       teamNumber: null,
 
-      password:
-        hashedPassword,
+      password: hashedPassword,
 
-      isActive:
-        typeof isActive === "boolean"
-          ? isActive
-          : true,
+      isActive: typeof isActive === "boolean" ? isActive : true,
 
-      emailVerificationCode:
-        hashedVerificationCode,
+      emailVerificationCode: hashedVerificationCode,
 
-      emailVerificationExpires:
-        verificationExpires,
+      emailVerificationExpires: verificationExpires,
 
       createdAt: Date.now(),
     };
@@ -353,10 +293,7 @@ export async function POST(request) {
     // User abhi MongoDB User collection mein nahi jayega.
     // ============================================================
 
-    setPendingRegistration(
-      normalizedEmail,
-      pendingData,
-    );
+    setPendingRegistration(normalizedEmail, pendingData);
 
     // ============================================================
     // Send Verification Email
@@ -371,28 +308,19 @@ export async function POST(request) {
         code: verificationCode,
       });
     } catch (emailError) {
-      console.error(
-        "Verification email error:",
-        emailError,
-      );
+      console.error("Verification email error:", emailError);
 
       // Email send fail ho gayi,
       // temporary registration remove kar dein.
 
-      deletePendingRegistration(
-        normalizedEmail,
-      );
+      deletePendingRegistration(normalizedEmail);
 
-      setPendingRegistration(
-        normalizedEmail,
-        pendingData,
-      );
+      setPendingRegistration(normalizedEmail, pendingData);
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Verification email could not be sent. Please try again.",
+          message: "Verification email could not be sent. Please try again.",
         },
         { status: 500 },
       );
@@ -411,8 +339,7 @@ export async function POST(request) {
       {
         success: true,
 
-        message:
-          "Verification code has been sent to your email.",
+        message: "Verification code has been sent to your email.",
 
         data: {
           email: normalizedEmail,
@@ -421,26 +348,19 @@ export async function POST(request) {
       { status: 201 },
     );
   } catch (error) {
-    console.error(
-      "Create user error:",
-      error,
-    );
+    console.error("Create user error:", error);
 
     // ============================================================
     // Duplicate Key
     // ============================================================
 
     if (error?.code === 11000) {
-      const duplicateField =
-        Object.keys(
-          error.keyPattern || {},
-        )[0];
+      const duplicateField = Object.keys(error.keyPattern || {})[0];
 
       return NextResponse.json(
         {
           success: false,
-          message:
-            `${duplicateField || "Field"} already exists.`,
+          message: `${duplicateField || "Field"} already exists.`,
         },
         { status: 409 },
       );
@@ -450,25 +370,16 @@ export async function POST(request) {
     // Mongoose Validation Error
     // ============================================================
 
-    if (
-      error?.name ===
-      "ValidationError"
-    ) {
-      const messages =
-        Object.values(
-          error.errors || {},
-        ).map(
-          (item) =>
-            item.message,
-        );
+    if (error?.name === "ValidationError") {
+      const messages = Object.values(error.errors || {}).map(
+        (item) => item.message,
+      );
 
       return NextResponse.json(
         {
           success: false,
           message:
-            messages.length > 0
-              ? messages.join(", ")
-              : "Validation failed.",
+            messages.length > 0 ? messages.join(", ") : "Validation failed.",
         },
         { status: 400 },
       );
@@ -481,9 +392,7 @@ export async function POST(request) {
     return NextResponse.json(
       {
         success: false,
-        message:
-          error?.message ||
-          "Failed to create user.",
+        message: error?.message || "Failed to create user.",
       },
       { status: 500 },
     );

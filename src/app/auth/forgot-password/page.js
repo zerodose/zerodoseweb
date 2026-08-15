@@ -442,7 +442,7 @@ export default function ForgotPasswordPage() {
                 alt="Zerodose Logo"
                 width={100}
                 height={100}
-                className="h-auto w-[100px]"
+                className="h-[100px] w-[100px]"
                 priority
               />
 

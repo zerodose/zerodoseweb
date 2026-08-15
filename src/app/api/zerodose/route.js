@@ -1,98 +1,27 @@
 import { NextResponse } from "next/server";
-import connectDB from "@/lib/mongodb";
+import mongoose from "mongoose";
+import { jwtVerify } from "jose";
+import { connectDB } from "@/lib/db";
 import Zerodose from "@/models/Zerodose";
+import District from "@/models/District";
+import Town from "@/models/Town";
+import UnionCouncil from "@/models/UnionCouncil";
+import User from "@/models/User";
 
-export async function POST(request) {
-  try {
-    await connectDB();
+// ===import { NextResponse } from "next/server";
 
-    const body = await request.json();
+const JWT_SECRET = process.env.JWT_SECRET;
 
-    const {
-      districtId,
-      townId,
-      unionCouncilId,
-      ucmoId,
-      supervisorId,
-      teamId,
-      childName,
-      fatherName,
-      age,
-      address,
-      contactNo,
-      recordDate,
-      visitDate,
-      coveredDate,
-      location,
-      status,
-    } = body;
-
-    if (
-      !districtId ||
-      !townId ||
-      !unionCouncilId ||
-      !ucmoId ||
-      !supervisorId ||
-      !teamId ||
-      !childName ||
-      !fatherName ||
-      age === undefined ||
-      !address ||
-      !location?.latitude ||
-      !location?.longitude
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Required fields are missing",
-        },
-        { status: 400 },
-      );
-    }
-
-    const zerodose = await Zerodose.create({
-      districtId,
-      townId,
-      unionCouncilId,
-      ucmoId,
-      supervisorId,
-      teamId,
-      childName,
-      fatherName,
-      age,
-      address,
-      contactNo,
-      recordDate: recordDate || new Date(),
-      visitDate,
-      coveredDate,
-      location: {
-        latitude: location.latitude,
-        longitude: location.longitude,
-      },
-      status: status || "recorded",
-    });
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Zerodose recorded successfully",
-        data: zerodose,
-      },
-      { status: 201 },
-    );
-  } catch (error) {
-    console.error("Zerodose POST error:", error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Failed to record Zerodose",
-        error: error.message,
-      },
-      { status: 500 },
-    );
-  }
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET is not configured");
 }
+
+const secret = new TextEncoder().encode(JWT_SECRET);
+
+// ==================================================
+// GET
+// Get Zerodose List
+// =====================================================
 
 export async function GET(request) {
   try {
@@ -100,48 +29,731 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
 
+    // ===================================================
+    // Pagination
+    // ===================================================
+
+    const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1);
+
+    const limit = Math.min(
+      Math.max(parseInt(searchParams.get("limit") || "10", 10), 1),
+      50,
+    );
+
+    const skip = (page - 1) * limit;
+
+    // ===================================================
+    // Search
+    // ===================================================
+
+    const search = searchParams.get("search")?.trim() || "";
+
+    // ===================================================
+    // Filters
+    // ===================================================
+
     const districtId = searchParams.get("districtId");
     const townId = searchParams.get("townId");
     const unionCouncilId = searchParams.get("unionCouncilId");
+
     const ucmoId = searchParams.get("ucmoId");
     const supervisorId = searchParams.get("supervisorId");
     const teamId = searchParams.get("teamId");
-    const status = searchParams.get("status");
 
-    const filter = {};
+    const vaccinationStatus = searchParams.get("vaccinationStatus");
 
-    if (districtId) filter.districtId = districtId;
-    if (townId) filter.townId = townId;
-    if (unionCouncilId) filter.unionCouncilId = unionCouncilId;
-    if (ucmoId) filter.ucmoId = ucmoId;
-    if (supervisorId) filter.supervisorId = supervisorId;
-    if (teamId) filter.teamId = teamId;
-    if (status) filter.status = status;
+    const clientStatus = searchParams.get("clientStatus");
 
-    const zerodose = await Zerodose.find(filter)
-      .populate("districtId")
-      .populate("townId")
-      .populate("unionCouncilId")
-      .populate("ucmoId", "name email")
-      .populate("supervisorId", "name email")
+    // ===================================================
+    // Date Filters
+    // ===================================================
+
+    const recordDateFrom = searchParams.get("recordDateFrom");
+
+    const recordDateTo = searchParams.get("recordDateTo");
+
+    const visitDateFrom = searchParams.get("visitDateFrom");
+
+    const visitDateTo = searchParams.get("visitDateTo");
+
+    const coveredDateFrom = searchParams.get("coveredDateFrom");
+
+    const coveredDateTo = searchParams.get("coveredDateTo");
+
+    // ===================================================
+    // Sorting
+    // ===================================================
+
+    const sortBy = searchParams.get("sortBy") || "createdAt";
+
+    const sortOrder = searchParams.get("sortOrder") === "asc" ? 1 : -1;
+
+    // ===================================================
+    // Query
+    // ===================================================
+
+    const query = {};
+
+    // ===================================================
+    // Validate ObjectIds
+    // ===================================================
+
+    const objectIdFields = [
+      {
+        value: districtId,
+        name: "districtId",
+      },
+      {
+        value: townId,
+        name: "townId",
+      },
+      {
+        value: unionCouncilId,
+        name: "unionCouncilId",
+      },
+      {
+        value: ucmoId,
+        name: "ucmoId",
+      },
+      {
+        value: supervisorId,
+        name: "supervisorId",
+      },
+      {
+        value: teamId,
+        name: "teamId",
+      },
+    ];
+
+    for (const field of objectIdFields) {
+      if (field.value && !mongoose.Types.ObjectId.isValid(field.value)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Invalid ${field.name}`,
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+    }
+
+    // ===================================================
+    // Location / User Filters
+    // ===================================================
+
+    if (districtId) {
+      query.districtId = districtId;
+    }
+
+    if (townId) {
+      query.townId = townId;
+    }
+
+    if (unionCouncilId) {
+      query.unionCouncilId = unionCouncilId;
+    }
+
+    if (ucmoId) {
+      query.ucmoId = ucmoId;
+    }
+
+    if (supervisorId) {
+      query.supervisorId = supervisorId;
+    }
+
+    if (teamId) {
+      query.teamId = teamId;
+    }
+
+    // ===================================================
+    // Status Filters
+    // ===================================================
+
+    if (vaccinationStatus) {
+      const allowedStatuses = ["recorded", "visited", "covered"];
+
+      if (!allowedStatuses.includes(vaccinationStatus)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid vaccinationStatus",
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+
+      query.vaccinationStatus = vaccinationStatus;
+    }
+
+    if (clientStatus) {
+      const allowedClientStatuses = [
+        "refusal",
+        "sick",
+        "not_available",
+        "deceased",
+      ];
+
+      if (!allowedClientStatuses.includes(clientStatus)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid clientStatus",
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+
+      query.clientStatus = clientStatus;
+    }
+
+    // ===================================================
+    // Search
+    // ===================================================
+
+    if (search) {
+      query.$or = [
+        {
+          childName: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          fatherName: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          address: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          contactNo: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+      ];
+    }
+
+    // ===================================================
+    // Date Range Helper
+    // ===================================================
+
+    const addDateRange = (field, from, to) => {
+      if (!from && !to) {
+        return;
+      }
+
+      const range = {};
+
+      if (from) {
+        const start = new Date(`${from}T00:00:00`);
+
+        if (Number.isNaN(start.getTime())) {
+          throw new Error(`Invalid ${field} from date`);
+        }
+
+        range.$gte = start;
+      }
+
+      if (to) {
+        const end = new Date(`${to}T23:59:59.999`);
+
+        if (Number.isNaN(end.getTime())) {
+          throw new Error(`Invalid ${field} to date`);
+        }
+
+        range.$lte = end;
+      }
+
+      query[field] = range;
+    };
+
+    addDateRange("recordDate", recordDateFrom, recordDateTo);
+
+    addDateRange("visitDate", visitDateFrom, visitDateTo);
+
+    addDateRange("coveredDate", coveredDateFrom, coveredDateTo);
+
+    // ===================================================
+    // Count
+    // ===================================================
+
+    const total = await Zerodose.countDocuments(query);
+
+    // ===================================================
+    // Data
+    // ===================================================
+
+    const data = await Zerodose.find(query)
+      .populate("districtId", "name code")
+      .populate("townId", "name code")
+      .populate("unionCouncilId", "name code")
+      .populate("ucmoId", "name contactNumber")
+      .populate("supervisorId", "name contactNumber")
       .populate("teamId")
-      .sort({ createdAt: -1 });
+      .sort({
+        [sortBy]: sortOrder,
+      })
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
-    return NextResponse.json({
-      success: true,
-      count: zerodose.length,
-      data: zerodose,
-    });
+    // ===================================================
+    // Pagination
+    // ===================================================
+
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+
+    return NextResponse.json(
+      {
+        success: true,
+        data,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
+      },
+      {
+        status: 200,
+      },
+    );
   } catch (error) {
-    console.error("Zerodose GET error:", error);
+    console.error("Get zerodose error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to fetch Zerodose records",
-        error: error.message,
+        message: error.message || "Failed to fetch zerodose records",
       },
-      { status: 500 },
+      {
+        status: 500,
+      },
+    );
+  }
+}
+
+// =====================================================
+// POST
+// Create Zerodose
+// =====================================================
+
+export async function POST(request) {
+  try {
+    // ============================================================
+    // Authentication
+    // ============================================================
+
+    const token = request.cookies.get("auth_token")?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Not authenticated.",
+        },
+        {
+          status: 401,
+        },
+      );
+    }
+
+    let payload;
+
+    try {
+      const result = await jwtVerify(token, secret);
+      payload = result.payload;
+    } catch (error) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid or expired authentication.",
+        },
+        {
+          status: 401,
+        },
+      );
+    }
+
+    // ============================================================
+    // Database
+    // ============================================================
+
+    await connectDB();
+
+    // ============================================================
+    // Get Logged-in User
+    // ============================================================
+
+    const worker = await User.findOne({
+      _id: payload.userId,
+      designation: "worker",
+      isActive: true,
+    }).lean();
+
+    if (!worker) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Only active workers can add zerodose.",
+        },
+        {
+          status: 403,
+        },
+      );
+    }
+
+    // ============================================================
+    // Worker Location / Team Information
+    // ============================================================
+
+    const { district, town, unionCouncil, ucmoId, supervisor, teamId } = worker;
+
+    if (
+      !district ||
+      !town ||
+      !unionCouncil ||
+      !ucmoId ||
+      !supervisor ||
+      !teamId
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Worker is not properly assigned to district, town, union council, UCMO, supervisor or team.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    // ============================================================
+    // Request Body
+    // ============================================================
+
+    const body = await request.json();
+
+    const { childName, fatherName, age, address, contactNo, location } = body;
+
+    // ============================================================
+    // Required Fields
+    // ============================================================
+
+    const requiredFields = [
+      "childName",
+      "fatherName",
+      "age",
+      "address",
+      "location",
+    ];
+
+    for (const field of requiredFields) {
+      if (
+        body[field] === undefined ||
+        body[field] === null ||
+        body[field] === ""
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `${field} is required.`,
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+    }
+
+    // ============================================================
+    // Child Name
+    // ============================================================
+
+    if (typeof childName !== "string" || !childName.trim()) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Valid child name is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    // ============================================================
+    // Father Name
+    // ============================================================
+
+    if (typeof fatherName !== "string" || !fatherName.trim()) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Valid father name is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    // ============================================================
+    // Age
+    // ============================================================
+
+    if (typeof age !== "number" || age < 0 || age > 10) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Age must be a number between 0 and 10.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    // ============================================================
+    // Address
+    // ============================================================
+
+    if (typeof address !== "string" || !address.trim()) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Valid address is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    // ============================================================
+    // Contact Number
+    // ============================================================
+
+    if (contactNo !== undefined && contactNo !== "") {
+      if (!/^03\d{9}$/.test(contactNo)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Please enter a valid Pakistani mobile number.",
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+    }
+
+    // ============================================================
+    // Location
+    // ============================================================
+
+    if (
+      !location ||
+      typeof location.latitude !== "number" ||
+      typeof location.longitude !== "number"
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Valid latitude and longitude are required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    // ============================================================
+    // Validate Worker IDs
+    // ============================================================
+
+    const workerIds = [
+      {
+        value: district,
+        name: "district",
+      },
+      {
+        value: town,
+        name: "town",
+      },
+      {
+        value: unionCouncil,
+        name: "unionCouncil",
+      },
+      {
+        value: ucmoId,
+        name: "ucmoId",
+      },
+      {
+        value: supervisor,
+        name: "supervisor",
+      },
+      {
+        value: teamId,
+        name: "teamId",
+      },
+    ];
+
+    for (const field of workerIds) {
+      if (!mongoose.Types.ObjectId.isValid(field.value)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Worker has an invalid ${field.name}.`,
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+    }
+
+    // ============================================================
+    // Create Zerodose
+    //
+    // IMPORTANT:
+    // Worker cannot provide:
+    // districtId
+    // townId
+    // unionCouncilId
+    // ucmoId
+    // supervisorId
+    // teamId
+    // clientStatus
+    // vaccinationStatus
+    // visitDate
+    // coveredDate
+    //
+    // All controlled fields are decided by backend.
+    // ============================================================
+
+    const zerodose = await Zerodose.create({
+      districtId: district,
+      townId: town,
+      unionCouncilId: unionCouncil,
+
+      ucmoId,
+      supervisorId: supervisor,
+      teamId,
+
+      childName: childName.trim(),
+      fatherName: fatherName.trim(),
+      age,
+
+      address: address.trim(),
+      contactNo: contactNo?.trim() || undefined,
+
+      recordDate: new Date(),
+
+      visitDate: null,
+      coveredDate: null,
+
+      location: {
+        latitude: location.latitude,
+        longitude: location.longitude,
+      },
+
+      // Worker only records the zerodose.
+      clientStatus: null,
+      vaccinationStatus: "recorded",
+    });
+
+    // ============================================================
+    // Populate
+    // ============================================================
+
+    const populatedZerodose = await Zerodose.findById(zerodose._id)
+      .populate("districtId", "name code")
+      .populate("townId", "name code")
+      .populate("unionCouncilId", "name code")
+      .populate("ucmoId", "name contactNumber")
+      .populate("supervisorId", "name contactNumber")
+      .populate("teamId")
+      .lean();
+
+    // ============================================================
+    // Response
+    // ============================================================
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Zerodose recorded successfully.",
+        data: populatedZerodose,
+      },
+      {
+        status: 201,
+      },
+    );
+  } catch (error) {
+    console.error("Create zerodose error:", error);
+
+    // ============================================================
+    // Mongoose Validation Error
+    // ============================================================
+
+    if (error.name === "ValidationError") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: Object.values(error.errors)
+            .map((item) => item.message)
+            .join(", "),
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    // ============================================================
+    // Invalid ObjectId
+    // ============================================================
+
+    if (error instanceof mongoose.Error.CastError) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid data provided.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    // ============================================================
+    // Server Error
+    // ============================================================
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to create zerodose.",
+      },
+      {
+        status: 500,
+      },
     );
   }
 }

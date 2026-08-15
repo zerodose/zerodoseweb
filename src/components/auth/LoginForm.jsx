@@ -271,7 +271,6 @@ export default function LoginForm() {
                     <input
                       id="password"
                       type={showPassword ? "text" : "password"}
-                      value={"12345678"}
                       placeholder="Enter your password"
                       autoComplete="current-password"
                       disabled={loading}

@@ -75,10 +75,6 @@ export async function POST(request) {
       );
     }
 
-    // ============================================================
-    // Workers cannot login because they don't have passwords
-    // ============================================================
-
     if (!user.password) {
       return NextResponse.json(
         {

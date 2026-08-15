@@ -71,6 +71,11 @@ export const dashboardSidebar = [
     href: "/dashboard/union-councils",
     icon: MapPin,
   },
+  {
+    title: "Zerodose",
+    href: "/dashboard/zerodose",
+    icon: MapPin,
+  },
 
   // =====================================================
   // Settings

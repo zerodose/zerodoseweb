@@ -100,7 +100,13 @@ const zerodoseSchema = new mongoose.Schema(
       },
     },
 
-    status: {
+    clientStatus: {
+      type: String,
+      enum: ["available", "refusal", "sick", "not_available", "deceased"],
+      default: null,
+      index: true,
+    },
+    vaccinationStatus: {
       type: String,
       enum: ["recorded", "visited", "covered"],
       default: "recorded",
@@ -113,7 +119,6 @@ const zerodoseSchema = new mongoose.Schema(
 );
 
 const Zerodose =
-  mongoose.models.Zerodose ||
-  mongoose.model("Zerodose", zerodoseSchema);
+  mongoose.models.Zerodose || mongoose.model("Zerodose", zerodoseSchema);
 
 export default Zerodose;

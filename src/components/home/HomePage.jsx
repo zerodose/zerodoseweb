@@ -37,9 +37,7 @@ export default function HomePage() {
         setLoading(true);
 
         // Pehle jo working query thi usi ko use kar rahe hain
-        const response = await getGlobalCount(
-          "supervisors,teams,zerodose",
-        );
+        const response = await getGlobalCount("supervisors,teams,zerodose");
 
         const data = response?.data || {};
 
@@ -133,21 +131,13 @@ export default function HomePage() {
       const easedProgress = 1 - Math.pow(1 - progress, 3);
 
       setAnimatedCounts({
-        campaigns: Math.floor(
-          counts.campaigns * easedProgress,
-        ),
+        campaigns: Math.floor(counts.campaigns * easedProgress),
 
-        teams: Math.floor(
-          counts.teams * easedProgress,
-        ),
+        teams: Math.floor(counts.teams * easedProgress),
 
-        supervisors: Math.floor(
-          counts.supervisors * easedProgress,
-        ),
+        supervisors: Math.floor(counts.supervisors * easedProgress),
 
-        zerodose: Math.floor(
-          counts.zerodose * easedProgress,
-        ),
+        zerodose: Math.floor(counts.zerodose * easedProgress),
       });
 
       if (progress < 1) {
@@ -175,104 +165,11 @@ export default function HomePage() {
       <div className="w-full max-w-5xl">
         <div className="bg-background border-border overflow-hidden rounded-2xl border shadow-sm sm:rounded-3xl">
           <div className="flex flex-col md:grid md:grid-cols-2">
-
-            {/* =================================================
-                Management Overview
-            ================================================= */}
-
-            <div className="bg-surface-blue order-1 flex items-center justify-center p-4 sm:p-6 md:order-2 md:p-6">
-              <div className="w-full max-w-lg">
-                <div className="bg-background border-border rounded-2xl border p-4 shadow-sm sm:p-6">
-
-                  {/* Header */}
-
-                  <div className="mb-4 flex items-center justify-between sm:mb-6">
-                    <div>
-                      <p className="text-text-secondary text-xs sm:text-sm">
-                        Dashboard
-                      </p>
-
-                      <h2 className="text-text mt-1 text-lg font-bold sm:text-xl">
-                        Management Overview
-                      </h2>
-                    </div>
-
-                    <div className="bg-primary-light flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-10 sm:w-10">
-                      <ShieldCheck className="text-primary h-5 w-5" />
-                    </div>
-                  </div>
-
-                  {/* Counts */}
-
-                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
-
-                    {/* Campaigns */}
-
-                    <div className="bg-surface rounded-xl p-3 sm:p-4">
-                      <p className="text-text-secondary text-xs">
-                        Campaigns
-                      </p>
-
-                      <p className="text-text mt-1 text-xl font-bold sm:text-2xl">
-                        {loading
-                          ? loadingDots
-                          : animatedCounts.campaigns.toLocaleString()}
-                      </p>
-                    </div>
-
-                    {/* Supervisors */}
-
-                    <div className="bg-surface rounded-xl p-3 sm:p-4">
-                      <p className="text-text-secondary text-xs">
-                        Supervisors
-                      </p>
-
-                      <p className="text-text mt-1 text-xl font-bold sm:text-2xl">
-                        {loading
-                          ? loadingDots
-                          : animatedCounts.supervisors.toLocaleString()}
-                      </p>
-                    </div>
-
-                    {/* Teams */}
-
-                    <div className="bg-surface rounded-xl p-3 sm:p-4">
-                      <p className="text-text-secondary text-xs">
-                        Teams
-                      </p>
-
-                      <p className="text-text mt-1 text-xl font-bold sm:text-2xl">
-                        {loading
-                          ? loadingDots
-                          : animatedCounts.teams.toLocaleString()}
-                      </p>
-                    </div>
-
-                    {/* Zerodose */}
-
-                    <div className="bg-surface rounded-xl p-3 sm:p-4">
-                      <p className="text-text-secondary text-xs">
-                        Zerodose
-                      </p>
-
-                      <p className="text-text mt-1 text-xl font-bold sm:text-2xl">
-                        {loading
-                          ? loadingDots
-                          : animatedCounts.zerodose.toLocaleString()}
-                      </p>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* =================================================
                 Left Content
             ================================================= */}
 
-            <div className="order-2 flex flex-col justify-center p-5 sm:p-8 md:order-1 md:p-10 lg:p-12">
-
+            <div className="order-1 flex flex-col justify-center p-5 sm:p-8 md:order-1 mb-10 md:mb-0 md:p-10 lg:p-12">
               {/* Logo */}
 
               <div className="mb-5 flex justify-center md:mb-7 md:justify-start">
@@ -298,9 +195,7 @@ export default function HomePage() {
 
               <h1 className="text-text mx-auto max-w-md text-center text-3xl leading-[1.15] font-bold tracking-tight sm:text-4xl md:mx-0 md:text-left">
                 Centralized
-                <span className="text-primary block">
-                  Management System
-                </span>
+                <span className="text-primary block">Management System</span>
               </h1>
 
               {/* Description */}
@@ -320,6 +215,86 @@ export default function HomePage() {
                   Login
                   <ArrowRight className="h-5 w-5" />
                 </Link>
+              </div>
+            </div>
+
+            {/* =================================================
+                Management Overview
+            ================================================= */}
+
+            <div className="bg-surface-blue order-2 flex items-center justify-center  p-4 sm:p-6 md:order-2 md:p-6">
+              <div className="w-full max-w-lg mt-10 md:mt-0">
+                <div className="bg-background border-border rounded-2xl border p-4 shadow-sm sm:p-6">
+                  {/* Header */}
+
+                  <div className="mb-4 flex items-center justify-between sm:mb-6">
+                    <div>
+                      <p className="text-text-secondary text-xs sm:text-sm">
+                        Dashboard
+                      </p>
+
+                      <h2 className="text-text mt-1 text-lg font-bold sm:text-xl">
+                        Management Overview
+                      </h2>
+                    </div>
+
+                    <div className="bg-primary-light flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-10 sm:w-10">
+                      <ShieldCheck className="text-primary h-5 w-5" />
+                    </div>
+                  </div>
+
+                  {/* Counts */}
+
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    {/* Campaigns */}
+
+                    <div className="bg-surface rounded-xl p-3 sm:p-4">
+                      <p className="text-text-secondary text-xs">Campaigns</p>
+
+                      <p className="text-text mt-1 text-xl font-bold sm:text-2xl">
+                        {loading
+                          ? loadingDots
+                          : animatedCounts.campaigns.toLocaleString()}
+                      </p>
+                    </div>
+
+                    {/* Supervisors */}
+
+                    <div className="bg-surface rounded-xl p-3 sm:p-4">
+                      <p className="text-text-secondary text-xs">Supervisors</p>
+
+                      <p className="text-text mt-1 text-xl font-bold sm:text-2xl">
+                        {loading
+                          ? loadingDots
+                          : animatedCounts.supervisors.toLocaleString()}
+                      </p>
+                    </div>
+
+                    {/* Teams */}
+
+                    <div className="bg-surface rounded-xl p-3 sm:p-4">
+                      <p className="text-text-secondary text-xs">Teams</p>
+
+                      <p className="text-text mt-1 text-xl font-bold sm:text-2xl">
+                        {loading
+                          ? loadingDots
+                          : animatedCounts.teams.toLocaleString()}
+                      </p>
+                    </div>
+
+                    {/* Zerodose */}
+
+                    <div className="bg-surface rounded-xl p-3 sm:p-4">
+                      <p className="text-text-secondary text-xs">Zerodose</p>
+
+                      <p className="text-text mt-1 text-xl font-bold sm:text-2xl">
+                        {loading
+                          ? loadingDots
+                          : animatedCounts.zerodose.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

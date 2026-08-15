@@ -329,12 +329,18 @@ export async function GET(request) {
       UnionCouncil.countDocuments(filter),
     ]);
 
+    const formattedUnionCouncils = unionCouncils.map((uc) => ({
+      ...uc,
+      districtName: uc.district?.name || "-",
+      townName: uc.town?.name || "-",
+    }));
+
     const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json(
       {
         success: true,
-        data: unionCouncils,
+        data: formattedUnionCouncils,
 
         pagination: {
           page,

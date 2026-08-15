@@ -1,5 +1,5 @@
 import React from 'react'
-import AddZerodosePage from '@/components/zerodose/ZerodoseForm'
+import ZerodoseForm from '@/components/zerodose/ZerodoseForm'
 
 function page() {
   return (

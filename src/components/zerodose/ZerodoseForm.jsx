@@ -37,10 +37,14 @@ export default function ZerodoseForm() {
   // Get Current Location
   // ============================================================
 
+  // ============================================================
+  // Get Current Location
+  // ============================================================
+
   const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error("Location is not supported by this device."));
+        reject(new Error("Location is not supported by this browser/device."));
 
         return;
       }
@@ -52,16 +56,35 @@ export default function ZerodoseForm() {
             longitude: position.coords.longitude,
           });
         },
-        () => {
-          reject(
-            new Error(
-              "Unable to get your location. Please allow location permission.",
-            ),
-          );
+        (error) => {
+          console.error("Geolocation error:", error);
+
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              reject(
+                new Error(
+                  "Location permission denied. Please allow location access.",
+                ),
+              );
+              break;
+
+            case error.POSITION_UNAVAILABLE:
+              reject(new Error("Unable to determine your current location."));
+              break;
+
+            case error.TIMEOUT:
+              reject(
+                new Error("Location request timed out. Please try again."),
+              );
+              break;
+
+            default:
+              reject(new Error("Unable to get your current location."));
+          }
         },
         {
           enableHighAccuracy: true,
-          timeout: 10000,
+          timeout: 20000,
           maximumAge: 0,
         },
       );
@@ -74,10 +97,6 @@ export default function ZerodoseForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // ----------------------------------------------------------
-    // Validation
-    // ----------------------------------------------------------
 
     if (!formData.childName.trim()) {
       toast.error("Child name is required.");
@@ -96,8 +115,8 @@ export default function ZerodoseForm() {
 
     const age = Number(formData.age);
 
-    if (Number.isNaN(age) || age < 0 || age > 10) {
-      toast.error("Age must be between 0 and 10.");
+    if (Number.isNaN(age) || age < 0 || age > 59) {
+      toast.error("Age must be between 0 and 59.");
       return;
     }
 
@@ -114,28 +133,8 @@ export default function ZerodoseForm() {
     try {
       setLoading(true);
 
-      // --------------------------------------------------------
-      // Get Worker GPS Location
-      // --------------------------------------------------------
-
+      // GPS
       const location = await getCurrentLocation();
-
-      // --------------------------------------------------------
-      // Only worker-entered data
-      //
-      // IMPORTANT:
-      // Do NOT send:
-      // districtId
-      // townId
-      // unionCouncilId
-      // ucmoId
-      // supervisorId
-      // teamId
-      // clientStatus
-      // vaccinationStatus
-      //
-      // Backend will handle these.
-      // --------------------------------------------------------
 
       const payload = {
         childName: formData.childName.trim(),
@@ -170,7 +169,7 @@ export default function ZerodoseForm() {
           Header
       ======================================================== */}
 
-      <div className="mb-6 flex items-start gap-3">
+      <div className="mt-4 mb-6 flex items-start gap-3">
         <button
           type="button"
           onClick={() => router.back()}
@@ -254,7 +253,7 @@ export default function ZerodoseForm() {
 
             <div>
               <label className="text-text mb-2 block text-sm font-medium">
-                Age
+                Age ( In Month )
               </label>
 
               <input
@@ -283,7 +282,7 @@ export default function ZerodoseForm() {
                 />
 
                 <input
-                  type="text"
+                  type="number"
                   name="contactNo"
                   value={formData.contactNo}
                   onChange={handleChange}

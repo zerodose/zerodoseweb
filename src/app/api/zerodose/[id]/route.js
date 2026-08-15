@@ -31,9 +31,9 @@ export async function GET(request, { params }) {
       .populate("districtId", "name code")
       .populate("townId", "name code")
       .populate("unionCouncilId", "name code")
-      .populate("ucmoId", "name contactNumber")
-      .populate("supervisorId", "name contactNumber")
-      .populate("teamId")
+      .populate("ucmo", "name contactNumber")
+      .populate("supervisor", "name contactNumber")
+      .populate("team")
       .lean();
 
     if (!zerodose) {
@@ -105,9 +105,9 @@ export async function PUT(request, { params }) {
       "districtId",
       "townId",
       "unionCouncilId",
-      "ucmoId",
-      "supervisorId",
-      "teamId",
+      "ucmo",
+      "supervisor",
+      "team",
       "childName",
       "fatherName",
       "age",
@@ -137,9 +137,9 @@ export async function PUT(request, { params }) {
       "districtId",
       "townId",
       "unionCouncilId",
-      "ucmoId",
-      "supervisorId",
-      "teamId",
+      "ucmo",
+      "supervisor",
+      "team",
     ];
 
     for (const field of objectIdFields) {
@@ -167,12 +167,12 @@ export async function PUT(request, { params }) {
       if (
         typeof updateData.age !== "number" ||
         updateData.age < 0 ||
-        updateData.age > 10
+        updateData.age > 59
       ) {
         return NextResponse.json(
           {
             success: false,
-            message: "Age must be a number between 0 and 10",
+            message: "Age must be a number between 0 and 59.",
           },
           {
             status: 400,
@@ -261,9 +261,9 @@ export async function PUT(request, { params }) {
       .populate("districtId", "name code")
       .populate("townId", "name code")
       .populate("unionCouncilId", "name code")
-      .populate("ucmoId", "name contactNumber")
-      .populate("supervisorId", "name contactNumber")
-      .populate("teamId")
+      .populate("ucmo", "name contactNumber")
+      .populate("supervisor", "name contactNumber")
+      .populate("team")
       .lean();
 
     if (!zerodose) {

@@ -23,23 +23,22 @@ const zerodoseSchema = new mongoose.Schema(
       index: true,
     },
 
-    ucmoId: {
+    ucmo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
       index: true,
     },
 
-    supervisorId: {
+    supervisor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
       index: true,
     },
 
-    teamId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Team",
+    teamNumber: {
+      type: Number,
       required: true,
       index: true,
     },
@@ -60,7 +59,7 @@ const zerodoseSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 0,
-      max: 10,
+      max: 59,
     },
 
     address: {

@@ -56,9 +56,9 @@ export async function GET(request) {
     const townId = searchParams.get("townId");
     const unionCouncilId = searchParams.get("unionCouncilId");
 
-    const ucmoId = searchParams.get("ucmoId");
-    const supervisorId = searchParams.get("supervisorId");
-    const teamId = searchParams.get("teamId");
+    const ucmo = searchParams.get("ucmo");
+    const supervisor = searchParams.get("supervisor");
+    const teamNumber = searchParams.get("teamNumber");
 
     const vaccinationStatus = searchParams.get("vaccinationStatus");
 
@@ -112,16 +112,16 @@ export async function GET(request) {
         name: "unionCouncilId",
       },
       {
-        value: ucmoId,
-        name: "ucmoId",
+        value: ucmo,
+        name: "ucmo",
       },
       {
-        value: supervisorId,
-        name: "supervisorId",
+        value: supervisor,
+        name: "supervisor",
       },
       {
-        value: teamId,
-        name: "teamId",
+        value: teamNumber,
+        name: "teamNumber",
       },
     ];
 
@@ -155,16 +155,16 @@ export async function GET(request) {
       query.unionCouncilId = unionCouncilId;
     }
 
-    if (ucmoId) {
-      query.ucmoId = ucmoId;
+    if (ucmo) {
+      query.ucmo = ucmo;
     }
 
-    if (supervisorId) {
-      query.supervisorId = supervisorId;
+    if (supervisor) {
+      query.supervisor = supervisor;
     }
 
-    if (teamId) {
-      query.teamId = teamId;
+    if (teamNumber) {
+      query.teamNumber = teamNumber;
     }
 
     // ===================================================
@@ -299,9 +299,9 @@ export async function GET(request) {
       .populate("districtId", "name code")
       .populate("townId", "name code")
       .populate("unionCouncilId", "name code")
-      .populate("ucmoId", "name contactNumber")
-      .populate("supervisorId", "name contactNumber")
-      .populate("teamId")
+      .populate("ucmo", "name contactNumber")
+      .populate("supervisor", "name contactNumber")
+      .populate("teamNumber")
       .sort({
         [sortBy]: sortOrder,
       })
@@ -421,15 +421,16 @@ export async function POST(request) {
     // Worker Location / Team Information
     // ============================================================
 
-    const { district, town, unionCouncil, ucmoId, supervisor, teamId } = worker;
+    const { district, town, unionCouncil, ucmo, supervisor, teamNumber } =
+      worker;
 
     if (
       !district ||
       !town ||
       !unionCouncil ||
-      !ucmoId ||
+      !ucmo ||
       !supervisor ||
-      !teamId
+      !teamNumber
     ) {
       return NextResponse.json(
         {
@@ -517,11 +518,11 @@ export async function POST(request) {
     // Age
     // ============================================================
 
-    if (typeof age !== "number" || age < 0 || age > 10) {
+    if (typeof age !== "number" || age < 0 || age > 59) {
       return NextResponse.json(
         {
           success: false,
-          message: "Age must be a number between 0 and 10.",
+          message: "Age must be a number between 0 and 59.",
         },
         {
           status: 400,
@@ -601,16 +602,12 @@ export async function POST(request) {
         name: "unionCouncil",
       },
       {
-        value: ucmoId,
-        name: "ucmoId",
+        value: ucmo,
+        name: "ucmo",
       },
       {
         value: supervisor,
         name: "supervisor",
-      },
-      {
-        value: teamId,
-        name: "teamId",
       },
     ];
 
@@ -636,9 +633,9 @@ export async function POST(request) {
     // districtId
     // townId
     // unionCouncilId
-    // ucmoId
-    // supervisorId
-    // teamId
+    // ucmo
+    // supervisor
+    // teamNumber
     // clientStatus
     // vaccinationStatus
     // visitDate
@@ -652,9 +649,9 @@ export async function POST(request) {
       townId: town,
       unionCouncilId: unionCouncil,
 
-      ucmoId,
-      supervisorId: supervisor,
-      teamId,
+      ucmo: ucmo,
+      supervisor: supervisor,
+      teamNumber,
 
       childName: childName.trim(),
       fatherName: fatherName.trim(),
@@ -686,9 +683,9 @@ export async function POST(request) {
       .populate("districtId", "name code")
       .populate("townId", "name code")
       .populate("unionCouncilId", "name code")
-      .populate("ucmoId", "name contactNumber")
-      .populate("supervisorId", "name contactNumber")
-      .populate("teamId")
+      .populate("ucmo", "name contactNumber")
+      .populate("supervisor", "name contactNumber")
+      .populate("teamNumber")
       .lean();
 
     // ============================================================

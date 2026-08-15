@@ -13,9 +13,9 @@ export const getZerodoses = async ({
   townId,
   unionCouncilId,
 
-  ucmoId,
-  supervisorId,
-  teamId,
+  ucmo,
+  supervisor,
+  teamNumber,
 
   vaccinationStatus,
   clientStatus,
@@ -44,9 +44,9 @@ export const getZerodoses = async ({
         unionCouncilId,
       }),
 
-      ...(ucmoId && { ucmoId }),
-      ...(supervisorId && { supervisorId }),
-      ...(teamId && { teamId }),
+      ...(ucmo && { ucmo }),
+      ...(supervisor && { supervisor }),
+      ...(teamNumber && { teamNumber }),
 
       ...(vaccinationStatus && {
         vaccinationStatus,

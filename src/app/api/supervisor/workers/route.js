@@ -19,9 +19,9 @@ export async function POST(request) {
     // Get Logged-in User ID
     // ============================================================
 
-    const supervisorId = request.headers.get("x-user-id");
+    const supervisor = request.headers.get("x-user-id");
 
-    if (!supervisorId) {
+    if (!supervisor) {
       return NextResponse.json(
         {
           success: false,
@@ -35,7 +35,7 @@ export async function POST(request) {
     // Validate User ID
     // ============================================================
 
-    if (!mongoose.Types.ObjectId.isValid(supervisorId)) {
+    if (!mongoose.Types.ObjectId.isValid(supervisor)) {
       return NextResponse.json(
         {
           success: false,
@@ -50,7 +50,7 @@ export async function POST(request) {
     // ============================================================
 
     const supervisorDoc = await User.findOne({
-      _id: supervisorId,
+      _id: supervisor,
       designation: "supervisor",
       isActive: true,
     })

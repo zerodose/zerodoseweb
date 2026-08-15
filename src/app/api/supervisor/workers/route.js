@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-
+import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import District from "@/models/District";
@@ -291,6 +291,17 @@ export async function POST(request) {
     }
 
     // ============================================================
+    // Hash Password
+    // ============================================================
+    let hashedPassword = null;
+
+    const password = "12345678";
+
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 12);
+    }
+
+    // ============================================================
     // Create Worker
     // ============================================================
 
@@ -319,6 +330,8 @@ export async function POST(request) {
 
       // Worker ke liye email/password nahi chahiye
       emailVerified: true,
+
+      password: hashedPassword,
 
       isActive: true,
     });

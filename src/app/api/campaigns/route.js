@@ -69,30 +69,74 @@ export async function POST(request) {
 
     const body = await request.json();
 
-    const { name, year, month, startDate, endDate, isActive } = body;
+    const { name, year, month, startDate, isActive = true } = body;
 
-    if (
-      !name ||
-      year === undefined ||
-      month === undefined ||
-      !startDate ||
-      !endDate
-    ) {
+    // =====================================================
+    // Required Fields
+    // =====================================================
+
+    if (!name || year === undefined || month === undefined || !startDate) {
       return NextResponse.json(
         {
           success: false,
-          message: "Name, year, month, start date and end date are required.",
+          message: "Name, year, month and start date are required.",
         },
         { status: 400 },
       );
     }
 
+    // =====================================================
+    // Calculate End Date
+    // 8 calendar days total
+    // Start Date + 7 days
+    // =====================================================
+
+    const start = new Date(startDate);
+
+    if (Number.isNaN(start.getTime())) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid start date.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const end = new Date(start);
+    end.setDate(end.getDate() + 7);
+
+    // =====================================================
+    // Prevent Multiple Campaigns On Same Date
+    // =====================================================
+
+    const existingCampaign = await Campaign.findOne({
+      startDate: {
+        $gte: new Date(start.setHours(0, 0, 0, 0)),
+        $lt: new Date(start.setHours(23, 59, 59, 999)),
+      },
+    });
+
+    if (existingCampaign) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `A campaign already exists on ${startDate}. Only one campaign can be created on the same date.`,
+        },
+        { status: 409 },
+      );
+    }
+
+    // =====================================================
+    // Create Campaign
+    // =====================================================
+
     const campaign = await Campaign.create({
       name,
-      year,
-      month,
-      startDate,
-      endDate,
+      year: Number(year),
+      month: Number(month),
+      startDate: new Date(startDate),
+      endDate: end,
       isActive,
     });
 
@@ -107,12 +151,12 @@ export async function POST(request) {
   } catch (error) {
     console.error("Create campaign error:", error);
 
-    // Duplicate campaign
+    // Duplicate index
     if (error.code === 11000) {
       return NextResponse.json(
         {
           success: false,
-          message: "This campaign type already exists for this month and year.",
+          message: "A campaign already exists for this date.",
         },
         { status: 409 },
       );

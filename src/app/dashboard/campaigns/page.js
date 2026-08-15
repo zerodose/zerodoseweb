@@ -43,7 +43,7 @@ export default function CampaignsPage() {
         year: "Year",
         month: "Month",
         startDate: "Start Date",
-        endDate: "End Date",
+        // endDate: "End Date",
         isActive: "Active",
       }}
       columnOptions={[
@@ -51,7 +51,7 @@ export default function CampaignsPage() {
         "year",
         "month",
         "startDate",
-        "endDate",
+        // "endDate",
         "isActive",
       ]}
       filterOptions={[

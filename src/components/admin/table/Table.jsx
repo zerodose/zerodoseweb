@@ -23,7 +23,7 @@ export default function Table({
   hiddenColumns = [],
   columnTitles = {},
   columnOptions = [],
-
+  dateColumns = [],
   onRowClick,
   rowKey = "_id",
 
@@ -228,6 +228,22 @@ export default function Table({
 
     if (typeof value === "boolean") {
       return value ? "Yes" : "No";
+    }
+
+    // Date
+    if (
+      value instanceof Date ||
+      (typeof value === "string" &&
+        !Number.isNaN(Date.parse(value)) &&
+        value.includes("T"))
+    ) {
+      const date = new Date(value);
+
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
     }
 
     if (typeof value === "object") {
@@ -648,6 +664,24 @@ export default function Table({
   // ============================================================
   // Active Filter Count
   // ============================================================
+
+const formatDate = (value) => {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+};
 
   const activeFilterCount = useMemo(() => {
     return filterOptions.reduce((count, filter) => {
@@ -1203,7 +1237,9 @@ export default function Table({
                         className="text-text max-w-xs px-4 py-3 text-sm"
                       >
                         <div className="truncate">
-                          {formatValue(row[column])}
+                          {dateColumns.includes(column)
+                            ? formatDate(row[column])
+                            : formatValue(row[column])}
                         </div>
                       </td>
                     ))}

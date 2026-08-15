@@ -145,7 +145,7 @@ export default function AdminHeader({ onMenuClick }) {
           {/* Desktop User Info */}
 
           <div className="hidden text-left lg:block">
-            <p className="text-text max-w-32 truncate text-sm font-semibold">
+            <p className="text-text max-w-32 uppercase truncate text-sm font-semibold">
               {user.name}
             </p>
 
@@ -182,11 +182,11 @@ export default function AdminHeader({ onMenuClick }) {
               {/* Name + Designation */}
 
               <div className="min-w-0">
-                <p className="text-text truncate text-sm font-semibold">
+                <p className="text-text truncate uppercase text-sm font-semibold">
                   {user.name}
                 </p>
 
-                <p className="text-text-secondary truncate text-xs capitalize">
+                <p className="text-text-secondary truncate uppercase text-xs capitalize">
                   {user.designation}
                 </p>
               </div>

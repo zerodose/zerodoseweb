@@ -53,7 +53,7 @@ export default function AddCampaignPage() {
     year: "",
     month: "",
     startDate: "",
-    endDate: "",
+    // endDate: "",
     isActive: true,
   });
 
@@ -112,10 +112,10 @@ export default function AddCampaignPage() {
       return;
     }
 
-    if (!formData.endDate) {
-      toast.error("Please select end date.");
-      return;
-    }
+    // if (!formData.endDate) {
+    //   toast.error("Please select end date.");
+    //   return;
+    // }
 
     try {
       setLoading(true);
@@ -125,7 +125,7 @@ export default function AddCampaignPage() {
         year: Number(formData.year),
         month: Number(formData.month),
         startDate: formData.startDate,
-        endDate: formData.endDate,
+        // endDate: formData.endDate,
         isActive: formData.isActive,
       };
 
@@ -137,18 +137,25 @@ export default function AddCampaignPage() {
 
       router.push("/dashboard/campaigns");
     } catch (error) {
+      const status = error?.response?.status;
+      const message =
+        error?.response?.data?.message || "Failed to create campaign.";
+
+      if (status === 409) {
+        toast.error(message);
+        return;
+      }
+
       console.error("Create campaign error:", error);
 
-      toast.error(
-        error?.response?.data?.message || "Failed to create campaign.",
-      );
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <div className="mx-auto w-full max-w-7xl">
       {/* =====================================================
           Header
       ===================================================== */}
@@ -178,7 +185,7 @@ export default function AddCampaignPage() {
           Form Card
       ===================================================== */}
 
-      <div className="bg-background border-border rounded-2xl border shadow-sm">
+      <div className="bg-background border-border rounded-2xl border shadow-sm ">
         <form onSubmit={handleSubmit}>
           {/* =================================================
               Form Header
@@ -202,7 +209,7 @@ export default function AddCampaignPage() {
               Fields
           ================================================= */}
 
-          <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2 sm:p-6">
+          <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-3 sm:p-6">
             {/* Campaign Type */}
 
             <Select
@@ -266,7 +273,7 @@ export default function AddCampaignPage() {
 
             {/* End Date */}
 
-            <div>
+            {/* <div>
               <label
                 htmlFor="endDate"
                 className="text-text mb-2 block text-sm font-medium"
@@ -284,7 +291,7 @@ export default function AddCampaignPage() {
                 disabled={loading}
                 className="bg-input-background text-text placeholder:text-input-placeholder border-border focus:border-primary focus:ring-primary-light w-full rounded-xl border px-4 py-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
               />
-            </div>
+            </div> */}
 
             {/* Active Status */}
 

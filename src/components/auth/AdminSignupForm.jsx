@@ -3,15 +3,22 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Eye, EyeClosed, EyeOff } from "lucide-react";
+import {
+  ArrowLeft,
+  Eye,
+  EyeClosed,
+  Save,
+  UserPlus,
+  UserRound,
+} from "lucide-react";
 
 import Select from "@/components/ui/Select";
 import Loader from "@/components/ui/Loader";
 import VerifyEmailModal from "@/components/auth/VerifyEmailModal";
-import { usePathname } from "next/navigation";
+
 import { getDistrictDropdown } from "@/api/districtApi";
 import { getTownDropdown } from "@/api/townApi";
 import { getUnionCouncilDropdown } from "@/api/unionCouncilApi";
@@ -19,21 +26,25 @@ import { createUser } from "@/api/userApi";
 
 import { verifyEmail, resendVerification } from "@/api/authApi";
 
-export default function SignupForm() {
+export default function AdminSignupForm() {
   const router = useRouter();
+  const pathname = usePathname();
+
+  // =====================================================
+  // Page Type
+  // =====================================================
+
+  const isDashboardAddUser = pathname === "/dashboard/users/addUser";
 
   // =====================================================
   // Designations
   // =====================================================
-
-  const pathname = usePathname();
 
   const DESIGNATIONS = [
     { value: "ucmo", label: "UCMO" },
     { value: "supervisor", label: "Supervisor" },
     { value: "vaccinator", label: "Vaccinator" },
     { value: "otherStaff", label: "Other Staff" },
-    // { value: "worker", label: "Worker" },
   ];
 
   const FROMADMINDESIGNATIONS = [
@@ -42,13 +53,11 @@ export default function SignupForm() {
     { value: "vaccinator", label: "Vaccinator" },
     { value: "otherStaff", label: "Other Staff" },
     { value: "admin", label: "Admin" },
-    // { value: "worker", label: "Worker" },
   ];
 
-  const designationOptions =
-    pathname === "/dashboard/users/addUser"
-      ? FROMADMINDESIGNATIONS
-      : DESIGNATIONS;
+  const designationOptions = isDashboardAddUser
+    ? FROMADMINDESIGNATIONS
+    : DESIGNATIONS;
 
   // =====================================================
   // Dashboard Routes
@@ -131,13 +140,9 @@ export default function SignupForm() {
   // =====================================================
 
   const [showVerifyModal, setShowVerifyModal] = useState(false);
-
   const [verificationEmail, setVerificationEmail] = useState("");
-
   const [verificationLoading, setVerificationLoading] = useState(false);
-
   const [verificationError, setVerificationError] = useState("");
-
   const [resendLoading, setResendLoading] = useState(false);
 
   // =====================================================
@@ -145,7 +150,6 @@ export default function SignupForm() {
   // =====================================================
 
   const [showPassword, setShowPassword] = useState(false);
-
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // =====================================================
@@ -180,7 +184,7 @@ export default function SignupForm() {
   }, []);
 
   // =====================================================
-  // Load Towns When District Changes
+  // Load Towns
   // =====================================================
 
   useEffect(() => {
@@ -217,7 +221,7 @@ export default function SignupForm() {
   }, [selectedDistrict]);
 
   // =====================================================
-  // Load Union Councils When Town Changes
+  // Load Union Councils
   // =====================================================
 
   useEffect(() => {
@@ -231,8 +235,6 @@ export default function SignupForm() {
         setUcLoading(true);
 
         const response = await getUnionCouncilDropdown(selectedTown);
-
-        console.log("UC RESPONSE:", response);
 
         setUnionCouncils(response?.data || []);
       } catch (error) {
@@ -255,7 +257,7 @@ export default function SignupForm() {
   }, [selectedTown]);
 
   // =====================================================
-  // Clear Supervisor Code When Designation Changes
+  // Clear Supervisor Code
   // =====================================================
 
   useEffect(() => {
@@ -266,7 +268,7 @@ export default function SignupForm() {
   }, [isSupervisor, setValue, clearErrors]);
 
   // =====================================================
-  // Helper: Get First Form Error
+  // Helper
   // =====================================================
 
   const getFirstError = (formErrors) => {
@@ -302,7 +304,9 @@ export default function SignupForm() {
 
         designation: data.designation,
 
-        supervisorCode: isSupervisor ? data.supervisorCode.trim() : null,
+        supervisorCode: isSupervisor
+          ? data.supervisorCode.trim()
+          : null,
 
         password: data.password,
       };
@@ -310,7 +314,9 @@ export default function SignupForm() {
       const response = await createUser(payload);
 
       if (response?.success) {
-        const email = response?.data?.email || data.email.trim().toLowerCase();
+        const email =
+          response?.data?.email ||
+          data.email.trim().toLowerCase();
 
         setVerificationEmail(email);
 
@@ -324,13 +330,12 @@ export default function SignupForm() {
         });
       } else {
         toast.error("Unable to create account", {
-          description: response?.message || "Please try again.",
+          description:
+            response?.message || "Please try again.",
         });
       }
     } catch (error) {
       console.error("Signup error:", error);
-
-      console.error("Response:", error?.response?.data);
 
       const message =
         error?.response?.data?.message ||
@@ -346,7 +351,7 @@ export default function SignupForm() {
   };
 
   // =====================================================
-  // Submit Validation Error
+  // Validation Error
   // =====================================================
 
   const onInvalid = (formErrors) => {
@@ -358,38 +363,139 @@ export default function SignupForm() {
   };
 
   return (
-    <>
-      {/* =====================================================
-          Page Loader
-      ===================================================== */}
+  <>
+    {/* =====================================================
+        Loader
+    ===================================================== */}
 
-      {loading && <Loader text="Creating your account..." />}
+    {loading && (
+      <Loader
+        text={
+          isDashboardAddUser
+            ? "Creating user account..."
+            : "Creating your account..."
+        }
+      />
+    )}
 
-      {/* =====================================================
-          Main
-      ===================================================== */}
+    {/* =====================================================
+        Main
+    ===================================================== */}
 
-      <main className="bg-surface min-h-screen px-4 py-10">
-        <div className="mx-auto w-full">
-          <div className="border-border bg-background rounded-2xl border p-6 shadow-sm sm:p-8">
-            {/* =================================================
-                Logo
-            ================================================= */}
+    <main className="bg-surface min-h-screen">
+      <div className="mx-auto w-full max-w-7xl">
+        {/* =================================================
+            Dashboard Add User Header
+        ================================================= */}
 
-            <div className="mb-8 flex flex-col items-center justify-center gap-2 text-center">
-              <Image
-                src="/images/logo.png"
-                alt="Zerodose Logo"
-                width={100}
-                height={100}
-                className="h-auto w-[100px]"
-                priority
-              />
+        {isDashboardAddUser && (
+          <div className="mb-6 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              disabled={loading}
+              className="bg-background border-border text-icon hover:bg-surface flex h-10 w-10 items-center justify-center rounded-xl border transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
 
-              <p className="text-text-secondary mt-2 text-sm">
-                Register your account to get started
+            <div>
+              <h1 className="text-text text-xl font-bold sm:text-2xl">
+                Add User
+              </h1>
+
+              <p className="text-text-secondary mt-1 text-sm">
+                Create a new user account and assign their role, location,
+                and access details.
               </p>
             </div>
+          </div>
+        )}
+
+        {/* =================================================
+            Main Card
+        ================================================= */}
+
+        <div className="bg-background border-border rounded-2xl border shadow-sm">
+          {/* =================================================
+              Client Signup Header
+          ================================================= */}
+
+          {!isDashboardAddUser && (
+            <div className="border-border border-b p-6 sm:p-8">
+              <div className="flex flex-col items-center justify-center gap-3 text-center">
+                <Image
+                  src="/images/logo.png"
+                  alt="Zerodose Logo"
+                  width={100}
+                  height={100}
+                  className="h-[100px] w-[100px] object-contain"
+                  priority
+                />
+
+                <div>
+                  <h1 className="text-text text-xl font-bold sm:text-2xl">
+                    Create Your Account
+                  </h1>
+
+                  <p className="text-text-secondary mt-1 text-sm">
+                    Register your account to get started
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* =================================================
+              Dashboard User Information Header
+          ================================================= */}
+
+          {isDashboardAddUser && (
+            <div className="border-border flex items-center gap-3 border-b p-5 sm:p-6">
+              <div className="bg-primary-light flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+                <UserRound className="text-primary h-5 w-5" />
+              </div>
+
+              <div>
+                <h2 className="text-text font-semibold">
+                  User Information
+                </h2>
+
+                <p className="text-text-secondary mt-0.5 text-xs">
+                  Enter user details below.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* =================================================
+              Form Content
+          ================================================= */}
+
+          <div className="p-5 sm:p-6">
+            {/* =================================================
+                Client Form Intro
+            ================================================= */}
+
+            {!isDashboardAddUser && (
+              <div className="border-border bg-surface-blue mb-7 rounded-xl border p-4 sm:p-5">
+                <div className="flex items-start gap-3">
+                  <div className="bg-primary-light mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+                    <UserRound className="text-primary h-5 w-5" />
+                  </div>
+
+                  <div>
+                    <h2 className="text-text text-base font-semibold">
+                      User Information
+                    </h2>
+
+                    <p className="text-text-secondary mt-1 text-sm">
+                      Enter your account details below.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* =================================================
                 Form
@@ -397,7 +503,7 @@ export default function SignupForm() {
 
             <form
               onSubmit={handleSubmit(onSubmit, onInvalid)}
-              className="space-y-6"
+              className="space-y-7"
               noValidate
             >
               {/* =================================================
@@ -410,9 +516,7 @@ export default function SignupForm() {
                 </h2>
 
                 <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  {/* =================================================
-                      Full Name
-                  ================================================= */}
+                  {/* Full Name */}
 
                   <div className="sm:col-span-2">
                     <label
@@ -434,19 +538,21 @@ export default function SignupForm() {
 
                         minLength: {
                           value: 2,
-                          message: "Name must be at least 2 characters.",
+                          message:
+                            "Name must be at least 2 characters.",
                         },
 
                         maxLength: {
                           value: 100,
-                          message: "Name cannot exceed 100 characters.",
+                          message:
+                            "Name cannot exceed 100 characters.",
                         },
 
                         validate: (value) =>
                           value.trim().length >= 2 ||
                           "Please enter a valid full name.",
                       })}
-                      className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-lg border px-4 py-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                      className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-xl border px-4 py-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
                         errors.name
                           ? "border-red-500 focus:border-red-500 focus:ring-red-100"
                           : "border-border focus:border-primary focus:ring-primary-light"
@@ -460,9 +566,7 @@ export default function SignupForm() {
                     )}
                   </div>
 
-                  {/* =================================================
-                      Contact Number
-                  ================================================= */}
+                  {/* Contact Number */}
 
                   <div>
                     <label
@@ -482,14 +586,16 @@ export default function SignupForm() {
                       autoComplete="tel"
                       disabled={loading}
                       {...register("contactNumber", {
-                        required: "Contact number is required.",
+                        required:
+                          "Contact number is required.",
 
                         pattern: {
                           value: /^03[0-9]{9}$/,
-                          message: "Enter a valid Pakistani mobile number.",
+                          message:
+                            "Enter a valid Pakistani mobile number.",
                         },
                       })}
-                      className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-lg border px-4 py-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                      className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-xl border px-4 py-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
                         errors.contactNumber
                           ? "border-red-500 focus:border-red-500 focus:ring-red-100"
                           : "border-border focus:border-primary focus:ring-primary-light"
@@ -503,9 +609,7 @@ export default function SignupForm() {
                     )}
                   </div>
 
-                  {/* =================================================
-                      Email
-                  ================================================= */}
+                  {/* Email */}
 
                   <div>
                     <label
@@ -526,11 +630,13 @@ export default function SignupForm() {
                         required: "Email is required.",
 
                         pattern: {
-                          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                          message: "Enter a valid email address.",
+                          value:
+                            /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                          message:
+                            "Enter a valid email address.",
                         },
                       })}
-                      className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-lg border px-4 py-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                      className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-xl border px-4 py-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
                         errors.email
                           ? "border-red-500 focus:border-red-500 focus:ring-red-100"
                           : "border-border focus:border-primary focus:ring-primary-light"
@@ -556,15 +662,12 @@ export default function SignupForm() {
                 </h2>
 
                 <div className="mt-4">
-                  {/* =================================================
-                      Designation
-                  ================================================= */}
-
                   <Controller
                     name="designation"
                     control={control}
                     rules={{
-                      required: "Please select a designation.",
+                      required:
+                        "Please select a designation.",
                     }}
                     render={({ field }) => (
                       <Select
@@ -581,21 +684,9 @@ export default function SignupForm() {
                       />
                     )}
                   />
-
-                  {/* {errors.designation && (
-                    <p className="mt-1.5 text-xs text-red-500">
-                      {
-                        errors
-                          .designation
-                          .message
-                      }
-                    </p>
-                  )} */}
                 </div>
 
-                {/* =================================================
-                    Supervisor Code
-                ================================================= */}
+                {/* Supervisor Code */}
 
                 {isSupervisor && (
                   <div className="mt-5">
@@ -613,13 +704,14 @@ export default function SignupForm() {
                       placeholder="Enter supervisor code"
                       disabled={loading}
                       {...register("supervisorCode", {
-                        required: "Supervisor code is required.",
+                        required:
+                          "Supervisor code is required.",
 
                         validate: (value) =>
                           value.trim().length > 0 ||
                           "Supervisor code is required.",
                       })}
-                      className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-lg border px-4 py-3 text-sm uppercase transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                      className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-xl border px-4 py-3 text-sm uppercase transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
                         errors.supervisorCode
                           ? "border-red-500 focus:border-red-500 focus:ring-red-100"
                           : "border-border focus:border-primary focus:ring-primary-light"
@@ -640,19 +732,20 @@ export default function SignupForm() {
               ================================================= */}
 
               <section>
-                <h2 className="text-text text-lg font-semibold">Location</h2>
+                <h2 className="text-text text-lg font-semibold">
+                  Location
+                </h2>
 
                 <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-3">
-                  {/* =================================================
-                      District
-                  ================================================= */}
+                  {/* District */}
 
                   <div>
                     <Controller
                       name="district"
                       control={control}
                       rules={{
-                        required: "Please select a district.",
+                        required:
+                          "Please select a district.",
                       }}
                       render={({ field }) => (
                         <Select
@@ -663,19 +756,22 @@ export default function SignupForm() {
                             field.onChange(e);
 
                             setValue("town", "");
-
                             setValue("unionCouncil", "");
 
                             setTowns([]);
-
                             setUnionCouncils([]);
 
-                            clearErrors(["town", "unionCouncil"]);
+                            clearErrors([
+                              "town",
+                              "unionCouncil",
+                            ]);
                           }}
-                          options={districts.map((district) => ({
-                            value: district._id,
-                            label: district.name,
-                          }))}
+                          options={districts.map(
+                            (district) => ({
+                              value: district._id,
+                              label: district.name,
+                            }),
+                          )}
                           placeholder="Select district"
                           loading={districtLoading}
                           disabled={loading}
@@ -691,16 +787,15 @@ export default function SignupForm() {
                     )}
                   </div>
 
-                  {/* =================================================
-                      Town
-                  ================================================= */}
+                  {/* Town */}
 
                   <div>
                     <Controller
                       name="town"
                       control={control}
                       rules={{
-                        required: "Please select a town.",
+                        required:
+                          "Please select a town.",
                       }}
                       render={({ field }) => (
                         <Select
@@ -711,7 +806,6 @@ export default function SignupForm() {
                             field.onChange(e);
 
                             setValue("unionCouncil", "");
-
                             setUnionCouncils([]);
 
                             clearErrors("unionCouncil");
@@ -726,7 +820,9 @@ export default function SignupForm() {
                               : "Select town"
                           }
                           loading={townLoading}
-                          disabled={loading || !selectedDistrict}
+                          disabled={
+                            loading || !selectedDistrict
+                          }
                           required
                         />
                       )}
@@ -739,16 +835,15 @@ export default function SignupForm() {
                     )}
                   </div>
 
-                  {/* =================================================
-                      Union Council
-                  ================================================= */}
+                  {/* Union Council */}
 
                   <div>
                     <Controller
                       name="unionCouncil"
                       control={control}
                       rules={{
-                        required: "Please select a Union Council.",
+                        required:
+                          "Please select a Union Council.",
                       }}
                       render={({ field }) => (
                         <Select
@@ -756,18 +851,22 @@ export default function SignupForm() {
                           name={field.name}
                           value={field.value}
                           onChange={field.onChange}
-                          options={unionCouncils.map((unionCouncil) => ({
-                            value: unionCouncil._id,
-                            label: unionCouncil.name,
-                            code: unionCouncil.code,
-                          }))}
+                          options={unionCouncils.map(
+                            (unionCouncil) => ({
+                              value: unionCouncil._id,
+                              label: unionCouncil.name,
+                              code: unionCouncil.code,
+                            }),
+                          )}
                           placeholder={
                             !selectedTown
                               ? "Select town first"
                               : "Select Union Council"
                           }
                           loading={ucLoading}
-                          disabled={loading || !selectedTown}
+                          disabled={
+                            loading || !selectedTown
+                          }
                           showCode
                           codePrefix="UC"
                           required
@@ -789,12 +888,12 @@ export default function SignupForm() {
               ================================================= */}
 
               <section>
-                <h2 className="text-text text-lg font-semibold">Security</h2>
+                <h2 className="text-text text-lg font-semibold">
+                  Security
+                </h2>
 
                 <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  {/* =================================================
-                      Password
-                  ================================================= */}
+                  {/* Password */}
 
                   <div>
                     <label
@@ -808,20 +907,25 @@ export default function SignupForm() {
                     <div className="relative">
                       <input
                         id="password"
-                        type={showPassword ? "text" : "password"}
+                        type={
+                          showPassword
+                            ? "text"
+                            : "password"
+                        }
                         placeholder="Minimum 8 characters"
                         autoComplete="new-password"
                         disabled={loading}
-
                         {...register("password", {
-                          required: "Password is required.",
+                          required:
+                            "Password is required.",
 
                           minLength: {
                             value: 8,
-                            message: "Password must be at least 8 characters.",
+                            message:
+                              "Password must be at least 8 characters.",
                           },
                         })}
-                        className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-lg border px-4 py-3 pr-16 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                        className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-xl border px-4 py-3 pr-16 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
                           errors.password
                             ? "border-red-500 focus:border-red-500 focus:ring-red-100"
                             : "border-border focus:border-primary focus:ring-primary-light"
@@ -830,9 +934,13 @@ export default function SignupForm() {
 
                       <button
                         type="button"
-                        onClick={() => setShowPassword((prev) => !prev)}
+                        onClick={() =>
+                          setShowPassword(
+                            (previous) => !previous,
+                          )
+                        }
                         disabled={loading}
-                        className="text-text-secondary hover:text-text absolute top-1/2 right-3 -translate-y-1/2 text-sm font-medium transition disabled:opacity-50"
+                        className="text-text-secondary hover:text-text absolute top-1/2 right-3 -translate-y-1/2 transition disabled:opacity-50"
                       >
                         {showPassword ? (
                           <EyeClosed size={20} />
@@ -849,9 +957,7 @@ export default function SignupForm() {
                     )}
                   </div>
 
-                  {/* =================================================
-                      Confirm Password
-                  ================================================= */}
+                  {/* Confirm Password */}
 
                   <div>
                     <label
@@ -865,22 +971,29 @@ export default function SignupForm() {
                     <div className="relative">
                       <input
                         id="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
+                        type={
+                          showConfirmPassword
+                            ? "text"
+                            : "password"
+                        }
                         placeholder="Confirm password"
                         autoComplete="new-password"
                         disabled={loading}
                         {...register("confirmPassword", {
-                          required: "Please confirm your password.",
+                          required:
+                            "Please confirm your password.",
 
                           minLength: {
                             value: 8,
-                            message: "Password must be at least 8 characters.",
+                            message:
+                              "Password must be at least 8 characters.",
                           },
 
                           validate: (value) =>
-                            value === password || "Passwords do not match.",
+                            value === password ||
+                            "Passwords do not match.",
                         })}
-                        className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-lg border px-4 py-3 pr-16 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                        className={`bg-input-background text-text placeholder:text-input-placeholder w-full rounded-xl border px-4 py-3 pr-16 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
                           errors.confirmPassword
                             ? "border-red-500 focus:border-red-500 focus:ring-red-100"
                             : "border-border focus:border-primary focus:ring-primary-light"
@@ -889,9 +1002,13 @@ export default function SignupForm() {
 
                       <button
                         type="button"
-                        onClick={() => setShowConfirmPassword((prev) => !prev)}
+                        onClick={() =>
+                          setShowConfirmPassword(
+                            (previous) => !previous,
+                          )
+                        }
                         disabled={loading}
-                        className="text-text-secondary hover:text-text absolute top-1/2 right-3 -translate-y-1/2 text-sm font-medium transition disabled:opacity-50"
+                        className="text-text-secondary hover:text-text absolute top-1/2 right-3 -translate-y-1/2 transition disabled:opacity-50"
                       >
                         {showConfirmPassword ? (
                           <EyeClosed size={20} />
@@ -911,33 +1028,73 @@ export default function SignupForm() {
               </section>
 
               {/* =================================================
-                  Submit Button
+                  Footer
               ================================================= */}
 
-              <button
-                type="submit"
-                disabled={
-                  loading || districtLoading || townLoading || ucLoading
-                }
-                className="bg-primary text-primary-foreground hover:bg-primary-dark w-full rounded-lg px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {loading ? "Creating account..." : "Create Account"}
-              </button>
+              <div className="border-border flex flex-col-reverse gap-3 border-t pt-6 sm:flex-row sm:justify-end">
+                {/* Cancel */}
+
+                {isDashboardAddUser && (
+                  <button
+                    type="button"
+                    onClick={() => router.back()}
+                    disabled={loading}
+                    className="border-border bg-background text-text hover:bg-surface rounded-xl border px-5 py-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                )}
+
+                {/* Submit */}
+
+                <button
+                  type="submit"
+                  disabled={
+                    loading ||
+                    districtLoading ||
+                    townLoading ||
+                    ucLoading
+                  }
+                  className="bg-primary hover:bg-primary-dark text-primary-foreground inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {loading ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+
+                      {isDashboardAddUser
+                        ? "Creating..."
+                        : "Creating..."}
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+
+                      {isDashboardAddUser
+                        ? "Create User"
+                        : "Create Account"}
+                    </>
+                  )}
+                </button>
+              </div>
             </form>
 
             {/* =================================================
-                Login Link
+                Client Login Link
             ================================================= */}
 
-            <div className="text-text-secondary mt-6 text-center text-sm">
-              Already have an account?{" "}
-              <Link
-                href="/auth/login"
-                className="text-primary hover:text-primary-dark font-semibold transition"
-              >
-                Sign In
-              </Link>
-            </div>
+            {!isDashboardAddUser && (
+              <div className="border-border border-t px-6 py-5 text-center">
+                <div className="text-text-secondary text-sm">
+                  Already have an account?{" "}
+                  <Link
+                    href="/auth/login"
+                    className="text-primary hover:text-primary-dark font-semibold transition"
+                  >
+                    Sign In
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -951,17 +1108,11 @@ export default function SignupForm() {
           loading={verificationLoading}
           error={verificationError}
           resendLoading={resendLoading}
-
           onClose={() => {
             if (!verificationLoading) {
               setShowVerifyModal(false);
             }
           }}
-
-          // ===================================================
-          // Verify Email
-          // ===================================================
-
           onVerify={async (code) => {
             try {
               setVerificationLoading(true);
@@ -973,23 +1124,29 @@ export default function SignupForm() {
               });
 
               if (response?.success) {
-                toast.success("Email verified successfully!", {
-                  description: "Your account has been verified.",
-                });
+                toast.success(
+                  "Email verified successfully!",
+                  {
+                    description:
+                      "Your account has been verified.",
+                  },
+                );
 
                 setShowVerifyModal(false);
 
-                if (pathname === "/dashboard/users/addUser") {
+                if (isDashboardAddUser) {
                   router.back();
                   return;
                 }
 
                 router.push(
-                  dashboardRoutes[selectedDesignation] || "/dashboard",
+                  dashboardRoutes[selectedDesignation] ||
+                    "/dashboard",
                 );
               } else {
                 const message =
-                  response?.message || "Email verification failed.";
+                  response?.message ||
+                  "Email verification failed.";
 
                 setVerificationError(message);
 
@@ -998,7 +1155,10 @@ export default function SignupForm() {
                 });
               }
             } catch (error) {
-              console.error("Email verification error:", error);
+              console.error(
+                "Email verification error:",
+                error,
+              );
 
               const message =
                 error?.response?.data?.message ||
@@ -1014,11 +1174,6 @@ export default function SignupForm() {
               setVerificationLoading(false);
             }
           }}
-
-          // ===================================================
-          // Resend Verification
-          // ===================================================
-
           onResend={async () => {
             try {
               setResendLoading(true);
@@ -1031,12 +1186,16 @@ export default function SignupForm() {
               if (response?.success) {
                 setVerificationError("");
 
-                toast.success("Verification code sent!", {
-                  description: `A new verification code was sent to ${verificationEmail}.`,
-                });
+                toast.success(
+                  "Verification code sent!",
+                  {
+                    description: `A new verification code was sent to ${verificationEmail}.`,
+                  },
+                );
               } else {
                 const message =
-                  response?.message || "Failed to resend verification code.";
+                  response?.message ||
+                  "Failed to resend verification code.";
 
                 setVerificationError(message);
 
@@ -1045,9 +1204,10 @@ export default function SignupForm() {
                 });
               }
             } catch (error) {
-              console.error("Resend verification error:", error);
-
-              console.error("Response:", error?.response?.data);
+              console.error(
+                "Resend verification error:",
+                error,
+              );
 
               const message =
                 error?.response?.data?.message ||
@@ -1064,7 +1224,8 @@ export default function SignupForm() {
             }
           }}
         />
+        </div>
       </main>
     </>
-  );
+);
 }

@@ -19,8 +19,11 @@ function Page() {
         <House size={17} />
         <span>Home</span>
       </button>
-
-      <SignupForm />
+      <div className="w-full flex justify-center bg-surface">
+        <div className="max-w-2xl">
+          <SignupForm />
+        </div>
+      </div>
     </div>
   );
 }

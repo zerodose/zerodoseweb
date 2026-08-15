@@ -369,7 +369,7 @@ export default function SignupForm() {
           Main
       ===================================================== */}
 
-      <main className="bg-surface min-h-screen px-4 py-10">
+      <main className="bg-surface min-h-screen px-4 py-10 w-full">
         <div className="mx-auto w-full">
           <div className="border-border bg-background rounded-2xl border p-6 shadow-sm sm:p-8">
             {/* =================================================

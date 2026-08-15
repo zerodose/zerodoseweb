@@ -20,7 +20,7 @@ function Page() {
         <span>Home</span>
       </button>
       <div className="w-full flex justify-center bg-surface">
-        <div className="max-w-2xl">
+        <div className="max-w-4xl w-full">
           <SignupForm />
         </div>
       </div>

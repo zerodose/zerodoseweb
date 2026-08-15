@@ -14,6 +14,7 @@ export default function AuthGuard({ children }) {
       "/auth/login",
       "/auth/signup",
       "/auth/verify-email",
+      "/auth/forgot-password",
       "/",
     ];
 

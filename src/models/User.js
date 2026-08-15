@@ -284,6 +284,7 @@ const userSchema = new mongoose.Schema(
 
 userSchema.index(
   {
+    unionCouncil: 1,
     supervisorCode: 1,
   },
   {

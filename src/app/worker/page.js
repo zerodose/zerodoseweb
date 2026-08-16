@@ -1,59 +1,3 @@
-// "use client";
-
-// import Link from "next/link";
-// import { Plus, Eye } from "lucide-react";
-// import PageHeader from "@/components/user/PageHeader";
-
-// export default function Page() {
-//   return (
-//     <div className="min-h-full p-4 md:p-6">
-//       {/* Page Header */}
-//       <PageHeader
-//         title="Worker"
-//         subtitle="Manage Zerodose assigned to this worker"
-//       />
-//       {/* Worker Actions */}
-//       <div className="grid grid-cols-2 gap-3 md:gap-5">
-//         {/* Add Zerodose */}
-//         <Link
-//           href="/worker/addzerodose"
-//           className="bg-surface border-border group flex aspect-square w-full flex-col items-center justify-center rounded-2xl border p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md md:p-6"
-//         >
-//           <div className="bg-primary/10 text-primary flex h-16 w-16 items-center justify-center rounded-2xl transition-transform duration-200 group-hover:scale-110 md:h-20 md:w-20">
-//             <Plus strokeWidth={2} className="h-9 w-9 md:h-10 md:w-10" />
-//           </div>
-
-//           <h2 className="text-text mt-4 text-center text-lg font-semibold md:mt-5 md:text-xl">
-//             Add Zerodose
-//           </h2>
-
-//           <p className="text-text-secondary mt-2 hidden max-w-xs text-center text-sm md:block">
-//             Add a new Zerodose for this worker
-//           </p>
-//         </Link>
-
-//         {/* View Zerodose */}
-//         <Link
-//           href="/worker/viewzerodose"
-//           className="bg-surface border-border group flex aspect-square w-full flex-col items-center justify-center rounded-2xl border p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md md:p-6"
-//         >
-//           <div className="bg-primary/10 text-primary flex h-16 w-16 items-center justify-center rounded-2xl transition-transform duration-200 group-hover:scale-110 md:h-20 md:w-20">
-//             <Eye strokeWidth={2} className="h-9 w-9 md:h-10 md:w-10" />
-//           </div>
-
-//           <h2 className="text-text mt-4 text-center text-lg font-semibold md:mt-5 md:text-xl">
-//             View Zerodose
-//           </h2>
-
-//           <p className="text-text-secondary mt-2 hidden max-w-xs text-center text-sm md:block">
-//             View all Zerodose assigned to this worker
-//           </p>
-//         </Link>
-//       </div>
-//     </div>
-//   );
-// }
-
 "use client";
 
 import Link from "next/link";
@@ -74,6 +18,7 @@ import {
 import PageHeader from "@/components/user/PageHeader";
 import { getZerodoses } from "@/api/zerodoseApi";
 import { getCampaigns } from "@/api/campaignApi";
+import ZerodoseCampaignSection from "@/components/worker/ZerodoseCampaignSection";
 
 export default function Page() {
   const [campaign, setCampaign] = useState(null);
@@ -84,6 +29,9 @@ export default function Page() {
 
   const [error, setError] = useState("");
 
+  const [activeTab, setActiveTab] = useState("current");
+
+  const [previousZerodoses, setPreviousZerodoses] = useState([]);
   // ============================================================
   // Load Current Campaign
   // ============================================================
@@ -99,12 +47,7 @@ export default function Page() {
 
       // Current/active campaign
       const currentCampaign =
-        campaigns.find(
-          (item) =>
-            item.isActive === true ||
-            item.status === "active" ||
-            item.status === "current",
-        ) || null;
+        campaigns.find((item) => item.isActive === true) || null;
 
       setCampaign(currentCampaign);
     } catch (error) {
@@ -276,7 +219,8 @@ export default function Page() {
 
       <PageHeader
         title="Worker"
-        subtitle="Manage Zerodose recorded by your team"
+        // subtitle="Manage Zerodose recorded by your team"
+        subtitle="Manage your team's Zerodose"
       />
 
       {/* ======================================================
@@ -316,23 +260,15 @@ export default function Page() {
             ) : campaign ? (
               <>
                 <h2 className="text-2xl font-bold text-white md:text-3xl">
-                  {campaign.name || campaign.title || "Current Campaign"}
+                  {campaign.name}
                 </h2>
 
                 <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/85">
-                  <span>
-                    {formatDate(
-                      campaign.startDate || campaign.start || campaign.fromDate,
-                    )}
-                  </span>
+                  <span>{formatDate(campaign.startDate)}</span>
 
                   <span className="text-white/50">→</span>
 
-                  <span>
-                    {formatDate(
-                      campaign.endDate || campaign.end || campaign.toDate,
-                    )}
-                  </span>
+                  <span>{formatDate(campaign.endDate)}</span>
                 </div>
               </>
             ) : (
@@ -424,26 +360,44 @@ export default function Page() {
 
       <section className="mb-6 grid grid-cols-2 gap-3 md:gap-4">
         {/* Add Zerodose */}
-        <Link
-          href="/worker/addzerodose"
-          className="bg-surface border-border group flex min-h-36 items-center gap-4 rounded-2xl border p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md md:min-h-40 md:p-6"
-        >
-          <div className="bg-primary/10 text-primary flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl transition-transform duration-200 group-hover:scale-105 md:h-16 md:w-16">
-            <Plus className="h-7 w-7 md:h-8 md:w-8" strokeWidth={2} />
+        {campaign ? (
+          <Link
+            href="/worker/addzerodose"
+            className="bg-surface border-border group flex min-h-36 items-center gap-4 rounded-2xl border p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md md:min-h-40 md:p-6"
+          >
+            <div className="bg-primary/10 text-primary flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl transition-transform duration-200 group-hover:scale-105 md:h-16 md:w-16">
+              <Plus className="h-7 w-7 md:h-8 md:w-8" strokeWidth={2} />
+            </div>
+
+            <div className="min-w-0">
+              <h2 className="text-text text-base font-semibold md:text-lg">
+                Add Zerodose
+              </h2>
+
+              <p className="text-text-secondary mt-1 hidden text-sm md:block">
+                Record a new Zerodose
+              </p>
+            </div>
+
+            <ChevronRight className="text-text-secondary ml-auto hidden h-5 w-5 md:block" />
+          </Link>
+        ) : (
+          <div className="bg-surface border-border flex min-h-36 cursor-not-allowed items-center gap-4 rounded-2xl border p-4 opacity-50 shadow-sm md:min-h-40 md:p-6">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 md:h-16 md:w-16">
+              <Plus className="h-7 w-7 md:h-8 md:w-8" strokeWidth={2} />
+            </div>
+
+            <div className="min-w-0">
+              <h2 className="text-text text-base font-semibold md:text-lg">
+                Add Zerodose
+              </h2>
+
+              <p className="text-text-secondary mt-1 hidden text-sm md:block">
+                Add Zerodose is available only during campaign days
+              </p>
+            </div>
           </div>
-
-          <div className="min-w-0">
-            <h2 className="text-text text-base font-semibold md:text-lg">
-              Add Zerodose
-            </h2>
-
-            <p className="text-text-secondary mt-1 hidden text-sm md:block">
-              Record a new Zerodose
-            </p>
-          </div>
-
-          <ChevronRight className="text-text-secondary ml-auto hidden h-5 w-5 md:block" />
-        </Link>
+        )}
 
         {/* View Zerodose */}
         <Link
@@ -472,244 +426,16 @@ export default function Page() {
           Current Campaign Zerodose
       ====================================================== */}
 
-      <section className="bg-surface border-border overflow-hidden rounded-2xl border shadow-sm">
-        {/* Section Header */}
-        <div className="border-border flex flex-col gap-3 border-b p-4 md:flex-row md:items-center md:justify-between md:p-5">
-          <div>
-            <div className="flex items-center gap-2">
-              <Users className="text-primary h-5 w-5" />
-
-              <h2 className="text-text text-lg font-semibold">
-                Current Campaign Zerodose
-              </h2>
-            </div>
-
-            <p className="text-text-secondary mt-1 text-sm">
-              Zerodose recorded by your team during the current campaign.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleRefresh}
-            disabled={loadingZerodose}
-            className="border-border text-text hover:bg-background flex w-fit items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition disabled:opacity-50"
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${loadingZerodose ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </button>
-        </div>
-
-        {/* ====================================================
-            Loading
-        ==================================================== */}
-
-        {loadingZerodose ? (
-          <div className="space-y-3 p-4 md:p-5">
-            {[1, 2, 3].map((item) => (
-              <div
-                key={item}
-                className="bg-background h-20 animate-pulse rounded-xl"
-              />
-            ))}
-          </div>
-        ) : currentZerodoses.length === 0 ? (
-          /* ==================================================
-             Empty
-          ================================================== */
-
-          <div className="flex flex-col items-center justify-center px-5 py-12 text-center">
-            <div className="bg-primary/10 text-primary flex h-14 w-14 items-center justify-center rounded-2xl">
-              <Syringe className="h-7 w-7" />
-            </div>
-
-            <h3 className="text-text mt-4 font-semibold">
-              No Zerodose Recorded
-            </h3>
-
-            <p className="text-text-secondary mt-1 max-w-sm text-sm">
-              Your team has not recorded any Zerodose during the current
-              campaign yet.
-            </p>
-
-            <Link
-              href="/worker/addzerodose"
-              className="bg-primary mt-5 rounded-xl px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
-            >
-              Add Zerodose
-            </Link>
-          </div>
-        ) : (
-          /* ==================================================
-             Desktop Table + Mobile Cards
-          ================================================== */
-
-          <>
-            {/* Desktop Table */}
-            <div className="hidden overflow-x-auto md:block">
-              <table className="w-full text-left">
-                <thead className="bg-background border-border border-b">
-                  <tr>
-                    <th className="text-text-secondary px-5 py-3 text-xs font-semibold uppercase">
-                      Child
-                    </th>
-
-                    <th className="text-text-secondary px-5 py-3 text-xs font-semibold uppercase">
-                      Father
-                    </th>
-
-                    <th className="text-text-secondary px-5 py-3 text-xs font-semibold uppercase">
-                      Age
-                    </th>
-
-                    <th className="text-text-secondary px-5 py-3 text-xs font-semibold uppercase">
-                      Status
-                    </th>
-
-                    <th className="text-text-secondary px-5 py-3 text-xs font-semibold uppercase">
-                      Record Date
-                    </th>
-
-                    <th className="text-text-secondary px-5 py-3 text-xs font-semibold uppercase">
-                      Visit Date
-                    </th>
-
-                    <th className="text-text-secondary px-5 py-3 text-xs font-semibold uppercase">
-                      Covered Date
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-border divide-y">
-                  {currentZerodoses.map((item) => {
-                    const status = getStatus(item);
-
-                    return (
-                      <tr
-                        key={item._id}
-                        className="hover:bg-background transition-colors"
-                      >
-                        <td className="text-text px-5 py-4 text-sm font-medium">
-                          {item.childName}
-                        </td>
-
-                        <td className="text-text-secondary px-5 py-4 text-sm">
-                          {item.fatherName}
-                        </td>
-
-                        <td className="text-text-secondary px-5 py-4 text-sm">
-                          {item.age}
-                        </td>
-
-                        <td className="px-5 py-4">
-                          <span
-                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${status.className}`}
-                          >
-                            {status.label}
-                          </span>
-                        </td>
-
-                        <td className="text-text-secondary px-5 py-4 text-sm">
-                          {formatDate(item.recordDate)}
-                        </td>
-
-                        <td className="text-text-secondary px-5 py-4 text-sm">
-                          {formatDate(item.visitDate)}
-                        </td>
-
-                        <td className="text-text-secondary px-5 py-4 text-sm">
-                          {formatDate(item.coveredDate)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards */}
-            <div className="divide-border divide-y md:hidden">
-              {currentZerodoses.map((item) => {
-                const status = getStatus(item);
-
-                return (
-                  <div key={item._id} className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h3 className="text-text truncate font-semibold">
-                          {item.childName}
-                        </h3>
-
-                        <p className="text-text-secondary mt-1 text-sm">
-                          Father: {item.fatherName}
-                        </p>
-                      </div>
-
-                      <span
-                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${status.className}`}
-                      >
-                        {status.label}
-                      </span>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-text-secondary text-xs">Age</p>
-
-                        <p className="text-text mt-1 text-sm font-medium">
-                          {item.age}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-text-secondary text-xs">
-                          Record Date
-                        </p>
-
-                        <p className="text-text mt-1 text-sm font-medium">
-                          {formatDate(item.recordDate)}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-text-secondary text-xs">
-                          Visit Date
-                        </p>
-
-                        <p className="text-text mt-1 text-sm font-medium">
-                          {formatDate(item.visitDate)}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-text-secondary text-xs">
-                          Covered Date
-                        </p>
-
-                        <p className="text-text mt-1 text-sm font-medium">
-                          {formatDate(item.coveredDate)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {item.address && (
-                      <div className="border-border mt-4 flex items-start gap-2 border-t pt-3">
-                        <MapPin className="text-text-secondary mt-0.5 h-4 w-4 shrink-0" />
-
-                        <p className="text-text-secondary text-xs leading-5">
-                          {item.address}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-      </section>
+      <ZerodoseCampaignSection
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        currentZerodoses={currentZerodoses}
+        previousZerodoses={previousZerodoses}
+        loading={loadingZerodose}
+        onRefresh={handleRefresh}
+        getStatus={getStatus}
+        formatDate={formatDate}
+      />
     </div>
   );
 }

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { User, MapPin, Phone, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-
+import { getCampaigns } from "@/api/campaignApi";
 import { createZerodose } from "@/api/zerodoseApi";
 
 export default function ZerodoseForm() {
@@ -19,6 +19,39 @@ export default function ZerodoseForm() {
   });
 
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const checkCampaign = async () => {
+      try {
+        const response = await getCampaigns();
+
+        const campaigns = response?.data || [];
+
+        const today = new Date();
+
+        const activeCampaign = campaigns.find((campaign) => {
+          const startDate = new Date(campaign.startDate);
+          const endDate = new Date(campaign.endDate);
+
+          endDate.setHours(23, 59, 59, 999);
+
+          return (
+            campaign.isActive === true && today >= startDate && today <= endDate
+          );
+        });
+
+        if (!activeCampaign) {
+          router.replace("/worker");
+        }
+      } catch (error) {
+        console.error("Campaign check error:", error);
+
+        router.replace("/worker");
+      }
+    };
+
+    checkCampaign();
+  }, [router]);
 
   // ============================================================
   // Handle Change
@@ -253,23 +286,47 @@ export default function ZerodoseForm() {
 
             <div>
               <label className="text-text mb-2 block text-sm font-medium">
-                Age ( In Month )
+                Age (In Month)
               </label>
 
               <input
                 type="number"
                 name="age"
                 min="0"
-                max="10"
+                max="59"
                 value={formData.age}
-                onChange={handleChange}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  if (value === "") {
+                    handleChange(e);
+                    return;
+                  }
+
+                  const number = Number(value);
+
+                  if (number >= 0 && number <= 59) {
+                    handleChange(e);
+                  }
+                }}
                 placeholder="Enter age"
                 disabled={loading}
-                className="border-border bg-input-background text-text placeholder:text-input-placeholder focus:border-primary focus:ring-primary-light h-11 w-full [appearance:textfield] appearance-none rounded-lg border px-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                className={`border-border bg-input-background text-text placeholder:text-input-placeholder focus:border-primary focus:ring-primary-light h-11 w-full [appearance:textfield] appearance-none rounded-lg border px-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                  formData.age !== "" &&
+                  (Number(formData.age) < 0 || Number(formData.age) > 59)
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                    : ""
+                }`}
               />
+
+              {formData.age !== "" &&
+                (Number(formData.age) < 0 || Number(formData.age) > 59) && (
+                  <p className="mt-1.5 text-xs text-red-500">
+                    Age must be between 0 and 59.
+                  </p>
+                )}
             </div>
             {/* Contact */}
-
             <div>
               <label className="text-text mb-2 block text-sm font-medium">
                 Contact No
@@ -282,15 +339,38 @@ export default function ZerodoseForm() {
                 />
 
                 <input
-                  type="number"
+                  type="tel"
                   name="contactNo"
                   value={formData.contactNo}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const value = e.target.value
+                      .replace(/\D/g, "")
+                      .slice(0, 11);
+
+                    handleChange({
+                      target: {
+                        name: "contactNo",
+                        value,
+                      },
+                    });
+                  }}
                   placeholder="03XXXXXXXXX"
+                  inputMode="numeric"
+                  maxLength={11}
                   disabled={loading}
-                  className="border-border bg-input-background text-text placeholder:text-input-placeholder focus:border-primary focus:ring-primary-light h-11 w-full rounded-lg border pr-3 pl-10 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+                  className={`border-border bg-input-background text-text placeholder:text-input-placeholder focus:border-primary focus:ring-primary-light h-11 w-full rounded-lg border pr-3 pl-10 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+                    formData.contactNo && !/^03\d{9}$/.test(formData.contactNo)
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-100"
+                      : ""
+                  }`}
                 />
               </div>
+
+              {formData.contactNo && !/^03\d{9}$/.test(formData.contactNo) && (
+                <p className="mt-1.5 text-xs text-red-500">
+                  Enter a valid Pakistani mobile number (03XXXXXXXXX).
+                </p>
+              )}
             </div>
           </div>
 

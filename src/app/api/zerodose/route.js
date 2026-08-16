@@ -581,14 +581,14 @@ export async function POST(request) {
     const now = new Date();
     console.log("NOW:", new Date());
     const currentCampaign = await Campaign.findOne({
-      isActive: true,
       startDate: { $lte: now },
       endDate: { $gte: now },
-    }).lean();
+    })
+      .sort({
+        startDate: -1,
+      })
+      .lean();
 
-    console.log("NOW:", now);
-    console.log("CAMPAIGN START:", currentCampaign?.startDate);
-    console.log("CAMPAIGN END:", currentCampaign?.endDate);
     if (!currentCampaign) {
       return NextResponse.json(
         {

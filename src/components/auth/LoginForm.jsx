@@ -187,7 +187,7 @@ export default function LoginForm() {
                 alt="Zerodose Logo"
                 width={100}
                 height={100}
-                className="h-auto w-[100px]"
+                className="h-[100px] w-[100px]"
                 priority
               />
 
@@ -314,21 +314,20 @@ export default function LoginForm() {
                   )}
                 </div>
 
-              <div className="text-right mt-4">
-                <Link
-                  href="/auth/forgot-password"
-                  aria-disabled={loading}
-                  onClick={(e) => {
-                    if (loading) {
-                      e.preventDefault();
-                    }
-                  }}
-                  className="text-primary hover:text-primary-dark text-sm transition aria-disabled:pointer-events-none aria-disabled:opacity-50"
-                >
-                  Forgot Password?
-                </Link>
-              </div>
-
+                <div className="mt-4 text-right">
+                  <Link
+                    href="/auth/forgot-password"
+                    aria-disabled={loading}
+                    onClick={(e) => {
+                      if (loading) {
+                        e.preventDefault();
+                      }
+                    }}
+                    className="text-primary hover:text-primary-dark text-sm transition aria-disabled:pointer-events-none aria-disabled:opacity-50"
+                  >
+                    Forgot Password?
+                  </Link>
+                </div>
               </div>
               {/* =================================================
                   Submit

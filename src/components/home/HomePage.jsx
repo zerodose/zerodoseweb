@@ -37,7 +37,7 @@ export default function HomePage() {
         setLoading(true);
 
         // Pehle jo working query thi usi ko use kar rahe hain
-        const response = await getGlobalCount("supervisors,teams,zerodose, campaigns");
+        const response = await getGlobalCount("supervisors,teams,zerodose,campaigns");
 
         const data = response?.data || {};
 

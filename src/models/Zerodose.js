@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const zerodoseSchema = new mongoose.Schema(
   {
-   campaignId: {
+    campaignId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Campaign",
       required: true,
@@ -78,6 +78,11 @@ const zerodoseSchema = new mongoose.Schema(
     contactNo: {
       type: String,
       trim: true,
+    },
+    day: {
+      type: Number,
+      required: true,
+      index: true,
     },
 
     recordDate: {

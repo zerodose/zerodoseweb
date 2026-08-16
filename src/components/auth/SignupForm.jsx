@@ -369,7 +369,7 @@ export default function SignupForm() {
           Main
       ===================================================== */}
 
-      <main className="bg-surface min-h-screen px-4 py-10 w-full">
+      <main className="bg-surface min-h-screen w-full px-4 py-10">
         <div className="mx-auto w-full">
           <div className="border-border bg-background rounded-2xl border p-6 shadow-sm sm:p-8">
             {/* =================================================
@@ -382,7 +382,7 @@ export default function SignupForm() {
                 alt="Zerodose Logo"
                 width={100}
                 height={100}
-                className="h-auto w-[100px]"
+                className="h-[100px] w-[100px]"
                 priority
               />
 

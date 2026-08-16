@@ -17,21 +17,26 @@ import { getGlobalCount } from "@/api/dashboardApi";
 
 export default async function DashboardPage() {
   let counts = {
+    districts: 0,
+    campaigns: 0,
     supervisors: 0,
     teams: 0,
     zerodose: 0,
   };
-
   try {
-    const response = await getGlobalCount("supervisors,teams,zerodose");
+    const response = await getGlobalCount(
+      "districts,campaigns,supervisors,teams,zerodose",
+    );
 
     const data = response?.data || {};
 
-    counts = {
-      supervisors: data.supervisors ?? 0,
-      teams: data.teams ?? 0,
-      zerodose: data.zerodose ?? 0,
-    };
+   counts = {
+  districts: data.districts ?? 0,
+  campaigns: data.campaigns ?? 0,
+  supervisors: data.supervisors ?? 0,
+  teams: data.teams ?? 0,
+  zerodose: data.zerodose ?? 0,
+};
   } catch (error) {
     console.error("Failed to fetch dashboard counts:", error);
   }
@@ -44,8 +49,8 @@ export default async function DashboardPage() {
 
       <DashboardStats
         stats={{
-          campaigns: 0,
-          districts: 0,
+          campaigns: counts.campaigns,
+          districts: counts.districts,
           supervisors: counts.supervisors,
           teams: counts.teams,
           zerodose: counts.zerodose,

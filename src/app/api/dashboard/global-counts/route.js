@@ -74,21 +74,43 @@ export async function GET(request) {
     // all / missing = both
     // =====================================================
 
+    // let activeFilter = {};
+
+    // if (isActiveParam === "true") {
+    //   activeFilter = {
+    //     isActive: true,
+    //   };
+    // }
+
+    // if (isActiveParam === "false") {
+    //   activeFilter = {
+    //     isActive: false,
+    //   };
+    // }
+
+    // if (isActiveParam && !["true", "false", "all"].includes(isActiveParam)) {
+    //   return NextResponse.json(
+    //     {
+    //       success: false,
+    //       message: "isActive must be true, false or all",
+    //     },
+    //     { status: 400 },
+    //   );
+    // }
+
     let activeFilter = {};
 
     if (isActiveParam === "true") {
       activeFilter = {
         isActive: true,
       };
-    }
-
-    if (isActiveParam === "false") {
+    } else if (isActiveParam === "false") {
       activeFilter = {
         isActive: false,
       };
-    }
-
-    if (isActiveParam && !["true", "false", "all"].includes(isActiveParam)) {
+    } else if (isActiveParam === "all" || !isActiveParam) {
+      activeFilter = {};
+    } else {
       return NextResponse.json(
         {
           success: false,

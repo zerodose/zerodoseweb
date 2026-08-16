@@ -74,7 +74,7 @@ export async function getUser(id) {
 // ============================================================
 
 export async function updateUser(id, data) {
-  const response = await api.patch(`/users/${id}`, data);
+  const response = await api.put(`/users/${id}`, data);
 
   return response.data;
 }

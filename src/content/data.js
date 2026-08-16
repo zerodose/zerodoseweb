@@ -68,7 +68,7 @@ export const dashboardSidebar = [
 
   {
     title: "Union Councils",
-    href: "/dashboard/unioncouncils",
+    href: "/dashboard/unionCouncils",
     icon: MapPin,
   },
   {

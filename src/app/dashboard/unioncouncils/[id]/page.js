@@ -5,10 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import {
-  getUnionCouncil,
-  deleteUnionCouncil,
-} from "@/api/unionCouncilApi";
+import { getUnionCouncil, deleteUnionCouncil } from "@/api/unionCouncilApi";
 import DeleteConfirmModal from "@/components/admin/ui/DeleteConfirmModal";
 import UnionCouncilForm from "@/components/admin/unioncouncil/UnionCouncilForm";
 import ActionButtons from "@/components/admin/ui/ActionButtons";
@@ -21,8 +18,7 @@ export default function UnionCouncilViewPage() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] =
-    useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   // =====================================================
   // Check Admin
@@ -67,14 +63,10 @@ export default function UnionCouncilViewPage() {
 
         setUnionCouncil(data);
       } catch (error) {
-        console.error(
-          "Get Union Council error:",
-          error,
-        );
+        console.error("Get Union Council error:", error);
 
         toast.error(
-          error?.response?.data?.message ||
-            "Failed to load Union Council.",
+          error?.response?.data?.message || "Failed to load Union Council.",
         );
 
         router.back();
@@ -98,22 +90,16 @@ export default function UnionCouncilViewPage() {
 
       await deleteUnionCouncil(unionCouncil._id);
 
-      toast.success(
-        "Union Council deleted successfully.",
-      );
+      toast.success("Union Council deleted successfully.");
 
       setDeleteModalOpen(false);
 
       router.push("/dashboard/unionCouncils");
     } catch (error) {
-      console.error(
-        "Delete Union Council error:",
-        error,
-      );
+      console.error("Delete Union Council error:", error);
 
       toast.error(
-        error?.response?.data?.message ||
-          "Failed to delete Union Council.",
+        error?.response?.data?.message || "Failed to delete Union Council.",
       );
     } finally {
       setDeleting(false);
@@ -157,13 +143,9 @@ export default function UnionCouncilViewPage() {
         {!loading && unionCouncil && isAdmin && (
           <ActionButtons
             onEdit={() =>
-              router.push(
-                `/dashboard/unionCouncils/${unionCouncil._id}/update`,
-              )
+              router.push(`/dashboard/unionCouncils/${unionCouncil._id}/update`)
             }
-            onDelete={() =>
-              setDeleteModalOpen(true)
-            }
+            onDelete={() => setDeleteModalOpen(true)}
           />
         )}
       </div>
@@ -184,7 +166,7 @@ export default function UnionCouncilViewPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2 lg:grid-cols-4 sm:p-6">
+          <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-4">
             {[1, 2, 3, 4].map((item) => (
               <div key={item}>
                 <div className="bg-surface mb-2 h-4 w-28 animate-pulse rounded" />
@@ -195,10 +177,7 @@ export default function UnionCouncilViewPage() {
           </div>
         </div>
       ) : unionCouncil ? (
-        <UnionCouncilForm
-          mode="view"
-          unionCouncil={unionCouncil}
-        />
+        <UnionCouncilForm mode="view" unionCouncil={unionCouncil} />
       ) : null}
 
       {/* =====================================================
@@ -207,9 +186,7 @@ export default function UnionCouncilViewPage() {
 
       <DeleteConfirmModal
         open={deleteModalOpen}
-        onClose={() =>
-          setDeleteModalOpen(false)
-        }
+        onClose={() => setDeleteModalOpen(false)}
         onConfirm={handleDelete}
         itemName={unionCouncil?.name || ""}
         itemLabel="Union Council"

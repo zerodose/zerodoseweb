@@ -2,6 +2,13 @@ import mongoose from "mongoose";
 
 const zerodoseSchema = new mongoose.Schema(
   {
+   campaignId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Campaign",
+      required: true,
+      index: true,
+    },
+
     districtId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "District",

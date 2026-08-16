@@ -6,6 +6,7 @@ import District from "@/models/District";
 import Town from "@/models/Town";
 import UnionCouncil from "@/models/UnionCouncil";
 import Zerodose from "@/models/Zerodose";
+import Campaign from "@/models/Campaign";
 
 export async function GET(request) {
   try {
@@ -35,7 +36,7 @@ export async function GET(request) {
       "districts",
       "towns",
       "unionCouncils",
-
+      "campaigns",
       "ucmos",
       "supervisors",
       "workers",
@@ -99,6 +100,15 @@ export async function GET(request) {
 
     const data = {};
 
+    // =====================================================
+    // Campaigns
+    // =====================================================
+
+    if (metrics.includes("campaigns")) {
+      data.campaigns = await Campaign.countDocuments({
+        ...activeFilter,
+      });
+    }
     // =====================================================
     // Locations
     // =====================================================

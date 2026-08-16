@@ -12,16 +12,16 @@ export default function ActionButtons({
   disabled = false,
 }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex w-full items-center gap-2 sm:w-auto">
       {/* Edit */}
       {showEdit && (
         <button
           type="button"
           onClick={onEdit}
           disabled={disabled}
-          className="bg-primary hover:bg-primary-dark text-primary-foreground inline-flex h-10 w-28 items-center justify-center gap-2 rounded-xl text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50"
+          className="bg-primary hover:bg-primary-dark text-primary-foreground inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 sm:w-28 sm:flex-none"
         >
-          <Edit className="h-4 w-4" />
+          <Edit className="h-4 w-4 shrink-0" />
 
           <span>{editText}</span>
         </button>
@@ -33,9 +33,9 @@ export default function ActionButtons({
           type="button"
           onClick={onDelete}
           disabled={disabled}
-          className="inline-flex h-10 w-28 items-center justify-center gap-2 rounded-xl bg-red-600 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-10 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-28 sm:flex-none"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-4 w-4 shrink-0" />
 
           <span>{deleteText}</span>
         </button>

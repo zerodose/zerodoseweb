@@ -48,7 +48,13 @@ export default function DashboardPage() {
       data={users}
       loading={loading}
       hiddenColumns={["_id", "__v", "password", "createdAt", "updatedAt"]}
-
+      pageTitle="Users"
+pageDescription="View and manage system users."
+      pageBreadcrumbs={[
+        {
+          label: "Users",
+        },
+      ]}
       columnTitles={{
         name: "Name",
         email: "Email",

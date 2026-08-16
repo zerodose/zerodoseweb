@@ -1,14 +1,16 @@
 "use client";
 
-import DistrictForm from "@/components/admin/districts/DistrictForm";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import UnionCouncilForm from "@/components/admin/unioncouncil/UnionCouncilForm";
 
-export default function AddDistrictPage() {
+export default function AddUnionCouncilPage() {
   const router = useRouter();
 
   return (
     <div className="mx-auto w-full max-w-7xl">
+      {/* Header */}
+
       <div className="mb-6 flex items-center gap-3">
         <button
           type="button"
@@ -20,19 +22,21 @@ export default function AddDistrictPage() {
 
         <div>
           <h1 className="text-text text-xl font-bold sm:text-2xl">
-            Add District
+            Add Union Council
           </h1>
 
           <p className="text-text-secondary mt-1 text-sm">
-            Create a new district in Zerodose.
+            Create a new Union Council in Zerodose.
           </p>
         </div>
       </div>
 
-      <DistrictForm
+      {/* Form */}
+
+      <UnionCouncilForm
         mode="add"
         onSuccess={() => {
-          router.push("/dashboard/districts");
+          router.push("/dashboard/unionCouncils");
         }}
       />
     </div>

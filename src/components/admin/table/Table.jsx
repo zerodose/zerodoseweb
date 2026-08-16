@@ -17,17 +17,19 @@ import {
 import Pagination from "./Pagination";
 import TableSkeleton from "./TableSkeleton";
 import SearchInput from "./SearchInput";
+import PageHeader from "../ui/PageHeader";
 
 export default function Table({
   data = [],
-
+  pageTitle,
+  pageDescription,
+  pageBreadcrumbs,
   hiddenColumns = [],
   columnTitles = {},
   columnOptions = [],
   dateColumns = [],
   onRowClick,
   rowKey = "_id",
-
   searchable = true,
   searchPlaceholder = "Search...",
   onSearchChange,
@@ -734,7 +736,13 @@ export default function Table({
           Toolbar
       ====================================================== */}
 
-      <div className="border-border flex flex-col gap-3 border-b p-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="border-border flex flex-col gap-3 border-b p-4 lg:flex-row lg:items-end lg:justify-between">
+        <PageHeader
+          title={pageTitle}
+          description={pageDescription}
+          breadcrumbs={pageBreadcrumbs}
+          // icon={pageHeaderIcon}
+        />
         {/* ==================================================
             Search
         ================================================== */}

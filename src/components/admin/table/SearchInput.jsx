@@ -54,7 +54,7 @@ export default function SearchInput({
   };
 
   return (
-    <div className="relative w-full lg:max-w-sm">
+    <div className="relative w-full lg:max-w-xs">
       {/* Left Search Icon */}
 
       <Search

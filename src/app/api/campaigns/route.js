@@ -12,40 +12,153 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
 
+    // =====================================================
+    // Pagination
+    // =====================================================
+
+    const pageParam = Number(searchParams.get("page") || 1);
+    const limitParam = Number(searchParams.get("limit") || 10);
+
+    const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
+
+    const limit =
+      Number.isInteger(limitParam) && limitParam > 0
+        ? Math.min(limitParam, 100)
+        : 10;
+
+    const skip = (page - 1) * limit;
+
+    // =====================================================
+    // Search
+    // =====================================================
+
+    const search = searchParams.get("search")?.trim() || "";
+
+    // =====================================================
+    // Filters
+    // =====================================================
+
     const year = searchParams.get("year");
     const month = searchParams.get("month");
-    const name = searchParams.get("name");
     const isActive = searchParams.get("isActive");
 
-    const filter = {};
+    // =====================================================
+    // Sorting
+    // =====================================================
 
+    const allowedSortFields = [
+      "name",
+      "year",
+      "month",
+      "startDate",
+      "endDate",
+      "createdAt",
+      "updatedAt",
+      "isActive",
+    ];
+
+    const requestedSort = searchParams.get("sortBy") || "startDate";
+
+    const sortBy = allowedSortFields.includes(requestedSort)
+      ? requestedSort
+      : "startDate";
+
+    const requestedOrder = searchParams.get("sortOrder") || "desc";
+
+    const sortOrder = requestedOrder.toLowerCase() === "asc" ? 1 : -1;
+
+    // =====================================================
+    // Build Query
+    // =====================================================
+
+    const query = {};
+
+    // Search campaign name
+    if (search) {
+      query.name = {
+        $regex: search,
+        $options: "i",
+      };
+    }
+
+    // Year filter
     if (year) {
-      filter.year = Number(year);
+      const numericYear = Number(year);
+
+      if (Number.isInteger(numericYear)) {
+        query.year = numericYear;
+      }
     }
 
+    // Month filter
     if (month) {
-      filter.month = Number(month);
+      const numericMonth = Number(month);
+
+      if (Number.isInteger(numericMonth)) {
+        query.month = numericMonth;
+      }
     }
 
-    if (name) {
-      filter.name = name.toUpperCase();
+    // Active filter
+    if (isActive === "true") {
+      query.isActive = true;
+    } else if (isActive === "false") {
+      query.isActive = false;
     }
 
-    if (isActive !== null) {
-      filter.isActive = isActive === "true";
-    }
+    // =====================================================
+    // Count
+    // =====================================================
 
-    const campaigns = await Campaign.find(filter).sort({
-      year: -1,
-      month: -1,
-      startDate: -1,
-    });
+    const total = await Campaign.countDocuments(query);
 
-    return NextResponse.json({
-      success: true,
-      count: campaigns.length,
-      data: campaigns,
-    });
+    // =====================================================
+    // Fetch
+    // =====================================================
+
+    const campaigns = await Campaign.find(query)
+      .sort({
+        [sortBy]: sortOrder,
+      })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    // =====================================================
+    // Pagination
+    // =====================================================
+
+    const totalPages = Math.ceil(total / limit);
+
+    return NextResponse.json(
+      {
+        success: true,
+
+        data: campaigns,
+
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
+
+        filters: {
+          search,
+          year: year || null,
+          month: month || null,
+          isActive: isActive === null ? null : isActive === "true",
+        },
+
+        sorting: {
+          sortBy,
+          sortOrder: sortOrder === 1 ? "asc" : "desc",
+        },
+      },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("Get campaigns error:", error);
 

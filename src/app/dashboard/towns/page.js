@@ -117,7 +117,13 @@ export default function TownsPage() {
     <Table
       data={towns}
       loading={loading}
-
+       pageTitle="Towns"
+pageDescription="View and manage all towns."
+        pageBreadcrumbs={[
+          {
+            label: "Towns",
+          },
+        ]}
       // ========================================================
       // Server Pagination
       // ========================================================

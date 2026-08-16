@@ -3,6 +3,7 @@ import axios from "axios";
 const API_URLS = [
   "http://192.168.100.12:3000",
   "http://10.137.120.208:3000",
+  "http://10.73.147.208:3000",
   "http://localhost:3000",
 ];
 
@@ -26,7 +27,7 @@ export const detectApiURL = async () => {
       if (response.status >= 200 && response.status < 300) {
         activeBaseURL = `${url}/api`;
 
-        console.log("Active API:", activeBaseURL);
+        // console.log("Active API:", activeBaseURL);
 
         return activeBaseURL;
       }
@@ -35,7 +36,9 @@ export const detectApiURL = async () => {
     }
   }
 
-  throw new Error("No working API server found.");
+  throw new Error(
+    "Unable to connect to the server. Please check your internet connection and try again.",
+  );
 };
 
 // ============================================================

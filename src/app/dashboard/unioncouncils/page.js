@@ -113,13 +113,26 @@ export default function UnionCouncilsPage() {
     }));
   };
 
+  // ============================================================
+  // UI
+  // ============================================================
+
   return (
     <Table
       data={unionCouncils}
       loading={loading}
+
+      pageTitle="Union Councils"
+      pageDescription="View and manage all union councils."
+      pageBreadcrumbs={[
+        {
+          label: "Union Councils",
+        },
+      ]}
       // ========================================================
       // Server Pagination
       // ========================================================
+
       serverPagination
       currentPage={pagination.page}
       totalItems={pagination.total}
@@ -128,9 +141,11 @@ export default function UnionCouncilsPage() {
       onPageChange={handlePageChange}
       onPageSizeChange={handlePageSizeChange}
       onSearchChange={handleSearchChange}
+
       // ========================================================
       // Columns
       // ========================================================
+
       hiddenColumns={[
         "_id",
         "__v",
@@ -146,10 +161,12 @@ export default function UnionCouncilsPage() {
         districtName: "District",
         isActive: "Active",
       }}
-      columnOptions={["code", "name",  "townName", "districtName", "isActive"]}
+      columnOptions={["code", "name", "townName", "districtName", "isActive"]}
+
       // ========================================================
       // Filters
       // ========================================================
+
       filterOptions={[
         {
           key: "name",
@@ -176,21 +193,27 @@ export default function UnionCouncilsPage() {
           column: "isActive",
         },
       ]}
+
       // ========================================================
       // Row
       // ========================================================
+
       onRowClick={(unionCouncil) => {
         router.push(`/dashboard/unionCouncils/${unionCouncil._id}`);
       }}
+
       // ========================================================
       // Add
       // ========================================================
+
       addButton
       addButtonText="Add Union Council"
       onAdd={() => router.push("/dashboard/unionCouncils/addUnionCouncil")}
+
       // ========================================================
       // Export
       // ========================================================
+
       onExportPDF={exportPDF}
       onExportExcel={exportExcel}
     />

@@ -236,7 +236,7 @@ export async function GET(request) {
     }
     // status=all => no isActive filter
 
-    // Search name
+    // Search by district name
     if (search) {
       query.name = {
         $regex: search,

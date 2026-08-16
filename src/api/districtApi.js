@@ -1,91 +1,66 @@
 import { api } from "./client";
 
 // ============================================================
-// Create
+// Get all districts
 // ============================================================
 
-export async function createDistrict(data) {
-  const response = await api.post("/districts", data);
-
-  return response.data;
-}
-
-// ============================================================
-// Get districts
-//
-// Example:
-//
-// getDistricts({
-//   page: 1,
-//   limit: 10,
-//   search: "lahore",
-//   sortBy: "name",
-//   sortOrder: "asc",
-//   status: "active",
-// })
-// ============================================================
-
-export async function getDistricts({
-  page = 1,
-  limit = 10,
-  search = "",
-  sortBy = "name",
-  sortOrder = "asc",
-  status = "active",
-} = {}) {
+export const getDistricts = async (params = {}) => {
   const response = await api.get("/districts", {
-    params: {
-      page,
-      limit,
-      search,
-      sortBy,
-      sortOrder,
-      status,
-    },
+    params,
   });
 
   return response.data;
-}
+};
 
 // ============================================================
 // Get single district
 // ============================================================
 
-export async function getDistrict(id) {
+export const getDistrict = async (id) => {
   const response = await api.get(`/districts/${id}`);
 
   return response.data;
-}
+};
 
 // ============================================================
-// Update
+// Create district
 // ============================================================
 
-export async function updateDistrict(id, data) {
+export const createDistrict = async (data) => {
+  const response = await api.post("/districts", data);
+
+  return response.data;
+};
+
+// ============================================================
+// Update district
+// ============================================================
+
+export const updateDistrict = async (id, data) => {
   const response = await api.patch(`/districts/${id}`, data);
 
   return response.data;
-}
+};
 
 // ============================================================
 // Soft delete
 // ============================================================
 
-export async function deleteDistrict(id) {
+export const deleteDistrict = async (id) => {
   const response = await api.delete(`/districts/${id}`);
 
   return response.data;
-}
+};
 
 // ============================================================
 // Permanent delete
 // ============================================================
 
-export async function permanentlyDeleteDistrict(id) {
+export const permanentlyDeleteDistrict = async (id) => {
   const response = await api.delete(`/districts/${id}?permanent=true`);
 
   return response.data;
-}
+};
 
 // ============================================================
 // Dropdown districts
@@ -93,5 +68,6 @@ export async function permanentlyDeleteDistrict(id) {
 
 export const getDistrictDropdown = async () => {
   const response = await api.get("/districts/dropdown");
+
   return response.data;
 };

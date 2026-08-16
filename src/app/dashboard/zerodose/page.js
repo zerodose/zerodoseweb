@@ -117,6 +117,13 @@ export default function ZerodosePage() {
     <Table
       data={zerodoses}
       loading={loading}
+      pageTitle="Zerodoses"
+pageDescription="View and manage recorded zerodose."
+      pageBreadcrumbs={[
+        {
+          label: "Zerodoses",
+        },
+      ]}
       // ========================================================
       // Server Pagination
       // ========================================================

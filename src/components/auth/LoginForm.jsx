@@ -9,6 +9,7 @@ import { Eye, EyeClosed, EyeOff } from "lucide-react";
 import { loginUser } from "@/api/authApi";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/ui/Loader";
+import { requestLocationPermission } from "@/utils/locationPermission";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -97,6 +98,15 @@ export default function LoginForm() {
 
       const designation = user?.designation;
 
+      // if (designation === "worker") {
+      //   await requestLocationPermission();
+      // }
+      if (designation === "worker") {
+        console.log("LOCATION: user is worker");
+        await requestLocationPermission();
+        console.log("LOCATION: permission check completed");
+      }
+
       const route = dashboardRoutes[designation];
 
       console.log("User designation:", designation);
@@ -116,12 +126,18 @@ export default function LoginForm() {
       // =================================================
       const expiresAt = Date.now() + 6 * 60 * 60 * 1000; // 6 hours
 
+      const locationPermission =
+        designation === "worker"
+          ? localStorage.getItem("locationPermission") || "denied"
+          : null;
+
       localStorage.setItem(
         "authUser",
         JSON.stringify({
           id: user._id || user.id,
           name: user.name,
           designation: user.designation,
+          locationPermission,
           expiresAt,
         }),
       );
@@ -141,8 +157,9 @@ export default function LoginForm() {
       // console.error("Login error:", error);
 
       const message =
-        // error?.response?.data?.message || "Invalid mobile number or password.";
-        error?.response?.data?.message || "Login failed. Please try again.";
+        error?.response?.data?.message ||
+        error?.message ||
+        "Login failed. Please try again.";
       // Show toast
       toast.error("Login failed", {
         description: message,

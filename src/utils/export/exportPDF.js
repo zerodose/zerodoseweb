@@ -44,7 +44,30 @@ export default function exportPDF({
     }
 
     if (value instanceof Date) {
-      return value.toLocaleDateString();
+      const day = String(value.getDate()).padStart(2, "0");
+
+      const month = value.toLocaleString("en-US", {
+        month: "short",
+      });
+
+      const year = value.getFullYear();
+
+      return `${day}-${month}-${year}`;
+    }
+
+    // MongoDB / API date string
+    if (typeof value === "string" && !Number.isNaN(Date.parse(value))) {
+      const date = new Date(value);
+
+      const day = String(date.getDate()).padStart(2, "0");
+
+      const month = date.toLocaleString("en-US", {
+        month: "short",
+      });
+
+      const year = date.getFullYear();
+
+      return `${day}-${month}-${year}`;
     }
 
     if (typeof value === "object") {

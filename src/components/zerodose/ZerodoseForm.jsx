@@ -6,6 +6,7 @@ import { User, MapPin, Phone, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { getCampaigns } from "@/api/campaignApi";
 import { createZerodose } from "@/api/zerodoseApi";
+import { getCurrentLocation } from "@/utils/location";
 
 export default function ZerodoseForm() {
   const router = useRouter();
@@ -71,60 +72,6 @@ export default function ZerodoseForm() {
   // ============================================================
 
   // ============================================================
-  // Get Current Location
-  // ============================================================
-
-  const getCurrentLocation = () => {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error("Location is not supported by this browser/device."));
-
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          resolve({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          });
-        },
-        (error) => {
-          console.error("Geolocation error:", error);
-
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              reject(
-                new Error(
-                  "Location permission denied. Please allow location access.",
-                ),
-              );
-              break;
-
-            case error.POSITION_UNAVAILABLE:
-              reject(new Error("Unable to determine your current location."));
-              break;
-
-            case error.TIMEOUT:
-              reject(
-                new Error("Location request timed out. Please try again."),
-              );
-              break;
-
-            default:
-              reject(new Error("Unable to get your current location."));
-          }
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 20000,
-          maximumAge: 0,
-        },
-      );
-    });
-  };
-
-  // ============================================================
   // Submit
   // ============================================================
 
@@ -178,9 +125,28 @@ export default function ZerodoseForm() {
         location,
       };
 
-      await createZerodose(payload);
+      // await createZerodose(payload);
+      // toast.success("Zerodose recorded successfully.");
 
-      toast.success("Zerodose recorded successfully.");
+// ======================================================
+              // Extra Add
+// ======================================================
+if (navigator.onLine) {
+  await createZerodose(zerodose);
+} else {
+  await saveOfflineZerodose(zerodose);
+}
+
+if (navigator.onLine) {
+  toast.success("Zerodose recorded successfully.");
+} else {
+  toast.success(
+    "Zerodose saved offline. It will sync automatically when internet is available.",
+  );
+}
+// ======================================================
+              // Extra Add
+// ======================================================
 
       router.back();
     } catch (error) {

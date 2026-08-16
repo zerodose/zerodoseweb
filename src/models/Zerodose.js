@@ -1,44 +1,51 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
-const zerodoseSchema = new mongoose.Schema(
+const zerodoseSchema = new Schema(
   {
     campaignId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Campaign",
       required: true,
       index: true,
     },
 
     districtId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "District",
       required: true,
       index: true,
     },
 
     townId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Town",
       required: true,
       index: true,
     },
 
     unionCouncilId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "UnionCouncil",
       required: true,
       index: true,
     },
 
     ucmo: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
       index: true,
     },
 
     supervisor: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+
+    user: {
+      type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
       index: true,
@@ -79,6 +86,7 @@ const zerodoseSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+
     day: {
       type: Number,
       required: true,
@@ -93,10 +101,12 @@ const zerodoseSchema = new mongoose.Schema(
 
     visitDate: {
       type: Date,
+      default: null,
     },
 
     coveredDate: {
       type: Date,
+      default: null,
     },
 
     location: {
@@ -117,11 +127,91 @@ const zerodoseSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+
     vaccinationStatus: {
       type: String,
       enum: ["recorded", "visited", "covered"],
       default: "recorded",
       index: true,
+    },
+
+    // =====================================================
+    // UPDATE APPROVAL
+    // =====================================================
+
+    updateRequested: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    updateRequestedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    updateRequestedAt: {
+      type: Date,
+      default: null,
+    },
+
+    updateData: {
+      type: Schema.Types.Mixed,
+      default: null,
+    },
+
+    updateApproved: {
+      type: Boolean,
+      default: false,
+    },
+
+    updateApprovedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    updateApprovedAt: {
+      type: Date,
+      default: null,
+    },
+
+    // =====================================================
+    // DELETE APPROVAL
+    // =====================================================
+
+    deleteRequested: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    deleteRequestedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    deleteRequestedAt: {
+      type: Date,
+      default: null,
+    },
+
+    deleteApproved: {
+      type: Boolean,
+      default: false,
+    },
+
+    deleteApprovedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    deleteApprovedAt: {
+      type: Date,
+      default: null,
     },
   },
   {

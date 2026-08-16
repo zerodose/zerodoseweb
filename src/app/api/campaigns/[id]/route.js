@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import connectDB from "@/lib/mongodb";
+import { isValidObjectId } from "mongoose";
+
+import { connectDB } from "@/lib/db";
 import Campaign from "@/models/Campaign";
 
 // =====================================================
@@ -11,6 +13,18 @@ export async function GET(request, { params }) {
     await connectDB();
 
     const { id } = await params;
+
+    console.log("Campaign ID:", id);
+
+    if (!id || !isValidObjectId(id)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid campaign ID.",
+        },
+        { status: 400 },
+      );
+    }
 
     const campaign = await Campaign.findById(id);
 
@@ -24,19 +38,22 @@ export async function GET(request, { params }) {
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      data: campaign,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data: campaign,
+      },
+      { status: 200 },
+    );
   } catch (error) {
-    console.error("Get single campaign error:", error);
+    console.error("Get campaign error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: "Invalid campaign ID.",
+        message: "Failed to get campaign.",
       },
-      { status: 400 },
+      { status: 500 },
     );
   }
 }

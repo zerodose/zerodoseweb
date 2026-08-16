@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import connectDB from "@/lib/db";
+import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import District from "@/models/District";
 import Town from "@/models/Town";

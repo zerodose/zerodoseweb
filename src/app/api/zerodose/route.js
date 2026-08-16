@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { jwtVerify } from "jose";
+
 import { connectDB } from "@/lib/db";
+
 import Zerodose from "@/models/Zerodose";
-import District from "@/models/District";
-import Town from "@/models/Town";
-import UnionCouncil from "@/models/UnionCouncil";
 import User from "@/models/User";
 import Campaign from "@/models/Campaign";
-
-// ===import { NextResponse } from "next/server";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -19,20 +16,304 @@ if (!JWT_SECRET) {
 
 const secret = new TextEncoder().encode(JWT_SECRET);
 
-// ==================================================
+// ============================================================
+// Helper
+// ============================================================
+
+function isValidObjectId(value) {
+  return mongoose.Types.ObjectId.isValid(value);
+}
+
+// ============================================================
+// Authentication Helper
+// ============================================================
+
+async function getAuthenticatedUser(request) {
+  const token = request.cookies.get("auth_token")?.value;
+
+  if (!token) {
+    return {
+      error: NextResponse.json(
+        {
+          success: false,
+          message: "Not authenticated.",
+        },
+        {
+          status: 401,
+        },
+      ),
+    };
+  }
+
+  let payload;
+
+  try {
+    const result = await jwtVerify(token, secret);
+
+    payload = result.payload;
+  } catch (error) {
+    return {
+      error: NextResponse.json(
+        {
+          success: false,
+          message: "Invalid or expired authentication.",
+        },
+        {
+          status: 401,
+        },
+      ),
+    };
+  }
+
+  if (!payload.userId || !isValidObjectId(payload.userId)) {
+    return {
+      error: NextResponse.json(
+        {
+          success: false,
+          message: "Invalid authenticated user.",
+        },
+        {
+          status: 401,
+        },
+      ),
+    };
+  }
+
+  const user = await User.findOne({
+    _id: payload.userId,
+    isActive: true,
+  })
+    .select(
+      "_id name designation district town unionCouncil ucmo supervisor teamNumber",
+    )
+    .lean();
+
+  if (!user) {
+    return {
+      error: NextResponse.json(
+        {
+          success: false,
+          message: "Active user not found.",
+        },
+        {
+          status: 401,
+        },
+      ),
+    };
+  }
+
+  return {
+    user,
+  };
+}
+
+// ============================================================
+// GET ACCESS SCOPE
+// ============================================================
+//
+// IMPORTANT:
+// Client filters can ONLY narrow the result.
+// They can NEVER expand the user's permission scope.
+//
+// worker      -> own user ID
+// supervisor  -> supervisor ID
+// ucmo        -> UCMO ID
+// vaccinator  -> own UC
+// townFP      -> own Town
+// districtFP  -> own District
+// admin       -> all
+//
+// ============================================================
+
+function applyUserAccessScope(query, user) {
+  switch (user.designation) {
+    // ========================================================
+    // Worker
+    // ========================================================
+    //
+    // Worker only sees Zerodose records created by himself.
+    //
+    case "worker":
+      query.user = user._id;
+      break;
+
+    // ========================================================
+    // Supervisor
+    // ========================================================
+    //
+    // Supervisor sees all Zerodose records belonging to him.
+    //
+    case "supervisor":
+      query.supervisor = user._id;
+      break;
+
+    // ========================================================
+    // UCMO
+    // ========================================================
+    //
+    // UCMO sees all Zerodose records belonging to his UCMO ID.
+    //
+    case "ucmo":
+      query.ucmo = user._id;
+      break;
+
+    // ========================================================
+    // Vaccinator
+    // ========================================================
+    //
+    // Vaccinator sees Zerodose of his own UC.
+    //
+    case "vaccinator":
+      if (!user.unionCouncil) {
+        return {
+          error: "Vaccinator is not assigned to a Union Council.",
+        };
+      }
+
+      query.unionCouncilId = user.unionCouncil;
+      break;
+
+    // ========================================================
+    // Town FP
+    // ========================================================
+    //
+    // Future town-level designation.
+    //
+    case "townFP":
+      if (!user.town) {
+        return {
+          error: "Town FP is not assigned to a Town.",
+        };
+      }
+
+      query.townId = user.town;
+      break;
+
+    // ========================================================
+    // District FP
+    // ========================================================
+    //
+    // Future district-level designation.
+    //
+    case "districtFP":
+      if (!user.district) {
+        return {
+          error: "District FP is not assigned to a District.",
+        };
+      }
+
+      query.districtId = user.district;
+      break;
+
+    // ========================================================
+    // Admin
+    // ========================================================
+    //
+    // Admin can see all records.
+    //
+    case "admin":
+      break;
+
+    // ========================================================
+    // Anything else
+    // ========================================================
+    //
+    // Do not accidentally expose Zerodose data to other roles.
+    //
+    default:
+      return {
+        error: "You are not authorized to view Zerodose records.",
+      };
+  }
+
+  return {
+    success: true,
+  };
+}
+
+// ============================================================
 // GET
 // Get Zerodose List
-// =====================================================
+// ============================================================
 
 export async function GET(request) {
   try {
+    // ========================================================
+    // Authentication
+    // ========================================================
+
+    const token = request.cookies.get("auth_token")?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Not authenticated.",
+        },
+        {
+          status: 401,
+        },
+      );
+    }
+
+    let payload;
+
+    try {
+      const result = await jwtVerify(token, secret);
+
+      payload = result.payload;
+    } catch (error) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid or expired authentication.",
+        },
+        {
+          status: 401,
+        },
+      );
+    }
+
+    // ========================================================
+    // Database
+    // ========================================================
+
     await connectDB();
 
-    const { searchParams } = new URL(request.url);
+    // ========================================================
+    // Get Logged-in User
+    //
+    // IMPORTANT:
+    // Access scope is ALWAYS calculated from MongoDB.
+    // Client cannot decide its own scope.
+    // ========================================================
 
-    // ===================================================
+    const loggedInUser = await User.findOne({
+      _id: payload.userId,
+      isActive: true,
+    })
+      .select(
+        "_id name designation district town unionCouncil ucmo supervisor teamNumber",
+      )
+      .lean();
+
+    if (!loggedInUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Active user not found.",
+        },
+        {
+          status: 403,
+        },
+      );
+    }
+
+    // ========================================================
     // Pagination
-    // ===================================================
+    // ========================================================
+
+    const { searchParams } = new URL(request.url);
 
     const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1);
 
@@ -43,23 +324,29 @@ export async function GET(request) {
 
     const skip = (page - 1) * limit;
 
-    // ===================================================
+    // ========================================================
     // Search
-    // ===================================================
+    // ========================================================
 
     const search = searchParams.get("search")?.trim() || "";
 
-    // ===================================================
-    // Filters
-    // ===================================================
+    // ========================================================
+    // Client Filters
+    //
+    // These filters are only additional filters.
+    // They NEVER define the user's access scope.
+    // ========================================================
 
     const campaignId = searchParams.get("campaignId");
 
     const districtId = searchParams.get("districtId");
+
     const townId = searchParams.get("townId");
+
     const unionCouncilId = searchParams.get("unionCouncilId");
 
     const ucmo = searchParams.get("ucmo");
+
     const supervisor = searchParams.get("supervisor");
 
     const teamNumberParam = searchParams.get("teamNumber");
@@ -68,9 +355,9 @@ export async function GET(request) {
 
     const clientStatus = searchParams.get("clientStatus");
 
-    // ===================================================
+    // ========================================================
     // Date Filters
-    // ===================================================
+    // ========================================================
 
     const recordDateFrom = searchParams.get("recordDateFrom");
 
@@ -84,9 +371,9 @@ export async function GET(request) {
 
     const coveredDateTo = searchParams.get("coveredDateTo");
 
-    // ===================================================
+    // ========================================================
     // Sorting
-    // ===================================================
+    // ========================================================
 
     const allowedSortFields = [
       "createdAt",
@@ -107,15 +394,273 @@ export async function GET(request) {
 
     const sortOrder = searchParams.get("sortOrder") === "asc" ? 1 : -1;
 
-    // ===================================================
-    // Query
-    // ===================================================
+    // ========================================================
+    // Base Query
+    // ========================================================
 
     const query = {};
 
-    // ===================================================
-    // Validate ObjectIds
-    // ===================================================
+    // ========================================================
+    // IMPORTANT:
+    // ACCESS CONTROL
+    //
+    // Client filters can NEVER expand this scope.
+    // ========================================================
+
+    switch (loggedInUser.designation) {
+      // ======================================================
+      // WORKER
+      //
+      // Worker can see:
+      // Team Leader + Team Member
+      // of his own team.
+      //
+      // Scope is determined by:
+      // supervisor + teamNumber
+      //
+      // We additionally use user IDs from DB so the access
+      // remains tied to actual workers of that team.
+      // ======================================================
+
+      case "worker": {
+        if (
+          !loggedInUser.supervisor ||
+          loggedInUser.teamNumber === null ||
+          loggedInUser.teamNumber === undefined
+        ) {
+          return NextResponse.json(
+            {
+              success: false,
+              message:
+                "Worker is not properly assigned to a supervisor or team.",
+            },
+            {
+              status: 400,
+            },
+          );
+        }
+
+        if (!isValidObjectId(loggedInUser.supervisor)) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: "Worker has an invalid supervisor.",
+            },
+            {
+              status: 400,
+            },
+          );
+        }
+
+        if (
+          !Number.isInteger(loggedInUser.teamNumber) ||
+          loggedInUser.teamNumber < 1
+        ) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: "Worker has an invalid teamNumber.",
+            },
+            {
+              status: 400,
+            },
+          );
+        }
+
+        // Find actual workers belonging to this team.
+        const teamWorkers = await User.find({
+          designation: "worker",
+          isActive: true,
+          supervisor: loggedInUser.supervisor,
+          teamNumber: loggedInUser.teamNumber,
+        })
+          .select("_id")
+          .lean();
+
+        const teamWorkerIds = teamWorkers.map((worker) => worker._id);
+
+        // Include the logged-in user even if another worker
+        // record has temporary assignment inconsistency.
+        if (
+          !teamWorkerIds.some(
+            (id) => id.toString() === loggedInUser._id.toString(),
+          )
+        ) {
+          teamWorkerIds.push(loggedInUser._id);
+        }
+
+        query.user = {
+          $in: teamWorkerIds,
+        };
+
+        break;
+      }
+
+      // ======================================================
+      // SUPERVISOR
+      //
+      // Supervisor sees Zerodose recorded by workers
+      // belonging to this supervisor.
+      // ======================================================
+
+      case "supervisor": {
+        query.supervisor = loggedInUser._id;
+
+        break;
+      }
+
+      // ======================================================
+      // UCMO
+      //
+      // UCMO sees Zerodose belonging to this UCMO.
+      // ======================================================
+
+      case "ucmo": {
+        query.ucmo = loggedInUser._id;
+
+        break;
+      }
+
+      // ======================================================
+      // VACCINATOR
+      //
+      // Vaccinator gets all Zerodose of its own UC.
+      //
+      // Vaccinator will later have UPDATE access.
+      // ======================================================
+
+      case "vaccinator": {
+        if (!loggedInUser.unionCouncil) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: "Vaccinator is not assigned to a union council.",
+            },
+            {
+              status: 400,
+            },
+          );
+        }
+
+        if (!isValidObjectId(loggedInUser.unionCouncil)) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: "Vaccinator has an invalid union council.",
+            },
+            {
+              status: 400,
+            },
+          );
+        }
+
+        query.unionCouncilId = loggedInUser.unionCouncil;
+
+        break;
+      }
+
+      // ======================================================
+      // TOWN FP
+      //
+      // Future town-level designation.
+      // ======================================================
+
+      case "townFP": {
+        if (!loggedInUser.town) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: "Town FP is not assigned to a town.",
+            },
+            {
+              status: 400,
+            },
+          );
+        }
+
+        if (!isValidObjectId(loggedInUser.town)) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: "Town FP has an invalid town.",
+            },
+            {
+              status: 400,
+            },
+          );
+        }
+
+        query.townId = loggedInUser.town;
+
+        break;
+      }
+
+      // ======================================================
+      // DISTRICT FP
+      //
+      // Future district-level designation.
+      // ======================================================
+
+      case "districtFP": {
+        if (!loggedInUser.district) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: "District FP is not assigned to a district.",
+            },
+            {
+              status: 400,
+            },
+          );
+        }
+
+        if (!isValidObjectId(loggedInUser.district)) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: "District FP has an invalid district.",
+            },
+            {
+              status: 400,
+            },
+          );
+        }
+
+        query.districtId = loggedInUser.district;
+
+        break;
+      }
+
+      // ======================================================
+      // ADMIN
+      //
+      // Admin can see everything.
+      // ======================================================
+
+      case "admin": {
+        break;
+      }
+
+      // ======================================================
+      // Other designations
+      // ======================================================
+
+      default: {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "You do not have permission to view Zerodose records.",
+          },
+          {
+            status: 403,
+          },
+        );
+      }
+    }
+
+    // ========================================================
+    // Validate Client ObjectId Filters
+    // ========================================================
 
     const objectIdFields = [
       {
@@ -145,7 +690,7 @@ export async function GET(request) {
     ];
 
     for (const field of objectIdFields) {
-      if (field.value && !mongoose.Types.ObjectId.isValid(field.value)) {
+      if (field.value && !isValidObjectId(field.value)) {
         return NextResponse.json(
           {
             success: false,
@@ -158,17 +703,21 @@ export async function GET(request) {
       }
     }
 
-    // ===================================================
-    // Campaign Filter
-    // ===================================================
+    // ========================================================
+    // Additional Filters
+    //
+    // IMPORTANT:
+    // These are AND filters.
+    // They cannot expand the access scope created above.
+    // ========================================================
 
     if (campaignId) {
       query.campaignId = campaignId;
     }
 
-    // ===================================================
-    // Location Filters
-    // ===================================================
+    // --------------------------------------------------------
+    // Location filters
+    // --------------------------------------------------------
 
     if (districtId) {
       query.districtId = districtId;
@@ -182,9 +731,9 @@ export async function GET(request) {
       query.unionCouncilId = unionCouncilId;
     }
 
-    // ===================================================
-    // User Filters
-    // ===================================================
+    // --------------------------------------------------------
+    // User filters
+    // --------------------------------------------------------
 
     if (ucmo) {
       query.ucmo = ucmo;
@@ -194,9 +743,9 @@ export async function GET(request) {
       query.supervisor = supervisor;
     }
 
-    // ===================================================
+    // --------------------------------------------------------
     // Team Number
-    // ===================================================
+    // --------------------------------------------------------
 
     if (teamNumberParam) {
       const teamNumber = Number(teamNumberParam);
@@ -216,9 +765,9 @@ export async function GET(request) {
       query.teamNumber = teamNumber;
     }
 
-    // ===================================================
+    // --------------------------------------------------------
     // Vaccination Status
-    // ===================================================
+    // --------------------------------------------------------
 
     if (vaccinationStatus) {
       const allowedStatuses = ["recorded", "visited", "covered"];
@@ -238,9 +787,9 @@ export async function GET(request) {
       query.vaccinationStatus = vaccinationStatus;
     }
 
-    // ===================================================
+    // --------------------------------------------------------
     // Client Status
-    // ===================================================
+    // --------------------------------------------------------
 
     if (clientStatus) {
       const allowedClientStatuses = [
@@ -266,9 +815,9 @@ export async function GET(request) {
       query.clientStatus = clientStatus;
     }
 
-    // ===================================================
+    // ========================================================
     // Search
-    // ===================================================
+    // ========================================================
 
     if (search) {
       query.$or = [
@@ -299,9 +848,9 @@ export async function GET(request) {
       ];
     }
 
-    // ===================================================
+    // ========================================================
     // Date Range Helper
-    // ===================================================
+    // ========================================================
 
     const addDateRange = (field, from, to) => {
       if (!from && !to) {
@@ -339,39 +888,41 @@ export async function GET(request) {
 
     addDateRange("coveredDate", coveredDateFrom, coveredDateTo);
 
-    // ===================================================
-    // Count
-    // ===================================================
+    // ========================================================
+    // Count + Data
+    // ========================================================
 
-    const total = await Zerodose.countDocuments(query);
+    const [total, data] = await Promise.all([
+      Zerodose.countDocuments(query),
 
-    // ===================================================
-    // Data
-    // ===================================================
+      Zerodose.find(query)
+        .populate("campaignId", "name year month startDate endDate isActive")
+        .populate("districtId", "name code")
+        .populate("townId", "name code")
+        .populate("unionCouncilId", "name code")
+        .populate("ucmo", "name contactNumber")
+        .populate("supervisor", "name contactNumber supervisorCode")
+        .populate(
+          "user",
+          "name contactNumber designation workerRole teamNumber",
+        )
+        .sort({
+          [sortBy]: sortOrder,
+        })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+    ]);
 
-    const data = await Zerodose.find(query)
-      .populate("campaignId", "name year month startDate endDate isActive")
-      .populate("districtId", "name code")
-      .populate("townId", "name code")
-      .populate("unionCouncilId", "name code")
-      .populate("ucmo", "name contactNumber")
-      .populate("supervisor", "name contactNumber supervisorCode")
-      .sort({
-        [sortBy]: sortOrder,
-      })
-      .skip(skip)
-      .limit(limit)
-      .lean();
-
-    // ===================================================
+    // ========================================================
     // Pagination
-    // ===================================================
+    // ========================================================
 
     const totalPages = Math.max(1, Math.ceil(total / limit));
 
-    // ===================================================
+    // ========================================================
     // Response
-    // ===================================================
+    // ========================================================
 
     return NextResponse.json(
       {
@@ -407,11 +958,18 @@ export async function GET(request) {
   }
 }
 
+// ============================================================
+// POST
+// Create Zerodose
+//
+// ONLY WORKER CAN CREATE
+// ============================================================
+
 export async function POST(request) {
   try {
-    // ============================================================
+    // ========================================================
     // Authentication
-    // ============================================================
+    // ========================================================
 
     const token = request.cookies.get("auth_token")?.value;
 
@@ -431,6 +989,7 @@ export async function POST(request) {
 
     try {
       const result = await jwtVerify(token, secret);
+
       payload = result.payload;
     } catch (error) {
       return NextResponse.json(
@@ -444,27 +1003,35 @@ export async function POST(request) {
       );
     }
 
-    // ============================================================
+    // ========================================================
     // Database
-    // ============================================================
+    // ========================================================
 
     await connectDB();
 
-    // ============================================================
-    // Get Logged-in Worker
-    // ============================================================
+    // ========================================================
+    // Get Logged-in User
+    // ========================================================
 
     const worker = await User.findOne({
       _id: payload.userId,
       designation: "worker",
       isActive: true,
-    }).lean();
+    })
+      .select(
+        "_id name designation district town unionCouncil ucmo supervisor teamNumber workerRole",
+      )
+      .lean();
+
+    // ========================================================
+    // ONLY WORKER
+    // ========================================================
 
     if (!worker) {
       return NextResponse.json(
         {
           success: false,
-          message: "Only active workers can add zerodose.",
+          message: "Only active workers can add Zerodose.",
         },
         {
           status: 403,
@@ -472,9 +1039,9 @@ export async function POST(request) {
       );
     }
 
-    // ============================================================
+    // ========================================================
     // Worker Assignment
-    // ============================================================
+    // ========================================================
 
     const { district, town, unionCouncil, ucmo, supervisor, teamNumber } =
       worker;
@@ -500,9 +1067,9 @@ export async function POST(request) {
       );
     }
 
-    // ============================================================
-    // Validate Worker IDs
-    // ============================================================
+    // ========================================================
+    // Validate Assignment IDs
+    // ========================================================
 
     const workerIds = [
       {
@@ -528,7 +1095,7 @@ export async function POST(request) {
     ];
 
     for (const field of workerIds) {
-      if (!mongoose.Types.ObjectId.isValid(field.value)) {
+      if (!isValidObjectId(field.value)) {
         return NextResponse.json(
           {
             success: false,
@@ -541,49 +1108,38 @@ export async function POST(request) {
       }
     }
 
-    // ============================================================
+    // ========================================================
+    // Validate Team Number
+    // ========================================================
+
+    if (!Number.isInteger(teamNumber) || teamNumber < 1) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Worker has an invalid teamNumber.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    // ========================================================
     // Current Campaign
-    //
-    // Zerodose sirf active/current campaign ke andar
-    // record ho sakta hai.
-    // ============================================================
-
-    // const now = new Date();
-
-    // const currentCampaign = await Campaign.findOne({
-    //   isActive: true,
-    //   startDate: {
-    //     $lte: now,
-    //   },
-    //   endDate: {
-    //     $gte: now,
-    //   },
-    // })
-    //   .select("_id name year month startDate endDate")
-    //   .sort({
-    //     startDate: -1,
-    //   })
-    //   .lean();
-
-    // if (!currentCampaign) {
-    //   return NextResponse.json(
-    //     {
-    //       success: false,
-    //       message:
-    //         "There is no active campaign available for recording Zerodose.",
-    //     },
-    //     {
-    //       status: 400,
-    //     },
-    //   );
-    // }
+    // ========================================================
 
     const now = new Date();
-    console.log("NOW:", new Date());
+
     const currentCampaign = await Campaign.findOne({
-      startDate: { $lte: now },
-      endDate: { $gte: now },
+      isActive: true,
+      startDate: {
+        $lte: now,
+      },
+      endDate: {
+        $gte: now,
+      },
     })
+      .select("_id name year month startDate endDate isActive")
       .sort({
         startDate: -1,
       })
@@ -601,26 +1157,36 @@ export async function POST(request) {
       );
     }
 
-    // ============================================================
+    // ========================================================
     // Request Body
     //
-    // Worker campaignId nahi bhejega.
-    // Campaign backend khud decide karega.
-    // ============================================================
+    // Client ONLY sends:
+    // childName
+    // fatherName
+    // age
+    // address
+    // contactNo
+    // day
+    // location
+    //
+    // Assignment information comes from MongoDB.
+    // ========================================================
 
     const body = await request.json();
 
-    const { childName, fatherName, age, address, contactNo, location } = body;
+    const { childName, fatherName, age, address, contactNo, day, location } =
+      body;
 
-    // ============================================================
+    // ========================================================
     // Required Fields
-    // ============================================================
+    // ========================================================
 
     const requiredFields = [
       "childName",
       "fatherName",
       "age",
       "address",
+      "day",
       "location",
     ];
 
@@ -642,9 +1208,9 @@ export async function POST(request) {
       }
     }
 
-    // ============================================================
+    // ========================================================
     // Child Name
-    // ============================================================
+    // ========================================================
 
     if (typeof childName !== "string" || !childName.trim()) {
       return NextResponse.json(
@@ -658,9 +1224,9 @@ export async function POST(request) {
       );
     }
 
-    // ============================================================
+    // ========================================================
     // Father Name
-    // ============================================================
+    // ========================================================
 
     if (typeof fatherName !== "string" || !fatherName.trim()) {
       return NextResponse.json(
@@ -674,9 +1240,9 @@ export async function POST(request) {
       );
     }
 
-    // ============================================================
+    // ========================================================
     // Age
-    // ============================================================
+    // ========================================================
 
     if (typeof age !== "number" || age < 0 || age > 59) {
       return NextResponse.json(
@@ -690,9 +1256,9 @@ export async function POST(request) {
       );
     }
 
-    // ============================================================
+    // ========================================================
     // Address
-    // ============================================================
+    // ========================================================
 
     if (typeof address !== "string" || !address.trim()) {
       return NextResponse.json(
@@ -706,12 +1272,31 @@ export async function POST(request) {
       );
     }
 
-    // ============================================================
+    // ========================================================
+    // Day
+    // ========================================================
+
+    if (!Number.isInteger(day) || day < 1) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid campaign day.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    // ========================================================
     // Contact Number
-    // ============================================================
+    // ========================================================
 
     if (contactNo !== undefined && contactNo !== "") {
-      if (!/^03\d{9}$/.test(contactNo)) {
+      if (
+        typeof contactNo !== "string" ||
+        !/^03\d{9}$/.test(contactNo.trim())
+      ) {
         return NextResponse.json(
           {
             success: false,
@@ -724,9 +1309,9 @@ export async function POST(request) {
       }
     }
 
-    // ============================================================
+    // ========================================================
     // Location
-    // ============================================================
+    // ========================================================
 
     if (
       !location ||
@@ -744,73 +1329,165 @@ export async function POST(request) {
       );
     }
 
-    // ============================================================
+    // ========================================================
+    // GPS Validation
+    // ========================================================
+
+    if (location.latitude < -90 || location.latitude > 90) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid latitude.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (location.longitude < -180 || location.longitude > 180) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid longitude.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    // ========================================================
     // Create Zerodose
     //
-    // IMPORTANT:
-    // Campaign bhi backend khud assign karega.
-    // Worker campaignId provide nahi karega.
-    // ============================================================
+    // EVERYTHING related to assignment comes from DB.
+    //
+    // user = exact worker who recorded it.
+    // ========================================================
 
     const zerodose = await Zerodose.create({
-      // Current campaign
+      // ------------------------------------------------------
+      // Campaign
+      // ------------------------------------------------------
+
       campaignId: currentCampaign._id,
 
-      // Worker assignment
+      // ------------------------------------------------------
+      // Exact Worker
+      // ------------------------------------------------------
+
+      user: worker._id,
+
+      // ------------------------------------------------------
+      // Worker Assignment Snapshot
+      // ------------------------------------------------------
+
       districtId: district,
+
       townId: town,
+
       unionCouncilId: unionCouncil,
 
       ucmo,
+
       supervisor,
+
       teamNumber,
 
-      // Child information
+      // ------------------------------------------------------
+      // Child Information
+      // ------------------------------------------------------
+
       childName: childName.trim(),
+
       fatherName: fatherName.trim(),
+
       age,
 
       address: address.trim(),
+
       contactNo: contactNo?.trim() || undefined,
 
+      // ------------------------------------------------------
+      // Campaign Day
+      // ------------------------------------------------------
+
+      day,
+
+      // ------------------------------------------------------
       // Dates
+      // ------------------------------------------------------
+
       recordDate: new Date(),
+
       visitDate: null,
+
       coveredDate: null,
 
+      // ------------------------------------------------------
       // GPS
+      // ------------------------------------------------------
+
       location: {
         latitude: location.latitude,
         longitude: location.longitude,
       },
 
-      // Initial status
+      // ------------------------------------------------------
+      // Initial Status
+      // ------------------------------------------------------
+
       clientStatus: null,
+
       vaccinationStatus: "recorded",
     });
 
-    // ============================================================
-    // Populate Created Zerodose
-    // ============================================================
+    // ========================================================
+    // Populate Created Document
+    // ========================================================
 
-    const populatedZerodose = await Zerodose.findById(zerodose._id)
-      .populate("campaignId", "name year month startDate endDate isActive")
-      .populate("districtId", "name code")
-      .populate("townId", "name code")
-      .populate("unionCouncilId", "name code")
-      .populate("ucmo", "name contactNumber")
-      .populate("supervisor", "name contactNumber")
-      .lean();
+    await zerodose.populate([
+      {
+        path: "campaignId",
+        select: "name year month startDate endDate isActive",
+      },
+      {
+        path: "districtId",
+        select: "name code",
+      },
+      {
+        path: "townId",
+        select: "name code",
+      },
+      {
+        path: "unionCouncilId",
+        select: "name code",
+      },
+      {
+        path: "ucmo",
+        select: "name contactNumber",
+      },
+      {
+        path: "supervisor",
+        select: "name contactNumber supervisorCode",
+      },
+      {
+        path: "user",
+        select: "name contactNumber designation workerRole teamNumber",
+      },
+    ]);
 
-    // ============================================================
+    // ========================================================
     // Response
-    // ============================================================
+    // ========================================================
 
     return NextResponse.json(
       {
         success: true,
+
         message: "Zerodose recorded successfully.",
-        data: populatedZerodose,
+
+        data: zerodose,
       },
       {
         status: 201,
@@ -819,9 +1496,9 @@ export async function POST(request) {
   } catch (error) {
     console.error("Create zerodose error:", error);
 
-    // ============================================================
+    // ========================================================
     // Mongoose Validation Error
-    // ============================================================
+    // ========================================================
 
     if (error?.name === "ValidationError") {
       return NextResponse.json(
@@ -837,9 +1514,25 @@ export async function POST(request) {
       );
     }
 
-    // ============================================================
+    // ========================================================
+    // Duplicate Key
+    // ========================================================
+
+    if (error?.code === 11000) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Duplicate Zerodose record.",
+        },
+        {
+          status: 409,
+        },
+      );
+    }
+
+    // ========================================================
     // Invalid ObjectId
-    // ============================================================
+    // ========================================================
 
     if (error instanceof mongoose.Error.CastError) {
       return NextResponse.json(
@@ -853,14 +1546,14 @@ export async function POST(request) {
       );
     }
 
-    // ============================================================
+    // ========================================================
     // Server Error
-    // ============================================================
+    // ========================================================
 
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to create zerodose.",
+        message: "Failed to create Zerodose.",
       },
       {
         status: 500,
@@ -868,70 +1561,42 @@ export async function POST(request) {
     );
   }
 }
-
-// =====================================================
+// ============================================================
 // POST
 // Create Zerodose
-// =====================================================
+//
+// ONLY WORKER
+// ============================================================
 
 // export async function POST(request) {
 //   try {
-//     // ============================================================
-//     // Authentication
-//     // ============================================================
-
-//     const token = request.cookies.get("auth_token")?.value;
-
-//     if (!token) {
-//       return NextResponse.json(
-//         {
-//           success: false,
-//           message: "Not authenticated.",
-//         },
-//         {
-//           status: 401,
-//         },
-//       );
-//     }
-
-//     let payload;
-
-//     try {
-//       const result = await jwtVerify(token, secret);
-//       payload = result.payload;
-//     } catch (error) {
-//       return NextResponse.json(
-//         {
-//           success: false,
-//           message: "Invalid or expired authentication.",
-//         },
-//         {
-//           status: 401,
-//         },
-//       );
-//     }
-
-//     // ============================================================
+//     // ========================================================
 //     // Database
-//     // ============================================================
+//     // ========================================================
 
 //     await connectDB();
 
-//     // ============================================================
-//     // Get Logged-in User
-//     // ============================================================
+//     // ========================================================
+//     // Authentication
+//     // ========================================================
 
-//     const worker = await User.findOne({
-//       _id: payload.userId,
-//       designation: "worker",
-//       isActive: true,
-//     }).lean();
+//     const auth = await getAuthenticatedUser(request);
 
-//     if (!worker) {
+//     if (auth.error) {
+//       return auth.error;
+//     }
+
+//     const user = auth.user;
+
+//     // ========================================================
+//     // ONLY WORKER CAN CREATE
+//     // ========================================================
+
+//     if (user.designation !== "worker") {
 //       return NextResponse.json(
 //         {
 //           success: false,
-//           message: "Only active workers can add zerodose.",
+//           message: "Only workers can add Zerodose.",
 //         },
 //         {
 //           status: 403,
@@ -939,12 +1604,11 @@ export async function POST(request) {
 //       );
 //     }
 
-//     // ============================================================
-//     // Worker Location / Team Information
-//     // ============================================================
+//     // ========================================================
+//     // Worker Assignment
+//     // ========================================================
 
-//     const { district, town, unionCouncil, ucmo, supervisor, teamNumber } =
-//       worker;
+//     const { district, town, unionCouncil, ucmo, supervisor, teamNumber } = user;
 
 //     if (
 //       !district ||
@@ -952,7 +1616,8 @@ export async function POST(request) {
 //       !unionCouncil ||
 //       !ucmo ||
 //       !supervisor ||
-//       !teamNumber
+//       teamNumber === null ||
+//       teamNumber === undefined
 //     ) {
 //       return NextResponse.json(
 //         {
@@ -966,17 +1631,142 @@ export async function POST(request) {
 //       );
 //     }
 
-//     // ============================================================
+//     // ========================================================
+//     // Validate Assignment IDs
+//     // ========================================================
+
+//     const workerIds = [
+//       {
+//         value: district,
+//         name: "district",
+//       },
+//       {
+//         value: town,
+//         name: "town",
+//       },
+//       {
+//         value: unionCouncil,
+//         name: "unionCouncil",
+//       },
+//       {
+//         value: ucmo,
+//         name: "ucmo",
+//       },
+//       {
+//         value: supervisor,
+//         name: "supervisor",
+//       },
+//     ];
+
+//     for (const field of workerIds) {
+//       if (!isValidObjectId(field.value)) {
+//         return NextResponse.json(
+//           {
+//             success: false,
+//             message: `Worker has an invalid ${field.name}.`,
+//           },
+//           {
+//             status: 400,
+//           },
+//         );
+//       }
+//     }
+
+//     // ========================================================
+//     // Validate Team Number
+//     // ========================================================
+
+//     if (!Number.isInteger(teamNumber) || teamNumber < 1) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           message: "Worker has an invalid teamNumber.",
+//         },
+//         {
+//           status: 400,
+//         },
+//       );
+//     }
+
+//     // ========================================================
+//     // Current Campaign
+//     // ========================================================
+
+//     const now = new Date();
+
+//     const currentCampaign = await Campaign.findOne({
+//       isActive: true,
+//       startDate: {
+//         $lte: now,
+//       },
+//       endDate: {
+//         $gte: now,
+//       },
+//     })
+//       .select("_id name year month startDate endDate isActive")
+//       .sort({
+//         startDate: -1,
+//       })
+//       .lean();
+
+//     if (!currentCampaign) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           message: "Zerodose can only be added during an active campaign.",
+//         },
+//         {
+//           status: 400,
+//         },
+//       );
+//     }
+
+//     // ========================================================
+//     // Campaign Day
+//     // ========================================================
+//     //
+//     // Day 1 = campaign start date
+//     // Day 2 = next day
+//     // etc.
+//     //
+//     // ========================================================
+
+//     const campaignStart = new Date(currentCampaign.startDate);
+
+//     campaignStart.setHours(0, 0, 0, 0);
+
+//     const recordDay = new Date(now);
+
+//     recordDay.setHours(0, 0, 0, 0);
+
+//     const day =
+//       Math.floor(
+//         (recordDay.getTime() - campaignStart.getTime()) / (1000 * 60 * 60 * 24),
+//       ) + 1;
+
+//     if (day < 1) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           message: "Invalid campaign day.",
+//         },
+//         {
+//           status: 400,
+//         },
+//       );
+//     }
+
+//     // ========================================================
 //     // Request Body
-//     // ============================================================
+//     // ========================================================
 
 //     const body = await request.json();
 
 //     const { childName, fatherName, age, address, contactNo, location } = body;
 
-//     // ============================================================
+//     // ========================================================
 //     // Required Fields
-//     // ============================================================
+//     // ========================================================
 
 //     const requiredFields = [
 //       "childName",
@@ -1004,9 +1794,9 @@ export async function POST(request) {
 //       }
 //     }
 
-//     // ============================================================
+//     // ========================================================
 //     // Child Name
-//     // ============================================================
+//     // ========================================================
 
 //     if (typeof childName !== "string" || !childName.trim()) {
 //       return NextResponse.json(
@@ -1020,9 +1810,9 @@ export async function POST(request) {
 //       );
 //     }
 
-//     // ============================================================
+//     // ========================================================
 //     // Father Name
-//     // ============================================================
+//     // ========================================================
 
 //     if (typeof fatherName !== "string" || !fatherName.trim()) {
 //       return NextResponse.json(
@@ -1036,15 +1826,20 @@ export async function POST(request) {
 //       );
 //     }
 
-//     // ============================================================
+//     // ========================================================
 //     // Age
-//     // ============================================================
+//     // ========================================================
 
-//     if (typeof age !== "number" || age < 0 || age > 59) {
+//     if (
+//       typeof age !== "number" ||
+//       !Number.isInteger(age) ||
+//       age < 0 ||
+//       age > 59
+//     ) {
 //       return NextResponse.json(
 //         {
 //           success: false,
-//           message: "Age must be a number between 0 and 59.",
+//           message: "Age must be an integer between 0 and 59.",
 //         },
 //         {
 //           status: 400,
@@ -1052,9 +1847,9 @@ export async function POST(request) {
 //       );
 //     }
 
-//     // ============================================================
+//     // ========================================================
 //     // Address
-//     // ============================================================
+//     // ========================================================
 
 //     if (typeof address !== "string" || !address.trim()) {
 //       return NextResponse.json(
@@ -1068,12 +1863,15 @@ export async function POST(request) {
 //       );
 //     }
 
-//     // ============================================================
+//     // ========================================================
 //     // Contact Number
-//     // ============================================================
+//     // ========================================================
 
-//     if (contactNo !== undefined && contactNo !== "") {
-//       if (!/^03\d{9}$/.test(contactNo)) {
+//     if (contactNo !== undefined && contactNo !== null && contactNo !== "") {
+//       if (
+//         typeof contactNo !== "string" ||
+//         !/^03\d{9}$/.test(contactNo.trim())
+//       ) {
 //         return NextResponse.json(
 //           {
 //             success: false,
@@ -1086,9 +1884,9 @@ export async function POST(request) {
 //       }
 //     }
 
-//     // ============================================================
+//     // ========================================================
 //     // Location
-//     // ============================================================
+//     // ========================================================
 
 //     if (
 //       !location ||
@@ -1106,118 +1904,151 @@ export async function POST(request) {
 //       );
 //     }
 
-//     // ============================================================
-//     // Validate Worker IDs
-//     // ============================================================
+//     // ========================================================
+//     // GPS Validation
+//     // ========================================================
 
-//     const workerIds = [
-//       {
-//         value: district,
-//         name: "district",
-//       },
-//       {
-//         value: town,
-//         name: "town",
-//       },
-//       {
-//         value: unionCouncil,
-//         name: "unionCouncil",
-//       },
-//       {
-//         value: ucmo,
-//         name: "ucmo",
-//       },
-//       {
-//         value: supervisor,
-//         name: "supervisor",
-//       },
-//     ];
-
-//     for (const field of workerIds) {
-//       if (!mongoose.Types.ObjectId.isValid(field.value)) {
-//         return NextResponse.json(
-//           {
-//             success: false,
-//             message: `Worker has an invalid ${field.name}.`,
-//           },
-//           {
-//             status: 400,
-//           },
-//         );
-//       }
+//     if (location.latitude < -90 || location.latitude > 90) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           message: "Invalid latitude.",
+//         },
+//         {
+//           status: 400,
+//         },
+//       );
 //     }
 
-//     // ============================================================
-//     // Create Zerodose
+//     if (location.longitude < -180 || location.longitude > 180) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           message: "Invalid longitude.",
+//         },
+//         {
+//           status: 400,
+//         },
+//       );
+//     }
+
+//     // ========================================================
+//     // CREATE ZEROdose
+//     // ========================================================
 //     //
 //     // IMPORTANT:
-//     // Worker cannot provide:
+//     // user = logged-in worker ID
+//     //
+//     // Client cannot send/override:
+//     //
+//     // campaignId
 //     // districtId
 //     // townId
 //     // unionCouncilId
 //     // ucmo
 //     // supervisor
 //     // teamNumber
-//     // clientStatus
-//     // vaccinationStatus
-//     // visitDate
-//     // coveredDate
+//     // user
+//     // day
 //     //
-//     // All controlled fields are decided by backend.
-//     // ============================================================
+//     // ========================================================
 
 //     const zerodose = await Zerodose.create({
+//       // Campaign
+//       campaignId: currentCampaign._id,
+
+//       // Worker
+//       user: user._id,
+
+//       // Worker assignment snapshot
 //       districtId: district,
 //       townId: town,
 //       unionCouncilId: unionCouncil,
 
-//       ucmo: ucmo,
-//       supervisor: supervisor,
+//       ucmo,
+//       supervisor,
 //       teamNumber,
 
+//       // Campaign day
+//       day,
+
+//       // Child information
 //       childName: childName.trim(),
+
 //       fatherName: fatherName.trim(),
+
 //       age,
 
 //       address: address.trim(),
+
 //       contactNo: contactNo?.trim() || undefined,
 
+//       // Dates
 //       recordDate: new Date(),
 
 //       visitDate: null,
+
 //       coveredDate: null,
 
+//       // GPS
 //       location: {
 //         latitude: location.latitude,
+
 //         longitude: location.longitude,
 //       },
 
-//       // Worker only records the zerodose.
+//       // Initial status
 //       clientStatus: null,
+
 //       vaccinationStatus: "recorded",
 //     });
 
-//     // ============================================================
+//     // ========================================================
 //     // Populate
-//     // ============================================================
+//     // ========================================================
 
-//     const populatedZerodose = await Zerodose.findById(zerodose._id)
-//       .populate("districtId", "name code")
-//       .populate("townId", "name code")
-//       .populate("unionCouncilId", "name code")
-//       .populate("ucmo", "name contactNumber")
-//       .populate("supervisor", "name contactNumber")
-//       .lean();
+//     await zerodose.populate([
+//       {
+//         path: "campaignId",
+//         select: "name year month startDate endDate isActive",
+//       },
+//       {
+//         path: "districtId",
+//         select: "name code",
+//       },
+//       {
+//         path: "townId",
+//         select: "name code",
+//       },
+//       {
+//         path: "unionCouncilId",
+//         select: "name code",
+//       },
+//       {
+//         path: "ucmo",
+//         select: "name contactNumber",
+//       },
+//       {
+//         path: "supervisor",
+//         select: "name contactNumber supervisorCode",
+//       },
+//       {
+//         path: "user",
+//         select: "name contactNumber designation",
+//       },
+//     ]);
 
-//     // ============================================================
+//     // ========================================================
 //     // Response
-//     // ============================================================
+//     // ========================================================
 
 //     return NextResponse.json(
 //       {
 //         success: true,
+
 //         message: "Zerodose recorded successfully.",
-//         data: populatedZerodose,
+
+//         data: zerodose,
 //       },
 //       {
 //         status: 201,
@@ -1226,11 +2057,11 @@ export async function POST(request) {
 //   } catch (error) {
 //     console.error("Create zerodose error:", error);
 
-//     // ============================================================
+//     // ========================================================
 //     // Mongoose Validation Error
-//     // ============================================================
+//     // ========================================================
 
-//     if (error.name === "ValidationError") {
+//     if (error?.name === "ValidationError") {
 //       return NextResponse.json(
 //         {
 //           success: false,
@@ -1244,9 +2075,25 @@ export async function POST(request) {
 //       );
 //     }
 
-//     // ============================================================
+//     // ========================================================
+//     // Duplicate Key
+//     // ========================================================
+
+//     if (error?.code === 11000) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           message: "Duplicate Zerodose record.",
+//         },
+//         {
+//           status: 409,
+//         },
+//       );
+//     }
+
+//     // ========================================================
 //     // Invalid ObjectId
-//     // ============================================================
+//     // ========================================================
 
 //     if (error instanceof mongoose.Error.CastError) {
 //       return NextResponse.json(
@@ -1260,9 +2107,9 @@ export async function POST(request) {
 //       );
 //     }
 
-//     // ============================================================
+//     // ========================================================
 //     // Server Error
-//     // ============================================================
+//     // ========================================================
 
 //     return NextResponse.json(
 //       {

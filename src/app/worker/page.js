@@ -45,9 +45,10 @@ export default function Page() {
 
       const campaigns = response?.data || [];
 
-      // Current/active campaign
+      const now = new Date();
+
       const currentCampaign =
-        campaigns.find((item) => item.isActive === true) || null;
+        campaigns.find((item) => item.isCampaignActive === true) || null;
 
       setCampaign(currentCampaign);
     } catch (error) {
@@ -94,6 +95,18 @@ export default function Page() {
       setLoadingZerodose(false);
     }
   };
+
+  useEffect(() => {
+    // Page load par bhi try karega
+    syncOfflineZerodose();
+
+    // Internet wapas aane par automatically sync
+    window.addEventListener("online", syncOfflineZerodose);
+
+    return () => {
+      window.removeEventListener("online", syncOfflineZerodose);
+    };
+  }, []);
 
   // ============================================================
   // Initial Load

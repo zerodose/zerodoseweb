@@ -127,6 +127,8 @@ const userSchema = new mongoose.Schema(
           "supervisor",
           "vaccinator",
           "otherStaff",
+          "townFP",
+          "districtFP",
           "worker",
           "admin",
         ],

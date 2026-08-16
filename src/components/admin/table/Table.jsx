@@ -729,7 +729,7 @@ export default function Table({
   // ============================================================
 
   return (
-    <div className="bg-background border-border min-h-full overflow-hidden rounded-lg border shadow-sm">
+    <div className="bg-background border-border min-h-[calc(100vh-100px)] overflow-hidden rounded-lg border shadow-sm">
       {/* ======================================================
           Toolbar
       ====================================================== */}
@@ -765,7 +765,7 @@ export default function Table({
             Actions
         ================================================== */}
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-wrap lg:items-center">
           {/* =================================================
               Selected
           ================================================= */}
@@ -784,7 +784,7 @@ export default function Table({
             <button
               type="button"
               onClick={onAdd}
-              className="bg-primary text-primary-foreground hover:bg-primary-dark flex h-10 min-w-28 items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition"
+              className="bg-primary text-primary-foreground hover:bg-primary-dark flex h-10 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition lg:w-auto"
             >
               <Plus size={16} />
 
@@ -807,7 +807,7 @@ export default function Table({
 
                 setDownloadOpen(false);
               }}
-              className="text-text hover:bg-surface border-border flex h-10 min-w-28 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition"
+              className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition lg:w-auto"
             >
               <Columns3 size={16} />
 
@@ -913,7 +913,7 @@ export default function Table({
 
                   setDownloadOpen(false);
                 }}
-                className="text-text hover:bg-surface border-border flex h-10 min-w-28 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition"
+                className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition lg:w-auto lg:min-w-28"
               >
                 <SlidersHorizontal size={16} />
 
@@ -1075,7 +1075,7 @@ export default function Table({
 
                   setShowColumnMenu(false);
                 }}
-                className="text-text hover:bg-surface border-border flex h-10 min-w-28 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition"
+                className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition lg:w-auto lg:min-w-28"
               >
                 <Download size={16} />
 

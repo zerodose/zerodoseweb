@@ -13,11 +13,17 @@ import {
   History,
 } from "lucide-react";
 
-const currentCampaign = {
-  name: "Campaign 2026 - August",
-  startDate: "01 Aug 2026",
-  endDate: "31 Aug 2026",
-};
+const currentCampaign = campaigns.find(
+  (campaign) => campaign.campaignStatus === "current",
+);
+
+const previousCampaigns = campaigns.filter(
+  (campaign) => campaign.campaignStatus === "previous",
+);
+
+const upcomingCampaigns = campaigns.filter(
+  (campaign) => campaign.campaignStatus === "upcoming",
+);
 
 const currentSupervisors = [
   {
@@ -47,54 +53,54 @@ const currentSupervisors = [
   },
 ];
 
-const previousCampaigns = [
-  {
-    id: 1,
-    name: "Campaign 2026 - July",
-    startDate: "01 Jul 2026",
-    endDate: "31 Jul 2026",
-    supervisors: [
-      {
-        id: 11,
-        name: "Ahmed Khan",
-        status: "active",
-        zerodose: ["ZD-0901", "ZD-0902", "ZD-0903"],
-      },
-      {
-        id: 12,
-        name: "Muhammad Ali",
-        status: "inactive",
-        zerodose: ["ZD-0904", "ZD-0905"],
-      },
-      {
-        id: 13,
-        name: "Bilal Ahmed",
-        status: "inactive",
-        zerodose: ["ZD-0906", "ZD-0907", "ZD-0908"],
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Campaign 2026 - June",
-    startDate: "01 Jun 2026",
-    endDate: "30 Jun 2026",
-    supervisors: [
-      {
-        id: 21,
-        name: "Ahmed Khan",
-        status: "active",
-        zerodose: ["ZD-0801", "ZD-0802"],
-      },
-      {
-        id: 22,
-        name: "Bilal Ahmed",
-        status: "inactive",
-        zerodose: ["ZD-0803", "ZD-0804", "ZD-0805"],
-      },
-    ],
-  },
-];
+// const previousCampaigns = [
+//   {
+//     id: 1,
+//     name: "Campaign 2026 - July",
+//     startDate: "01 Jul 2026",
+//     endDate: "31 Jul 2026",
+//     supervisors: [
+//       {
+//         id: 11,
+//         name: "Ahmed Khan",
+//         status: "active",
+//         zerodose: ["ZD-0901", "ZD-0902", "ZD-0903"],
+//       },
+//       {
+//         id: 12,
+//         name: "Muhammad Ali",
+//         status: "inactive",
+//         zerodose: ["ZD-0904", "ZD-0905"],
+//       },
+//       {
+//         id: 13,
+//         name: "Bilal Ahmed",
+//         status: "inactive",
+//         zerodose: ["ZD-0906", "ZD-0907", "ZD-0908"],
+//       },
+//     ],
+//   },
+//   {
+//     id: 2,
+//     name: "Campaign 2026 - June",
+//     startDate: "01 Jun 2026",
+//     endDate: "30 Jun 2026",
+//     supervisors: [
+//       {
+//         id: 21,
+//         name: "Ahmed Khan",
+//         status: "active",
+//         zerodose: ["ZD-0801", "ZD-0802"],
+//       },
+//       {
+//         id: 22,
+//         name: "Bilal Ahmed",
+//         status: "inactive",
+//         zerodose: ["ZD-0803", "ZD-0804", "ZD-0805"],
+//       },
+//     ],
+//   },
+// ];
 
 export default function Page() {
   const [expandedSupervisors, setExpandedSupervisors] = useState({});

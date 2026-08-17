@@ -137,6 +137,9 @@ export default function LoginForm() {
           id: user._id || user.id,
           name: user.name,
           designation: user.designation,
+
+          unionCouncil: user.unionCouncil || null,
+
           locationPermission,
           expiresAt,
         }),

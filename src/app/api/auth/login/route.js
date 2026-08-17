@@ -63,7 +63,9 @@ export async function POST(request) {
     const user = await User.findOne({
       contactNumber: mobile,
       isActive: true,
-    }).select("+password");
+    })
+      .select("+password")
+      .populate("unionCouncil", "_id name code");
 
     if (!user) {
       return NextResponse.json(
@@ -89,10 +91,7 @@ export async function POST(request) {
     // Verify Password
     // ============================================================
 
-    const passwordValid = await bcrypt.compare(
-      password,
-      user.password,
-    );
+    const passwordValid = await bcrypt.compare(password, user.password);
 
     if (!passwordValid) {
       return NextResponse.json(

@@ -68,7 +68,7 @@ export const dashboardSidebar = [
 
   {
     title: "Union Councils",
-    href: "/dashboard/unionCouncils",
+    href: "/dashboard/unioncouncils",
     icon: MapPin,
   },
   {
@@ -272,26 +272,5 @@ export const previousCampaigns = [
         visitZerodose: 2,
       },
     ],
-  },
-];
-
-export const tableData = [
-  {
-    _id: "1",
-    name: "Ali",
-    email: "ali@gmail.com",
-    designation: "Supervisor",
-    district: "Karachi",
-    teamNumber: 5,
-    zerodose: 20,
-  },
-  {
-    _id: "2",
-    name: "Ahmed",
-    email: "ahmed@gmail.com",
-    designation: "Supervisor",
-    district: "Lahore",
-    teamNumber: 2,
-    zerodose: 35,
   },
 ];

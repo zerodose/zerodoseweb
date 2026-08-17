@@ -1404,11 +1404,11 @@ export default function AdminSignupForm({ mode = "add", userId = null }) {
           return;
         }
 
-        const districtId = getId(user.district);
+        const district = getId(user.district);
 
-        const townId = getId(user.town);
+        const town = getId(user.town);
 
-        const unionCouncilId = getId(user.unionCouncil);
+        const unionCouncil = getId(user.unionCouncil);
 
         const designation = user.designation || "";
 
@@ -1428,11 +1428,11 @@ export default function AdminSignupForm({ mode = "add", userId = null }) {
 
           contactNumber: user.contactNumber || "",
 
-          district: districtId,
+          district: district,
 
-          town: townId,
+          town: town,
 
-          unionCouncil: unionCouncilId,
+          unionCouncil: unionCouncil,
 
           designation,
 
@@ -1447,9 +1447,9 @@ export default function AdminSignupForm({ mode = "add", userId = null }) {
           name: user.name,
           email: user.email,
           contactNumber: user.contactNumber,
-          district: districtId,
-          town: townId,
-          unionCouncil: unionCouncilId,
+          district: district,
+          town: town,
+          unionCouncil: unionCouncil,
           designation,
           supervisorCode,
         });
@@ -1751,7 +1751,7 @@ export default function AdminSignupForm({ mode = "add", userId = null }) {
               Header
           ================================================= */}
 
-          {( isAddMode || isEditMode) && (
+          {(isAddMode || isEditMode) && (
             <div className="mb-6 flex items-center gap-3">
               <button
                 type="button"

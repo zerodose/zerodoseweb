@@ -36,26 +36,39 @@ export const getCount = async (type, id, metrics, isActive) => {
 // District
 // =====================================================
 
-export const getDistrictCount = async (districtId, metrics, isActive) => {
-  return getCount("district", districtId, metrics, isActive);
+export const getDistrictCount = async (district, metrics, isActive) => {
+  return getCount("district", district, metrics, isActive);
 };
 
 // =====================================================
 // Town
 // =====================================================
 
-export const getTownCount = async (townId, metrics, isActive) => {
-  return getCount("town", townId, metrics, isActive);
+export const getTownCount = async (town, metrics, isActive) => {
+  return getCount("town", town, metrics, isActive);
 };
 
 // =====================================================
 // Union Council
 // =====================================================
 
-export const getUnionCouncilCount = async (
-  unionCouncilId,
+export const getUnionCouncilCount = async (unionCouncil, metrics, isActive) => {
+  return getCount("unionCouncil", unionCouncil, metrics, isActive);
+};
+
+export const getSupervisorUnionCouncilCount = async (
+  supervisorId,
+  unionCouncil,
   metrics,
-  isActive,
 ) => {
-  return getCount("unionCouncil", unionCouncilId, metrics, isActive);
+  const response = await api.get("/dashboard/counts", {
+    params: {
+      type: "unionCouncil",
+      id: unionCouncil,
+      supervisorId,
+      metrics,
+    },
+  });
+
+  return response.data;
 };

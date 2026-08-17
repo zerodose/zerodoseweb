@@ -68,12 +68,12 @@ export default function UnionCouncilForm({
       return;
     }
 
-    const districtId =
+    const district =
       typeof unionCouncil.district === "object"
         ? unionCouncil.district?._id
         : unionCouncil.district;
 
-    const townId =
+    const town =
       typeof unionCouncil.town === "object"
         ? unionCouncil.town?._id
         : unionCouncil.town;
@@ -84,8 +84,8 @@ export default function UnionCouncilForm({
         unionCouncil.code !== undefined && unionCouncil.code !== null
           ? String(unionCouncil.code)
           : "",
-      district: districtId || "",
-      town: townId || "",
+      district: district || "",
+      town: town || "",
     });
   }, [unionCouncil]);
 

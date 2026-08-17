@@ -94,7 +94,7 @@ export default function UnionCouncilViewPage() {
 
       setDeleteModalOpen(false);
 
-      router.push("/dashboard/unionCouncils");
+      router.push("/dashboard/unioncouncils");
     } catch (error) {
       console.error("Delete Union Council error:", error);
 
@@ -143,7 +143,9 @@ export default function UnionCouncilViewPage() {
         {!loading && unionCouncil && isAdmin && (
           <ActionButtons
             onEdit={() =>
-              router.push(`/dashboard/unionCouncils/${unionCouncil._id}/update`)
+              router.push(
+                `/dashboard/unioncouncils/${unionCouncil._id}/update`,
+              )
             }
             onDelete={() => setDeleteModalOpen(true)}
           />

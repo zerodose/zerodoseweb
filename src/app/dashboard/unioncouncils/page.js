@@ -199,7 +199,7 @@ export default function UnionCouncilsPage() {
       // ========================================================
 
       onRowClick={(unionCouncil) => {
-        router.push(`/dashboard/unionCouncils/${unionCouncil._id}`);
+        router.push(`/dashboard/unioncouncils/${unionCouncil._id}`);
       }}
 
       // ========================================================
@@ -208,7 +208,7 @@ export default function UnionCouncilsPage() {
 
       addButton
       addButtonText="Add Union Council"
-      onAdd={() => router.push("/dashboard/unionCouncils/addUnionCouncil")}
+      onAdd={() => router.push("/dashboard/unioncouncils/addUnionCouncil")}
 
       // ========================================================
       // Export

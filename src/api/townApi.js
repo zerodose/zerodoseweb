@@ -44,8 +44,8 @@ export const permanentlyDeleteTown = async (id) => {
   return response.data;
 };
 
-// export const getTownDropdown = async (districtId) => {
-//   const response = await api.get(`/towns/dropdown?districtId=${districtId}`);
+// export const getTownDropdown = async (district) => {
+//   const response = await api.get(`/towns/dropdown?district=${district}`);
 
 //   return response.data;
 // };

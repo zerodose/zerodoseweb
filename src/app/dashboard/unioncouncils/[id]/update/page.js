@@ -137,7 +137,7 @@ export default function UpdateUnionCouncilPage() {
         mode="edit"
         unionCouncil={unionCouncil}
         onSuccess={() => {
-          router.push(`/dashboard/unionCouncils/${params.id}`);
+          router.push(`/dashboard/unioncouncils/${params.id}`);
         }}
       />
     </div>

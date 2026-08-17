@@ -36,7 +36,7 @@ export default function AddUnionCouncilPage() {
       <UnionCouncilForm
         mode="add"
         onSuccess={() => {
-          router.push("/dashboard/unionCouncils");
+          router.push("/dashboard/unioncouncils");
         }}
       />
     </div>

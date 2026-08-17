@@ -122,10 +122,10 @@ async function getAuthenticatedUser(request) {
 
 function populateZerodose(query) {
   return query
-    .populate("campaignId", "name year month startDate endDate isActive")
-    .populate("districtId", "name code")
-    .populate("townId", "name code")
-    .populate("unionCouncilId", "name code")
+    .populate("campaign", "name year month startDate endDate isActive")
+    .populate("district", "name code")
+    .populate("town", "name code")
+    .populate("unionCouncil", "name code")
     .populate("ucmo", "name contactNumber")
     .populate("supervisor", "name contactNumber supervisorCode")
     .populate("user", "name contactNumber designation workerRole teamNumber");
@@ -211,7 +211,7 @@ function canAccessZerodose(user, zerodose) {
   // ==========================================================
 
   if (user.designation === "vaccinator") {
-    return objectIdEquals(user.unionCouncil, zerodose.unionCouncilId);
+    return objectIdEquals(user.unionCouncil, zerodose.unionCouncil);
   }
 
   // ==========================================================
@@ -219,7 +219,7 @@ function canAccessZerodose(user, zerodose) {
   // ==========================================================
 
   if (user.designation === "townFP") {
-    return objectIdEquals(user.town, zerodose.townId);
+    return objectIdEquals(user.town, zerodose.town);
   }
 
   // ==========================================================
@@ -227,7 +227,7 @@ function canAccessZerodose(user, zerodose) {
   // ==========================================================
 
   if (user.designation === "districtFP") {
-    return objectIdEquals(user.district, zerodose.districtId);
+    return objectIdEquals(user.district, zerodose.district);
   }
 
   return false;
@@ -927,7 +927,7 @@ export async function PATCH(request, { params }) {
 
       if (
         !user.unionCouncil ||
-        !objectIdEquals(user.unionCouncil, zerodose.unionCouncilId)
+        !objectIdEquals(user.unionCouncil, zerodose.unionCouncil)
       ) {
         return NextResponse.json(
           {

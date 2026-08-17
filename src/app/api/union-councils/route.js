@@ -226,8 +226,8 @@ export async function POST(request) {
 // ?search=abc
 // ?sortBy=name
 // ?sortOrder=asc
-// ?districtId=...
-// ?townId=...
+// ?district=...
+// ?town=...
 // ?includeInactive=true
 // =====================================================
 
@@ -253,9 +253,9 @@ export async function GET(request) {
 
     const sortOrder = searchParams.get("sortOrder") === "desc" ? -1 : 1;
 
-    const districtId = searchParams.get("districtId")?.trim() || "";
+    const district = searchParams.get("district")?.trim() || "";
 
-    const townId = searchParams.get("townId")?.trim() || "";
+    const town = searchParams.get("town")?.trim() || "";
 
     const includeInactive = searchParams.get("includeInactive") === "true";
 
@@ -297,16 +297,16 @@ export async function GET(request) {
     // District filter
     // -----------------------------
 
-    if (districtId) {
-      filter.district = districtId;
+    if (district) {
+      filter.district = district;
     }
 
     // -----------------------------
     // Town filter
     // -----------------------------
 
-    if (townId) {
-      filter.town = townId;
+    if (town) {
+      filter.town = town;
     }
 
     // -----------------------------
@@ -353,8 +353,8 @@ export async function GET(request) {
 
         filters: {
           search,
-          districtId,
-          townId,
+          district,
+          town,
           includeInactive,
         },
 

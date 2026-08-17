@@ -7,6 +7,9 @@ import { connectDB } from "@/lib/db";
 import Zerodose from "@/models/Zerodose";
 import User from "@/models/User";
 import Campaign from "@/models/Campaign";
+import District from "@/models/District";
+import Town from "@/models/Town";
+import UnionCouncil from "@/models/UnionCouncil";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -170,7 +173,7 @@ function applyUserAccessScope(query, user) {
         };
       }
 
-      query.unionCouncilId = user.unionCouncil;
+      query.unionCouncil = user.unionCouncil;
       break;
 
     // ========================================================
@@ -186,7 +189,7 @@ function applyUserAccessScope(query, user) {
         };
       }
 
-      query.townId = user.town;
+      query.town = user.town;
       break;
 
     // ========================================================
@@ -202,7 +205,7 @@ function applyUserAccessScope(query, user) {
         };
       }
 
-      query.districtId = user.district;
+      query.district = user.district;
       break;
 
     // ========================================================
@@ -337,13 +340,13 @@ export async function GET(request) {
     // They NEVER define the user's access scope.
     // ========================================================
 
-    const campaignId = searchParams.get("campaignId");
+    const campaign = searchParams.get("campaign");
 
-    const districtId = searchParams.get("districtId");
+    const district = searchParams.get("district");
 
-    const townId = searchParams.get("townId");
+    const town = searchParams.get("town");
 
-    const unionCouncilId = searchParams.get("unionCouncilId");
+    const unionCouncil = searchParams.get("unionCouncil");
 
     const ucmo = searchParams.get("ucmo");
 
@@ -554,7 +557,7 @@ export async function GET(request) {
           );
         }
 
-        query.unionCouncilId = loggedInUser.unionCouncil;
+        query.unionCouncil = loggedInUser.unionCouncil;
 
         break;
       }
@@ -590,7 +593,7 @@ export async function GET(request) {
           );
         }
 
-        query.townId = loggedInUser.town;
+        query.town = loggedInUser.town;
 
         break;
       }
@@ -626,7 +629,7 @@ export async function GET(request) {
           );
         }
 
-        query.districtId = loggedInUser.district;
+        query.district = loggedInUser.district;
 
         break;
       }
@@ -664,20 +667,20 @@ export async function GET(request) {
 
     const objectIdFields = [
       {
-        value: campaignId,
-        name: "campaignId",
+        value: campaign,
+        name: "campaign",
       },
       {
-        value: districtId,
-        name: "districtId",
+        value: district,
+        name: "district",
       },
       {
-        value: townId,
-        name: "townId",
+        value: town,
+        name: "town",
       },
       {
-        value: unionCouncilId,
-        name: "unionCouncilId",
+        value: unionCouncil,
+        name: "unionCouncil",
       },
       {
         value: ucmo,
@@ -711,24 +714,24 @@ export async function GET(request) {
     // They cannot expand the access scope created above.
     // ========================================================
 
-    if (campaignId) {
-      query.campaignId = campaignId;
+    if (campaign) {
+      query.campaign = campaign;
     }
 
     // --------------------------------------------------------
     // Location filters
     // --------------------------------------------------------
 
-    if (districtId) {
-      query.districtId = districtId;
+    if (district) {
+      query.district = district;
     }
 
-    if (townId) {
-      query.townId = townId;
+    if (town) {
+      query.town = town;
     }
 
-    if (unionCouncilId) {
-      query.unionCouncilId = unionCouncilId;
+    if (unionCouncil) {
+      query.unionCouncil = unionCouncil;
     }
 
     // --------------------------------------------------------
@@ -820,29 +823,53 @@ export async function GET(request) {
     // ========================================================
 
     if (search) {
+      const searchRegex = {
+        $regex: search,
+        $options: "i",
+      };
+
+      const [matchingUCMOs, matchingSupervisors] = await Promise.all([
+        User.find({
+          designation: "ucmo",
+          isActive: true,
+          name: searchRegex,
+        })
+          .select("_id")
+          .lean(),
+
+        User.find({
+          designation: "supervisor",
+          isActive: true,
+          name: searchRegex,
+        })
+          .select("_id")
+          .lean(),
+      ]);
+
+      const ucmoIds = matchingUCMOs.map((user) => user._id);
+      const supervisorIds = matchingSupervisors.map((user) => user._id);
+
       query.$or = [
         {
-          childName: {
-            $regex: search,
-            $options: "i",
+          childName: searchRegex,
+        },
+        {
+          fatherName: searchRegex,
+        },
+        {
+          address: searchRegex,
+        },
+        {
+          contactNo: searchRegex,
+        },
+        {
+          ucmo: {
+            $in: ucmoIds,
           },
         },
         {
-          fatherName: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          address: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          contactNo: {
-            $regex: search,
-            $options: "i",
+          supervisor: {
+            $in: supervisorIds,
           },
         },
       ];
@@ -896,10 +923,10 @@ export async function GET(request) {
       Zerodose.countDocuments(query),
 
       Zerodose.find(query)
-        .populate("campaignId", "name year month startDate endDate isActive")
-        .populate("districtId", "name code")
-        .populate("townId", "name code")
-        .populate("unionCouncilId", "name code")
+        .populate("campaign", "name year month startDate endDate isActive")
+        .populate("district", "name code")
+        .populate("town", "name code")
+        .populate("unionCouncil", "name code")
         .populate("ucmo", "name contactNumber")
         .populate("supervisor", "name contactNumber supervisorCode")
         .populate(
@@ -1370,7 +1397,7 @@ export async function POST(request) {
       // Campaign
       // ------------------------------------------------------
 
-      campaignId: currentCampaign._id,
+      campaign: currentCampaign._id,
 
       // ------------------------------------------------------
       // Exact Worker
@@ -1382,11 +1409,11 @@ export async function POST(request) {
       // Worker Assignment Snapshot
       // ------------------------------------------------------
 
-      districtId: district,
+      district: district,
 
-      townId: town,
+      town: town,
 
-      unionCouncilId: unionCouncil,
+      unionCouncil: unionCouncil,
 
       ucmo,
 
@@ -1448,19 +1475,19 @@ export async function POST(request) {
 
     await zerodose.populate([
       {
-        path: "campaignId",
+        path: "campaign",
         select: "name year month startDate endDate isActive",
       },
       {
-        path: "districtId",
+        path: "district",
         select: "name code",
       },
       {
-        path: "townId",
+        path: "town",
         select: "name code",
       },
       {
-        path: "unionCouncilId",
+        path: "unionCouncil",
         select: "name code",
       },
       {
@@ -1941,10 +1968,10 @@ export async function POST(request) {
 //     //
 //     // Client cannot send/override:
 //     //
-//     // campaignId
-//     // districtId
-//     // townId
-//     // unionCouncilId
+//     // campaign
+//     // district
+//     // town
+//     // unionCouncil
 //     // ucmo
 //     // supervisor
 //     // teamNumber
@@ -1955,15 +1982,15 @@ export async function POST(request) {
 
 //     const zerodose = await Zerodose.create({
 //       // Campaign
-//       campaignId: currentCampaign._id,
+//       campaign: currentCampaign._id,
 
 //       // Worker
 //       user: user._id,
 
 //       // Worker assignment snapshot
-//       districtId: district,
-//       townId: town,
-//       unionCouncilId: unionCouncil,
+//       district: district,
+//       town: town,
+//       unionCouncil: unionCouncil,
 
 //       ucmo,
 //       supervisor,
@@ -2009,19 +2036,19 @@ export async function POST(request) {
 
 //     await zerodose.populate([
 //       {
-//         path: "campaignId",
+//         path: "campaign",
 //         select: "name year month startDate endDate isActive",
 //       },
 //       {
-//         path: "districtId",
+//         path: "district",
 //         select: "name code",
 //       },
 //       {
-//         path: "townId",
+//         path: "town",
 //         select: "name code",
 //       },
 //       {
-//         path: "unionCouncilId",
+//         path: "unionCouncil",
 //         select: "name code",
 //       },
 //       {

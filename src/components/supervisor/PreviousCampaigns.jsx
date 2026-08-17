@@ -9,7 +9,7 @@ import ZerodoseTable from "./ZerodoseTable";
 export default function PreviousCampaigns({ campaigns = [] }) {
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
-  const [selectedCampaignId, setSelectedCampaignId] = useState("");
+  const [selectedcampaign, setSelectedcampaign] = useState("");
 
   const years = useMemo(() => {
     return [...new Set(campaigns.map((item) => item.campaign?.year))]
@@ -37,17 +37,17 @@ export default function PreviousCampaigns({ campaigns = [] }) {
 
   const selectedCampaign = useMemo(() => {
     return campaigns.find(
-      (item) => item.campaign?._id?.toString() === selectedCampaignId,
+      (item) => item.campaign?._id?.toString() === selectedcampaign,
     )?.campaign;
-  }, [campaigns, selectedCampaignId]);
+  }, [campaigns, selectedcampaign]);
 
   const selectedData = useMemo(() => {
-    if (!selectedCampaignId) return [];
+    if (!selectedcampaign) return [];
 
     return campaigns.filter(
-      (item) => item.campaign?._id?.toString() === selectedCampaignId,
+      (item) => item.campaign?._id?.toString() === selectedcampaign,
     );
-  }, [campaigns, selectedCampaignId]);
+  }, [campaigns, selectedcampaign]);
 
   const handleYearChange = (value) => {
     setSelectedYear(value);
@@ -62,7 +62,7 @@ export default function PreviousCampaigns({ campaigns = [] }) {
       (item) => item.campaign?.year?.toString() === value,
     )?.campaign?._id;
 
-    setSelectedCampaignId(firstCampaign?.toString() || "");
+    setSelectedcampaign(firstCampaign?.toString() || "");
   };
 
   const handleMonthChange = (value) => {
@@ -74,7 +74,7 @@ export default function PreviousCampaigns({ campaigns = [] }) {
         item.campaign?.month?.toString() === value,
     )?.campaign?._id;
 
-    setSelectedCampaignId(firstCampaign?.toString() || "");
+    setSelectedcampaign(firstCampaign?.toString() || "");
   };
 
   return (
@@ -156,8 +156,8 @@ export default function PreviousCampaigns({ campaigns = [] }) {
 
             <div className="relative">
               <select
-                value={selectedCampaignId}
-                onChange={(e) => setSelectedCampaignId(e.target.value)}
+                value={selectedcampaign}
+                onChange={(e) => setSelectedcampaign(e.target.value)}
                 disabled={!selectedMonth}
                 className="bg-background border-border text-text w-full appearance-none rounded-xl border px-3 py-2.5 pr-9 text-sm outline-none disabled:opacity-50"
               >

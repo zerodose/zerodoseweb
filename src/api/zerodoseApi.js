@@ -9,11 +9,11 @@ export const getZerodoses = async ({
   limit = 10,
   search = "",
 
-  campaignId,
+  campaign,
 
-  districtId,
-  townId,
-  unionCouncilId,
+  district,
+  town,
+  unionCouncil,
 
   ucmo,
   supervisor,
@@ -39,11 +39,11 @@ export const getZerodoses = async ({
       page,
       limit,
       search,
-      ...(campaignId && { campaignId }),
-      ...(districtId && { districtId }),
-      ...(townId && { townId }),
-      ...(unionCouncilId && {
-        unionCouncilId,
+      ...(campaign && { campaign }),
+      ...(district && { district }),
+      ...(town && { town }),
+      ...(unionCouncil && {
+        unionCouncil,
       }),
 
       ...(ucmo && { ucmo }),

@@ -14,7 +14,7 @@ import District from "@/models/District";
 | ?page=1
 | ?limit=10
 | ?search=rawalpindi
-| ?district=<districtId>
+| ?district=<district>
 | ?isActive=true
 | ?sortBy=name
 | ?sortOrder=asc
@@ -53,7 +53,7 @@ export async function GET(request) {
     const search = searchParams.get("search")?.trim() || "";
 
     // Filters
-    const districtId = searchParams.get("district")?.trim() || "";
+    const district = searchParams.get("district")?.trim() || "";
 
     const isActiveParam = searchParams.get("isActive");
 
@@ -90,8 +90,8 @@ export async function GET(request) {
     }
 
     // District filter
-    if (districtId) {
-      if (!mongoose.Types.ObjectId.isValid(districtId)) {
+    if (district) {
+      if (!mongoose.Types.ObjectId.isValid(district)) {
         return NextResponse.json(
           {
             success: false,
@@ -101,7 +101,7 @@ export async function GET(request) {
         );
       }
 
-      query.district = districtId;
+      query.district = district;
     }
 
     // Count
@@ -140,7 +140,7 @@ export async function GET(request) {
 
         filters: {
           search,
-          district: districtId || null,
+          district: district || null,
           isActive: isActiveParam === null ? true : isActiveParam === "true",
         },
 

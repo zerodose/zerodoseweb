@@ -12,7 +12,7 @@ export async function GET(request) {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-
+    const supervisorId = searchParams.get("supervisorId");
     const type = searchParams.get("type");
     const id = searchParams.get("id");
     const metricsParam = searchParams.get("metrics");
@@ -191,7 +191,7 @@ export async function GET(request) {
 
       unionCouncilFilter.district = id;
 
-      zerodoseLocationFilter.districtId = id;
+      zerodoseLocationFilter.district = id;
     }
 
     if (type === "town") {
@@ -199,13 +199,17 @@ export async function GET(request) {
 
       unionCouncilFilter.town = id;
 
-      zerodoseLocationFilter.townId = id;
+      zerodoseLocationFilter.town = id;
     }
 
     if (type === "unionCouncil") {
       userLocationFilter.unionCouncil = id;
 
-      zerodoseLocationFilter.unionCouncilId = id;
+      zerodoseLocationFilter.unionCouncil = id;
+    }
+
+    if (supervisorId) {
+      zerodoseLocationFilter.supervisorId = supervisorId;
     }
 
     // =====================================================

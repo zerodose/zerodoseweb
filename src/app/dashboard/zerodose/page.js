@@ -29,7 +29,7 @@ export default function ZerodosePage() {
   });
 
   // ============================================================
-  // Get Zerodose
+  // Get Zerodoses
   // ============================================================
 
   const getZerodoseData = async () => {
@@ -42,7 +42,40 @@ export default function ZerodosePage() {
         search,
       });
 
-      setZerodoses(response.data || []);
+      // ========================================================
+      // Format Zerodose Data
+      // Raw IDs hide karne hain aur names show karne hain
+      // ========================================================
+      const formattedZerodoses = (response.data || []).map((zerodose) => {
+        console.log("DISTRICT:", zerodose.district);
+        console.log("TOWN:", zerodose.town);
+        console.log("UC:", zerodose.unionCouncil);
+        console.log("Campign:", zerodose.campaign);
+
+        return {
+          ...zerodose,
+
+          districtName: zerodose.district?.name || "-",
+          townName: zerodose.town?.name || "-",
+          unionCouncilName: zerodose.unionCouncil?.name || "-",
+
+          ucmoName: zerodose.ucmo?.name || "-",
+          supervisorName: zerodose.supervisor?.name || "-",
+          campaignName: zerodose.campaign
+            ? `${zerodose.campaign.name} ${zerodose.campaign.month} ${zerodose.campaign.year}`
+            : "-",
+
+          // team:
+          //   zerodose.teamNumber !== null && zerodose.teamNumber !== undefined
+          //     ? `Team ${zerodose.teamNumber}`
+          //     : "-",
+          team: zerodose.teamNumber || "-",
+
+          status: zerodose.vaccinationStatus || "-",
+        };
+      });
+
+      setZerodoses(formattedZerodoses);
 
       setPagination((previous) => ({
         ...previous,
@@ -113,20 +146,26 @@ export default function ZerodosePage() {
     }));
   };
 
+  // ============================================================
+  // UI
+  // ============================================================
+
   return (
     <Table
       data={zerodoses}
       loading={loading}
       pageTitle="Zerodoses"
-pageDescription="View and manage recorded zerodose."
+      pageDescription="View and manage recorded zerodose."
       pageBreadcrumbs={[
         {
           label: "Zerodoses",
         },
       ]}
+
       // ========================================================
       // Server Pagination
       // ========================================================
+
       serverPagination
       currentPage={pagination.page}
       totalItems={pagination.total}
@@ -135,54 +174,116 @@ pageDescription="View and manage recorded zerodose."
       onPageChange={handlePageChange}
       onPageSizeChange={handlePageSizeChange}
       onSearchChange={handleSearchChange}
+
       // ========================================================
-      // Columns
+      // Column Titles
       // ========================================================
-      hiddenColumns={[
-        "_id",
-        "__v",
-        "districtId",
-        "town",
-        "unionCouncilId",
-        "ucmo",
-        "supervisor",
-        "team",
-        "location",
-        "createdAt",
-        "updatedAt",
-      ]}
+
       columnTitles={{
         childName: "Child Name",
         fatherName: "Father Name",
         age: "Age",
         address: "Address",
         contactNo: "Contact No",
+
+        districtName: "District",
+        townName: "Town",
+        unionCouncilName: "Union Council",
+        campaignName: "Campaign",
+        ucmoName: "UCMO",
+        supervisorName: "Supervisor",
+        team: "Team",
+
         recordDate: "Record Date",
         visitDate: "Visit Date",
         coveredDate: "Covered Date",
         status: "Status",
       }}
+
+      // =====  // ========================================================
+      // Hidden Columns
+      // ========================================================
+
+      hiddenColumns={[
+        "_id",
+        "__v",
+
+        "campaign",
+        "district",
+        "town",
+        "unionCouncil",
+
+        "ucmo",
+        "supervisor",
+        "user",
+        "teamNumber",
+
+        "location",
+        "createdAt",
+        "updatedAt",
+      ]}
+
+      // ===================================================
+      // Columns
+      // ========================================================
+
       columnOptions={[
         "childName",
         "fatherName",
         "age",
         "address",
         "contactNo",
+
+        "districtName",
+        "townName",
+        "unionCouncilName",
+        "ucmoName",
+        "supervisorName",
+        "team",
+        "campaignName",
+
         "recordDate",
         "visitDate",
         "coveredDate",
         "status",
       ]}
+
       dateColumns={["recordDate", "visitDate", "coveredDate"]}
+
       // ========================================================
       // Filters
       // ========================================================
+
       filterOptions={[
         {
           key: "status",
           label: "Status",
           type: "select",
           column: "status",
+        },
+        {
+          key: "districtName",
+          label: "District",
+          type: "select",
+          column: "districtName",
+        },
+        {
+          key: "townName",
+          label: "Town",
+          type: "select",
+          column: "townName",
+        },
+        {
+          key: "unionCouncilName",
+          label: "Union Council",
+          type: "select",
+          column: "unionCouncilName",
+        },
+        {
+          key: "campaignName",
+          label: "Campaign Name",
+          type: "select",
+          column: "campaignName",
         },
         {
           key: "recordDate",
@@ -203,21 +304,27 @@ pageDescription="View and manage recorded zerodose."
           column: "coveredDate",
         },
       ]}
+
       // ========================================================
       // Row
       // ========================================================
+
       onRowClick={(zerodose) => {
         router.push(`/dashboard/zerodose/${zerodose._id}`);
       }}
+
       // ========================================================
       // Add
       // ========================================================
+
       addButton
       addButtonText="Add Zerodose"
       onAdd={() => router.push("/dashboard/zerodose/addzerodose")}
+
       // ========================================================
       // Export
       // ========================================================
+
       onExportPDF={exportPDF}
       onExportExcel={exportExcel}
     />

@@ -23,9 +23,9 @@ export async function createUser(data) {
 //   sortOrder: "asc",
 //   status: "active",
 //   designation: "supervisor",
-//   district: "districtId",
-//   town: "townId",
-//   unionCouncil: "unionCouncilId",
+//   district: "district",
+//   town: "town",
+//   unionCouncil: "unionCouncil",
 // })
 // ============================================================
 

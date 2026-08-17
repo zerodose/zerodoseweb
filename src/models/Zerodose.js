@@ -2,28 +2,28 @@ import mongoose, { Schema } from "mongoose";
 
 const zerodoseSchema = new Schema(
   {
-    campaignId: {
+    campaign: {
       type: Schema.Types.ObjectId,
       ref: "Campaign",
       required: true,
       index: true,
     },
 
-    districtId: {
+    district: {
       type: Schema.Types.ObjectId,
       ref: "District",
       required: true,
       index: true,
     },
 
-    townId: {
+    town: {
       type: Schema.Types.ObjectId,
       ref: "Town",
       required: true,
       index: true,
     },
 
-    unionCouncilId: {
+    unionCouncil: {
       type: Schema.Types.ObjectId,
       ref: "UnionCouncil",
       required: true,

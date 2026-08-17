@@ -67,10 +67,10 @@ if (!MONGODB_URI) {
 // Hide password from logs
 // ============================================================
 
-console.log(
-  "MongoDB URI:",
-  MONGODB_URI.replace(/\/\/([^:]+):([^@]+)@/, "//$1:****@"),
-);
+// console.log(
+//   "MongoDB URI:",
+//   MONGODB_URI.replace(/\/\/([^:]+):([^@]+)@/, "//$1:****@"),
+// );
 
 // ============================================================
 // Global MongoDB Cache
@@ -95,7 +95,7 @@ export async function connectDB() {
   // ==========================================================
 
   if (cached.conn) {
-    console.log("MongoDB: using existing connection");
+    // console.log("MongoDB: using existing connection");
 
     return cached.conn;
   }
@@ -105,7 +105,7 @@ export async function connectDB() {
   // ==========================================================
 
   if (cached.promise) {
-    console.log("MongoDB: waiting for existing connection");
+    // console.log("MongoDB: waiting for existing connection");
 
     cached.conn = await cached.promise;
 

@@ -237,7 +237,7 @@ function canAccessZerodose(user, zerodose) {
 // Get Zerodose By ID
 // ============================================================
 
-async function getZerodoseById(id) {
+async function getZerodose(id) {
   return populateZerodose(Zerodose.findById(id)).lean();
 }
 
@@ -290,7 +290,7 @@ export async function GET(request, { params }) {
     // Get Zerodose
     // ========================================================
 
-    const zerodose = await getZerodoseById(id);
+    const zerodose = await getZerodose(id);
 
     if (!zerodose) {
       return NextResponse.json(
@@ -737,7 +737,7 @@ export async function PATCH(request, { params }) {
 
       await zerodose.save();
 
-      const populated = await getZerodoseById(id);
+      const populated = await getZerodose(id);
 
       return NextResponse.json(
         {
@@ -836,7 +836,7 @@ export async function PATCH(request, { params }) {
 
         await zerodose.save();
 
-        const populated = await getZerodoseById(id);
+        const populated = await getZerodose(id);
 
         return NextResponse.json(
           {
@@ -891,7 +891,7 @@ export async function PATCH(request, { params }) {
 
       await zerodose.save();
 
-      const populated = await getZerodoseById(id);
+      const populated = await getZerodose(id);
 
       return NextResponse.json(
         {
@@ -1092,7 +1092,7 @@ export async function PATCH(request, { params }) {
 
       await zerodose.save();
 
-      const populated = await getZerodoseById(id);
+      const populated = await getZerodose(id);
 
       return NextResponse.json(
         {
@@ -1180,7 +1180,7 @@ export async function PATCH(request, { params }) {
 
         await zerodose.save();
 
-        const populated = await getZerodoseById(id);
+        const populated = await getZerodose(id);
 
         return NextResponse.json(
           {
@@ -1440,7 +1440,7 @@ export async function DELETE(request, { params }) {
     // Populate Response
     // ========================================================
 
-    const populated = await getZerodoseById(id);
+    const populated = await getZerodose(id);
 
     // ========================================================
     // Response

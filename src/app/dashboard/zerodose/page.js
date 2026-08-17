@@ -47,11 +47,6 @@ export default function ZerodosePage() {
       // Raw IDs hide karne hain aur names show karne hain
       // ========================================================
       const formattedZerodoses = (response.data || []).map((zerodose) => {
-        console.log("DISTRICT:", zerodose.district);
-        console.log("TOWN:", zerodose.town);
-        console.log("UC:", zerodose.unionCouncil);
-        console.log("Campign:", zerodose.campaign);
-
         return {
           ...zerodose,
 

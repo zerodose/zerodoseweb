@@ -44,12 +44,12 @@ export default function AuthGuard({ children }) {
         return;
       }
 
-      console.log(
-        "Auth expires at:",
-        new Date(parsedUser.expiresAt).toLocaleString(),
-      );
+      // console.log(
+      //   "Auth expires at:",
+      //   new Date(parsedUser.expiresAt).toLocaleString(),
+      // );
 
-      console.log("Remaining minutes:", Math.ceil(remainingTime / 1000 / 60));
+      // console.log("Remaining minutes:", Math.ceil(remainingTime / 1000 / 60));
 
       // Automatically logout exactly when expiry time arrives
       const timer = setTimeout(() => {

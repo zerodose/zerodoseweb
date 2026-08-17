@@ -50,7 +50,7 @@ const EMPTY_FORM = {
   month: "",
   startDate: "",
   endDate: "",
-  isActive: true,
+  campaignStatus: "",
 };
 
 const formatDateForInput = (date) => {
@@ -95,7 +95,7 @@ export default function CampaignForm({
       month: campaign.month ? String(campaign.month) : "",
       startDate: formatDateForInput(campaign.startDate),
       endDate: formatDateForInput(campaign.endDate),
-      isActive: campaign.isActive ?? true,
+      campaignStatus: campaign.campaignStatus || "",
     });
   }, [campaign]);
 

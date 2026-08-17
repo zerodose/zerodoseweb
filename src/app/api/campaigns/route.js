@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { connectDB } from "@/lib/db";
 import Campaign from "@/models/Campaign";
 
@@ -40,7 +41,7 @@ export async function GET(request) {
 
     const year = searchParams.get("year");
     const month = searchParams.get("month");
-    const isActive = searchParams.get("isActive");
+    const status = searchParams.get("status");
 
     // =====================================================
     // Sorting
@@ -54,7 +55,6 @@ export async function GET(request) {
       "endDate",
       "createdAt",
       "updatedAt",
-      "isActive",
     ];
 
     const requestedSort = searchParams.get("sortBy") || "startDate";
@@ -73,7 +73,7 @@ export async function GET(request) {
 
     const query = {};
 
-    // Search campaign name
+    // Search
     if (search) {
       query.name = {
         $regex: search,
@@ -81,7 +81,7 @@ export async function GET(request) {
       };
     }
 
-    // Year filter
+    // Year
     if (year) {
       const numericYear = Number(year);
 
@@ -90,20 +90,36 @@ export async function GET(request) {
       }
     }
 
-    // Month filter
+    // Month
     if (month) {
       const numericMonth = Number(month);
 
-      if (Number.isInteger(numericMonth)) {
+      if (
+        Number.isInteger(numericMonth) &&
+        numericMonth >= 1 &&
+        numericMonth <= 12
+      ) {
         query.month = numericMonth;
       }
     }
 
-    // Active filter
-    if (isActive === "true") {
-      query.isActive = true;
-    } else if (isActive === "false") {
-      query.isActive = false;
+    // =====================================================
+    // Status Filter
+    // =====================================================
+
+    const now = new Date();
+
+    if (status === "current") {
+      query.startDate = { $lte: now };
+      query.endDate = { $gte: now };
+    }
+
+    if (status === "upcoming") {
+      query.startDate = { $gt: now };
+    }
+
+    if (status === "previous") {
+      query.endDate = { $lt: now };
     }
 
     // =====================================================
@@ -114,6 +130,7 @@ export async function GET(request) {
 
     // =====================================================
     // Fetch
+    // Don't use lean because campaignStatus is a virtual
     // =====================================================
 
     const campaigns = await Campaign.find(query)
@@ -121,8 +138,7 @@ export async function GET(request) {
         [sortBy]: sortOrder,
       })
       .skip(skip)
-      .limit(limit)
-      .lean();
+      .limit(limit);
 
     // =====================================================
     // Pagination
@@ -149,7 +165,7 @@ export async function GET(request) {
           search,
           year: year || null,
           month: month || null,
-          isActive: isActive === null ? null : isActive === "true",
+          status: status || null,
         },
 
         sorting: {
@@ -182,7 +198,7 @@ export async function POST(request) {
 
     const body = await request.json();
 
-    const { name, year, month, startDate, isActive = true } = body;
+    const { name, year, month, startDate } = body;
 
     // =====================================================
     // Required Fields
@@ -199,9 +215,7 @@ export async function POST(request) {
     }
 
     // =====================================================
-    // Calculate End Date
-    // 8 calendar days total
-    // Start Date + 7 days
+    // Validate Start Date
     // =====================================================
 
     const start = new Date(startDate);
@@ -216,25 +230,29 @@ export async function POST(request) {
       );
     }
 
+    // =====================================================
+    // Calculate End Date
+    // 8 calendar days total
+    // Start Date + 7 days
+    // =====================================================
+
     const end = new Date(start);
     end.setDate(end.getDate() + 7);
 
     // =====================================================
-    // Prevent Multiple Campaigns On Same Date
+    // Prevent Overlapping Campaigns
     // =====================================================
 
     const existingCampaign = await Campaign.findOne({
-      startDate: {
-        $gte: new Date(start.setHours(0, 0, 0, 0)),
-        $lt: new Date(start.setHours(23, 59, 59, 999)),
-      },
+      startDate: { $lte: end },
+      endDate: { $gte: start },
     });
 
     if (existingCampaign) {
       return NextResponse.json(
         {
           success: false,
-          message: `A campaign already exists on ${startDate}. Only one campaign can be created on the same date.`,
+          message: "Another campaign already exists during these dates.",
         },
         { status: 409 },
       );
@@ -248,9 +266,8 @@ export async function POST(request) {
       name,
       year: Number(year),
       month: Number(month),
-      startDate: new Date(startDate),
+      startDate: start,
       endDate: end,
-      isActive,
     });
 
     return NextResponse.json(
@@ -264,12 +281,11 @@ export async function POST(request) {
   } catch (error) {
     console.error("Create campaign error:", error);
 
-    // Duplicate index
     if (error.code === 11000) {
       return NextResponse.json(
         {
           success: false,
-          message: "A campaign already exists for this date.",
+          message: "A campaign already exists.",
         },
         { status: 409 },
       );

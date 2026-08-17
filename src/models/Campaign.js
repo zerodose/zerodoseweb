@@ -29,11 +29,6 @@ const campaignSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
   },
   {
     timestamps: true,
@@ -48,17 +43,9 @@ const campaignSchema = new mongoose.Schema(
   },
 );
 
-/* =========================================================
-   Campaign Active Status
-   Campaign is active only between startDate and endDate.
-   ========================================================= */
-
+// Automatically determine campaign status
 campaignSchema.virtual("campaignStatus").get(function () {
   const now = new Date();
-
-  if (!this.isActive) {
-    return "inactive";
-  }
 
   const startDate = new Date(this.startDate);
 
@@ -76,21 +63,12 @@ campaignSchema.virtual("campaignStatus").get(function () {
   return "current";
 });
 
-/* =========================================================
-   Validate Dates
-   ========================================================= */
-
+// Validate dates
 campaignSchema.pre("validate", function () {
-  if (this.startDate && this.endDate) {
-    if (this.startDate > this.endDate) {
-      throw new Error("Campaign end date cannot be before start date.");
-    }
+  if (this.startDate > this.endDate) {
+    throw new Error("Campaign end date cannot be before start date.");
   }
 });
-
-/* =========================================================
-   Model
-   ========================================================= */
 
 const Campaign =
   mongoose.models.Campaign || mongoose.model("Campaign", campaignSchema);

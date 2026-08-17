@@ -151,7 +151,7 @@ export default function CampaignsPage() {
         month: "Month",
         startDate: "Start Date",
         endDate: "End Date",
-        isActive: "Active",
+        campaignStatus: "Status",
       }}
 
       columnOptions={[
@@ -160,7 +160,7 @@ export default function CampaignsPage() {
         "month",
         "startDate",
         "endDate",
-        "isActive",
+        "campaignStatus",
       ]}
 
       // ========================================================
@@ -187,10 +187,10 @@ export default function CampaignsPage() {
           column: "month",
         },
         {
-          key: "isActive",
-          label: "IsActive",
+          key: "status",
+          label: "Status",
           type: "select",
-          column: "isActive",
+          column: "campaignStatus",
         },
         {
           key: "dateRange",

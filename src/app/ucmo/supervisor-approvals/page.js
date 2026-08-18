@@ -95,7 +95,7 @@ export default function Page() {
       }
 
       const unionCouncilId = getAuthUnionCouncil(authUser);
-
+      
       if (!unionCouncilId) {
         throw new Error(
           "Union Council information not found in UCMO authentication data.",

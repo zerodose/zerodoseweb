@@ -1,16 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-
+import Link from "next/link";
 import { getCampaigns } from "@/api/campaignApi";
 import { getZerodoses } from "@/api/zerodoseApi";
 import { getUsers } from "@/api/userApi";
-
+import { getPendingSupervisorApprovals } from "@/api/supervisorApprovalApi";
 import UCMOSummaryCards from "@/components/ucmo/UCMOSummaryCards";
 import UCMOActions from "@/components/ucmo/UCMOActions";
 import CampaignTabs from "@/components/ucmo/CampaignTabs";
 import CurrentCampaign from "@/components/ucmo/CurrentCampaign";
 import PreviousCampaigns from "@/components/ucmo/PreviousCampaigns";
+import { UsersRound } from "lucide-react";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
@@ -168,26 +169,29 @@ export default function Page() {
         //
         // --------------------------------------------------------
 
-        const approvalsResponse = await getUsers({
-          page: 1,
-          limit: 1,
-          designation: "supervisor",
-          status: "pending",
-          ucmo: ucmoId,
-        });
+        const authUnionCouncilId =
+          getId(storedAuthUser.unionCouncil) ||
+          getId(storedAuthUser.unionCouncilId);
 
-        if (approvalsResponse?.success) {
+        if (authUnionCouncilId) {
+          const approvalsResponse =
+            await getPendingSupervisorApprovals(authUnionCouncilId);
+
+          if (!approvalsResponse?.success) {
+            throw new Error(
+              approvalsResponse?.message ||
+                "Failed to fetch pending supervisor approvals.",
+            );
+          }
+
           setPendingApprovals(
-            approvalsResponse.pagination?.total ||
-              approvalsResponse.pagination?.totalItems ||
-              approvalsResponse.total ||
-              approvalsResponse.data?.length ||
-              0,
+            Array.isArray(approvalsResponse.data)
+              ? approvalsResponse.data.length
+              : 0,
           );
         } else {
           setPendingApprovals(0);
         }
-
         // --------------------------------------------------------
         // ALL ZERODOSE
         // --------------------------------------------------------
@@ -535,20 +539,24 @@ export default function Page() {
     <div className="min-h-full p-4 md:p-6">
       <div className="mx-auto w-full max-w-7xl">
         {/* ======================================================
-            HEADER
-        ====================================================== */}
+              HEADER
+          ====================================================== */}
+        <div className="mb-4 flex items-center justify-between md:mb-6">
+          <div className="">
+            <h1 className="text-text text-2xl font-bold md:text-3xl">UCMO</h1>
 
-        <div className="mb-6 md:mb-7">
-          <h1 className="text-text text-2xl font-bold md:text-3xl">UCMO</h1>
-
-          <p className="text-text-secondary mt-1 text-sm">
-            Manage supervisors and campaign-wise Zerodose records
-          </p>
+            <p className="text-text-secondary mt-1 text-sm">
+              Manage supervisors and campaign-wise Zerodose records
+            </p>
+          </div>
+          <div className="flex align-bottom">
+            <UCMOActions pendingApprovals={pendingApprovals} />
+          </div>
         </div>
 
         {/* ======================================================
-            ERROR
-        ====================================================== */}
+              ERROR
+          ====================================================== */}
 
         {error && (
           <div className="mb-5 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -557,8 +565,8 @@ export default function Page() {
         )}
 
         {/* ======================================================
-            SUMMARY
-        ====================================================== */}
+              SUMMARY
+          ====================================================== */}
 
         <UCMOSummaryCards
           totalSupervisors={supervisors.length}
@@ -567,20 +575,32 @@ export default function Page() {
         />
 
         {/* ======================================================
-            ACTIONS
-        ====================================================== */}
+              ACTIONS
+          ====================================================== */}
 
-        <UCMOActions pendingApprovals={pendingApprovals} />
+        {/* <UCMOActions pendingApprovals={pendingApprovals} /> */}
+        <div className="flex">
+          <Link
+            href="/ucmo/supervisor-management"
+            className="border-border bg-primary hover:border-primary/40 hover:bg-primary-light group text-white inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-semibold shadow-sm transition-all"
+          >
+            <UsersRound
+              size={17}
+              className="transition-transform group-hover:scale-105"
+            />
 
+            <span>Supervisor Management</span>
+          </Link>
+        </div>
         {/* ======================================================
-            TABS
-        ====================================================== */}
+              TABS
+          ====================================================== */}
 
         <CampaignTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
         {/* ======================================================
-            CURRENT CAMPAIGN
-        ====================================================== */}
+              CURRENT CAMPAIGN
+          ====================================================== */}
 
         {activeTab === "current" && (
           <CurrentCampaign
@@ -592,8 +612,8 @@ export default function Page() {
         )}
 
         {/* ======================================================
-            PREVIOUS CAMPAIGNS
-        ====================================================== */}
+              PREVIOUS CAMPAIGNS
+          ====================================================== */}
 
         {activeTab === "previous" && (
           <PreviousCampaigns

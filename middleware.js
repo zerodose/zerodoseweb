@@ -1,16 +1,16 @@
-import { NextResponse } from "next/server";
+// import { NextResponse } from "next/server";
 
-export function middleware(request) {
-  const pathname = request.nextUrl.pathname;
+// export function middleware(request) {
+//   const pathname = request.nextUrl.pathname;
 
-  if (pathname === "/worker/addzerodose") {
-    // Middleware mein MongoDB directly use karna avoid karna better hai.
-    // Campaign check API/server-side layout mein karna recommended hai.
-  }
+//   if (pathname === "/worker/addzerodose") {
+//     // Middleware mein MongoDB directly use karna avoid karna better hai.
+//     // Campaign check API/server-side layout mein karna recommended hai.
+//   }
 
-  return NextResponse.next();
-}
+//   return NextResponse.next();
+// }
 
-export const config = {
-  matcher: ["/worker/addzerodose"],
-};
+// export const config = {
+//   matcher: ["/worker/addzerodose"],
+// };

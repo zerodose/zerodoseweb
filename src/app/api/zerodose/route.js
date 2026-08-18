@@ -1250,7 +1250,6 @@ export async function POST(request) {
     const now = new Date();
 
     const currentCampaign = await Campaign.findOne({
-      isActive: true,
       startDate: {
         $lte: now,
       },
@@ -1258,7 +1257,7 @@ export async function POST(request) {
         $gte: now,
       },
     })
-      .select("_id name year month startDate endDate isActive")
+      .select("_id name year month startDate endDate")
       .sort({
         startDate: -1,
       })

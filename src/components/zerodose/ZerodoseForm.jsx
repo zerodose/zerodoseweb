@@ -31,14 +31,16 @@ export default function ZerodoseForm() {
         const today = new Date();
 
         const activeCampaign = campaigns.find((campaign) => {
+          if (!campaign.startDate || !campaign.endDate) {
+            return false;
+          }
+
           const startDate = new Date(campaign.startDate);
           const endDate = new Date(campaign.endDate);
 
           endDate.setHours(23, 59, 59, 999);
 
-          return (
-            campaign.isActive === true && today >= startDate && today <= endDate
-          );
+          return today >= startDate && today <= endDate;
         });
 
         if (!activeCampaign) {
@@ -128,25 +130,25 @@ export default function ZerodoseForm() {
       // await createZerodose(payload);
       // toast.success("Zerodose recorded successfully.");
 
-// ======================================================
-              // Extra Add
-// ======================================================
-if (navigator.onLine) {
-  await createZerodose(zerodose);
-} else {
-  await saveOfflineZerodose(zerodose);
-}
+      // ======================================================
+      // Extra Add
+      // ======================================================
+      if (navigator.onLine) {
+        await createZerodose(zerodose);
+      } else {
+        await saveOfflineZerodose(zerodose);
+      }
 
-if (navigator.onLine) {
-  toast.success("Zerodose recorded successfully.");
-} else {
-  toast.success(
-    "Zerodose saved offline. It will sync automatically when internet is available.",
-  );
-}
-// ======================================================
-              // Extra Add
-// ======================================================
+      if (navigator.onLine) {
+        toast.success("Zerodose recorded successfully.");
+      } else {
+        toast.success(
+          "Zerodose saved offline. It will sync automatically when internet is available.",
+        );
+      }
+      // ======================================================
+      // Extra Add
+      // ======================================================
 
       router.back();
     } catch (error) {

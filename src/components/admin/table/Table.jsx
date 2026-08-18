@@ -773,7 +773,7 @@ export default function Table({
             Actions
         ================================================== */}
 
-        <div className="grid grid-cols-2 gap-2 lg:flex lg:flex-wrap lg:items-center">
+        <div className="grid grid-cols-2 gap-2 lg:flex lg:items-center">
           {/* =================================================
               Selected
           ================================================= */}
@@ -796,7 +796,7 @@ export default function Table({
             >
               <Plus size={16} />
 
-              <span>{addButtonText}</span>
+              <span className="min-w-0 truncate">{addButtonText}</span>
             </button>
           )}
 

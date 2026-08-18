@@ -162,7 +162,7 @@ export default function SearchInput({
   };
 
   return (
-    <div className="relative w-full lg:max-w-xs">
+    <div className="relative">
       <Search
         size={18}
         className="text-text-secondary pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"

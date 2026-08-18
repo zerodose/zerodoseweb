@@ -78,7 +78,7 @@ export default function LoginForm() {
         password,
       });
 
-      console.log("Login response:", response);
+      // console.log("Login response:", response);
 
       // =================================================
       // Get User
@@ -90,7 +90,7 @@ export default function LoginForm() {
         throw new Error("User information was not returned.");
       }
 
-      console.log("Logged in user:", user);
+      // console.log("Logged in user:", user);
 
       // =================================================
       // Get Route According To Designation
@@ -109,9 +109,9 @@ export default function LoginForm() {
 
       const route = dashboardRoutes[designation];
 
-      console.log("User designation:", designation);
+      // console.log("User designation:", designation);
 
-      console.log("Dashboard route:", route);
+      // console.log("Dashboard route:", route);
 
       if (!route) {
         throw new Error(

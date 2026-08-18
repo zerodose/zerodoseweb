@@ -175,12 +175,17 @@ export async function POST(request) {
         unionCouncil,
 
         designation,
+        
+        approvalStatus: ["supervisor", "vaccinator"].includes(designation)
+          ? "pending"
+          : null,
 
-        supervisor,
+        supervisorCode:
+          designation === "supervisor" ? normalizedSupervisorCode : null,
 
-        supervisorCode: null,
+        supervisor: null,
 
-        teamNumber: Number(teamNumber),
+        teamNumber: null,
 
         password: hashedPassword,
 
@@ -266,7 +271,9 @@ export async function POST(request) {
 
       designation,
 
-      approvalStatus: designation === "supervisor" ? "pending" : "approved",
+      approvalStatus: ["supervisor", "vaccinator"].includes(designation)
+        ? "pending"
+        : null,
 
       supervisorCode:
         designation === "supervisor" ? normalizedSupervisorCode : null,

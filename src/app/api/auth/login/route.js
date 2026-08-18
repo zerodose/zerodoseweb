@@ -105,7 +105,7 @@ export async function POST(request) {
     }
 
     if (
-      user.designation === "supervisor" &&
+      ["supervisor", "vaccinator"].includes(user.designation) &&
       user.approvalStatus !== "approved"
     ) {
       return NextResponse.json(

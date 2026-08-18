@@ -55,14 +55,21 @@ const userSchema = new mongoose.Schema(
       },
 
       default: function () {
-        return this.designation === "supervisor" ? "pending" : null;
+        return ["supervisor", "vaccinator"].includes(this.designation)
+          ? "pending"
+          : null;
       },
 
       validate: {
         validator: function (value) {
-          return value === null || this.designation === "supervisor";
+          return (
+            value === null ||
+            ["supervisor", "vaccinator"].includes(this.designation)
+          );
         },
-        message: "Only supervisors can have an approval status.",
+
+        message:
+          "Only supervisors and vaccinators can have an approval status.",
       },
     },
 

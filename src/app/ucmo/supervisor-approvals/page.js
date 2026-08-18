@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -18,6 +17,7 @@ import {
 } from "@/api/supervisorApprovalApi";
 
 import SupervisorApprovalCard from "@/components/ucmo/SupervisorApprovalCard";
+import ClientPageHeader from "@/components/ui/ClientPageHeader";
 
 export default function Page() {
   const router = useRouter();
@@ -68,9 +68,7 @@ export default function Page() {
     if (!authUser) return null;
 
     return (
-      getId(authUser.unionCouncil) ||
-      getId(authUser.unionCouncilId) ||
-      null
+      getId(authUser.unionCouncil) || getId(authUser.unionCouncilId) || null
     );
   };
 
@@ -95,7 +93,7 @@ export default function Page() {
       }
 
       const unionCouncilId = getAuthUnionCouncil(authUser);
-      
+
       if (!unionCouncilId) {
         throw new Error(
           "Union Council information not found in UCMO authentication data.",
@@ -156,10 +154,7 @@ export default function Page() {
     try {
       setProcessingId(supervisorId);
 
-      const response = await updateSupervisorApproval(
-        supervisorId,
-        status,
-      );
+      const response = await updateSupervisorApproval(supervisorId, status);
 
       if (!response?.success) {
         throw new Error(
@@ -258,59 +253,23 @@ export default function Page() {
             HEADER
         ====================================================== */}
 
-        <header className="border-border mb-6 border-b pb-6">
+        <header className="border-border mb-6 flex justify-between border-b pb-6">
           {/* Back */}
+          <ClientPageHeader
+            title="Supervisor Approvals"
+            description="Review and manage pending supervisor registration requests."
+            onBack={() => router.back()}
+          />
           <button
             type="button"
-            onClick={() => router.push("/ucmo")}
-            className="text-text-secondary hover:text-primary group mb-5 inline-flex items-center gap-2 text-sm font-medium transition-colors"
+            onClick={() => fetchApprovals(true)}
+            disabled={refreshing}
+            className="border-border text-text hover:border-primary/30 hover:bg-primary/5 inline-flex h-10 items-center justify-center gap-2 rounded-xl border bg-white px-4 text-sm font-semibold shadow-sm transition-all hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <span className="bg-surface border-border group-hover:border-primary/30 group-hover:bg-primary/10 flex h-8 w-8 items-center justify-center rounded-lg border transition-all">
-              <ArrowLeft
-                size={16}
-                className="transition-transform group-hover:-translate-x-0.5"
-              />
-            </span>
+            <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
 
-            <span>Back to UCMO</span>
+            <span>{refreshing ? "Refreshing..." : "Refresh"}</span>
           </button>
-
-          {/* Title */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3.5">
-              <div className="bg-primary/10 text-primary mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
-                <ClipboardCheck size={21} />
-              </div>
-
-              <div>
-                <h1 className="text-text text-2xl font-bold tracking-tight md:text-3xl">
-                  Supervisor Approvals
-                </h1>
-
-                <p className="text-text-secondary mt-1.5 max-w-xl text-sm leading-5">
-                  Review and manage pending supervisor registration
-                  requests.
-                </p>
-              </div>
-            </div>
-
-            {/* Refresh */}
-            <button
-              type="button"
-              onClick={() => fetchApprovals(true)}
-              disabled={refreshing}
-              className="border-border text-text hover:border-primary/30 hover:bg-primary/5 inline-flex h-10 items-center justify-center gap-2 rounded-xl border bg-white px-4 text-sm font-semibold shadow-sm transition-all hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <RefreshCw
-                size={16}
-                className={refreshing ? "animate-spin" : ""}
-              />
-
-              <span>
-                {refreshing ? "Refreshing..." : "Refresh"}
-              </span>
-            </button>
-          </div>
         </header>
 
         {/* ======================================================
@@ -330,9 +289,7 @@ export default function Page() {
                     Unable to load approvals
                   </p>
 
-                  <p className="mt-0.5 text-xs text-red-600">
-                    {error}
-                  </p>
+                  <p className="mt-0.5 text-xs text-red-600">{error}</p>
                 </div>
               </div>
 
@@ -372,12 +329,8 @@ export default function Page() {
           {supervisors.length > 0 && (
             <div className="text-text-secondary flex items-center gap-1.5 text-xs">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-
               {supervisors.length}{" "}
-              {supervisors.length === 1
-                ? "request"
-                : "requests"}{" "}
-              waiting
+              {supervisors.length === 1 ? "request" : "requests"} waiting
             </div>
           )}
         </div>
@@ -392,19 +345,14 @@ export default function Page() {
 
             <div className="relative">
               <div className="bg-primary/10 text-primary mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-xl">
-                <CheckCircle2
-                  size={28}
-                  strokeWidth={1.8}
-                />
+                <CheckCircle2 size={28} strokeWidth={1.8} />
               </div>
 
-              <h3 className="text-text text-lg font-bold">
-                All Caught Up
-              </h3>
+              <h3 className="text-text text-lg font-bold">All Caught Up</h3>
 
               <p className="text-text-secondary mx-auto mt-2 max-w-md text-sm leading-6">
-                There are currently no supervisor registration
-                requests waiting for your approval.
+                There are currently no supervisor registration requests waiting
+                for your approval.
               </p>
 
               <button
@@ -418,9 +366,7 @@ export default function Page() {
                   className={refreshing ? "animate-spin" : ""}
                 />
 
-                <span>
-                  {refreshing ? "Checking..." : "Check Again"}
-                </span>
+                <span>{refreshing ? "Checking..." : "Check Again"}</span>
               </button>
             </div>
           </div>
@@ -439,27 +385,11 @@ export default function Page() {
                 <SupervisorApprovalCard
                   key={supervisorId}
                   supervisor={supervisor}
-                  expanded={
-                    !!expandedSupervisors[supervisorId]
-                  }
-                  processing={
-                    processingId === supervisorId
-                  }
-                  onToggle={() =>
-                    toggleSupervisor(supervisorId)
-                  }
-                  onApprove={() =>
-                    handleApproval(
-                      supervisor,
-                      "approved",
-                    )
-                  }
-                  onReject={() =>
-                    handleApproval(
-                      supervisor,
-                      "rejected",
-                    )
-                  }
+                  expanded={!!expandedSupervisors[supervisorId]}
+                  processing={processingId === supervisorId}
+                  onToggle={() => toggleSupervisor(supervisorId)}
+                  onApprove={() => handleApproval(supervisor, "approved")}
+                  onReject={() => handleApproval(supervisor, "rejected")}
                 />
               );
             })}

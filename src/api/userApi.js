@@ -41,6 +41,7 @@ export async function getUsers({
   town = "",
   unionCouncil = "",
   supervisor = "",
+    isActive,
 } = {}) {
   const response = await api.get("/users", {
     params: {
@@ -55,6 +56,7 @@ export async function getUsers({
       town,
       unionCouncil,
       supervisor,
+        isActive,
     },
   });
 

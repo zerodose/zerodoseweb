@@ -12,6 +12,7 @@ import CampaignTabs from "@/components/ucmo/CampaignTabs";
 import CurrentCampaign from "@/components/ucmo/CurrentCampaign";
 import PreviousCampaigns from "@/components/ucmo/PreviousCampaigns";
 import { UsersRound } from "lucide-react";
+import ActionLinkButton from "@/components/admin/ui/ActionLinkButton";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
@@ -536,7 +537,7 @@ export default function Page() {
   // ============================================================
 
   return (
-    <div className="min-h-full ">
+    <div className="min-h-full">
       <div className="mx-auto w-full max-w-7xl">
         {/* ======================================================
               HEADER
@@ -579,17 +580,10 @@ export default function Page() {
           ====================================================== */}
 
         {/* <UCMOActions pendingApprovals={pendingApprovals} /> */}
-        <div className="flex">
-          <Link
-            href="/ucmo/supervisor-management"
-            className="border-border bg-primary hover:border-primary/80 hover:text-primary group inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-500 hover:bg-white"
-          >
-            <UsersRound
-              size={17}
-              className="transition-transform duration-200 group-hover:-translate-x-1 group-hover:scale-105"
-            />
-            <span>Supervisor Management</span>
-          </Link>
+        <div className="flex gap-3">
+        
+          <ActionLinkButton href="/ucmo/supervisor-management" label="Supervisor Management" icon={UsersRound}/>
+          <ActionLinkButton href="/ucmo/supervisorDetail" label="Supervisor Details" icon={UsersRound}/>
         </div>
         {/* ======================================================
               TABS

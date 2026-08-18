@@ -8,6 +8,7 @@ import SupervisorSelection from "@/components/ucmo/supervisor-management/Supervi
 import WorkerTransfer from "@/components/ucmo/supervisor-management/WorkerTransfer";
 import { ArrowLeft, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
+import ClientPageHeader from "@/components/ui/ClientPageHeader";
 
 export default function SupervisorManagementPage() {
   const [users, setUsers] = useState([]);
@@ -219,25 +220,11 @@ export default function SupervisorManagementPage() {
   return (
     <div className="m-auto max-w-7xl space-y-6">
      
-      <div className="flex items-start gap-3">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="border-border bg-background text-text hover:bg-primary-light hover:text-primary mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-sm transition-all duration-200"
-        >
-          <ArrowLeft size={18} />
-        </button>
-
-        <div>
-          <h1 className="text-text text-2xl font-bold tracking-tight md:text-3xl">
-           Supervisor Management
-          </h1>
-
-          <p className="text-text-secondary mt-1 text-sm">
-             Transfer individual workers between supervisors.
-          </p>
-        </div>
-      </div>
+       <ClientPageHeader
+              title="Supervisor Management"
+              description="Transfer individual workers between supervisors."
+              onBack={() => router.back()}
+            />
 
       <SupervisorSelection
         supervisors={supervisors}
@@ -267,16 +254,7 @@ export default function SupervisorManagementPage() {
       />
 
       <div className="border-border flex justify-end border-t pt-5">
-        {/* <button
-          type="button"
-          onClick={handleTransfer}
-          disabled={
-            !fromSupervisor || !toSupervisor || !transferredWorkers.length
-          }
-          className="bg-primary hover:bg-primary-dark rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Transfer Selected Workers
-        </button> */}
+        
         <button
           type="button"
           onClick={handleTransfer}

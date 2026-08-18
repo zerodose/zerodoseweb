@@ -476,7 +476,7 @@ export default function Page() {
           page: 1,
           limit: 50,
           designation: "worker",
-          status: "active",
+           isActive: true,
           supervisor: supervisorId,
         });
 

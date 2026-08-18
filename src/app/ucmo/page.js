@@ -2,26 +2,30 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+
 import { getCampaigns } from "@/api/campaignApi";
 import { getZerodoses } from "@/api/zerodoseApi";
 import { getUsers } from "@/api/userApi";
 import { getPendingSupervisorApprovals } from "@/api/supervisorApprovalApi";
+
 import UCMOSummaryCards from "@/components/ucmo/UCMOSummaryCards";
 import UCMOActions from "@/components/ucmo/UCMOActions";
 import CampaignTabs from "@/components/ucmo/CampaignTabs";
 import CurrentCampaign from "@/components/ucmo/CurrentCampaign";
 import PreviousCampaigns from "@/components/ucmo/PreviousCampaigns";
+
 import { UsersRound } from "lucide-react";
 import ActionLinkButton from "@/components/admin/ui/ActionLinkButton";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
-
   const [campaigns, setCampaigns] = useState([]);
   const [zerodoses, setZerodoses] = useState([]);
   const [supervisors, setSupervisors] = useState([]);
+  const [activeUsers, setActiveUsers] = useState([]);
 
   const [pendingApprovals, setPendingApprovals] = useState(0);
+  const [authUnionCouncilId, setAuthUnionCouncilId] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -128,6 +132,16 @@ export default function Page() {
         const ucmoId = String(storedAuthUser.id);
 
         // --------------------------------------------------------
+        // AUTH UNION COUNCIL
+        // --------------------------------------------------------
+
+        const authUnionCouncilId =
+          getId(storedAuthUser.unionCouncil) ||
+          getId(storedAuthUser.unionCouncilId);
+
+        setAuthUnionCouncilId(authUnionCouncilId);
+
+        // --------------------------------------------------------
         // CAMPAIGNS
         // --------------------------------------------------------
 
@@ -150,6 +164,7 @@ export default function Page() {
           limit: 50,
           designation: "supervisor",
           status: "active",
+          isActive: true,
           ucmo: ucmoId,
         });
 
@@ -162,17 +177,32 @@ export default function Page() {
         setSupervisors(supervisorsResponse.data || []);
 
         // --------------------------------------------------------
-        // PENDING SUPERVISOR APPROVALS
-        // --------------------------------------------------------
-        //
-        // IMPORTANT:
-        // Yahan hardcoded 3 nahi hai.
-        //
+        // ACTIVE USERS / TEAMS
         // --------------------------------------------------------
 
-        const authUnionCouncilId =
-          getId(storedAuthUser.unionCouncil) ||
-          getId(storedAuthUser.unionCouncilId);
+        if (authUnionCouncilId) {
+          const usersResponse = await getUsers({
+            page: 1,
+            limit: 100,
+            designation: "worker",
+            isActive: true,
+            unionCouncil: authUnionCouncilId,
+          });
+
+          if (!usersResponse?.success) {
+            throw new Error(
+              usersResponse?.message || "Failed to fetch active workers.",
+            );
+          }
+
+          setActiveUsers(usersResponse.data || []);
+        } else {
+          setActiveUsers([]);
+        }
+
+        // --------------------------------------------------------
+        // PENDING SUPERVISOR APPROVALS
+        // --------------------------------------------------------
 
         if (authUnionCouncilId) {
           const approvalsResponse =
@@ -193,6 +223,7 @@ export default function Page() {
         } else {
           setPendingApprovals(0);
         }
+
         // --------------------------------------------------------
         // ALL ZERODOSE
         // --------------------------------------------------------
@@ -270,7 +301,6 @@ export default function Page() {
       .filter((campaign) => campaign.campaignStatus === "previous")
       .sort((a, b) => {
         const dateA = new Date(a.startDate).getTime();
-
         const dateB = new Date(b.startDate).getTime();
 
         return dateB - dateA;
@@ -286,7 +316,6 @@ export default function Page() {
       .filter((campaign) => campaign.campaignStatus === "upcoming")
       .sort((a, b) => {
         const dateA = new Date(a.startDate).getTime();
-
         const dateB = new Date(b.startDate).getTime();
 
         return dateA - dateB;
@@ -533,6 +562,54 @@ export default function Page() {
   const currentZerodoseCount = currentData.length;
 
   // ============================================================
+  // CURRENT RECORDED ZERODOSE
+  // ============================================================
+
+  const currentRecordedZerodoseCount = useMemo(() => {
+    return currentData.filter((item) => item.vaccinationStatus === "recorded")
+      .length;
+  }, [currentData]);
+
+  // ============================================================
+  // CURRENT COVERED ZERODOSE
+  // ============================================================
+
+  const currentCoveredZerodoseCount = useMemo(() => {
+    return currentData.filter((item) => item.vaccinationStatus === "covered")
+      .length;
+  }, [currentData]);
+
+  // ============================================================
+  // ACTIVE TEAMS
+  // ============================================================
+
+  const activeTeamsCount = useMemo(() => {
+    const teamNumbers = new Set();
+
+    if (!authUnionCouncilId) {
+      return 0;
+    }
+
+    activeUsers.forEach((user) => {
+      const userUnionCouncilId =
+        getId(user.unionCouncil) || getId(user.unionCouncilId);
+
+      if (
+        user.isActive === true &&
+        userUnionCouncilId &&
+        String(userUnionCouncilId) === String(authUnionCouncilId) &&
+        user.teamNumber !== null &&
+        user.teamNumber !== undefined &&
+        String(user.teamNumber).trim() !== ""
+      ) {
+        teamNumbers.add(String(user.teamNumber));
+      }
+    });
+
+    return teamNumbers.size;
+  }, [activeUsers, authUnionCouncilId]);
+
+  // ============================================================
   // RENDER
   // ============================================================
 
@@ -542,14 +619,16 @@ export default function Page() {
         {/* ======================================================
               HEADER
           ====================================================== */}
+
         <div className="mb-4 flex items-center justify-between md:mb-6">
-          <div className="">
+          <div>
             <h1 className="text-text text-2xl font-bold md:text-3xl">UCMO</h1>
 
             <p className="text-text-secondary mt-1 text-sm">
               Manage supervisors and campaign-wise Zerodose records
             </p>
           </div>
+
           <div className="flex align-bottom">
             <UCMOActions pendingApprovals={pendingApprovals} />
           </div>
@@ -571,7 +650,9 @@ export default function Page() {
 
         <UCMOSummaryCards
           totalSupervisors={supervisors.length}
-          currentZerodose={currentZerodoseCount}
+          recordedZerodose={currentRecordedZerodoseCount}
+          coveredZerodose={currentCoveredZerodoseCount}
+          activeTeams={activeTeamsCount}
           previousCampaigns={previousCampaigns.length}
         />
 
@@ -579,12 +660,20 @@ export default function Page() {
               ACTIONS
           ====================================================== */}
 
-        {/* <UCMOActions pendingApprovals={pendingApprovals} /> */}
         <div className="flex gap-3">
-        
-          <ActionLinkButton href="/ucmo/supervisor-management" label="Supervisor Management" icon={UsersRound}/>
-          <ActionLinkButton href="/ucmo/supervisorDetail" label="Supervisor Details" icon={UsersRound}/>
+          <ActionLinkButton
+            href="/ucmo/supervisor-management"
+            label="Supervisor Management"
+            icon={UsersRound}
+          />
+
+          <ActionLinkButton
+            href="/ucmo/supervisorDetail"
+            label="Supervisor Details"
+            icon={UsersRound}
+          />
         </div>
+
         {/* ======================================================
               TABS
           ====================================================== */}

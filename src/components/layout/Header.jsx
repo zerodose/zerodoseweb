@@ -8,6 +8,8 @@ export default function Header({
   onMenuClick,
   title = "Zerodose",
   dashboardRoute = "/dashboard",
+  profileRoute = "/dashboard/profile",
+  settingsRoute = "/dashboard/settings",
 }) {
   const router = useRouter();
 
@@ -80,6 +82,8 @@ export default function Header({
   // ============================================================
 
   const goTo = (route) => {
+    if (!route) return;
+
     setProfileOpen(false);
     router.push(route);
   };
@@ -91,7 +95,6 @@ export default function Header({
   const handleLogout = () => {
     setProfileOpen(false);
     localStorage.removeItem("authUser");
-    // router.push("/auth/login");
     router.push("/");
   };
 
@@ -148,7 +151,7 @@ export default function Header({
               {user.name}
             </p>
 
-            <p className="text-text-secondary max-w-32 truncate text-xs capitalize">
+            <p className="text-text-secondary max-w-32 truncate text-xs uppercase">
               {user.designation}
             </p>
           </div>
@@ -179,11 +182,11 @@ export default function Header({
               {/* Name + Designation */}
 
               <div className="min-w-0">
-                <p className="text-text truncate text-sm font-semibold">
+                <p className="text-text truncate text-sm font-semibold uppercase">
                   {user.name}
                 </p>
 
-                <p className="text-text-secondary truncate text-xs capitalize">
+                <p className="text-text-secondary truncate text-xs uppercase">
                   {user.designation}
                 </p>
               </div>
@@ -196,7 +199,7 @@ export default function Header({
 
               <button
                 type="button"
-                onClick={() => goTo("/dashboard/profile")}
+                onClick={() => goTo(profileRoute)}
                 className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
               >
                 <User size={17} />
@@ -208,7 +211,7 @@ export default function Header({
 
               <button
                 type="button"
-                onClick={() => goTo("/dashboard/settings")}
+                onClick={() => goTo(settingsRoute)}
                 className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
               >
                 <Settings size={17} />

@@ -23,12 +23,13 @@ export default function UCMOLayout({ children }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Header
-          title="UCMO Dashboard"
+          title="UCMO"
           dashboardRoute="/ucmo"
-          onMenuClick={() => setMobileOpen(true)}
+          profileRoute="/ucmo/profile"
+          settingsRoute="/ucmo/settings"
         />
 
-        <main className="flex-1 p-4 sm:p-5 md:p-6 bg-white">{children}</main>
+        <main className="flex-1 bg-white p-4 sm:p-5 md:p-6">{children}</main>
       </div>
     </div>
   );

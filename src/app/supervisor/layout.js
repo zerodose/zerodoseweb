@@ -10,7 +10,7 @@ export default function SupervisorLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="bg-white flex min-h-screen">
+    <div className="flex min-h-screen bg-white">
       {/* Mobile Sidebar */}
 
       <Sidebar
@@ -23,12 +23,15 @@ export default function SupervisorLayout({ children }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Header
-          title="Supervisor Dashboard"
+          title="Supervisor"
           dashboardRoute="/supervisor"
-          onMenuClick={() => setMobileOpen(true)}
+          profileRoute="/supervisor/profile"
+          settingsRoute="/supervisor/settings"
         />
 
-        <main className="flex-1 p-4 sm:px-4 sm:py-5 md:py-6 md:px-10 bg-white">{children}</main>
+        <main className="flex-1 bg-white p-4 sm:px-4 sm:py-5 md:px-10 md:py-6">
+          {children}
+        </main>
       </div>
     </div>
   );

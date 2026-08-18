@@ -6,7 +6,6 @@ import {
   Plus,
   Eye,
   CalendarDays,
-  Users,
   Syringe,
   CheckCircle2,
   Clock3,
@@ -32,9 +31,6 @@ export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
 
   const [previousZerodoses, setPreviousZerodoses] = useState([]);
-  // ============================================================
-  // Load Current Campaign
-  // ============================================================
 
   const loadCampaign = async () => {
     try {
@@ -64,13 +60,6 @@ export default function Page() {
     }
   };
 
-  // ============================================================
-  // Load Zerodose
-  //
-  // Backend/API will determine the logged-in worker's records.
-  // We only request the records needed for the worker page.
-  // ============================================================
-
   const loadZerodose = async () => {
     try {
       setLoadingZerodose(true);
@@ -97,32 +86,9 @@ export default function Page() {
   };
 
   useEffect(() => {
-    // Page load par bhi try karega
-    syncOfflineZerodose();
-
-    // Internet wapas aane par automatically sync
-    window.addEventListener("online", syncOfflineZerodose);
-
-    return () => {
-      window.removeEventListener("online", syncOfflineZerodose);
-    };
-  }, []);
-
-  // ============================================================
-  // Initial Load
-  // ============================================================
-
-  useEffect(() => {
     loadCampaign();
     loadZerodose();
   }, []);
-
-  // ============================================================
-  // Current Campaign Zerodose
-  //
-  // If campaign dates are available, show only records
-  // belonging to the current campaign period.
-  // ============================================================
 
   const currentZerodoses = useMemo(() => {
     if (!campaign) {
@@ -154,10 +120,6 @@ export default function Page() {
     });
   }, [campaign, zerodoses]);
 
-  // ============================================================
-  // Statistics
-  // ============================================================
-
   const totalZerodose = currentZerodoses.length;
 
   const visitedZerodose = currentZerodoses.filter(
@@ -172,10 +134,6 @@ export default function Page() {
     (item) => item.vaccinationStatus === "recorded",
   ).length;
 
-  // ============================================================
-  // Format Date
-  // ============================================================
-
   const formatDate = (date) => {
     if (!date) {
       return "-";
@@ -187,10 +145,6 @@ export default function Page() {
       year: "numeric",
     });
   };
-
-  // ============================================================
-  // Status
-  // ============================================================
 
   const getStatus = (item) => {
     if (item.vaccinationStatus === "covered") {
@@ -216,29 +170,18 @@ export default function Page() {
     };
   };
 
-  // ============================================================
-  // Refresh
-  // ============================================================
-
   const handleRefresh = async () => {
     await Promise.all([loadCampaign(), loadZerodose()]);
   };
 
   return (
     <div className="min-h-full p-4 md:p-6">
-      {/* ======================================================
-          Header
-      ====================================================== */}
 
       <PageHeader
         title="Worker"
         // subtitle="Manage Zerodose recorded by your team"
         subtitle="Manage your team's Zerodose"
       />
-
-      {/* ======================================================
-          Error
-      ====================================================== */}
 
       {error && (
         <div className="border-border bg-surface mb-5 flex items-center justify-between gap-3 rounded-xl border p-4">
@@ -254,10 +197,6 @@ export default function Page() {
           </button>
         </div>
       )}
-
-      {/* ======================================================
-          Current Campaign
-      ====================================================== */}
 
       <section className="mb-6">
         <div className="bg-primary relative overflow-hidden rounded-2xl p-5 shadow-sm md:p-6">
@@ -300,10 +239,6 @@ export default function Page() {
           <CalendarDays className="absolute -right-5 -bottom-8 h-36 w-36 text-white/10" />
         </div>
       </section>
-
-      {/* ======================================================
-          Statistics
-      ====================================================== */}
 
       <section className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         {/* Total */}
@@ -366,10 +301,6 @@ export default function Page() {
           </p>
         </div>
       </section>
-
-      {/* ======================================================
-          Worker Actions
-      ====================================================== */}
 
       <section className="mb-6 grid grid-cols-2 gap-3 md:gap-4">
         {/* Add Zerodose */}
@@ -435,11 +366,7 @@ export default function Page() {
         </Link>
       </section>
 
-      {/* ======================================================
-          Current Campaign Zerodose
-      ====================================================== */}
-
-      <ZerodoseCampaignSection
+      {/* <ZerodoseCampaignSection
         activeTab={activeTab}
         onTabChange={setActiveTab}
         currentZerodoses={currentZerodoses}
@@ -448,7 +375,7 @@ export default function Page() {
         onRefresh={handleRefresh}
         getStatus={getStatus}
         formatDate={formatDate}
-      />
+      /> */}
     </div>
   );
 }

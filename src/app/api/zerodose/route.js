@@ -31,84 +31,84 @@ function isValidObjectId(value) {
 // Authentication Helper
 // ============================================================
 
-async function getAuthenticatedUser(request) {
-  const token = request.cookies.get("auth_token")?.value;
+// async function getAuthenticatedUser(request) {
+//   const token = request.cookies.get("auth_token")?.value;
 
-  if (!token) {
-    return {
-      error: NextResponse.json(
-        {
-          success: false,
-          message: "Not authenticated.",
-        },
-        {
-          status: 401,
-        },
-      ),
-    };
-  }
+//   if (!token) {
+//     return {
+//       error: NextResponse.json(
+//         {
+//           success: false,
+//           message: "Not authenticated.",
+//         },
+//         {
+//           status: 401,
+//         },
+//       ),
+//     };
+//   }
 
-  let payload;
+//   let payload;
 
-  try {
-    const result = await jwtVerify(token, secret);
+//   try {
+//     const result = await jwtVerify(token, secret);
 
-    payload = result.payload;
-  } catch (error) {
-    return {
-      error: NextResponse.json(
-        {
-          success: false,
-          message: "Invalid or expired authentication.",
-        },
-        {
-          status: 401,
-        },
-      ),
-    };
-  }
+//     payload = result.payload;
+//   } catch (error) {
+//     return {
+//       error: NextResponse.json(
+//         {
+//           success: false,
+//           message: "Invalid or expired authentication.",
+//         },
+//         {
+//           status: 401,
+//         },
+//       ),
+//     };
+//   }
 
-  if (!payload.userId || !isValidObjectId(payload.userId)) {
-    return {
-      error: NextResponse.json(
-        {
-          success: false,
-          message: "Invalid authenticated user.",
-        },
-        {
-          status: 401,
-        },
-      ),
-    };
-  }
+//   if (!payload.userId || !isValidObjectId(payload.userId)) {
+//     return {
+//       error: NextResponse.json(
+//         {
+//           success: false,
+//           message: "Invalid authenticated user.",
+//         },
+//         {
+//           status: 401,
+//         },
+//       ),
+//     };
+//   }
 
-  const user = await User.findOne({
-    _id: payload.userId,
-    isActive: true,
-  })
-    .select(
-      "_id name designation district town unionCouncil ucmo supervisor teamNumber",
-    )
-    .lean();
+//   const user = await User.findOne({
+//     _id: payload.userId,
+//     isActive: true,
+//   })
+//     .select(
+//       "_id name designation district town unionCouncil ucmo supervisor teamNumber",
+//     )
+//     .lean();
 
-  if (!user) {
-    return {
-      error: NextResponse.json(
-        {
-          success: false,
-          message: "Active user not found.",
-        },
-        {
-          status: 401,
-        },
-      ),
-    };
-  }
+//   if (!user) {
+//     return {
+//       error: NextResponse.json(
+//         {
+//           success: false,
+//           message: "Active user not found.",
+//         },
+//         {
+//           status: 401,
+//         },
+//       ),
+//     };
+//   }
 
-  return {
-    user,
-  };
-}
+//   return {
+//     user,
+//   };
+// }
 
 // ============================================================
 // GET ACCESS SCOPE
@@ -128,111 +128,111 @@ async function getAuthenticatedUser(request) {
 //
 // ============================================================
 
-function applyUserAccessScope(query, user) {
-  switch (user.designation) {
-    // ========================================================
-    // Worker
-    // ========================================================
-    //
-    // Worker only sees Zerodose records created by himself.
-    //
-    case "worker":
-      query.user = user._id;
-      break;
+// function applyUserAccessScope(query, user) {
+//   switch (user.designation) {
+//     // ========================================================
+//     // Worker
+//     // ========================================================
+//     //
+//     // Worker only sees Zerodose records created by himself.
+//     //
+//     case "worker":
+//       query.user = user._id;
+//       break;
 
-    // ========================================================
-    // Supervisor
-    // ========================================================
-    //
-    // Supervisor sees all Zerodose records belonging to him.
-    //
-    case "supervisor":
-      query.supervisor = user._id;
-      break;
+//     // ========================================================
+//     // Supervisor
+//     // ========================================================
+//     //
+//     // Supervisor sees all Zerodose records belonging to him.
+//     //
+//     case "supervisor":
+//       query.supervisor = user._id;
+//       break;
 
-    // ========================================================
-    // UCMO
-    // ========================================================
-    //
-    // UCMO sees all Zerodose records belonging to his UCMO ID.
-    //
-    case "ucmo":
-      query.ucmo = user._id;
-      break;
+//     // ========================================================
+//     // UCMO
+//     // ========================================================
+//     //
+//     // UCMO sees all Zerodose records belonging to his UCMO ID.
+//     //
+//     case "ucmo":
+//       query.ucmo = user._id;
+//       break;
 
-    // ========================================================
-    // Vaccinator
-    // ========================================================
-    //
-    // Vaccinator sees Zerodose of his own UC.
-    //
-    case "vaccinator":
-      if (!user.unionCouncil) {
-        return {
-          error: "Vaccinator is not assigned to a Union Council.",
-        };
-      }
+//     // ========================================================
+//     // Vaccinator
+//     // ========================================================
+//     //
+//     // Vaccinator sees Zerodose of his own UC.
+//     //
+//     case "vaccinator":
+//       if (!user.unionCouncil) {
+//         return {
+//           error: "Vaccinator is not assigned to a Union Council.",
+//         };
+//       }
 
-      query.unionCouncil = user.unionCouncil;
-      break;
+//       query.unionCouncil = user.unionCouncil;
+//       break;
 
-    // ========================================================
-    // Town FP
-    // ========================================================
-    //
-    // Future town-level designation.
-    //
-    case "townFP":
-      if (!user.town) {
-        return {
-          error: "Town FP is not assigned to a Town.",
-        };
-      }
+//     // ========================================================
+//     // Town FP
+//     // ========================================================
+//     //
+//     // Future town-level designation.
+//     //
+//     case "townFP":
+//       if (!user.town) {
+//         return {
+//           error: "Town FP is not assigned to a Town.",
+//         };
+//       }
 
-      query.town = user.town;
-      break;
+//       query.town = user.town;
+//       break;
 
-    // ========================================================
-    // District FP
-    // ========================================================
-    //
-    // Future district-level designation.
-    //
-    case "districtFP":
-      if (!user.district) {
-        return {
-          error: "District FP is not assigned to a District.",
-        };
-      }
+//     // ========================================================
+//     // District FP
+//     // ========================================================
+//     //
+//     // Future district-level designation.
+//     //
+//     case "districtFP":
+//       if (!user.district) {
+//         return {
+//           error: "District FP is not assigned to a District.",
+//         };
+//       }
 
-      query.district = user.district;
-      break;
+//       query.district = user.district;
+//       break;
 
-    // ========================================================
-    // Admin
-    // ========================================================
-    //
-    // Admin can see all records.
-    //
-    case "admin":
-      break;
+//     // ========================================================
+//     // Admin
+//     // ========================================================
+//     //
+//     // Admin can see all records.
+//     //
+//     case "admin":
+//       break;
 
-    // ========================================================
-    // Anything else
-    // ========================================================
-    //
-    // Do not accidentally expose Zerodose data to other roles.
-    //
-    default:
-      return {
-        error: "You are not authorized to view Zerodose records.",
-      };
-  }
+//     // ========================================================
+//     // Anything else
+//     // ========================================================
+//     //
+//     // Do not accidentally expose Zerodose data to other roles.
+//     //
+//     default:
+//       return {
+//         error: "You are not authorized to view Zerodose records.",
+//       };
+//   }
 
-  return {
-    success: true,
-  };
-}
+//   return {
+//     success: true,
+//   };
+// }
 
 // ============================================================
 // GET
@@ -481,11 +481,23 @@ export async function GET(request) {
         // Client cannot send/change these values.
         // ========================================================
 
+        // const teamWorkers = await User.find({
+        //   designation: "worker",
+        //   isActive: true,
+        //   supervisor: supervisor,
+        //   teamNumber: teamNumber,
+        //   workerRole: {
+        //     $in: ["teamLeader", "teamMember"],
+        //   },
+        // })
+        //   .select("_id name workerRole")
+        //   .lean();
+
         const teamWorkers = await User.find({
           designation: "worker",
           isActive: true,
-          supervisor: supervisor,
-          teamNumber: teamNumber,
+          supervisor: loggedInUser.supervisor,
+          teamNumber: loggedInUser.teamNumber,
           workerRole: {
             $in: ["teamLeader", "teamMember"],
           },
@@ -537,8 +549,8 @@ export async function GET(request) {
         // ========================================================
 
         const belongsToTeam =
-          teamLeaderWorker._id.toString() === worker._id.toString() ||
-          teamMemberWorker._id.toString() === worker._id.toString();
+          teamLeaderWorker._id.toString() === loggedInUser._id.toString() ||
+          teamMemberWorker._id.toString() === loggedInUser._id.toString();
 
         if (!belongsToTeam) {
           return NextResponse.json(
@@ -1383,15 +1395,16 @@ export async function POST(request) {
     // Day
     // ========================================================
 
-    if (!Number.isInteger(day) || day < 1) {
+    const campaignDays =
+      Math.floor((campaignEnd - campaignStart) / (1000 * 60 * 60 * 24)) + 1;
+
+    if (!Number.isInteger(day) || day < 1 || day > campaignDays) {
       return NextResponse.json(
         {
           success: false,
-          message: "Invalid campaign day.",
+          message: `Invalid campaign day. Valid days are 1 to ${campaignDays}.`,
         },
-        {
-          status: 400,
-        },
+        { status: 400 },
       );
     }
 

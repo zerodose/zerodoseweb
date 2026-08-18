@@ -2,17 +2,15 @@
 const nextConfig = {
   /* config options here */
   allowedDevOrigins: [
-    "zerodoseweb.vercel.app"
-  
+    "192.168.100.12",
+    "192.168.1.14",
+    "10.137.120.208",
+    "10.73.147.208",
+    "localhost",
+    "zerodoseweb.vercel.app",
   ],
 
   reactCompiler: true,
 };
 
 export default nextConfig;
-
-  // "192.168.100.12",
-    // "192.168.1.14",
-    // "10.137.120.208",
-    // "10.73.147.208",
-    // "localhost",

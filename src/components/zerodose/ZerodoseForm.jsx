@@ -2,14 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { User, MapPin, Phone, ArrowLeft } from "lucide-react";
+import { User, Phone, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+
 import { getCampaigns } from "@/api/campaignApi";
 import { createZerodose } from "@/api/zerodoseApi";
 import { getCurrentLocation } from "@/utils/location";
 
 export default function ZerodoseForm() {
   const router = useRouter();
+
+  // ============================================================
+  // Form State
+  // ============================================================
 
   const [formData, setFormData] = useState({
     childName: "",
@@ -19,24 +24,47 @@ export default function ZerodoseForm() {
     contactNo: "",
   });
 
+  // ============================================================
+  // Campaign State
+  // ============================================================
+
+  const [campaign, setCampaign] = useState(null);
+
   const [loading, setLoading] = useState(false);
+  const [checkingCampaign, setCheckingCampaign] = useState(true);
+
+  // ============================================================
+  // Check Current Campaign
+  // ============================================================
 
   useEffect(() => {
     const checkCampaign = async () => {
       try {
-        const response = await getCampaigns();
+        setCheckingCampaign(true);
+
+        const response = await getCampaigns({
+          status: "current",
+          limit: 1,
+        });
 
         const campaigns = response?.data || [];
 
         const today = new Date();
 
-        const activeCampaign = campaigns.find((campaign) => {
-          if (!campaign.startDate || !campaign.endDate) {
+        const activeCampaign = campaigns.find((item) => {
+          if (!item?.startDate || !item?.endDate) {
             return false;
           }
 
-          const startDate = new Date(campaign.startDate);
-          const endDate = new Date(campaign.endDate);
+          const startDate = new Date(item.startDate);
+          const endDate = new Date(item.endDate);
+
+          if (
+            Number.isNaN(startDate.getTime()) ||
+            Number.isNaN(endDate.getTime())
+          ) {
+            return false;
+          }
 
           endDate.setHours(23, 59, 59, 999);
 
@@ -44,12 +72,25 @@ export default function ZerodoseForm() {
         });
 
         if (!activeCampaign) {
+          toast.error("There is no active campaign.");
+
           router.replace("/worker");
+          return;
         }
+
+        // Save current campaign
+        setCampaign(activeCampaign);
       } catch (error) {
         console.error("Campaign check error:", error);
 
+        toast.error(
+          error?.response?.data?.message ||
+            "Unable to verify the current campaign.",
+        );
+
         router.replace("/worker");
+      } finally {
+        setCheckingCampaign(false);
       }
     };
 
@@ -70,44 +111,71 @@ export default function ZerodoseForm() {
   };
 
   // ============================================================
-  // Get Current Location
-  // ============================================================
-
-  // ============================================================
   // Submit
   // ============================================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // ----------------------------------------------------------
+    // Campaign Check
+    // ----------------------------------------------------------
+
+    if (!campaign) {
+      toast.error("No active campaign found.");
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // Child Name
+    // ----------------------------------------------------------
+
     if (!formData.childName.trim()) {
       toast.error("Child name is required.");
       return;
     }
+
+    // ----------------------------------------------------------
+    // Father Name
+    // ----------------------------------------------------------
 
     if (!formData.fatherName.trim()) {
       toast.error("Father name is required.");
       return;
     }
 
-    if (!formData.age) {
+    // ----------------------------------------------------------
+    // Age
+    // ----------------------------------------------------------
+
+    if (formData.age === "") {
       toast.error("Age is required.");
       return;
     }
 
     const age = Number(formData.age);
 
-    if (Number.isNaN(age) || age < 0 || age > 59) {
+    if (!Number.isInteger(age) || age < 0 || age > 59) {
       toast.error("Age must be between 0 and 59.");
       return;
     }
+
+    // ----------------------------------------------------------
+    // Address
+    // ----------------------------------------------------------
 
     if (!formData.address.trim()) {
       toast.error("Address is required.");
       return;
     }
 
-    if (formData.contactNo && !/^03\d{9}$/.test(formData.contactNo.trim())) {
+    // ----------------------------------------------------------
+    // Contact Number
+    // ----------------------------------------------------------
+
+    const contactNo = formData.contactNo.trim();
+
+    if (contactNo && !/^03\d{9}$/.test(contactNo)) {
       toast.error("Please enter a valid Pakistani mobile number.");
       return;
     }
@@ -115,40 +183,85 @@ export default function ZerodoseForm() {
     try {
       setLoading(true);
 
-      // GPS
+      // ========================================================
+      // Get Current GPS Location
+      // ========================================================
+
       const location = await getCurrentLocation();
+
+      // ========================================================
+      // Calculate Campaign Day
+      // ========================================================
+
+      const campaignStart = new Date(campaign.startDate);
+
+      if (Number.isNaN(campaignStart.getTime())) {
+        throw new Error("Invalid campaign start date.");
+      }
+
+      campaignStart.setHours(0, 0, 0, 0);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const day =
+        Math.floor(
+          (today.getTime() - campaignStart.getTime()) / (1000 * 60 * 60 * 24),
+        ) + 1;
+
+      // ========================================================
+      // Validate Campaign Day
+      // ========================================================
+
+      const campaignEnd = new Date(campaign.endDate);
+
+      if (Number.isNaN(campaignEnd.getTime())) {
+        throw new Error("Invalid campaign end date.");
+      }
+
+      campaignEnd.setHours(0, 0, 0, 0);
+
+      const campaignDays =
+        Math.floor(
+          (campaignEnd.getTime() - campaignStart.getTime()) /
+            (1000 * 60 * 60 * 24),
+        ) + 1;
+
+      if (day < 1 || day > campaignDays) {
+        toast.error("Today is outside the current campaign period.");
+        return;
+      }
+
+      // ========================================================
+      // Payload
+      //
+      // Client sends ONLY fields allowed from client.
+      // Assignment data comes from backend using logged-in worker.
+      // ========================================================
 
       const payload = {
         childName: formData.childName.trim(),
         fatherName: formData.fatherName.trim(),
         age,
         address: formData.address.trim(),
-        contactNo: formData.contactNo.trim() || null,
+        contactNo: contactNo || null,
+        day,
         location,
       };
 
-      // await createZerodose(payload);
-      // toast.success("Zerodose recorded successfully.");
+      console.log("Creating Zerodose:", payload);
 
-      // ======================================================
-      // Extra Add
-      // ======================================================
-      if (navigator.onLine) {
-        await createZerodose(zerodose);
-      } else {
-        await saveOfflineZerodose(zerodose);
-      }
+      // ========================================================
+      // Create Zerodose
+      // ========================================================
 
-      if (navigator.onLine) {
-        toast.success("Zerodose recorded successfully.");
-      } else {
-        toast.success(
-          "Zerodose saved offline. It will sync automatically when internet is available.",
-        );
-      }
-      // ======================================================
-      // Extra Add
-      // ======================================================
+      await createZerodose(payload);
+
+      toast.success("Zerodose recorded successfully.");
+
+      // ========================================================
+      // Go Back
+      // ========================================================
 
       router.back();
     } catch (error) {
@@ -163,6 +276,24 @@ export default function ZerodoseForm() {
       setLoading(false);
     }
   };
+
+  // ============================================================
+  // Campaign Checking
+  // ============================================================
+
+  if (checkingCampaign) {
+    return (
+      <div className="flex min-h-[300px] items-center justify-center">
+        <p className="text-text-secondary text-sm">
+          Checking current campaign...
+        </p>
+      </div>
+    );
+  }
+
+  // ============================================================
+  // UI
+  // ============================================================
 
   return (
     <div className="w-full">
@@ -214,7 +345,9 @@ export default function ZerodoseForm() {
           </div>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            {/* Child Name */}
+            {/* ==================================================
+                Child Name
+            ================================================== */}
 
             <div>
               <label className="text-text mb-2 block text-sm font-medium">
@@ -232,7 +365,9 @@ export default function ZerodoseForm() {
               />
             </div>
 
-            {/* Father Name */}
+            {/* ==================================================
+                Father Name
+            ================================================== */}
 
             <div>
               <label className="text-text mb-2 block text-sm font-medium">
@@ -250,7 +385,9 @@ export default function ZerodoseForm() {
               />
             </div>
 
-            {/* Age */}
+            {/* ==================================================
+                Age
+            ================================================== */}
 
             <div>
               <label className="text-text mb-2 block text-sm font-medium">
@@ -279,22 +416,14 @@ export default function ZerodoseForm() {
                 }}
                 placeholder="Enter age"
                 disabled={loading}
-                className={`border-border bg-input-background text-text placeholder:text-input-placeholder focus:border-primary focus:ring-primary-light h-11 w-full [appearance:textfield] appearance-none rounded-lg border px-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
-                  formData.age !== "" &&
-                  (Number(formData.age) < 0 || Number(formData.age) > 59)
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-100"
-                    : ""
-                }`}
+                className="border-border bg-input-background text-text placeholder:text-input-placeholder focus:border-primary focus:ring-primary-light h-11 w-full [appearance:textfield] rounded-lg border px-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
               />
-
-              {formData.age !== "" &&
-                (Number(formData.age) < 0 || Number(formData.age) > 59) && (
-                  <p className="mt-1.5 text-xs text-red-500">
-                    Age must be between 0 and 59.
-                  </p>
-                )}
             </div>
-            {/* Contact */}
+
+            {/* ==================================================
+                Contact
+            ================================================== */}
+
             <div>
               <label className="text-text mb-2 block text-sm font-medium">
                 Contact No
@@ -315,12 +444,10 @@ export default function ZerodoseForm() {
                       .replace(/\D/g, "")
                       .slice(0, 11);
 
-                    handleChange({
-                      target: {
-                        name: "contactNo",
-                        value,
-                      },
-                    });
+                    setFormData((previous) => ({
+                      ...previous,
+                      contactNo: value,
+                    }));
                   }}
                   placeholder="03XXXXXXXXX"
                   inputMode="numeric"
@@ -342,7 +469,9 @@ export default function ZerodoseForm() {
             </div>
           </div>
 
-          {/* Address */}
+          {/* ====================================================
+              Address
+          ==================================================== */}
 
           <div className="mt-5">
             <label className="text-text mb-2 block text-sm font-medium">
@@ -362,25 +491,6 @@ export default function ZerodoseForm() {
         </div>
 
         {/* ======================================================
-            Location Information
-        ====================================================== */}
-
-        {/* <div className="border-border border-t p-5 sm:p-6">
-          <div className="border-primary-soft bg-surface-blue flex items-start gap-3 rounded-lg border p-4">
-            <MapPin size={20} className="text-primary mt-0.5 shrink-0" />
-
-            <div>
-              <h3 className="text-text text-sm font-semibold">Location</h3>
-
-              <p className="text-text-secondary mt-1 text-sm">
-                Your current GPS location will automatically be recorded when
-                you submit this form.
-              </p>
-            </div>
-          </div>
-        </div> */}
-
-        {/* ======================================================
             Buttons
         ====================================================== */}
 
@@ -397,7 +507,7 @@ export default function ZerodoseForm() {
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={loading || !campaign}
             className="bg-primary hover:bg-primary-dark flex h-11 items-center justify-center gap-2 rounded-lg px-6 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Saving..." : "Add Zerodose"}

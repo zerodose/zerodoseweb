@@ -10,7 +10,7 @@ export async function PATCH(request) {
 
     const body = await request.json();
 
-    const { fromSupervisorId, toSupervisorId, workerIds } = body;
+    const { fromSupervisorId, toSupervisorId, workers } = body;
 
     // ============================================================
     // Basic Validation
@@ -59,7 +59,11 @@ export async function PATCH(request) {
       );
     }
 
-    if (!Array.isArray(workerIds) || workerIds.length === 0) {
+    // ============================================================
+    // Validate Workers
+    // ============================================================
+
+    if (!Array.isArray(workers) || workers.length === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -73,11 +77,12 @@ export async function PATCH(request) {
     // Validate Worker IDs
     // ============================================================
 
-    const invalidWorkerId = workerIds.find(
-      (workerId) => !mongoose.Types.ObjectId.isValid(workerId),
+    const invalidWorker = workers.find(
+      (worker) =>
+        !worker?.workerId || !mongoose.Types.ObjectId.isValid(worker.workerId),
     );
 
-    if (invalidWorkerId) {
+    if (invalidWorker) {
       return NextResponse.json(
         {
           success: false,
@@ -87,8 +92,32 @@ export async function PATCH(request) {
       );
     }
 
+    // ============================================================
+    // Validate Team Number / Worker Role
+    // ============================================================
+
+    const invalidWorkerDetails = workers.find(
+      (worker) =>
+        worker.teamNumber === undefined ||
+        worker.teamNumber === null ||
+        worker.teamNumber === "" ||
+        !worker.workerRole,
+    );
+
+    if (invalidWorkerDetails) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Team number and worker role are required for all workers.",
+        },
+        { status: 400 },
+      );
+    }
+
     // Remove duplicate worker IDs
-    const uniqueWorkerIds = [...new Set(workerIds.map((id) => String(id)))];
+    const uniqueWorkerIds = [
+      ...new Set(workers.map((worker) => String(worker.workerId))),
+    ];
 
     // ============================================================
     // Validate From Supervisor
@@ -137,11 +166,10 @@ export async function PATCH(request) {
     // ============================================================
     // Find Selected Workers
     //
-    // IMPORTANT:
     // Workers must currently belong to From Supervisor.
     // ============================================================
 
-    const workers = await User.find({
+    const existingWorkers = await User.find({
       _id: {
         $in: uniqueWorkerIds,
       },
@@ -156,9 +184,9 @@ export async function PATCH(request) {
     // Make Sure All Selected Workers Belong To From Supervisor
     // ============================================================
 
-    if (workers.length !== uniqueWorkerIds.length) {
+    if (existingWorkers.length !== uniqueWorkerIds.length) {
       const foundWorkerIds = new Set(
-        workers.map((worker) => String(worker._id)),
+        existingWorkers.map((worker) => String(worker._id)),
       );
 
       const invalidWorkers = uniqueWorkerIds.filter(
@@ -179,33 +207,39 @@ export async function PATCH(request) {
     // ============================================================
     // Transfer Workers
     //
-    // ONLY supervisor field is changed.
+    // Update:
+    // - supervisor
+    // - teamNumber
+    // - workerRole
     //
-    // approvalStatus, teamNumber, workerRole, UCMO,
-    // district, town and unionCouncil remain unchanged.
+    // Other fields remain unchanged.
     // ============================================================
 
-    const result = await User.updateMany(
-      {
-        _id: {
-          $in: uniqueWorkerIds,
+    const bulkOperations = workers.map((worker) => ({
+      updateOne: {
+        filter: {
+          _id: worker.workerId,
+          designation: "worker",
+          isActive: true,
+          supervisor: fromSupervisorId,
         },
-        designation: "worker",
-        isActive: true,
-        supervisor: fromSupervisorId,
-      },
-      {
-        $set: {
-          supervisor: toSupervisorId,
+        update: {
+          $set: {
+            supervisor: toSupervisorId,
+            teamNumber: worker.teamNumber,
+            workerRole: worker.workerRole,
+          },
         },
       },
-    );
+    }));
+
+    const result = await User.bulkWrite(bulkOperations);
 
     // ============================================================
     // Verify Update
     // ============================================================
 
-    if (result.modifiedCount !== uniqueWorkerIds.length) {
+    if (result.modifiedCount !== workers.length) {
       return NextResponse.json(
         {
           success: false,
@@ -236,8 +270,8 @@ export async function PATCH(request) {
     return NextResponse.json(
       {
         success: true,
-        message: `${uniqueWorkerIds.length} worker${
-          uniqueWorkerIds.length !== 1 ? "s" : ""
+        message: `${workers.length} worker${
+          workers.length !== 1 ? "s" : ""
         } transferred successfully.`,
         data: {
           fromSupervisor: {

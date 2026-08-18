@@ -4,15 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 
 import { getUsers, transferWorkers } from "@/api/userApi";
 import { toast } from "sonner";
-import SupervisorSelection from "@/components/ucmo/supervisor-management/SupervisorSelection";
 import WorkerTransfer from "@/components/ucmo/supervisor-management/WorkerTransfer";
-import { ArrowLeft, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ClientPageHeader from "@/components/ui/ClientPageHeader";
+import SupervisorSelection from "@/components/ucmo/supervisor-management/SupervisorSelection";
 
 export default function SupervisorManagementPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [transferring, setTransferring] = useState(false);
   const router = useRouter();
   const [fromSupervisor, setFromSupervisor] = useState("");
   const [toSupervisor, setToSupervisor] = useState("");
@@ -170,19 +170,30 @@ export default function SupervisorManagementPage() {
       return;
     }
 
+    const workers = transferredWorkerObjects.map((worker) => {
+      const workerId = getWorkerId(worker);
+      const details = transferDetails[workerId] || {};
+
+      return {
+        workerId,
+        teamNumber: details.teamNumber ?? worker.teamNumber,
+        workerRole: details.workerRole ?? worker.workerRole,
+      };
+    });
+
     const payload = {
       fromSupervisorId: fromSupervisor,
       toSupervisorId: toSupervisor,
-      workerIds: transferredWorkers,
+      workers,
     };
-
-    console.log("Worker transfer payload:", payload);
+    // console.log("Worker transfer payload:", payload);
 
     /*
     await transferWorkers(payload);
   */
 
     try {
+      setTransferring(true);
       const response = await transferWorkers(payload);
 
       if (response?.success) {
@@ -203,7 +214,6 @@ export default function SupervisorManagementPage() {
 
         return;
       }
-
       toast.error(response?.message || "Failed to transfer workers.");
     } catch (error) {
       console.error("Worker transfer error:", error);
@@ -211,20 +221,20 @@ export default function SupervisorManagementPage() {
       toast.error(
         error?.response?.data?.message || "Failed to transfer workers.",
       );
+    } finally {
+      setTransferring(false);
     }
-
-    setSelectedWorkers([]);
-    setTransferredWorkers([]);
   };
+  // setSelectedWorkers([]);
+  // setTransferredWorkers([]);
 
   return (
     <div className="m-auto max-w-7xl space-y-6">
-     
-       <ClientPageHeader
-              title="Supervisor Management"
-              description="Transfer individual workers between supervisors."
-              onBack={() => router.back()}
-            />
+      <ClientPageHeader
+        title="Supervisor Management"
+        description="Transfer individual workers between supervisors."
+        onBack={() => router.back()}
+      />
 
       <SupervisorSelection
         supervisors={supervisors}
@@ -254,14 +264,13 @@ export default function SupervisorManagementPage() {
       />
 
       <div className="border-border flex justify-end border-t pt-5">
-        
         <button
           type="button"
           onClick={handleTransfer}
-          disabled={!transferredWorkers.length}
+          disabled={!transferredWorkers.length || loading || transferring}
           className="bg-primary hover:bg-primary-dark rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Transfer Selected Workers
+          {transferring ? "Transferring..." : "Transfer Selected Workers"}
         </button>
       </div>
 

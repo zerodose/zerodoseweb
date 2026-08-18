@@ -37,23 +37,22 @@ export default function Page() {
       setLoadingCampaign(true);
       setError("");
 
-      const response = await getCampaigns();
+      const response = await getCampaigns({
+        status: "current",
+        page: 1,
+        limit: 1,
+      });
 
       const campaigns = response?.data || [];
 
-      const now = new Date();
-
-      const currentCampaign =
-        campaigns.find((item) => item.isCampaignActive === true) || null;
-
-      setCampaign(currentCampaign);
+      setCampaign(campaigns[0] || null);
     } catch (error) {
-      console.error("Get campaigns error:", error);
+      console.error("Get current campaign error:", error);
 
       setError(
         error?.response?.data?.message ||
           error?.message ||
-          "Failed to load campaign.",
+          "Failed to load current campaign.",
       );
     } finally {
       setLoadingCampaign(false);
@@ -176,7 +175,6 @@ export default function Page() {
 
   return (
     <div className="min-h-full p-4 md:p-6">
-
       <PageHeader
         title="Worker"
         // subtitle="Manage Zerodose recorded by your team"
@@ -366,7 +364,7 @@ export default function Page() {
         </Link>
       </section>
 
-      {/* <ZerodoseCampaignSection
+      <ZerodoseCampaignSection
         activeTab={activeTab}
         onTabChange={setActiveTab}
         currentZerodoses={currentZerodoses}
@@ -375,7 +373,7 @@ export default function Page() {
         onRefresh={handleRefresh}
         getStatus={getStatus}
         formatDate={formatDate}
-      /> */}
+      />
     </div>
   );
 }

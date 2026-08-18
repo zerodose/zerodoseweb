@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { getUsers } from "@/api/userApi";
-
+import { toast } from "sonner";
 import SupervisorSelection from "@/components/ucmo/supervisor-management/SupervisorSelection";
 import WorkerTransfer from "@/components/ucmo/supervisor-management/WorkerTransfer";
 import { ArrowLeft, Users } from "lucide-react";
@@ -118,15 +118,23 @@ export default function SupervisorManagementPage() {
     );
   };
 
-  const moveToRight = () => {
-    if (!selectedWorkers.length) return;
+const moveToRight = () => {
+  if (!toSupervisor) {
+    toast.error("Please select a To Supervisor first.");
+    return;
+  }
 
-    setTransferredWorkers((prev) => [
-      ...new Set([...prev, ...selectedWorkers]),
-    ]);
+  if (!selectedWorkers.length) {
+    toast.error("Please select at least one worker to transfer.");
+    return;
+  }
 
-    setSelectedWorkers([]);
-  };
+  setTransferredWorkers((prev) => [
+    ...new Set([...prev, ...selectedWorkers]),
+  ]);
+
+  setSelectedWorkers([]);
+};
 
   const moveToLeft = () => {
     if (!transferredWorkers.length) return;
@@ -141,18 +149,23 @@ export default function SupervisorManagementPage() {
   }, [fromSupervisorWorkers, transferredWorkers]);
 
   const handleTransfer = async () => {
-    if (!fromSupervisor || !toSupervisor) {
-      alert("Please select both supervisors.");
+    if (!fromSupervisor) {
+      toast.error("Please select a From Supervisor.");
+      return;
+    }
+
+    if (!toSupervisor) {
+      toast.error("Please select a To Supervisor.");
       return;
     }
 
     if (fromSupervisor === toSupervisor) {
-      alert("From and To supervisor cannot be the same.");
+      toast.error("From and To supervisor cannot be the same.");
       return;
     }
 
     if (!transferredWorkers.length) {
-      alert("Please select at least one worker to transfer.");
+      toast.error("Please select at least one worker to transfer.");
       return;
     }
 
@@ -165,17 +178,17 @@ export default function SupervisorManagementPage() {
     console.log("Worker transfer payload:", payload);
 
     /*
-      await transferWorkers(payload);
-    */
+    await transferWorkers(payload);
+  */
 
-    alert("Worker transfer API will be connected here.");
+    toast.success("Worker transfer API will be connected here.");
 
     setSelectedWorkers([]);
     setTransferredWorkers([]);
   };
 
   return (
-    <div className="space-y-6 max-w-7xl m-auto">
+    <div className="m-auto max-w-7xl space-y-6">
       <div className="flex flex-col items-start gap-3">
         <button
           type="button"
@@ -225,12 +238,20 @@ export default function SupervisorManagementPage() {
       />
 
       <div className="border-border flex justify-end border-t pt-5">
-        <button
+        {/* <button
           type="button"
           onClick={handleTransfer}
           disabled={
             !fromSupervisor || !toSupervisor || !transferredWorkers.length
           }
+          className="bg-primary hover:bg-primary-dark rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Transfer Selected Workers
+        </button> */}
+        <button
+          type="button"
+          onClick={handleTransfer}
+          disabled={!transferredWorkers.length}
           className="bg-primary hover:bg-primary-dark rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
         >
           Transfer Selected Workers

@@ -582,13 +582,12 @@ export default function Page() {
         <div className="flex">
           <Link
             href="/ucmo/supervisor-management"
-            className="border-border bg-primary hover:border-primary/40 hover:bg-primary-light group text-white inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-semibold shadow-sm transition-all"
+            className="border-border bg-primary hover:border-primary/80 hover:text-primary group inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-500 hover:bg-white"
           >
             <UsersRound
               size={17}
-              className="transition-transform group-hover:scale-105"
+              className="transition-transform duration-200 group-hover:-translate-x-1 group-hover:scale-105"
             />
-
             <span>Supervisor Management</span>
           </Link>
         </div>

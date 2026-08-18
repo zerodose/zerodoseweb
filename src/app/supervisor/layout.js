@@ -28,7 +28,7 @@ export default function SupervisorLayout({ children }) {
           onMenuClick={() => setMobileOpen(true)}
         />
 
-        <main className="flex-1 p-4 sm:p-5 md:p-6">{children}</main>
+        <main className="flex-1 p-4 sm:px-4 sm:py-5 md:py-6 md:px-10 bg-white">{children}</main>
       </div>
     </div>
   );

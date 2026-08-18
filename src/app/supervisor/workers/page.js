@@ -5,6 +5,7 @@ import { ArrowLeft, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { getUsers } from "@/api/userApi";
+import ClientPageHeader from "@/components/ui/ClientPageHeader";
 
 export default function SupervisorWorkersPage() {
   const router = useRouter();
@@ -136,31 +137,17 @@ export default function SupervisorWorkersPage() {
   // ============================================================
 
   return (
-    <div className="bg-white min-h-full p-4 md:p-6">
+    <div className="min-h-full">
       {/* ======================================================
         HEADER
     ====================================================== */}
 
       <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-start gap-3">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="border-border bg-background text-text hover:bg-primary-light hover:text-primary mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-sm transition-all duration-200"
-          >
-            <ArrowLeft size={18} />
-          </button>
-
-          <div>
-            <h1 className="text-text text-2xl font-bold tracking-tight md:text-3xl">
-              Workers
-            </h1>
-
-            <p className="text-text-secondary mt-1 text-sm">
-              Manage your teams and assigned workers
-            </p>
-          </div>
-        </div>
+        <ClientPageHeader
+          title={"Workers"}
+          description={"Manage your teams and assigned workers"}
+          onBack={() => router.back()}
+        />
 
         {/* TEAM COUNT */}
 
@@ -456,7 +443,6 @@ export default function SupervisorWorkersPage() {
                 {/* ==================================================
                   TEAM FOOTER
               ================================================== */}
-
               </div>
             );
           })}

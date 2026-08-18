@@ -144,11 +144,11 @@ export default function Header({
           {/* Desktop User */}
 
           <div className="hidden text-left lg:block">
-            <p className="text-text max-w-32 truncate text-sm font-semibold">
+            <p className="text-text max-w-32 truncate text-sm font-semibold uppercase">
               {user.name}
             </p>
 
-            <p className="text-text-secondary max-w-32 truncate text-xs capitalize uppercase">
+            <p className="text-text-secondary max-w-32 truncate text-xs capitalize">
               {user.designation}
             </p>
           </div>

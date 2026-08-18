@@ -9,6 +9,7 @@ import SupervisorZerodoseTableSkeleton from "./SupervisorZerodoseTableSkeleton";
 
 export default function PreviousCampaigns({
   campaigns = [],
+  data = [],
   loading = false,
 }) {
   const [selectedYear, setSelectedYear] = useState("");
@@ -35,16 +36,34 @@ export default function PreviousCampaigns({
   // UNIQUE CAMPAIGNS
   // ============================================================
 
+  // const uniqueCampaigns = useMemo(() => {
+  //   const map = new Map();
+
+  //   campaigns.forEach((item) => {
+  //     const campaign = item?.campaign;
+
+  //     if (!campaign) {
+  //       return;
+  //     }
+
+  //     const campaignId = getId(campaign);
+
+  //     if (!campaignId) {
+  //       return;
+  //     }
+
+  //     if (!map.has(campaignId)) {
+  //       map.set(campaignId, campaign);
+  //     }
+  //   });
+
+  //   return Array.from(map.values());
+  // }, [campaigns]);
+
   const uniqueCampaigns = useMemo(() => {
     const map = new Map();
 
-    campaigns.forEach((item) => {
-      const campaign = item?.campaign;
-
-      if (!campaign) {
-        return;
-      }
-
+    campaigns.forEach((campaign) => {
       const campaignId = getId(campaign);
 
       if (!campaignId) {
@@ -190,12 +209,14 @@ export default function PreviousCampaigns({
       return [];
     }
 
-    return campaigns.filter((item) => {
-      const campaignId = getId(item?.campaign);
+    return data.filter((item) => {
+      const campaignId = getId(
+        item?.campaign || item?.campaignId || item?.campaign?._id,
+      );
 
       return campaignId && String(campaignId) === String(selectedCampaignId);
     });
-  }, [campaigns, selectedCampaignId]);
+  }, [data, selectedCampaignId]);
 
   // ============================================================
   // TEAM-WISE DATA
@@ -205,63 +226,63 @@ export default function PreviousCampaigns({
   // TEAM-WISE DATA
   // ============================================================
 
-const teamData = useMemo(() => {
-  const teamsMap = new Map();
+  const teamData = useMemo(() => {
+    const teamsMap = new Map();
 
-  selectedRawData.forEach((item) => {
-    const rawTeamNumber = item?.teamNumber;
+    selectedRawData.forEach((item) => {
+      const rawTeamNumber = item?.teamNumber;
 
-    if (
-      rawTeamNumber === null ||
-      rawTeamNumber === undefined ||
-      rawTeamNumber === ""
-    ) {
-      return;
-    }
+      if (
+        rawTeamNumber === null ||
+        rawTeamNumber === undefined ||
+        rawTeamNumber === ""
+      ) {
+        return;
+      }
 
-    const teamNumber = Number(rawTeamNumber);
+      const teamNumber = Number(rawTeamNumber);
 
-    if (!Number.isInteger(teamNumber)) {
-      return;
-    }
+      if (!Number.isInteger(teamNumber)) {
+        return;
+      }
 
-    if (!teamsMap.has(teamNumber)) {
-      teamsMap.set(teamNumber, {
-        teamNumber,
-        teamLeader: item?.teamLeader || null,
-        teamMember: item?.teamMember || null,
-        recorded: 0,
-        visited: 0,
-        covered: 0,
-      });
-    }
+      if (!teamsMap.has(teamNumber)) {
+        teamsMap.set(teamNumber, {
+          teamNumber,
+          teamLeader: item?.teamLeader || null,
+          teamMember: item?.teamMember || null,
+          recorded: 0,
+          visited: 0,
+          covered: 0,
+        });
+      }
 
-    const team = teamsMap.get(teamNumber);
+      const team = teamsMap.get(teamNumber);
 
-    team.recorded += 1;
+      team.recorded += 1;
 
-    if (item?.visitDate || item?.vaccinationStatus === "visited") {
-      team.visited += 1;
-    }
+      if (item?.visitDate || item?.vaccinationStatus === "visited") {
+        team.visited += 1;
+      }
 
-    if (item?.coveredDate || item?.vaccinationStatus === "covered") {
-      team.covered += 1;
-    }
+      if (item?.coveredDate || item?.vaccinationStatus === "covered") {
+        team.covered += 1;
+      }
 
-    // Historical team assignment
-    if (item?.teamLeader) {
-      team.teamLeader = item.teamLeader;
-    }
+      // Historical team assignment
+      if (item?.teamLeader) {
+        team.teamLeader = item.teamLeader;
+      }
 
-    if (item?.teamMember) {
-      team.teamMember = item.teamMember;
-    }
-  });
+      if (item?.teamMember) {
+        team.teamMember = item.teamMember;
+      }
+    });
 
-  return Array.from(teamsMap.values()).sort(
-    (a, b) => Number(a.teamNumber) - Number(b.teamNumber),
-  );
-}, [selectedRawData]);
+    return Array.from(teamsMap.values()).sort(
+      (a, b) => Number(a.teamNumber) - Number(b.teamNumber),
+    );
+  }, [selectedRawData]);
 
   // ============================================================
   // TOTALS

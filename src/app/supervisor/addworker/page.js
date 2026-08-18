@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { UserPlus, Users, Phone, Hash, ShieldCheck } from "lucide-react";
 import { createWorker } from "@/api/supervisorApi";
 import Select from "@/components/ui/Select";
+import ClientPageHeader from "@/components/ui/ClientPageHeader";
 
 export default function Page() {
   const router = useRouter();
@@ -61,34 +62,22 @@ export default function Page() {
   };
 
   return (
-    <div className="bg= min-h-screen p-4 md:p-6">
+    <div className="min-h-screen ">
       {/* =====================================================
           Header
       ===================================================== */}
-
-      <div className="mb-6 md:mb-7">
-        <div className="mb-3 flex items-center gap-3">
-          <div className="bg-primary/10 text-primary flex h-11 w-11 items-center justify-center rounded-xl">
-            <UserPlus size={21} />
-          </div>
-
-          <div>
-            <h1 className="text-text text-2xl font-bold md:text-3xl">
-              Add Worker
-            </h1>
-
-            <p className="text-text-secondary mt-1 text-sm">
-              Add a worker to your team
-            </p>
-          </div>
-        </div>
+      <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <ClientPageHeader
+          title={"Add Worker"}
+          description={"Add a worker to your team."}
+          onBack={() => router.back()}
+        />
       </div>
-
       {/* =====================================================
           Form
       ===================================================== */}
 
-      <div className="bg-background mx-auto max-w-3xl">
+      <div className="bg-surface mx-auto max-w-7xl">
         <div className="border-border rounded-2xl border p-5 md:p-6">
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* =================================================

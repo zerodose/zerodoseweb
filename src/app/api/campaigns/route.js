@@ -3,19 +3,11 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Campaign from "@/models/Campaign";
 
-// =====================================================
-// GET ALL CAMPAIGNS
-// =====================================================
-
 export async function GET(request) {
   try {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-
-    // =====================================================
-    // Pagination
-    // =====================================================
 
     const pageParam = Number(searchParams.get("page") || 1);
     const limitParam = Number(searchParams.get("limit") || 10);
@@ -29,26 +21,15 @@ export async function GET(request) {
 
     const skip = (page - 1) * limit;
 
-    // =====================================================
-    // Search
-    // =====================================================
-
     const search = searchParams.get("search")?.trim() || "";
-
-    // =====================================================
-    // Filters
-    // =====================================================
-
     const year = searchParams.get("year");
     const month = searchParams.get("month");
+    const scope = searchParams.get("scope");
     const status = searchParams.get("status");
-
-    // =====================================================
-    // Sorting
-    // =====================================================
 
     const allowedSortFields = [
       "name",
+      "scope",
       "year",
       "month",
       "startDate",
@@ -67,21 +48,25 @@ export async function GET(request) {
 
     const sortOrder = requestedOrder.toLowerCase() === "asc" ? 1 : -1;
 
-    // =====================================================
-    // Build Query
-    // =====================================================
-
     const query = {};
 
-    // Search
     if (search) {
-      query.name = {
-        $regex: search,
-        $options: "i",
-      };
+      query.$or = [
+        {
+          name: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          scope: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+      ];
     }
 
-    // Year
     if (year) {
       const numericYear = Number(year);
 
@@ -90,7 +75,6 @@ export async function GET(request) {
       }
     }
 
-    // Month
     if (month) {
       const numericMonth = Number(month);
 
@@ -103,35 +87,44 @@ export async function GET(request) {
       }
     }
 
-    // =====================================================
-    // Status Filter
-    // =====================================================
+    if (scope) {
+      const allowedScopes = [
+        "nationwide",
+        "high_risk_districts",
+        "sindh_karachi",
+        "karachi",
+      ];
+
+      if (allowedScopes.includes(scope)) {
+        query.scope = scope;
+      }
+    }
 
     const now = new Date();
 
     if (status === "current") {
-      query.startDate = { $lte: now };
-      query.endDate = { $gte: now };
+      query.startDate = {
+        $lte: now,
+      };
+
+      query.endDate = {
+        $gte: now,
+      };
     }
 
     if (status === "upcoming") {
-      query.startDate = { $gt: now };
+      query.startDate = {
+        $gt: now,
+      };
     }
 
     if (status === "previous") {
-      query.endDate = { $lt: now };
+      query.endDate = {
+        $lt: now,
+      };
     }
 
-    // =====================================================
-    // Count
-    // =====================================================
-
     const total = await Campaign.countDocuments(query);
-
-    // =====================================================
-    // Fetch
-    // Don't use lean because campaignStatus is a virtual
-    // =====================================================
 
     const campaigns = await Campaign.find(query)
       .sort({
@@ -140,18 +133,12 @@ export async function GET(request) {
       .skip(skip)
       .limit(limit);
 
-    // =====================================================
-    // Pagination
-    // =====================================================
-
     const totalPages = Math.ceil(total / limit);
 
     return NextResponse.json(
       {
         success: true,
-
         data: campaigns,
-
         pagination: {
           page,
           limit,
@@ -160,20 +147,21 @@ export async function GET(request) {
           hasNextPage: page < totalPages,
           hasPreviousPage: page > 1,
         },
-
         filters: {
           search,
           year: year || null,
           month: month || null,
+          scope: scope || null,
           status: status || null,
         },
-
         sorting: {
           sortBy,
           sortOrder: sortOrder === 1 ? "asc" : "desc",
         },
       },
-      { status: 200 },
+      {
+        status: 200,
+      },
     );
   } catch (error) {
     console.error("Get campaigns error:", error);
@@ -183,14 +171,12 @@ export async function GET(request) {
         success: false,
         message: error.message || "Failed to fetch campaigns.",
       },
-      { status: 500 },
+      {
+        status: 500,
+      },
     );
   }
 }
-
-// =====================================================
-// ADD CAMPAIGN
-// =====================================================
 
 export async function POST(request) {
   try {
@@ -198,27 +184,30 @@ export async function POST(request) {
 
     const body = await request.json();
 
-    const { name, year, month, startDate } = body;
+    const { name, scope, year, month, startDate, endDate } = body;
 
-    // =====================================================
-    // Required Fields
-    // =====================================================
-
-    if (!name || year === undefined || month === undefined || !startDate) {
+    if (
+      !name ||
+      !scope ||
+      year === undefined ||
+      month === undefined ||
+      !startDate ||
+      !endDate
+    ) {
       return NextResponse.json(
         {
           success: false,
-          message: "Name, year, month and start date are required.",
+          message:
+            "Name, scope, year, month, start date and end date are required.",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
-    // =====================================================
-    // Validate Start Date
-    // =====================================================
-
     const start = new Date(startDate);
+    const end = new Date(endDate);
 
     if (Number.isNaN(start.getTime())) {
       return NextResponse.json(
@@ -226,26 +215,62 @@ export async function POST(request) {
           success: false,
           message: "Invalid start date.",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
-    // =====================================================
-    // Calculate End Date
-    // 8 calendar days total
-    // Start Date + 7 days
-    // =====================================================
+    if (Number.isNaN(end.getTime())) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid end date.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
 
-    const end = new Date(start);
-    end.setDate(end.getDate() + 7);
+    if (start > end) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Campaign end date cannot be before start date.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
 
-    // =====================================================
-    // Prevent Overlapping Campaigns
-    // =====================================================
+    const allowedScopes = [
+      "nationwide",
+      "high_risk_districts",
+      "sindh_karachi",
+      "karachi",
+    ];
+
+    if (!allowedScopes.includes(scope)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid campaign scope.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
 
     const existingCampaign = await Campaign.findOne({
-      startDate: { $lte: end },
-      endDate: { $gte: start },
+      startDate: {
+        $lte: end,
+      },
+      endDate: {
+        $gte: start,
+      },
     });
 
     if (existingCampaign) {
@@ -254,16 +279,15 @@ export async function POST(request) {
           success: false,
           message: "Another campaign already exists during these dates.",
         },
-        { status: 409 },
+        {
+          status: 409,
+        },
       );
     }
 
-    // =====================================================
-    // Create Campaign
-    // =====================================================
-
     const campaign = await Campaign.create({
       name,
+      scope,
       year: Number(year),
       month: Number(month),
       startDate: start,
@@ -276,7 +300,9 @@ export async function POST(request) {
         message: "Campaign created successfully.",
         data: campaign,
       },
-      { status: 201 },
+      {
+        status: 201,
+      },
     );
   } catch (error) {
     console.error("Create campaign error:", error);
@@ -287,7 +313,9 @@ export async function POST(request) {
           success: false,
           message: "A campaign already exists.",
         },
-        { status: 409 },
+        {
+          status: 409,
+        },
       );
     }
 
@@ -296,7 +324,9 @@ export async function POST(request) {
         success: false,
         message: error.message || "Failed to create campaign.",
       },
-      { status: 400 },
+      {
+        status: 400,
+      },
     );
   }
 }

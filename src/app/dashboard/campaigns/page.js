@@ -15,10 +15,6 @@ export default function CampaignsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // ============================================================
-  // Server Pagination
-  // ============================================================
-
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -27,10 +23,6 @@ export default function CampaignsPage() {
     hasNextPage: false,
     hasPreviousPage: false,
   });
-
-  // ============================================================
-  // Get Campaigns
-  // ============================================================
 
   const getCampaignsData = async () => {
     try {
@@ -65,10 +57,6 @@ export default function CampaignsPage() {
     }
   };
 
-  // ============================================================
-  // Load Data
-  // ============================================================
-
   useEffect(() => {
     const timer = setTimeout(() => {
       getCampaignsData();
@@ -76,10 +64,6 @@ export default function CampaignsPage() {
 
     return () => clearTimeout(timer);
   }, [pagination.page, pagination.limit, search]);
-
-  // ============================================================
-  // Search
-  // ============================================================
 
   const handleSearchChange = (value) => {
     setSearch(value);
@@ -90,20 +74,12 @@ export default function CampaignsPage() {
     }));
   };
 
-  // ============================================================
-  // Page Change
-  // ============================================================
-
   const handlePageChange = (page) => {
     setPagination((previous) => ({
       ...previous,
       page,
     }));
   };
-
-  // ============================================================
-  // Page Size Change
-  // ============================================================
 
   const handlePageSizeChange = (limit) => {
     setPagination((previous) => ({
@@ -124,11 +100,6 @@ export default function CampaignsPage() {
           label: "Campaigns",
         },
       ]}
-
-      // ========================================================
-      // Server Pagination
-      // ========================================================
-
       serverPagination
       currentPage={pagination.page}
       totalItems={pagination.total}
@@ -137,42 +108,38 @@ export default function CampaignsPage() {
       onPageChange={handlePageChange}
       onPageSizeChange={handlePageSizeChange}
       onSearchChange={handleSearchChange}
-
-      // ========================================================
-      // Columns
-      // ========================================================
-
       hiddenColumns={["_id", "__v", "createdAt", "updatedAt"]}
       dateColumns={["startDate", "endDate"]}
-
       columnTitles={{
         name: "Campaign",
+        scope: "Scope",
         year: "Year",
         month: "Month",
         startDate: "Start Date",
         endDate: "End Date",
         campaignStatus: "Status",
       }}
-
       columnOptions={[
         "name",
+        "scope",
         "year",
         "month",
         "startDate",
         "endDate",
         "campaignStatus",
       ]}
-
-      // ========================================================
-      // Filters
-      // ========================================================
-
       filterOptions={[
         {
           key: "name",
           label: "Campaign",
           type: "select",
           column: "name",
+        },
+        {
+          key: "scope",
+          label: "Scope",
+          type: "select",
+          column: "scope",
         },
         {
           key: "year",
@@ -199,27 +166,12 @@ export default function CampaignsPage() {
           column: "startDate",
         },
       ]}
-
-      // ========================================================
-      // Row
-      // ========================================================
-
       onRowClick={(campaign) => {
         router.push(`/dashboard/campaigns/${campaign._id}`);
       }}
-
-      // ========================================================
-      // Add
-      // ========================================================
-
       addButton
       addButtonText="Add Campaign"
       onAdd={() => router.push("/dashboard/campaigns/addCampaign")}
-
-      // ========================================================
-      // Export
-      // ========================================================
-
       onExportPDF={exportPDF}
       onExportExcel={exportExcel}
     />

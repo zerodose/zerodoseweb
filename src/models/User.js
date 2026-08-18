@@ -6,8 +6,8 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Name is required"],
       trim: true,
-      minlength: [2, "Name must be at least 2 characters"],
-      maxlength: [100, "Name cannot exceed 100 characters"],
+      minlength: [4, "Name must be at least 4 characters"],
+      maxlength: [30, "Name cannot exceed 30 characters"],
     },
 
     email: {
@@ -44,6 +44,26 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
       select: false,
+    },
+
+    approvalStatus: {
+      type: String,
+
+      enum: {
+        values: ["pending", "approved", "rejected"],
+        message: "Invalid approval status",
+      },
+
+      default: function () {
+        return this.designation === "supervisor" ? "pending" : null;
+      },
+
+      validate: {
+        validator: function (value) {
+          return value === null || this.designation === "supervisor";
+        },
+        message: "Only supervisors can have an approval status.",
+      },
     },
 
     // =====================================================

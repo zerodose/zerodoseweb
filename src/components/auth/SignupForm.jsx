@@ -663,11 +663,9 @@ export default function SignupForm() {
                             field.onChange(e);
 
                             setValue("town", "");
-
                             setValue("unionCouncil", "");
 
                             setTowns([]);
-
                             setUnionCouncils([]);
 
                             clearErrors(["town", "unionCouncil"]);
@@ -677,6 +675,8 @@ export default function SignupForm() {
                             label: district.name,
                           }))}
                           placeholder="Select district"
+                          searchPlaceholder="Search district..."
+                          searchable
                           loading={districtLoading}
                           disabled={loading}
                           required
@@ -711,7 +711,6 @@ export default function SignupForm() {
                             field.onChange(e);
 
                             setValue("unionCouncil", "");
-
                             setUnionCouncils([]);
 
                             clearErrors("unionCouncil");
@@ -725,6 +724,8 @@ export default function SignupForm() {
                               ? "Select district first"
                               : "Select town"
                           }
+                          searchPlaceholder="Search town..."
+                          searchable
                           loading={townLoading}
                           disabled={loading || !selectedDistrict}
                           required
@@ -766,6 +767,8 @@ export default function SignupForm() {
                               ? "Select town first"
                               : "Select Union Council"
                           }
+                          searchPlaceholder="Search Union Council..."
+                          searchable
                           loading={ucLoading}
                           disabled={loading || !selectedTown}
                           showCode

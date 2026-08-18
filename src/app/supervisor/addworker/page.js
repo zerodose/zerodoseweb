@@ -61,7 +61,7 @@ export default function Page() {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-6 bg-surface">
+    <div className="min-h-screen p-4 md:p-6 bg=">
       {/* =====================================================
           Header
       ===================================================== */}

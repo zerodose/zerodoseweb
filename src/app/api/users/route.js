@@ -258,16 +258,15 @@ export async function POST(request) {
 
       contactNumber: normalizedContactNumber,
 
-      // ObjectId
       district,
 
-      // ObjectId
       town,
 
-      // ObjectId
       unionCouncil,
 
       designation,
+
+      approvalStatus: designation === "supervisor" ? "pending" : "approved",
 
       supervisorCode:
         designation === "supervisor" ? normalizedSupervisorCode : null,

@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
+
 import { deleteCampaign, getCampaign } from "@/api/campaignApi";
 import CampaignForm from "@/components/admin/CampaignForm";
 import DeleteConfirmModal from "@/components/admin/ui/DeleteConfirmModal";
@@ -12,6 +13,7 @@ import ActionButtons from "@/components/admin/ui/ActionButtons";
 export default function CampaignViewPage() {
   const router = useRouter();
   const params = useParams();
+
   const [campaign, setCampaign] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
@@ -40,7 +42,6 @@ export default function CampaignViewPage() {
         setLoading(true);
 
         const response = await getCampaign(params.id);
-
         const data = response?.data;
 
         if (!data) {
@@ -89,11 +90,10 @@ export default function CampaignViewPage() {
       setDeleting(false);
     }
   };
+
   return (
     <div className="mx-auto w-full max-w-7xl">
-      {/* Header */}
       <div className="mb-6 flex items-center justify-between gap-3">
-        {/* Left Side */}
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -115,7 +115,6 @@ export default function CampaignViewPage() {
           </div>
         </div>
 
-        {/* Right Side */}
         {!loading && campaign && isAdmin && (
           <ActionButtons
             onEdit={() =>
@@ -126,11 +125,10 @@ export default function CampaignViewPage() {
         )}
       </div>
 
-      {/* Reusable Read Only Form */}
       {loading ? (
         <div className="bg-background border-border rounded-2xl border shadow-sm">
           <div className="grid grid-cols-1 gap-5 p-6 sm:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((item) => (
+            {[1, 2, 3, 4, 5, 6, 7].map((item) => (
               <div key={item}>
                 <div className="bg-surface mb-2 h-4 w-24 animate-pulse rounded" />
 
@@ -143,7 +141,6 @@ export default function CampaignViewPage() {
         <CampaignForm mode="view" campaign={campaign} />
       ) : null}
 
-      {/* Delete Modal */}
       <DeleteConfirmModal
         open={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}

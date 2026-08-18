@@ -10,7 +10,7 @@ export default function SupervisorLayout({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="bg-surface flex min-h-screen">
+    <div className="bg-white flex min-h-screen">
       {/* Mobile Sidebar */}
 
       <Sidebar

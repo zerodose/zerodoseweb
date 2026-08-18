@@ -51,6 +51,20 @@ const zerodoseSchema = new Schema(
       index: true,
     },
 
+    teamLeader: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+
+    teamMember: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+
     teamNumber: {
       type: Number,
       required: true,

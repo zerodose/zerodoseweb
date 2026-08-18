@@ -18,6 +18,25 @@ const CAMPAIGN_TYPES = [
   },
 ];
 
+const CAMPAIGN_SCOPES = [
+  {
+    value: "nationwide",
+    label: "Nationwide",
+  },
+  {
+    value: "high_risk_districts",
+    label: "High Risk Districts",
+  },
+  {
+    value: "sindh_karachi",
+    label: "Sindh / Karachi",
+  },
+  {
+    value: "karachi",
+    label: "Karachi",
+  },
+];
+
 const MONTHS = [
   { value: 1, label: "January" },
   { value: 2, label: "February" },
@@ -46,6 +65,7 @@ const YEARS = Array.from({ length: 11 }, (_, index) => {
 
 const EMPTY_FORM = {
   name: "",
+  scope: "",
   year: "",
   month: "",
   startDate: "",
@@ -91,6 +111,7 @@ export default function CampaignForm({
 
     setFormData({
       name: campaign.name || "",
+      scope: campaign.scope || "",
       year: campaign.year ? String(campaign.year) : "",
       month: campaign.month ? String(campaign.month) : "",
       startDate: formatDateForInput(campaign.startDate),
@@ -137,6 +158,11 @@ export default function CampaignForm({
       return;
     }
 
+    if (!formData.scope) {
+      toast.error("Please select campaign scope.");
+      return;
+    }
+
     if (!formData.year) {
       toast.error("Please select year.");
       return;
@@ -167,11 +193,11 @@ export default function CampaignForm({
 
       const payload = {
         name: formData.name,
+        scope: formData.scope,
         year: Number(formData.year),
         month: Number(formData.month),
         startDate: formData.startDate,
         endDate: formData.endDate,
-        isActive: formData.isActive,
       };
 
       if (isAdd) {
@@ -213,11 +239,33 @@ export default function CampaignForm({
     );
   };
 
+  const getScopeName = (scope) => {
+    return (
+      CAMPAIGN_SCOPES.find((item) => item.value === scope)?.label ||
+      scope ||
+      "-"
+    );
+  };
+
+  const getStatusName = (status) => {
+    if (status === "current") {
+      return "Current";
+    }
+
+    if (status === "upcoming") {
+      return "Upcoming";
+    }
+
+    if (status === "previous") {
+      return "Previous";
+    }
+
+    return "-";
+  };
+
   return (
     <div className="bg-background border-border rounded-2xl border shadow-sm">
       <form onSubmit={handleSubmit}>
-        {/* Form Header */}
-
         <div className="border-border flex items-center gap-3 border-b p-5 sm:p-6">
           <div className="bg-primary-light flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
             <CalendarDays className="text-primary h-5 w-5" />
@@ -236,11 +284,7 @@ export default function CampaignForm({
           </div>
         </div>
 
-        {/* Fields */}
-
         <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-3 sm:p-6">
-          {/* Campaign Type */}
-
           {isView ? (
             <ReadOnlyField label="Campaign Type" value={formData.name || "-"} />
           ) : (
@@ -256,7 +300,23 @@ export default function CampaignForm({
             />
           )}
 
-          {/* Year */}
+          {isView ? (
+            <ReadOnlyField
+              label="Campaign Scope"
+              value={getScopeName(formData.scope)}
+            />
+          ) : (
+            <Select
+              name="scope"
+              label="Campaign Scope"
+              value={formData.scope}
+              onChange={handleSelectChange}
+              options={CAMPAIGN_SCOPES}
+              placeholder="Select campaign scope"
+              required
+              disabled={loading}
+            />
+          )}
 
           {isView ? (
             <ReadOnlyField label="Year" value={formData.year || "-"} />
@@ -273,8 +333,6 @@ export default function CampaignForm({
             />
           )}
 
-          {/* Month */}
-
           {isView ? (
             <ReadOnlyField label="Month" value={getMonthName(formData.month)} />
           ) : (
@@ -289,8 +347,6 @@ export default function CampaignForm({
               disabled={loading}
             />
           )}
-
-          {/* Start Date */}
 
           {isView ? (
             <ReadOnlyField
@@ -307,8 +363,6 @@ export default function CampaignForm({
             />
           )}
 
-          {/* End Date */}
-
           {isView ? (
             <ReadOnlyField
               label="End Date"
@@ -324,44 +378,13 @@ export default function CampaignForm({
             />
           )}
 
-          {/* Status */}
-
-          {isView ? (
-            <ReadOnlyStatus isActive={formData.isActive} />
-          ) : (
-            <div>
-              <label className="text-text mb-2 block text-sm font-medium">
-                Status
-              </label>
-
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() =>
-                  setFormData((previous) => ({
-                    ...previous,
-                    isActive: !previous.isActive,
-                  }))
-                }
-                className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-sm transition ${
-                  formData.isActive
-                    ? "border-primary bg-primary-light text-primary"
-                    : "border-border bg-input-background text-text-secondary"
-                }`}
-              >
-                <span>{formData.isActive ? "Active" : "Inactive"}</span>
-
-                <span
-                  className={`h-2.5 w-2.5 rounded-full ${
-                    formData.isActive ? "bg-primary" : "bg-gray"
-                  }`}
-                />
-              </button>
-            </div>
+          {isView && (
+            <ReadOnlyField
+              label="Campaign Status"
+              value={getStatusName(formData.campaignStatus)}
+            />
           )}
         </div>
-
-        {/* Footer */}
 
         {!isView && (
           <div className="border-border flex flex-col-reverse gap-3 border-t p-5 sm:flex-row sm:justify-end sm:p-6">
@@ -432,30 +455,6 @@ function DateField({ label, name, value, onChange, disabled }) {
         disabled={disabled}
         className="bg-input-background text-text placeholder:text-input-placeholder border-border focus:border-primary focus:ring-primary-light w-full rounded-xl border px-4 py-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
       />
-    </div>
-  );
-}
-
-function ReadOnlyStatus({ isActive }) {
-  return (
-    <div>
-      <label className="text-text mb-2 block text-sm font-medium">Status</label>
-
-      <div
-        className={`flex items-center justify-between rounded-xl border px-4 py-3 text-sm ${
-          isActive
-            ? "border-primary bg-primary-light text-primary"
-            : "border-border bg-input-background text-text-secondary"
-        }`}
-      >
-        <span>{isActive ? "Active" : "Inactive"}</span>
-
-        <span
-          className={`h-2.5 w-2.5 rounded-full ${
-            isActive ? "bg-primary" : "bg-gray"
-          }`}
-        />
-      </div>
     </div>
   );
 }

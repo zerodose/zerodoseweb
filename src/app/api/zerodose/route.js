@@ -470,15 +470,87 @@ export async function GET(request) {
           );
         }
 
-        // Find actual workers belonging to this team.
+        // ========================================================
+        // HISTORICAL TEAM MEMBERS
+        //
+        // user       = worker who actually recorded Zerodose
+        // teamLeader = Team Leader of this team at record time
+        // teamMember = Team Member of this team at record time
+        //
+        // Both are resolved from MongoDB.
+        // Client cannot send/change these values.
+        // ========================================================
+
         const teamWorkers = await User.find({
           designation: "worker",
           isActive: true,
-          supervisor: loggedInUser.supervisor,
-          teamNumber: loggedInUser.teamNumber,
+          supervisor: supervisor,
+          teamNumber: teamNumber,
+          workerRole: {
+            $in: ["teamLeader", "teamMember"],
+          },
         })
-          .select("_id")
+          .select("_id name workerRole")
           .lean();
+
+        const teamLeaderWorker = teamWorkers.find(
+          (item) => item.workerRole === "teamLeader",
+        );
+
+        const teamMemberWorker = teamWorkers.find(
+          (item) => item.workerRole === "teamMember",
+        );
+
+        // ========================================================
+        // Validate Team Assignment
+        // ========================================================
+
+        if (!teamLeaderWorker) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: "No active Team Leader found for this team.",
+            },
+            {
+              status: 400,
+            },
+          );
+        }
+
+        if (!teamMemberWorker) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: "No active Team Member found for this team.",
+            },
+            {
+              status: 400,
+            },
+          );
+        }
+
+        // ========================================================
+        // Safety Check
+        // ========================================================
+        //
+        // Logged-in worker must actually belong to this team.
+        // ========================================================
+
+        const belongsToTeam =
+          teamLeaderWorker._id.toString() === worker._id.toString() ||
+          teamMemberWorker._id.toString() === worker._id.toString();
+
+        if (!belongsToTeam) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: "Worker does not belong to the assigned team.",
+            },
+            {
+              status: 403,
+            },
+          );
+        }
 
         const teamWorkerIds = teamWorkers.map((worker) => worker._id);
 
@@ -931,6 +1003,14 @@ export async function GET(request) {
         .populate("supervisor", "name contactNumber supervisorCode")
         .populate(
           "user",
+          "name contactNumber designation workerRole teamNumber",
+        )
+        .populate(
+          "teamLeader",
+          "name contactNumber designation workerRole teamNumber",
+        )
+        .populate(
+          "teamMember",
           "name contactNumber designation workerRole teamNumber",
         )
         .sort({
@@ -1400,26 +1480,34 @@ export async function POST(request) {
       campaign: currentCampaign._id,
 
       // ------------------------------------------------------
-      // Exact Worker
+      // Exact Worker Who Recorded Zerodose
       // ------------------------------------------------------
 
       user: worker._id,
 
       // ------------------------------------------------------
-      // Worker Assignment Snapshot
+      // Team Snapshot
       // ------------------------------------------------------
 
-      district: district,
+      teamLeader: teamLeaderWorker._id,
 
-      town: town,
+      teamMember: teamMemberWorker._id,
 
-      unionCouncil: unionCouncil,
+      teamNumber,
+
+      // ------------------------------------------------------
+      // Assignment Snapshot
+      // ------------------------------------------------------
+
+      district,
+
+      town,
+
+      unionCouncil,
 
       ucmo,
 
       supervisor,
-
-      teamNumber,
 
       // ------------------------------------------------------
       // Child Information
@@ -1500,6 +1588,14 @@ export async function POST(request) {
       },
       {
         path: "user",
+        select: "name contactNumber designation workerRole teamNumber",
+      },
+      {
+        path: "teamLeader",
+        select: "name contactNumber designation workerRole teamNumber",
+      },
+      {
+        path: "teamMember",
         select: "name contactNumber designation workerRole teamNumber",
       },
     ]);
@@ -1588,6 +1684,7 @@ export async function POST(request) {
     );
   }
 }
+
 // ============================================================
 // POST
 // Create Zerodose

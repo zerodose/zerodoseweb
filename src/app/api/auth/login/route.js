@@ -4,6 +4,7 @@ import { SignJWT } from "jose";
 
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
+import UnionCouncil from "@/models/UnionCouncil";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -100,6 +101,19 @@ export async function POST(request) {
           message: "Invalid mobile number or password.",
         },
         { status: 401 },
+      );
+    }
+
+    if (
+      user.designation === "supervisor" &&
+      user.approvalStatus !== "approved"
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Your account is waiting for UCMO approval.",
+        },
+        { status: 403 },
       );
     }
 

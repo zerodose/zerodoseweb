@@ -21,7 +21,6 @@ export default function UpdateCampaignPage() {
         setLoading(true);
 
         const response = await getCampaign(params.id);
-
         const data = response?.data;
 
         if (!data) {
@@ -67,7 +66,7 @@ export default function UpdateCampaignPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-5 p-6 sm:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((item) => (
+            {[1, 2, 3, 4, 5, 6, 7].map((item) => (
               <div key={item}>
                 <div className="bg-surface mb-2 h-4 w-24 animate-pulse rounded" />
                 <div className="bg-surface h-12 w-full animate-pulse rounded-xl" />

@@ -893,33 +893,6 @@ export default function Page() {
   //
   // ============================================================
 
-  useEffect(() => {
-    console.log("Supervisor Dashboard");
-    console.log("Campaigns:", normalizedCampaigns);
-    console.log("Current Campaign:", currentCampaign);
-    console.log("Previous Campaigns:", previousCampaigns);
-    console.log("Upcoming Campaigns:", upcomingCampaigns);
-    console.log("Workers:", workers);
-    console.log("Active Teams:", activeTeams);
-    console.log("Supervisor UC:", supervisorUnionCouncilId);
-    console.log("Supervisor UC Data:", supervisorUCData);
-    console.log("Current Zerodose:", currentData);
-    console.log("Previous Zerodose:", previousData);
-    console.log("Upcoming Zerodose:", upcomingData);
-  }, [
-    normalizedCampaigns,
-    currentCampaign,
-    previousCampaigns,
-    upcomingCampaigns,
-    workers,
-    activeTeams,
-    supervisorUnionCouncilId,
-    supervisorUCData,
-    currentData,
-    previousData,
-    upcomingData,
-  ]);
-
   // ============================================================
   // RENDER
   // ============================================================

@@ -4,10 +4,6 @@ import { isValidObjectId } from "mongoose";
 import { connectDB } from "@/lib/db";
 import Campaign from "@/models/Campaign";
 
-// =====================================================
-// GET SINGLE CAMPAIGN
-// =====================================================
-
 export async function GET(request, { params }) {
   try {
     await connectDB();
@@ -20,7 +16,9 @@ export async function GET(request, { params }) {
           success: false,
           message: "Invalid campaign ID.",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
@@ -32,7 +30,9 @@ export async function GET(request, { params }) {
           success: false,
           message: "Campaign not found.",
         },
-        { status: 404 },
+        {
+          status: 404,
+        },
       );
     }
 
@@ -41,7 +41,9 @@ export async function GET(request, { params }) {
         success: true,
         data: campaign,
       },
-      { status: 200 },
+      {
+        status: 200,
+      },
     );
   } catch (error) {
     console.error("Get campaign error:", error);
@@ -51,14 +53,12 @@ export async function GET(request, { params }) {
         success: false,
         message: "Failed to get campaign.",
       },
-      { status: 500 },
+      {
+        status: 500,
+      },
     );
   }
 }
-
-// =====================================================
-// UPDATE CAMPAIGN
-// =====================================================
 
 export async function PUT(request, { params }) {
   try {
@@ -72,13 +72,15 @@ export async function PUT(request, { params }) {
           success: false,
           message: "Invalid campaign ID.",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
     const body = await request.json();
 
-    const { name, year, month, startDate } = body;
+    const { name, scope, year, month, startDate, endDate } = body;
 
     const campaign = await Campaign.findById(id);
 
@@ -88,16 +90,37 @@ export async function PUT(request, { params }) {
           success: false,
           message: "Campaign not found.",
         },
-        { status: 404 },
+        {
+          status: 404,
+        },
       );
     }
 
-    // =====================================================
-    // Update Basic Fields
-    // =====================================================
-
     if (name !== undefined) {
       campaign.name = name;
+    }
+
+    if (scope !== undefined) {
+      const allowedScopes = [
+        "nationwide",
+        "high_risk_districts",
+        "sindh_karachi",
+        "karachi",
+      ];
+
+      if (!allowedScopes.includes(scope)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid campaign scope.",
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+
+      campaign.scope = scope;
     }
 
     if (year !== undefined) {
@@ -108,37 +131,63 @@ export async function PUT(request, { params }) {
       campaign.month = Number(month);
     }
 
-    // =====================================================
-    // Update Start Date
-    // Automatically calculate End Date
-    // =====================================================
+    let newStartDate = campaign.startDate;
+    let newEndDate = campaign.endDate;
 
     if (startDate !== undefined) {
-      const start = new Date(startDate);
+      newStartDate = new Date(startDate);
 
-      if (Number.isNaN(start.getTime())) {
+      if (Number.isNaN(newStartDate.getTime())) {
         return NextResponse.json(
           {
             success: false,
             message: "Invalid start date.",
           },
-          { status: 400 },
+          {
+            status: 400,
+          },
         );
       }
+    }
 
-      const end = new Date(start);
-      end.setDate(end.getDate() + 7);
+    if (endDate !== undefined) {
+      newEndDate = new Date(endDate);
 
-      // Prevent overlap with other campaigns
-      const existingCampaign = await Campaign.findOne({
-        _id: { $ne: id },
+      if (Number.isNaN(newEndDate.getTime())) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid end date.",
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+    }
 
-        startDate: {
-          $lte: end,
+    if (newStartDate > newEndDate) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Campaign end date cannot be before start date.",
         },
+        {
+          status: 400,
+        },
+      );
+    }
 
+    if (startDate !== undefined || endDate !== undefined) {
+      const existingCampaign = await Campaign.findOne({
+        _id: {
+          $ne: id,
+        },
+        startDate: {
+          $lte: newEndDate,
+        },
         endDate: {
-          $gte: start,
+          $gte: newStartDate,
         },
       });
 
@@ -148,12 +197,14 @@ export async function PUT(request, { params }) {
             success: false,
             message: "Another campaign already exists during these dates.",
           },
-          { status: 409 },
+          {
+            status: 409,
+          },
         );
       }
 
-      campaign.startDate = start;
-      campaign.endDate = end;
+      campaign.startDate = newStartDate;
+      campaign.endDate = newEndDate;
     }
 
     await campaign.save();
@@ -164,7 +215,9 @@ export async function PUT(request, { params }) {
         message: "Campaign updated successfully.",
         data: campaign,
       },
-      { status: 200 },
+      {
+        status: 200,
+      },
     );
   } catch (error) {
     console.error("Update campaign error:", error);
@@ -174,14 +227,12 @@ export async function PUT(request, { params }) {
         success: false,
         message: error.message || "Failed to update campaign.",
       },
-      { status: 400 },
+      {
+        status: 400,
+      },
     );
   }
 }
-
-// =====================================================
-// DELETE CAMPAIGN
-// =====================================================
 
 export async function DELETE(request, { params }) {
   try {
@@ -195,7 +246,9 @@ export async function DELETE(request, { params }) {
           success: false,
           message: "Invalid campaign ID.",
         },
-        { status: 400 },
+        {
+          status: 400,
+        },
       );
     }
 
@@ -207,7 +260,9 @@ export async function DELETE(request, { params }) {
           success: false,
           message: "Campaign not found.",
         },
-        { status: 404 },
+        {
+          status: 404,
+        },
       );
     }
 
@@ -217,7 +272,9 @@ export async function DELETE(request, { params }) {
         message: "Campaign deleted successfully.",
         data: campaign,
       },
-      { status: 200 },
+      {
+        status: 200,
+      },
     );
   } catch (error) {
     console.error("Delete campaign error:", error);
@@ -227,7 +284,9 @@ export async function DELETE(request, { params }) {
         success: false,
         message: "Failed to delete campaign.",
       },
-      { status: 400 },
+      {
+        status: 400,
+      },
     );
   }
 }

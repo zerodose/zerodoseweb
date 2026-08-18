@@ -10,6 +10,13 @@ const campaignSchema = new mongoose.Schema(
       trim: true,
     },
 
+    scope: {
+      type: String,
+      required: true,
+      enum: ["nationwide", "high_risk_districts", "sindh_karachi", "karachi"],
+      trim: true,
+    },
+
     year: {
       type: Number,
       required: true,

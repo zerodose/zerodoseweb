@@ -28,7 +28,7 @@ export default function UCMOLayout({ children }) {
           onMenuClick={() => setMobileOpen(true)}
         />
 
-        <main className="flex-1 p-4 sm:p-5 md:p-6">{children}</main>
+        <main className="flex-1 p-4 sm:p-5 md:p-6 bg-white">{children}</main>
       </div>
     </div>
   );

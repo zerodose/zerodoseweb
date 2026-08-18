@@ -536,7 +536,7 @@ export default function Page() {
   // ============================================================
 
   return (
-    <div className="min-h-full p-4 md:p-6">
+    <div className="min-h-full ">
       <div className="mx-auto w-full max-w-7xl">
         {/* ======================================================
               HEADER

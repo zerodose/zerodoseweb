@@ -100,3 +100,13 @@ export async function permanentlyDeleteUser(id) {
 
   return response.data;
 }
+
+// ============================================================
+// Transfer Workers
+// ============================================================
+
+export async function transferWorkers(data) {
+  const response = await api.patch("/users/transfer-workers", data);
+
+  return response.data;
+}

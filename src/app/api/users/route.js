@@ -404,25 +404,81 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
 
+    // -----------------------------
+    // Pagination
+    // -----------------------------
+
+    const page = Math.max(
+      Number.parseInt(searchParams.get("page") || "1", 10),
+      1,
+    );
+
+    const limit = Math.min(
+      Math.max(Number.parseInt(searchParams.get("limit") || "10", 10), 1),
+      100,
+    );
+
+    // -----------------------------
+    // Search
+    // -----------------------------
+
+    const search = searchParams.get("search")?.trim() || "";
+
+    // -----------------------------
+    // Filters
+    // -----------------------------
+
     const designation = searchParams.get("designation")?.trim() || "";
     const district = searchParams.get("district")?.trim() || "";
     const town = searchParams.get("town")?.trim() || "";
     const unionCouncil = searchParams.get("unionCouncil")?.trim() || "";
+    const supervisor = searchParams.get("supervisor")?.trim() || "";
     const isActiveParam = searchParams.get("isActive");
+
+    // -----------------------------
+    // Build filter
+    // -----------------------------
 
     const filter = {};
 
-    // -------------------------------------------------
+    // -----------------------------
+    // Search
+    // -----------------------------
+
+    if (search) {
+      filter.$or = [
+        {
+          name: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          email: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          contactNumber: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+      ];
+    }
+
+    // -----------------------------
     // Designation filter
-    // -------------------------------------------------
+    // -----------------------------
 
     if (designation) {
       filter.designation = designation;
     }
 
-    // -------------------------------------------------
+    // -----------------------------
     // District filter
-    // -------------------------------------------------
+    // -----------------------------
 
     if (district) {
       if (!mongoose.Types.ObjectId.isValid(district)) {
@@ -438,9 +494,9 @@ export async function GET(request) {
       filter.district = district;
     }
 
-    // -------------------------------------------------
+    // -----------------------------
     // Town filter
-    // -------------------------------------------------
+    // -----------------------------
 
     if (town) {
       if (!mongoose.Types.ObjectId.isValid(town)) {
@@ -456,9 +512,9 @@ export async function GET(request) {
       filter.town = town;
     }
 
-    // -------------------------------------------------
+    // -----------------------------
     // Union Council filter
-    // -------------------------------------------------
+    // -----------------------------
 
     if (unionCouncil) {
       if (!mongoose.Types.ObjectId.isValid(unionCouncil)) {
@@ -474,39 +530,101 @@ export async function GET(request) {
       filter.unionCouncil = unionCouncil;
     }
 
-    // -------------------------------------------------
-    // Active filter
-    // -------------------------------------------------
+    // -----------------------------
+    // Supervisor filter
+    // -----------------------------
 
-    if (isActiveParam !== null && isActiveParam !== "") {
-      if (isActiveParam === "true") {
-        filter.isActive = true;
+    if (supervisor) {
+      if (!mongoose.Types.ObjectId.isValid(supervisor)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid supervisor ID",
+          },
+          { status: 400 },
+        );
       }
 
-      if (isActiveParam === "false") {
-        filter.isActive = false;
-      }
+      filter.supervisor = supervisor;
     }
 
-    // -------------------------------------------------
-    // Fetch users
-    // -------------------------------------------------
+    // -----------------------------
+    // Active filter
+    // -----------------------------
 
-    const users = await User.find(filter)
-      .select("-password")
-      .populate("district", "_id name code")
-      .populate("town", "_id name code")
-      .populate("unionCouncil", "_id name code")
-      .populate("supervisor", "_id name contactNumber")
-      .populate("ucmo", "_id name contactNumber")
-      .sort({ createdAt: -1 })
-      .lean();
+    if (isActiveParam === "true") {
+      filter.isActive = true;
+    }
+
+    if (isActiveParam === "false") {
+      filter.isActive = false;
+    }
+
+    // -----------------------------
+    // Pagination
+    // -----------------------------
+
+    const skip = (page - 1) * limit;
+
+    // -----------------------------
+    // Fetch Users + Total
+    // -----------------------------
+
+    const [users, total] = await Promise.all([
+      User.find(filter)
+        .select("-password")
+        .populate("district", "_id name code")
+        .populate("town", "_id name code")
+        .populate("unionCouncil", "_id name code")
+        .populate("supervisor", "_id name contactNumber")
+        .populate("ucmo", "_id name contactNumber")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+
+      User.countDocuments(filter),
+    ]);
+
+    // -----------------------------
+    // Total Pages
+    // -----------------------------
+
+    const totalPages = Math.ceil(total / limit);
+
+    // -----------------------------
+    // Response
+    // -----------------------------
 
     return NextResponse.json(
       {
         success: true,
-        count: users.length,
+
         data: users,
+
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
+
+        filters: {
+          search,
+          designation,
+          district,
+          town,
+          unionCouncil,
+          supervisor,
+          isActive:
+            isActiveParam === "true"
+              ? true
+              : isActiveParam === "false"
+                ? false
+                : null,
+        },
       },
       { status: 200 },
     );

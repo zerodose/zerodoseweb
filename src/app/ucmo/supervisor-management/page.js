@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { getUsers } from "@/api/userApi";
+import { getUsers, transferWorkers } from "@/api/userApi";
 import { toast } from "sonner";
 import SupervisorSelection from "@/components/ucmo/supervisor-management/SupervisorSelection";
 import WorkerTransfer from "@/components/ucmo/supervisor-management/WorkerTransfer";
@@ -118,23 +118,23 @@ export default function SupervisorManagementPage() {
     );
   };
 
-const moveToRight = () => {
-  if (!toSupervisor) {
-    toast.error("Please select a To Supervisor first.");
-    return;
-  }
+  const moveToRight = () => {
+    if (!toSupervisor) {
+      toast.error("Please select a To Supervisor first.");
+      return;
+    }
 
-  if (!selectedWorkers.length) {
-    toast.error("Please select at least one worker to transfer.");
-    return;
-  }
+    if (!selectedWorkers.length) {
+      toast.error("Please select at least one worker to transfer.");
+      return;
+    }
 
-  setTransferredWorkers((prev) => [
-    ...new Set([...prev, ...selectedWorkers]),
-  ]);
+    setTransferredWorkers((prev) => [
+      ...new Set([...prev, ...selectedWorkers]),
+    ]);
 
-  setSelectedWorkers([]);
-};
+    setSelectedWorkers([]);
+  };
 
   const moveToLeft = () => {
     if (!transferredWorkers.length) return;
@@ -181,7 +181,36 @@ const moveToRight = () => {
     await transferWorkers(payload);
   */
 
-    toast.success("Worker transfer API will be connected here.");
+    try {
+      const response = await transferWorkers(payload);
+
+      if (response?.success) {
+        toast.success(response.message || "Workers transferred successfully.");
+
+        setSelectedWorkers([]);
+        setTransferredWorkers([]);
+        setTransferDetails({});
+
+        // Latest workers/supervisors dobara load karne ke liye
+        const usersResponse = await getUsers();
+
+        const data = Array.isArray(usersResponse)
+          ? usersResponse
+          : usersResponse?.users || usersResponse?.data || [];
+
+        setUsers(data);
+
+        return;
+      }
+
+      toast.error(response?.message || "Failed to transfer workers.");
+    } catch (error) {
+      console.error("Worker transfer error:", error);
+
+      toast.error(
+        error?.response?.data?.message || "Failed to transfer workers.",
+      );
+    }
 
     setSelectedWorkers([]);
     setTransferredWorkers([]);
@@ -189,23 +218,23 @@ const moveToRight = () => {
 
   return (
     <div className="m-auto max-w-7xl space-y-6">
-      <div className="flex flex-col items-start gap-3">
+     
+      <div className="flex items-start gap-3">
         <button
           type="button"
           onClick={() => router.back()}
-          className="border-border bg-background text-text hover:bg-surface mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition"
-          title="Go back"
+          className="border-border bg-background text-text hover:bg-primary-light hover:text-primary mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-sm transition-all duration-200"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft size={18} />
         </button>
 
         <div>
-          <h1 className="text-text text-2xl font-semibold">
-            Supervisor Management
+          <h1 className="text-text text-2xl font-bold tracking-tight md:text-3xl">
+           Supervisor Management
           </h1>
 
           <p className="text-text-secondary mt-1 text-sm">
-            Transfer individual workers between supervisors.
+             Transfer individual workers between supervisors.
           </p>
         </div>
       </div>

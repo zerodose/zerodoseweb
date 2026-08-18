@@ -61,7 +61,7 @@ export default function Page() {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-6 bg=">
+    <div className="bg= min-h-screen p-4 md:p-6">
       {/* =====================================================
           Header
       ===================================================== */}
@@ -88,8 +88,8 @@ export default function Page() {
           Form
       ===================================================== */}
 
-      <div className="mx-auto max-w-3xl bg-background">
-        <div className=" border-border rounded-2xl border p-5 md:p-6">
+      <div className="bg-background mx-auto max-w-3xl">
+        <div className="border-border rounded-2xl border p-5 md:p-6">
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* =================================================
                 Worker Information

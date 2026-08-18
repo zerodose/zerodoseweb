@@ -32,7 +32,6 @@ export default function ZerodoseForm() {
 
   const [loading, setLoading] = useState(false);
   const [checkingCampaign, setCheckingCampaign] = useState(true);
-
   // ============================================================
   // Check Current Campaign
   // ============================================================
@@ -245,7 +244,6 @@ export default function ZerodoseForm() {
         age,
         address: formData.address.trim(),
         contactNo: contactNo || null,
-        day,
         location,
       };
 
@@ -283,10 +281,94 @@ export default function ZerodoseForm() {
 
   if (checkingCampaign) {
     return (
-      <div className="flex min-h-[300px] items-center justify-center">
-        <p className="text-text-secondary text-sm">
-          Checking current campaign...
-        </p>
+      <div className="w-full animate-pulse">
+        {/* ========================================================
+          Header Skeleton
+      ======================================================== */}
+
+        <div className="mt-4 mb-6 flex items-start gap-3">
+          {/* Back button */}
+          <div className="bg-surface mt-1 h-9 w-9 shrink-0 rounded-lg" />
+
+          <div className="flex-1">
+            {/* Title */}
+            <div className="bg-surface h-7 w-40 rounded-md" />
+
+            {/* Description */}
+            <div className="bg-surface mt-2 h-4 w-56 rounded-md" />
+          </div>
+        </div>
+
+        {/* ========================================================
+          Form Card Skeleton
+      ======================================================== */}
+
+        <div className="border-border bg-background rounded-xl border shadow-sm">
+          {/* ======================================================
+            Child Information
+        ====================================================== */}
+
+          <div className="p-5 sm:p-6">
+            {/* Section Header */}
+            <div className="mb-5 flex items-center gap-3">
+              {/* Icon */}
+              <div className="bg-surface h-10 w-10 shrink-0 rounded-lg" />
+
+              <div className="flex-1">
+                {/* Heading */}
+                <div className="bg-surface h-5 w-36 rounded-md" />
+
+                {/* Description */}
+                <div className="bg-surface mt-2 h-4 w-52 rounded-md" />
+              </div>
+            </div>
+
+            {/* Fields */}
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              {/* Child Name */}
+              <div>
+                <div className="bg-surface mb-2 h-4 w-24 rounded-md" />
+                <div className="bg-surface h-11 w-full rounded-lg" />
+              </div>
+
+              {/* Father Name */}
+              <div>
+                <div className="bg-surface mb-2 h-4 w-24 rounded-md" />
+                <div className="bg-surface h-11 w-full rounded-lg" />
+              </div>
+
+              {/* Age */}
+              <div>
+                <div className="bg-surface mb-2 h-4 w-28 rounded-md" />
+                <div className="bg-surface h-11 w-full rounded-lg" />
+              </div>
+
+              {/* Contact */}
+              <div>
+                <div className="bg-surface mb-2 h-4 w-24 rounded-md" />
+                <div className="bg-surface h-11 w-full rounded-lg" />
+              </div>
+            </div>
+
+            {/* Address */}
+            <div className="mt-5">
+              <div className="bg-surface mb-2 h-4 w-20 rounded-md" />
+              <div className="bg-surface h-[76px] w-full rounded-lg" />
+            </div>
+          </div>
+
+          {/* ======================================================
+            Buttons Skeleton
+        ====================================================== */}
+
+          <div className="border-border flex flex-col-reverse gap-3 border-t p-5 sm:flex-row sm:justify-end sm:p-6">
+            {/* Cancel */}
+            <div className="bg-surface h-11 w-full rounded-lg sm:w-24" />
+
+            {/* Add */}
+            <div className="bg-surface h-11 w-full rounded-lg sm:w-32" />
+          </div>
+        </div>
       </div>
     );
   }

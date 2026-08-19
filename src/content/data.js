@@ -265,7 +265,7 @@ export const dashboardRoutes = {
   supervisor: "/supervisor",
   ucmo: "/ucmo",
   otherStaff: "/otherStaff",
-  townFP: "/townFP",
-  districtFP: "/districtFP",
+  townFP: "/townfp",
+  districtFP: "/districtfp",
   vaccinator: "/vaccinator",
 };

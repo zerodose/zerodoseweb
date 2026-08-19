@@ -158,9 +158,7 @@ export async function PUT(request, { params }) {
         : existingUser.district?.toString() || null;
 
     const finalTown =
-      town !== undefined
-        ? town || null
-        : existingUser.town?.toString() || null;
+      town !== undefined ? town || null : existingUser.town?.toString() || null;
 
     const finalUnionCouncil =
       unionCouncil !== undefined
@@ -248,10 +246,7 @@ export async function PUT(request, { params }) {
     // =================================================
 
     if (requiresDistrict) {
-      if (
-        !finalDistrict ||
-        !mongoose.Types.ObjectId.isValid(finalDistrict)
-      ) {
+      if (!finalDistrict || !mongoose.Types.ObjectId.isValid(finalDistrict)) {
         return NextResponse.json(
           {
             success: false,
@@ -302,7 +297,7 @@ export async function PUT(request, { params }) {
 
     if (!requiresUnionCouncil && finalUnionCouncil !== null) {
       if (designation !== undefined || unionCouncil !== undefined) {
-        // For townFP/districtFP/admin, UC must not be retained.
+        // For townFP/districtfp/admin, UC must not be retained.
         // It will be cleared below.
       }
     }
@@ -398,9 +393,7 @@ export async function PUT(request, { params }) {
     // =================================================
 
     const finalEmail =
-      email !== undefined
-        ? email?.trim().toLowerCase()
-        : existingUser.email;
+      email !== undefined ? email?.trim().toLowerCase() : existingUser.email;
 
     if (finalDesignation !== "worker" && !finalEmail) {
       return NextResponse.json(
@@ -618,9 +611,7 @@ export async function PUT(request, { params }) {
         supervisor !== undefined ? supervisor : existingUser.supervisor;
 
       updateData.teamNumber =
-        teamNumber !== undefined
-          ? Number(teamNumber)
-          : existingUser.teamNumber;
+        teamNumber !== undefined ? Number(teamNumber) : existingUser.teamNumber;
     } else {
       updateData.supervisor = null;
       updateData.teamNumber = null;

@@ -128,11 +128,29 @@ export default function LoginForm() {
         name: user.name,
         designation: user.designation,
 
-        unionCouncil: user.unionCouncil || null,
-
         locationPermission,
         expiresAt,
       };
+
+      // ============================================================
+      // Location Based on Designation
+      // ============================================================
+
+      if (user.designation === "districtFP") {
+        authUser.district = user.district || null;
+      }
+
+      if (user.designation === "townFP") {
+        authUser.town = user.town || null;
+      }
+
+      if (["ucmo", "supervisor", "vaccinator"].includes(user.designation)) {
+        authUser.unionCouncil = user.unionCouncil || null;
+      }
+
+      // ============================================================
+      // Worker Specific Data
+      // ============================================================
 
       if (user.designation === "worker") {
         authUser.teamNumber =
@@ -144,7 +162,6 @@ export default function LoginForm() {
       }
 
       localStorage.setItem("authUser", JSON.stringify(authUser));
-
       // =================================================
       // Successful Login
       // =================================================

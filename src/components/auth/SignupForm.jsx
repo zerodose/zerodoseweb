@@ -348,11 +348,6 @@ export default function SignupForm() {
 
         contactNumber: data.contactNumber,
 
-        // -------------------------------------------------
-        // Location
-        // Only send fields required by designation
-        // -------------------------------------------------
-
         district: requiresDistrict ? data.district : null,
 
         town: requiresTown ? data.town : null,
@@ -372,9 +367,7 @@ export default function SignupForm() {
         const email = response?.data?.email || data.email.trim().toLowerCase();
 
         setVerificationEmail(email);
-
         setVerificationError("");
-
         setShowVerifyModal(true);
 
         toast.info("Verification code sent!", {
@@ -387,9 +380,8 @@ export default function SignupForm() {
         });
       }
     } catch (error) {
-      console.error("Signup error:", error);
-
-      console.error("Response:", error?.response?.data);
+      // console.error("Signup error:", error);
+      // console.error("Response:", error?.response?.data);
 
       const message =
         error?.response?.data?.message ||

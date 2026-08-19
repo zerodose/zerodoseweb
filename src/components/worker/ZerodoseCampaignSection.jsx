@@ -379,22 +379,22 @@ export default function ZerodoseCampaignSection({
           Section Header
       ========================================================= */}
 
-      <div className="border-border bg-white flex items-center justify-between gap-3 border-b p-4 md:p-5">
+      <div className="border-border flex items-center justify-between gap-3 border-b bg-white p-4 md:p-5">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 shrink-0 text-primary" />
+            <Users className="text-text-secondary h-5 w-5 shrink-0" />
 
-            <h2 className="text-lg font-semibold text-primary">{title}</h2>
+            <h2 className="text-text text-lg font-semibold">{title}</h2>
           </div>
 
-          <p className="mt-1 text-sm text-primary">{description}</p>
+          <p className="text-text-secondary mt-1 text-sm">{description}</p>
         </div>
 
         <button
           type="button"
           onClick={onRefresh}
           disabled={loading}
-          className="border-border bg-primary text-white hover:bg-background flex w-fit shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
+          className="border-border bg-primary hover:bg-primary-dark flex w-fit shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-50"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           Refresh

@@ -131,6 +131,11 @@ export const supervisorSidebar = [
   },
 
   {
+    title: "Add Worker",
+    href: "/supervisor/addworker",
+    icon: Users,
+  },
+  {
     title: "Workers",
     href: "/supervisor/workers",
     icon: Users,

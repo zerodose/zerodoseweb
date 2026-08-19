@@ -94,7 +94,7 @@ export default function WorkerPageHeader({
               teamNumber !== null &&
               supervisorName && <span>•</span>}
 
-            {supervisorName && <span>Supervisor: {supervisorName} Code: {supervisorCode} </span>}
+            {supervisorName && <span className="capitalize">Supervisor: {supervisorName} Code: {supervisorCode} </span>}
           </div>
         </div>
 

@@ -67,7 +67,7 @@ export async function POST(request) {
     })
       .select("+password")
       .populate("unionCouncil", "_id name code")
-      .populate("supervisor", "_id name supervisorCode");
+      .populate("supervisor", "_id name contactNumber");
     console.log("LOGIN USER:", user.toObject());
 
     if (!user) {

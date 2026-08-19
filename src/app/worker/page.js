@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import WorkerHeader from "@/components/worker/WorkerHeader";
 import CurrentCampaignCard from "@/components/worker/CurrentCampaignCard";
 import ZerodoseStats from "@/components/worker/ZerodoseStats";
 import WorkerActions from "@/components/worker/WorkerActions";

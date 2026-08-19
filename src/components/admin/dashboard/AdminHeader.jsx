@@ -97,7 +97,7 @@ export default function AdminHeader({ onMenuClick }) {
   };
 
   return (
-    <header className="border-border bg-background relative z-30 flex h-16 shrink-0 items-center justify-between border-b px-3 sm:px-5 md:px-6">
+    <header className="border-border bg-background relative z-10 flex h-16 shrink-0 items-center justify-between border-b px-3 sm:px-5 md:px-6">
       {/* ======================================================
           Left Side
       ====================================================== */}

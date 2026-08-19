@@ -6,49 +6,25 @@ import {
   Megaphone,
   Database,
   Ad,
+  MapPinned,
+  Building2,
+  Syringe,
+  Map,
+  ClipboardCheck,
 } from "lucide-react";
 
 export const dashboardSidebar = [
-  // =====================================================
-  // Dashboard
-  // =====================================================
 
   {
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
   },
-
-  // =====================================================
-  // Users
-  // =====================================================
-
-  // {
-  //   title: "Users",
-  //   icon: Users,
-  //   children: [
-  //     {
-  //       title: "All Users",
-  //       href: "/dashboard/users",
-  //       icon: Users,
-  //     },
-  //     {
-  //       title: "Add User",
-  //       href: "/dashboard/users/create",
-  //       icon: Users,
-  //     },
-  //   ],
-  // },
   {
     title: "Users",
     href: "/dashboard/users",
     icon: Users,
   },
-
-  // =====================================================
-  // Locations
-  // =====================================================
-
   {
     title: "Campaigns",
     href: "/dashboard/campaigns",
@@ -57,24 +33,27 @@ export const dashboardSidebar = [
   {
     title: "Districts",
     href: "/dashboard/districts",
-    icon: MapPin,
+    icon: Map,
   },
-
   {
     title: "Towns",
     href: "/dashboard/towns",
-    icon: MapPin,
+    icon: Building2,
   },
-
   {
     title: "Union Councils",
     href: "/dashboard/unioncouncils",
-    icon: MapPin,
+    icon: MapPinned,
   },
   {
     title: "Zerodose",
     href: "/dashboard/zerodose",
-    icon: MapPin,
+    icon: Syringe,
+  },
+  {
+    title: "Pending Approvals",
+    href: "/dashboard/pedingapprovals",
+    icon: ClipboardCheck,
   },
 
   // =====================================================
@@ -279,3 +258,14 @@ export const previousCampaigns = [
     ],
   },
 ];
+
+export const dashboardRoutes = {
+  admin: "/dashboard",
+  worker: "/worker",
+  supervisor: "/supervisor",
+  ucmo: "/ucmo",
+  otherStaff: "/otherStaff",
+  townFP: "/townFP",
+  districtFP: "/districtFP",
+  vaccinator: "/vaccinator",
+};

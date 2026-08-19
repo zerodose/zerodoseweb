@@ -6,7 +6,7 @@ import Link from "next/link";
 import { getCampaigns } from "@/api/campaignApi";
 import { getZerodoses } from "@/api/zerodoseApi";
 import { getUsers } from "@/api/userApi";
-import { getPendingSupervisorApprovals } from "@/api/supervisorApprovalApi";
+import { getPendingUserApprovals } from "@/api/userApi";
 
 import UCMOSummaryCards from "@/components/ucmo/UCMOSummaryCards";
 import UCMOActions from "@/components/ucmo/UCMOActions";
@@ -206,7 +206,7 @@ export default function Page() {
 
         if (authUnionCouncilId) {
           const approvalsResponse =
-            await getPendingSupervisorApprovals(authUnionCouncilId);
+            await getPendingUserApprovals(authUnionCouncilId);
 
           if (!approvalsResponse?.success) {
             throw new Error(

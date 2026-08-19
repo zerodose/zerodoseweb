@@ -78,15 +78,16 @@ export default function AdminLayout({ children }) {
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-surface">
+    <div className="bg-surface flex h-screen w-full overflow-visible">
       {/* =================================================
           Desktop Sidebar
       ================================================= */}
 
       <div
-        className="hidden shrink-0 overflow-hidden transition-[width] duration-300 ease-in-out md:block"
+        className="relative z-50 hidden shrink-0 overflow-visible md:block"
         style={{
           width: sidebar.width,
+          transition: "width 350ms cubic-bezier(0.4, 0, 0.2, 1)",
         }}
       >
         <AdminSidebar
@@ -121,8 +122,8 @@ export default function AdminLayout({ children }) {
 
         {/* Page Content */}
 
-        <main className="min-h-0 flex-1 overflow-y-auto bg-surface">
-          <div className="p-4 ">{children}</div>
+        <main className="bg-surface min-h-0 flex-1 overflow-y-auto">
+          <div className="p-4">{children}</div>
         </main>
       </div>
     </div>

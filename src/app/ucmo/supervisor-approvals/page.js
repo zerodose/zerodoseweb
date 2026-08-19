@@ -12,9 +12,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import {
-  getPendingSupervisorApprovals,
-  updateSupervisorApproval,
-} from "@/api/supervisorApprovalApi";
+  getPendingUserApprovals,
+  updateUserApproval,
+} from "@/api/userApi";
 
 import SupervisorApprovalCard from "@/components/ucmo/SupervisorApprovalCard";
 import ClientPageHeader from "@/components/ui/ClientPageHeader";
@@ -100,7 +100,7 @@ export default function Page() {
         );
       }
 
-      const response = await getPendingSupervisorApprovals(unionCouncilId);
+      const response = await getPendingUserApprovals(unionCouncilId, "supervisor");
 
       if (!response?.success) {
         throw new Error(
@@ -154,7 +154,7 @@ export default function Page() {
     try {
       setProcessingId(supervisorId);
 
-      const response = await updateSupervisorApproval(supervisorId, status);
+      const response = await updateUserApproval(supervisorId, status);
 
       if (!response?.success) {
         throw new Error(

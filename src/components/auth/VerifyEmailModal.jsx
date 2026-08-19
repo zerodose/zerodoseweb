@@ -82,39 +82,8 @@ export default function VerifyEmailModal({
   }
 
   return (
-    <div
-      className="
-        fixed
-        inset-0
-        z-[100]
-        flex
-        items-center
-        justify-center
-        bg-black/40
-        px-4
-        py-6
-        backdrop-blur-sm
-      "
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !loading) {
-          onClose?.();
-        }
-      }}
-    >
-      <div
-        className="
-          relative
-          w-full
-          max-w-md
-          rounded-2xl
-          border
-          border-border
-          bg-background
-          p-6
-          shadow-xl
-          sm:p-8
-        "
-      >
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4 py-6 backdrop-blur-sm">
+      <div className="border-border bg-background relative w-full max-w-md rounded-2xl border p-6 shadow-xl sm:p-8">
         {/* ======================================================
             Close
         ====================================================== */}
@@ -123,19 +92,7 @@ export default function VerifyEmailModal({
           type="button"
           onClick={onClose}
           disabled={loading}
-          className="
-            absolute
-            right-4
-            top-4
-            rounded-lg
-            p-2
-            text-muted
-            transition
-            hover:bg-surface
-            hover:text-text
-            disabled:cursor-not-allowed
-            disabled:opacity-50
-          "
+          className="text-muted hover:bg-surface hover:text-text absolute top-4 right-4 rounded-lg p-2 transition disabled:cursor-not-allowed disabled:opacity-50"
           aria-label="Close"
         >
           <X size={20} />
@@ -146,30 +103,17 @@ export default function VerifyEmailModal({
         ====================================================== */}
 
         <div className="text-center">
-          <div
-            className="
-              mx-auto
-              mb-4
-              flex
-              h-14
-              w-14
-              items-center
-              justify-center
-              rounded-full
-              bg-primary-light
-              text-primary
-            "
-          >
+          <div className="bg-primary-light text-primary mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full">
             <span className="text-xl font-bold">@</span>
           </div>
 
-          <h2 className="text-xl font-semibold text-text">Verify your email</h2>
+          <h2 className="text-text text-xl font-semibold">Verify your email</h2>
 
-          <p className="mt-2 text-sm leading-6 text-text-secondary">
+          <p className="text-text-secondary mt-2 text-sm leading-6">
             We sent a 6-digit verification code to
           </p>
 
-          <p className="mt-1 break-all text-sm font-medium text-text">
+          <p className="text-text mt-1 text-sm font-medium break-all">
             {email}
           </p>
         </div>
@@ -181,7 +125,7 @@ export default function VerifyEmailModal({
         <form onSubmit={handleSubmit} className="mt-6">
           <label
             htmlFor="verificationCode"
-            className="mb-2 block text-sm font-medium text-text"
+            className="text-text mb-2 block text-sm font-medium"
           >
             Verification Code
           </label>
@@ -198,29 +142,7 @@ export default function VerifyEmailModal({
             placeholder="000000"
             maxLength={6}
             disabled={loading}
-            className="
-              w-full
-              rounded-lg
-              border
-              border-border
-              bg-input-background
-              px-4
-              py-3
-              text-center
-              text-2xl
-              font-semibold
-              tracking-[0.5em]
-              text-text
-              outline-none
-              transition
-              placeholder:text-muted
-              placeholder:tracking-[0.5em]
-              focus:border-primary
-              focus:ring-2
-              focus:ring-primary-light
-              disabled:cursor-not-allowed
-              disabled:opacity-60
-            "
+            className="border-border bg-input-background text-text placeholder:text-muted focus:border-primary focus:ring-primary-light w-full rounded-lg border px-4 py-3 text-center text-2xl font-semibold tracking-[0.5em] transition outline-none placeholder:tracking-[0.5em] focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
           />
 
           {/* ====================================================
@@ -238,21 +160,7 @@ export default function VerifyEmailModal({
           <button
             type="submit"
             disabled={loading || code.length !== 6}
-            className="
-              mt-5
-              w-full
-              rounded-lg
-              bg-primary
-              px-4
-              py-3
-              text-sm
-              font-semibold
-              text-primary-foreground
-              transition
-              hover:bg-primary-dark
-              disabled:cursor-not-allowed
-              disabled:opacity-60
-            "
+            className="bg-primary text-primary-foreground hover:bg-primary-dark mt-5 w-full rounded-lg px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Verifying..." : "Verify Email"}
           </button>
@@ -263,7 +171,7 @@ export default function VerifyEmailModal({
         ====================================================== */}
 
         <div className="mt-5 text-center">
-          <p className="text-sm text-text-secondary">
+          <p className="text-text-secondary text-sm">
             Didn't receive the code?
           </p>
 
@@ -271,16 +179,7 @@ export default function VerifyEmailModal({
             type="button"
             onClick={onResend}
             disabled={loading || resendLoading}
-            className="
-              mt-1
-              text-sm
-              font-semibold
-              text-primary
-              transition
-              hover:text-primary-dark
-              disabled:cursor-not-allowed
-              disabled:opacity-50
-            "
+            className="text-primary hover:text-primary-dark mt-1 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
           >
             {resendLoading ? "Sending..." : "Resend Code"}
           </button>

@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { dashboardSidebar } from "@/content/data";
 import Image from "next/image";
+import { getPendingDistrictFPApprovalCount } from "@/api/userApi";
 
 export default function AdminSidebar({
   collapsed,
@@ -15,6 +16,7 @@ export default function AdminSidebar({
 }) {
   const pathname = usePathname();
   const [openMenus, setOpenMenus] = useState({});
+  const [pendingApprovalCount, setPendingApprovalCount] = useState(0);
 
   // Automatically open active parent
   useEffect(() => {
@@ -32,6 +34,22 @@ export default function AdminSidebar({
         }));
       }
     });
+  }, [pathname]);
+
+  useEffect(() => {
+    const loadPendingApprovalCount = async () => {
+      try {
+        const response = await getPendingDistrictFPApprovalCount();
+
+        setPendingApprovalCount(response?.count || 0);
+      } catch (error) {
+        console.error("Get pending approval count error:", error);
+
+        setPendingApprovalCount(0);
+      }
+    };
+
+    loadPendingApprovalCount();
   }, [pathname]);
 
   // Close mobile sidebar when screen becomes desktop
@@ -78,13 +96,13 @@ export default function AdminSidebar({
           type="button"
           aria-label="Close menu"
           onClick={() => setMobileOpen(false)}
-          className="fixed inset-0 z-40 cursor-default bg-black/40 backdrop-blur-[2px] md:hidden"
+          className="fixed inset-0 z-[999] cursor-default bg-black/40 backdrop-blur-[2px] md:hidden"
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`border-border bg-background fixed inset-y-0 left-0 z-50 flex h-screen w-[256px] flex-col overflow-hidden border-r shadow-xl transition-transform duration-300 ease-in-out md:static md:z-auto md:h-full md:w-full md:translate-x-0 md:border-r-0 md:shadow-none ${
+        className={`border-border bg-background fixed inset-y-0 left-0 z-50 flex h-screen w-[256px] flex-col border-r shadow-xl transition-transform duration-300 ease-in-out md:static md:z-auto md:h-full md:w-full md:translate-x-0 md:border-r-0 md:shadow-none ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -97,7 +115,7 @@ export default function AdminSidebar({
             }`}
           >
             {/* Logo */}
-            <div className="text-primary-foreground flex  shrink-0 items-center justify-center rounded-lg text-sm font-bold">
+            <div className="text-primary-foreground flex shrink-0 items-center justify-center rounded-lg text-sm font-bold">
               <Image
                 src="/images/logo.png"
                 alt="Zerodose Logo"
@@ -110,7 +128,7 @@ export default function AdminSidebar({
 
             {/* Brand */}
             <div
-              className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${
+              className={`overflow-visible whitespace-nowrap transition-all duration-300 ${
                 collapsed ? "md:w-0 md:opacity-0" : "md:w-auto md:opacity-100"
               }`}
             >
@@ -120,14 +138,19 @@ export default function AdminSidebar({
           </div>
 
           {/* Desktop Toggle */}
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="text-text-secondary hover:bg-surface hover:text-text absolute top-4 right-2 z-50 hidden h-9 w-9 items-center justify-center rounded-lg transition md:flex"
-          >
-            <Menu size={20} />
-          </button>
+         <button
+  type="button"
+  onClick={onToggle}
+  aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+  className="text-text-secondary hover:bg-surface hover:text-text border-border bg-background absolute top-15 -right-4.5 z-50 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border shadow-md transition-all duration-300 ease-in-out md:flex"
+>
+  <ChevronLeft
+    size={20}
+    className={`transition-transform duration-300 ease-in-out ${
+      collapsed ? "rotate-180" : "rotate-0"
+    }`}
+  />
+</button>
 
           {/* Mobile Close */}
           <button
@@ -217,13 +240,27 @@ export default function AdminSidebar({
                       >
                         {item.title}
                       </span>
+
+                      {item.title === "Pending Approvals" &&
+                        !collapsed &&
+                        pendingApprovalCount > 0 && (
+                          <span
+                            className={`ml-auto flex h-5 min-w-5 items-center justify-center rounded-lg px-1.5 text-[10px] font-bold ${
+                              active
+                                ? "text-primary bg-white"
+                                : "bg-surface text-text"
+                            }`}
+                          >
+                            {pendingApprovalCount}
+                          </span>
+                        )}
                     </Link>
                   )}
 
                   {/* Children */}
                   {hasChildren && (
                     <div
-                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                      className={`overflow-visible transition-all duration-300 ease-in-out ${
                         openMenus[item.title] && !collapsed
                           ? "max-h-96 opacity-100"
                           : "max-h-0 opacity-0"

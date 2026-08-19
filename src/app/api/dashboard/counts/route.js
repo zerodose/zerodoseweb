@@ -50,6 +50,8 @@ export async function GET(request) {
       "workers",
       "vaccinators",
       "otherStaff",
+      "townFP",
+      "districtFP",
       "admins",
 
       "teams",
@@ -279,6 +281,8 @@ export async function GET(request) {
       workers: "worker",
       vaccinators: "vaccinator",
       otherStaff: "otherStaff",
+      townFP: "townFP",
+      districtFP: "districtFP",
       admins: "admin",
     };
 

@@ -105,14 +105,24 @@ export async function POST(request) {
       );
     }
 
-    if (
-      ["supervisor", "vaccinator"].includes(user.designation) &&
-      user.approvalStatus !== "approved"
-    ) {
+    const APPROVAL_HIERARCHY = {
+      ucmo: "townFP",
+      supervisor: "ucmo",
+      vaccinator: "ucmo",
+      otherStaff: "townFP",
+      townFP: "districtFP",
+      districtFP: "admin",
+      worker: null,
+      admin: null,
+    };
+
+    const requiredApprover = APPROVAL_HIERARCHY[user.designation];
+
+    if (requiredApprover && user.approvalStatus !== "approved") {
       return NextResponse.json(
         {
           success: false,
-          message: "Your account is waiting for UCMO approval.",
+          message: `Your account is waiting for ${requiredApprover} approval.`,
         },
         { status: 403 },
       );
@@ -125,9 +135,9 @@ export async function POST(request) {
     const token = await new SignJWT({
       userId: user._id.toString(),
       designation: user.designation,
-      district: user.district.toString(),
-      town: user.town.toString(),
-      unionCouncil: user.unionCouncil.toString(),
+      district: user.district?.toString() || null,
+      town: user.town?.toString() || null,
+      unionCouncil: user.unionCouncil?.toString() || null,
     })
       .setProtectedHeader({
         alg: "HS256",
@@ -149,8 +159,6 @@ export async function POST(request) {
       town: user.town,
       unionCouncil: user.unionCouncil,
       designation: user.designation,
-      // Worker fields
-      // Worker fields
       teamNumber: user.teamNumber ?? null,
 
       supervisor: user.supervisor

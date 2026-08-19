@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 
-export async function PATCH(request) {
+export async function PUT(request) {
   try {
     await connectDB();
 

@@ -10,6 +10,7 @@ import { loginUser } from "@/api/authApi";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/ui/Loader";
 import { requestLocationPermission } from "@/utils/locationPermission";
+import { dashboardRoutes } from "@/content/data";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -21,15 +22,6 @@ export default function LoginForm() {
   // =====================================================
   // Dashboard Routes
   // =====================================================
-
-  const dashboardRoutes = {
-    admin: "/dashboard",
-    worker: "/worker",
-    supervisor: "/supervisor",
-    ucmo: "/ucmo",
-    otherStaff: "/otherStaff",
-    vaccinator: "/vaccinator",
-  };
 
   // =====================================================
   // React Hook Form

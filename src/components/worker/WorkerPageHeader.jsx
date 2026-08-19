@@ -84,10 +84,16 @@ export default function WorkerPageHeader({
   // Supervisor Display
   // ============================================================
 
-  const supervisorDisplay = supervisorCode
-    ? `Supervisor Code: ${supervisorCode}`
-    : supervisorName
-      ? `Supervisor: ${supervisorName}`
+  // const supervisorDisplay = supervisorCode
+  //   ? `Supervisor Code: ${supervisorCode}`
+  //   : supervisorName
+  //     ? `Supervisor: ${supervisorName}`
+  //     : null;
+  const supervisorDisplay =
+    supervisorName || supervisorCode
+      ? `Supervisor: ${supervisorName || "-"}${
+          supervisorCode ? ` (${supervisorCode})` : ""
+        }`
       : null;
 
   return (

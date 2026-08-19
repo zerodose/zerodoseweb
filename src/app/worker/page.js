@@ -212,6 +212,7 @@ export default function Page() {
         name={worker?.name}
         teamNumber={worker?.teamNumber}
         supervisorName={worker?.supervisor?.name}
+        supervisorCode={worker?.supervisor?.supervisorCode}
       />
 
       {error && (

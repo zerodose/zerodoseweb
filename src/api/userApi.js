@@ -84,6 +84,16 @@ export async function updateUser(id, data) {
 }
 
 // ============================================================
+// Change User Passoword
+// ============================================================
+
+export const changePassword = async (userId, data) => {
+  const response = await api.put(`/users/${userId}/password`, data);
+
+  return response.data;
+};
+
+// ============================================================
 // Soft Delete User
 // ============================================================
 

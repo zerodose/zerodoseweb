@@ -27,7 +27,7 @@ export default function CurrentCampaignCard({
                 {campaign.name}
               </h2>
 
-              <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/85">
+              <div className="mt-1 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/85">
                 <span>{formatDate(campaign.startDate)}</span>
 
                 <span className="text-white/50">→</span>

@@ -211,8 +211,8 @@ export default function Page() {
       <WorkerPageHeader
         name={worker?.name}
         teamNumber={worker?.teamNumber}
-        supervisorName={worker?.supervisor?.name}
-        supervisorCode={worker?.supervisor?.supervisorCode}
+        supervisorName={worker?.supervisorId?.name}
+        supervisorCode={worker?.supervisorId?.supervisorCode}
       />
 
       {error && (

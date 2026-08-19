@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 
 import { getZerodose } from "@/api/zerodoseApi";
+import WorkerPageSkeleton from "@/components/worker/WorkerPageSkeleton";
 
 export default function ZerodoseDetailPage() {
   const params = useParams();
@@ -130,28 +131,7 @@ export default function ZerodoseDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div className="w-full animate-pulse">
-        <div className="mt-4 mb-6 flex items-start gap-3">
-          <div className="bg-surface h-9 w-9 rounded-lg" />
-
-          <div className="flex-1">
-            <div className="bg-surface h-7 w-48 rounded-md" />
-            <div className="bg-surface mt-2 h-4 w-64 rounded-md" />
-          </div>
-        </div>
-
-        <div className="border-border bg-background rounded-2xl border p-5 shadow-sm md:p-6">
-          <div className="bg-surface h-20 rounded-xl" />
-
-          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-            {[1, 2, 3, 4, 5, 6].map((item) => (
-              <div key={item} className="bg-surface h-16 rounded-xl" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <WorkerPageSkeleton />;
   }
 
   if (!zerodose) {
@@ -159,10 +139,6 @@ export default function ZerodoseDetailPage() {
   }
 
   const status = getStatus();
-
-  if (loadingCampaign || loadingZerodose) {
-    return <WorkerPageSkeleton />;
-  }
 
   return (
     <div className="w-full px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">

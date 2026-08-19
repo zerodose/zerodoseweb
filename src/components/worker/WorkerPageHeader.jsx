@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   User,
   LogOut,
@@ -17,6 +18,7 @@ export default function WorkerPageHeader({
   supervisorCode,
   supervisorName,
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -60,41 +62,11 @@ export default function WorkerPageHeader({
   // Logout
   // ============================================================
 
-  const handleLogout = async () => {
-    try {
-      setLoggingOut(true);
-
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Logout failed.");
-      }
-
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Logout error:", error);
-      setLoggingOut(false);
-    }
+  const handleLogout = () => {
+    setProfileOpen(false);
+    localStorage.removeItem("authUser");
+    router.push("/");
   };
-
-  // ============================================================
-  // Supervisor Display
-  // ============================================================
-
-  // const supervisorDisplay = supervisorCode
-  //   ? `Supervisor Code: ${supervisorCode}`
-  //   : supervisorName
-  //     ? `Supervisor: ${supervisorName}`
-  //     : null;
-  const supervisorDisplay =
-    supervisorName || supervisorCode
-      ? `Supervisor: ${supervisorName || "-"}${
-          supervisorCode ? ` (${supervisorCode})` : ""
-        }`
-      : null;
 
   return (
     <>
@@ -122,7 +94,7 @@ export default function WorkerPageHeader({
               teamNumber !== null &&
               supervisorName && <span>•</span>}
 
-            {supervisorName && <span>Supervisor: {supervisorName}</span>}
+            {supervisorName && <span>Supervisor: {supervisorName} Code: {supervisorCode} </span>}
           </div>
         </div>
 

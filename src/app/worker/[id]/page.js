@@ -161,7 +161,7 @@ export default function ZerodoseDetailPage() {
   const status = getStatus();
 
   return (
-    <div className="w-full">
+    <div className="w-full px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
       {/* =========================================================
           Header
       ========================================================= */}
@@ -186,22 +186,6 @@ export default function ZerodoseDetailPage() {
                 View complete zerodose record information.
               </p>
             </div>
-
-            {/* =====================================================
-                Edit Button
-            ===================================================== */}
-
-            <button
-              type="button"
-              onClick={() =>
-                router.push(`/worker/viewzerodose/${zerodose._id}/edit`)
-              }
-              className="bg-primary hover:bg-primary-dark flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-medium text-white transition"
-            >
-              <Edit className="h-4 w-4" />
-
-              <span>Edit Zerodose</span>
-            </button>
           </div>
         </div>
       </div>
@@ -216,7 +200,7 @@ export default function ZerodoseDetailPage() {
         ======================================================= */}
 
         <div className="border-border bg-background rounded-2xl border shadow-sm">
-          <div className="p-5 md:p-6">
+          <div className="flex items-center justify-between p-5 md:p-6">
             <div className="flex items-start gap-4">
               <div className="bg-primary/10 text-primary flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl">
                 <Syringe className="h-7 w-7" />
@@ -239,6 +223,18 @@ export default function ZerodoseDetailPage() {
                   Zerodose Record
                 </p>
               </div>
+            </div>
+            <div>
+              <button
+                type="button"
+                onClick={() =>
+                  router.push(`/worker/viewzerodose/${zerodose._id}/update`)
+                }
+                className="border-border bg-background text-text-secondary hover:bg-surface hover:text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition"
+                title="Edit Zerodose"
+              >
+                <Edit className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
@@ -383,18 +379,6 @@ export default function ZerodoseDetailPage() {
 
           <DetailItem
             icon={User}
-            label="Team Leader"
-            value={zerodose.teamLeader?.name || "-"}
-          />
-
-          <DetailItem
-            icon={User}
-            label="Team Member"
-            value={zerodose.teamMember?.name || "-"}
-          />
-
-          <DetailItem
-            icon={User}
             label="Recorded By"
             value={zerodose.user?.name || "-"}
           />
@@ -482,23 +466,6 @@ export default function ZerodoseDetailPage() {
           </DetailSection>
         )}
       </div>
-
-      {/* =========================================================
-          Bottom Edit Button
-      ========================================================= */}
-
-      <div className="flex justify-end py-6">
-        <button
-          type="button"
-          onClick={() =>
-            router.push(`/worker/viewzerodose/${zerodose._id}/edit`)
-          }
-          className="bg-primary hover:bg-primary-dark flex h-11 items-center gap-2 rounded-lg px-5 text-sm font-medium text-white transition"
-        >
-          <Edit className="h-4 w-4" />
-          Edit Zerodose
-        </button>
-      </div>
     </div>
   );
 }
@@ -522,13 +489,12 @@ function DetailSection({ icon: Icon, title, description, children }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-x-6 gap-y-5 p-4 md:grid-cols-2 md:p-5">
+      <div className="grid grid-cols-1 gap-x-8 gap-y-6 p-4 sm:grid-cols-2 md:p-5">
         {children}
       </div>
     </section>
   );
 }
-
 /* ================================================================
    Detail Item
 ================================================================ */

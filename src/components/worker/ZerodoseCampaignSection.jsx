@@ -379,22 +379,22 @@ export default function ZerodoseCampaignSection({
           Section Header
       ========================================================= */}
 
-      <div className="border-border flex flex-col gap-3 border-b p-4 md:flex-row md:items-center md:justify-between md:p-5">
+      <div className="border-border bg-primary flex items-center justify-between gap-3 border-b p-4 md:p-5">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <Users className="text-primary h-5 w-5 shrink-0" />
+            <Users className="h-5 w-5 shrink-0 text-white" />
 
-            <h2 className="text-text text-lg font-semibold">{title}</h2>
+            <h2 className="text-lg font-semibold text-white">{title}</h2>
           </div>
 
-          <p className="text-text-secondary mt-1 text-sm">{description}</p>
+          <p className="mt-1 text-sm text-white/80">{description}</p>
         </div>
 
         <button
           type="button"
           onClick={onRefresh}
           disabled={loading}
-          className="border-border text-text hover:bg-background flex w-fit shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-fit shrink-0 items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           Refresh
@@ -443,12 +443,10 @@ export default function ZerodoseCampaignSection({
 
             return (
               <div
-  key={item._id}
-  onClick={() =>
-    router.push(`/worker/${item._id}`)
-  }
-  className="bg-background border-border hover:border-primary cursor-pointer rounded-xl border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md md:p-5"
->
+                key={item._id}
+                onClick={() => router.push(`/worker/${item._id}`)}
+                className="bg-background border-border hover:border-primary cursor-pointer rounded-xl border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md md:p-5"
+              >
                 {/* =================================================
                     Card Header
                 ================================================= */}

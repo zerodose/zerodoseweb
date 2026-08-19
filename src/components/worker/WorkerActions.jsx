@@ -97,7 +97,7 @@ export default function WorkerActions({ campaign }) {
     "bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11";
 
   return (
-    <section className="mb-6 grid grid-cols-2 gap-3 md:gap-4">
+    <section className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
       {/* =====================================================
           Add Zerodose
       ===================================================== */}
@@ -142,7 +142,7 @@ export default function WorkerActions({ campaign }) {
           View Zerodose
       ===================================================== */}
 
-      <Link href="/worker/viewzerodose" className={baseClass}>
+      {/* <Link href="/worker/viewzerodose" className={baseClass}>
         <div className={iconClass}>
           <Eye className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2} />
         </div>
@@ -158,7 +158,7 @@ export default function WorkerActions({ campaign }) {
         </div>
 
         <ChevronRight className="text-text-secondary ml-auto h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
-      </Link>
+      </Link> */}
     </section>
   );
 }

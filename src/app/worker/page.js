@@ -10,6 +10,7 @@ import ZerodoseCampaignSection from "@/components/worker/ZerodoseCampaignSection
 
 import { getZerodoses } from "@/api/zerodoseApi";
 import { getCampaigns } from "@/api/campaignApi";
+import WorkerPageHeader from "@/components/worker/WorkerPageHeader";
 
 export default function Page() {
   const [campaign, setCampaign] = useState(null);
@@ -208,10 +209,10 @@ export default function Page() {
 
   return (
     <div className="min-h-full p-4 md:p-6">
-      <WorkerHeader
+      <WorkerPageHeader
         name={worker?.name}
         teamNumber={worker?.teamNumber}
-        supervisorCode={worker?.supervisorCode}
+        supervisorName={worker?.supervisor?.name}
       />
 
       {error && (

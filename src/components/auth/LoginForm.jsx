@@ -131,19 +131,27 @@ export default function LoginForm() {
           ? localStorage.getItem("locationPermission") || "denied"
           : null;
 
-      localStorage.setItem(
-        "authUser",
-        JSON.stringify({
-          id: user._id || user.id,
-          name: user.name,
-          designation: user.designation,
+      const authUser = {
+        id: user._id || user.id,
+        name: user.name,
+        designation: user.designation,
 
-          unionCouncil: user.unionCouncil || null,
+        unionCouncil: user.unionCouncil || null,
 
-          locationPermission,
-          expiresAt,
-        }),
-      );
+        locationPermission,
+        expiresAt,
+      };
+
+      if (user.designation === "worker") {
+        authUser.teamNumber =
+          user.teamNumber !== undefined && user.teamNumber !== null
+            ? user.teamNumber
+            : null;
+
+        authUser.supervisorId = user.supervisor?._id || user.supervisor || null;
+      }
+
+      localStorage.setItem("authUser", JSON.stringify(authUser));
 
       // =================================================
       // Successful Login

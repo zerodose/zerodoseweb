@@ -28,7 +28,10 @@ function objectIdEquals(first, second) {
     return false;
   }
 
-  return first.toString() === second.toString();
+  const firstId = first?._id || first;
+  const secondId = second?._id || second;
+
+  return firstId.toString() === secondId.toString();
 }
 
 // ============================================================
@@ -176,18 +179,19 @@ function canAccessZerodose(user, zerodose) {
   // ==========================================================
 
   if (user.designation === "worker") {
-    if (!user.supervisor || user.teamNumber === null) {
+    if (
+      !user.supervisor ||
+      user.teamNumber === null ||
+      user.teamNumber === undefined
+    ) {
       return false;
     }
 
-    if (user.teamNumber === undefined) {
-      return false;
-    }
+    const sameSupervisor = objectIdEquals(user.supervisor, zerodose.supervisor);
 
-    return (
-      objectIdEquals(user.supervisor, zerodose.supervisor) &&
-      Number(user.teamNumber) === Number(zerodose.teamNumber)
-    );
+    const sameTeam = Number(user.teamNumber) === Number(zerodose.teamNumber);
+
+    return sameSupervisor && sameTeam;
   }
 
   // ==========================================================

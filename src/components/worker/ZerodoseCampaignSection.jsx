@@ -394,7 +394,7 @@ export default function ZerodoseCampaignSection({
           type="button"
           onClick={onRefresh}
           disabled={loading}
-          className="flex w-fit shrink-0 items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+          className="border-border bg-surface text-text hover:bg-background flex w-fit shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           Refresh

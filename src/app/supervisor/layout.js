@@ -23,6 +23,7 @@ export default function SupervisorLayout({ children }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Header
+          onMenuClick={() => setMobileOpen(true)}
           title="Supervisor"
           dashboardRoute="/supervisor"
           profileRoute="/supervisor/profile"

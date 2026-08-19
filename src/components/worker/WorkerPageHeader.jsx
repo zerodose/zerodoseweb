@@ -102,8 +102,8 @@ export default function WorkerPageHeader({
         ====================================================== */}
 
         <div className="min-w-0">
-          <h1 className="text-text truncate text-xl font-bold md:text-2xl">
-            {name}
+          <h1 className="text-text truncate text-xl font-bold uppercase md:text-2xl">
+            {name || "Worker"}
           </h1>
 
           {/* Worker Information */}
@@ -114,9 +114,9 @@ export default function WorkerPageHeader({
 
             {teamNumber !== undefined &&
               teamNumber !== null &&
-              supervisorDisplay && <span>•</span>}
+              supervisorName && <span>•</span>}
 
-            {supervisorDisplay && <span>{supervisorDisplay}</span>}
+            {supervisorName && <span>Supervisor: {supervisorName}</span>}
           </div>
         </div>
 

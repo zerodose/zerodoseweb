@@ -66,7 +66,8 @@ export async function POST(request) {
       isActive: true,
     })
       .select("+password")
-      .populate("unionCouncil", "_id name code");
+      .populate("unionCouncil", "_id name code")
+      .populate("supervisor", "_id name supervisorCode");
 
     if (!user) {
       return NextResponse.json(
@@ -148,6 +149,15 @@ export async function POST(request) {
       town: user.town,
       unionCouncil: user.unionCouncil,
       designation: user.designation,
+      // Worker fields
+      teamNumber: user.teamNumber ?? null,
+      supervisor: user.supervisor
+        ? {
+            id: user.supervisor._id.toString(),
+            name: user.supervisor.name,
+            supervisorCode: user.supervisor.supervisorCode || null,
+          }
+        : null,
       emailVerified: user.emailVerified,
       isActive: user.isActive,
     };

@@ -1,12 +1,7 @@
-import React from 'react'
-import ZerodoseForm from '@/components/zerodose/ZerodoseForm'
+"use client";
 
-function page() {
-  return (
-    <div>
-      <ZerodoseForm />
-    </div>
-  )
+import ZerodoseForm from "@/components/worker/ZerodoseForm";
+
+export default function AddZerodosePage() {
+  return <ZerodoseForm mode="create" />;
 }
-
-export default page

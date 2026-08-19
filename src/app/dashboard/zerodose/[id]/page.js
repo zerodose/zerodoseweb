@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { getZerodose } from "@/api/zerodoseApi";
-import ZerodoseView from "@/components/zerodose/ZerodoseView";
+import ZerodoseView from "@/components/worker/ZerodoseView";
 
 export default function ZerodoseViewPage() {
   const router = useRouter();

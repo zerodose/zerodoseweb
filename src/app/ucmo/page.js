@@ -202,7 +202,7 @@ export default function Page() {
 
         if (authUnionCouncilId) {
           const approvalsResponse =
-            await getPendingUserApprovals(authUnionCouncilId);
+            await getPendingUserApprovals(authUnionCouncilId, "supervisor");
 
           if (!approvalsResponse?.success) {
             throw new Error(

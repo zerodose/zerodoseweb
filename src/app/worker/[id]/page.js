@@ -228,7 +228,7 @@ export default function ZerodoseDetailPage() {
               <button
                 type="button"
                 onClick={() =>
-                  router.push(`/worker/viewzerodose/${zerodose._id}/update`)
+                  router.push(`/worker/${zerodose._id}/update`)
                 }
                 className="border-border bg-background text-text-secondary hover:bg-surface hover:text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition"
                 title="Edit Zerodose"
@@ -244,41 +244,40 @@ export default function ZerodoseDetailPage() {
         ======================================================= */}
 
         <DetailSection
-          icon={Baby}
-          title="Child Information"
-          description="Basic information about the child."
-        >
-          <DetailItem
-            icon={User}
-            label="Child Name"
-            value={zerodose.childName}
-          />
+  icon={Baby}
+  title="Child Information"
+  description="Basic information about the child."
+>
+  <DetailItem
+    icon={User}
+    label="Child Name"
+    value={zerodose.childName}
+  />
 
-          <DetailItem
-            icon={User}
-            label="Father Name"
-            value={zerodose.fatherName}
-          />
+  <DetailItem
+    icon={User}
+    label="Father Name"
+    value={zerodose.fatherName}
+  />
 
-          <DetailItem
-            icon={Baby}
-            label="Age"
-            value={`${zerodose.age ?? "-"} months`}
-          />
+  <DetailItem
+    icon={Baby}
+    label="Age"
+    value={`${zerodose.age ?? "-"} months`}
+  />
 
-          <DetailItem
-            icon={Phone}
-            label="Contact Number"
-            value={zerodose.contactNo || "-"}
-          />
+  <DetailItem
+    icon={Phone}
+    label="Contact Number"
+    value={zerodose.contactNo || "-"}
+  />
 
-          <DetailItem
-            icon={MapPin}
-            label="Address"
-            value={zerodose.address}
-            fullWidth
-          />
-        </DetailSection>
+  <DetailItem
+    icon={MapPin}
+    label="Address"
+    value={zerodose.address}
+  />
+</DetailSection>
 
         {/* =======================================================
             Campaign Information
@@ -485,11 +484,13 @@ function DetailSection({ icon: Icon, title, description, children }) {
         <div className="min-w-0">
           <h2 className="text-text font-semibold">{title}</h2>
 
-          <p className="text-text-secondary mt-0.5 text-xs">{description}</p>
+          <p className="text-text-secondary mt-0.5 text-xs">
+            {description}
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-x-8 gap-y-6 p-4 sm:grid-cols-2 md:p-5">
+      <div className="grid grid-cols-1 gap-x-10 gap-y-6 p-4 md:grid-cols-2 md:p-5">
         {children}
       </div>
     </section>
@@ -499,9 +500,9 @@ function DetailSection({ icon: Icon, title, description, children }) {
    Detail Item
 ================================================================ */
 
-function DetailItem({ icon: Icon, label, value, fullWidth = false }) {
+function DetailItem({ icon: Icon, label, value }) {
   return (
-    <div className={fullWidth ? "md:col-span-2" : ""}>
+    <div>
       <div className="text-text-secondary flex items-center gap-1.5 text-xs">
         {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
 

@@ -6,7 +6,7 @@ import { Menu, X, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { dashboardSidebar } from "@/content/data";
 import Image from "next/image";
-import { getPendingDistrictFPApprovalCount } from "@/api/userApi";
+import { getPendingApprovalCount } from "@/api/userApprovalsApi";
 
 export default function AdminSidebar({
   collapsed,
@@ -39,7 +39,7 @@ export default function AdminSidebar({
   useEffect(() => {
     const loadPendingApprovalCount = async () => {
       try {
-        const response = await getPendingDistrictFPApprovalCount();
+        const response = await getPendingApprovalCount();
 
         setPendingApprovalCount(response?.count || 0);
       } catch (error) {
@@ -138,19 +138,19 @@ export default function AdminSidebar({
           </div>
 
           {/* Desktop Toggle */}
-         <button
-  type="button"
-  onClick={onToggle}
-  aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-  className="text-text-secondary hover:bg-surface hover:text-text border-border bg-background absolute top-15 -right-4.5 z-50 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border shadow-md transition-all duration-300 ease-in-out md:flex"
->
-  <ChevronLeft
-    size={20}
-    className={`transition-transform duration-300 ease-in-out ${
-      collapsed ? "rotate-180" : "rotate-0"
-    }`}
-  />
-</button>
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="text-text-secondary hover:bg-surface hover:text-text border-border bg-background absolute top-15 -right-4.5 z-50 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border shadow-md transition-all duration-300 ease-in-out md:flex"
+          >
+            <ChevronLeft
+              size={20}
+              className={`transition-transform duration-300 ease-in-out ${
+                collapsed ? "rotate-180" : "rotate-0"
+              }`}
+            />
+          </button>
 
           {/* Mobile Close */}
           <button

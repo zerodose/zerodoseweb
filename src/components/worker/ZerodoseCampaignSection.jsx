@@ -494,11 +494,11 @@ export default function ZerodoseCampaignSection({
     >
       {/* Card Header */}
       <div className="flex items-start gap-3">
-        <div className="bg-surface h-10 w-10 shrink-0 animate-pulse rounded-xl" />
+        <div className="h-10 w-10 shrink-0 animate-pulse rounded-xl bg-gray-200" />
 
         <div className="min-w-0 flex-1 space-y-2">
-          <div className="bg-surface h-5 w-32 animate-pulse rounded" />
-          <div className="bg-surface h-3 w-20 animate-pulse rounded" />
+          <div className="h-5 w-32 animate-pulse rounded bg-gray-200" />
+          <div className="h-3 w-20 animate-pulse rounded bg-gray-200" />
         </div>
       </div>
 
@@ -506,8 +506,8 @@ export default function ZerodoseCampaignSection({
       <div className="border-border mt-4 grid grid-cols-2 gap-x-4 gap-y-4 border-t pt-4 md:grid-cols-4">
         {[1, 2, 3, 4].map((item) => (
           <div key={item} className="space-y-2">
-            <div className="bg-surface h-3 w-16 animate-pulse rounded" />
-            <div className="bg-surface h-4 w-24 animate-pulse rounded" />
+            <div className="h-3 w-16 animate-pulse rounded bg-gray-200" />
+            <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
           </div>
         ))}
       </div>
@@ -516,19 +516,19 @@ export default function ZerodoseCampaignSection({
       <div className="border-border mt-4 grid grid-cols-2 gap-4 border-t pt-4 md:grid-cols-3">
         {[1, 2, 3].map((item) => (
           <div key={item} className="space-y-2">
-            <div className="bg-surface h-3 w-20 animate-pulse rounded" />
-            <div className="bg-surface h-4 w-28 animate-pulse rounded" />
+            <div className="h-3 w-20 animate-pulse rounded bg-gray-200" />
+            <div className="h-4 w-28 animate-pulse rounded bg-gray-200" />
           </div>
         ))}
       </div>
 
       {/* Address */}
       <div className="border-border mt-4 flex items-start gap-2 border-t pt-3">
-        <div className="bg-surface mt-0.5 h-4 w-4 shrink-0 animate-pulse rounded" />
+        <div className="mt-0.5 h-4 w-4 shrink-0 animate-pulse rounded bg-gray-200" />
 
         <div className="flex-1 space-y-2">
-          <div className="bg-surface h-3 w-full animate-pulse rounded" />
-          <div className="bg-surface h-3 w-3/4 animate-pulse rounded" />
+          <div className="h-3 w-full animate-pulse rounded bg-gray-200" />
+          <div className="h-3 w-3/4 animate-pulse rounded bg-gray-200" />
         </div>
       </div>
     </div>
@@ -541,23 +541,25 @@ export default function ZerodoseCampaignSection({
       ========================================================= */}
 
       <div className="border-border border-b p-3 md:p-4">
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 md:gap-3">
           <button
             type="button"
             onClick={() => onTabChange("current")}
-            className={`group relative flex min-w-0 items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition ${
+            className={`group relative flex min-h-[56px] min-w-0 items-center overflow-hidden rounded-xl px-3 py-3 text-left text-sm font-semibold transition md:min-h-[64px] md:px-4 ${
               activeTab === "current"
                 ? "bg-primary text-white shadow-sm"
                 : "bg-background text-text-secondary border-border hover:border-primary hover:text-primary border"
             }`}
           >
-            <span className="min-w-0 truncate pr-10">Current Campaign</span>
+            <span className="relative z-10 min-w-0 truncate pr-10">
+              Current Campaign
+            </span>
 
             <CalendarDays
-              className={`pointer-events-none absolute right-2 bottom-1 h-9 w-9 shrink-0 ${
+              className={`pointer-events-none absolute -right-3 -bottom-4 z-0 h-16 w-16 ${
                 activeTab === "current"
-                  ? "text-white/20"
-                  : "text-primary/15 group-hover:text-primary/20"
+                  ? "text-white/25"
+                  : "text-primary/20 group-hover:text-primary/25"
               }`}
             />
           </button>
@@ -565,19 +567,21 @@ export default function ZerodoseCampaignSection({
           <button
             type="button"
             onClick={() => onTabChange("previous")}
-            className={`group relative flex min-w-0 items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition ${
+            className={`group relative flex min-h-[56px] min-w-0 items-center overflow-hidden rounded-xl px-3 py-3 text-left text-sm font-semibold transition md:min-h-[64px] md:px-4 ${
               activeTab === "previous"
                 ? "bg-primary text-white shadow-sm"
                 : "bg-background text-text-secondary border-border hover:border-primary hover:text-primary border"
             }`}
           >
-            <span className="min-w-0 truncate pr-10">Previous Campaigns</span>
+            <span className="relative z-10 min-w-0 truncate pr-10">
+              Previous Campaigns
+            </span>
 
             <CalendarDays
-              className={`pointer-events-none absolute right-2 bottom-1 h-9 w-9 shrink-0 ${
+              className={`pointer-events-none absolute -right-3 -bottom-4 z-0 h-16 w-16 ${
                 activeTab === "previous"
-                  ? "text-white/20"
-                  : "text-primary/15 group-hover:text-primary/20"
+                  ? "text-white/25"
+                  : "text-primary/20 group-hover:text-primary/25"
               }`}
             />
           </button>
@@ -594,7 +598,7 @@ export default function ZerodoseCampaignSection({
           <div className="flex min-w-0 items-center gap-2">
             <Users className="text-text-secondary h-5 w-5 shrink-0" />
 
-            <h2 className="text-text truncate text-lg font-semibold">
+            <h2 className="text-text text-lg font-semibold text-wrap">
               {title}
             </h2>
           </div>
@@ -622,21 +626,32 @@ export default function ZerodoseCampaignSection({
       ========================================================= */}
 
       <div className="border-border border-b p-3 md:p-4">
-        <div className="grid grid-cols-3 gap-2">
-          {statusTabs.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setStatusTab(tab.key)}
-              className={`min-w-0 truncate rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
-                statusTab === tab.key
-                  ? "bg-primary text-white shadow-sm"
-                  : "bg-background text-text-secondary border-border hover:border-primary hover:text-primary border"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="bg-surface border-border grid grid-cols-3 gap-1.5 rounded-2xl border p-1.5">
+          {statusTabs.map((tab) => {
+            const Icon =
+              tab.key === "recorded"
+                ? Clock3
+                : tab.key === "visited"
+                  ? CalendarDays
+                  : Syringe;
+
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setStatusTab(tab.key)}
+                className={`flex min-w-0 items-center justify-center gap-2 rounded-xl px-2 py-2.5 text-sm font-semibold transition-all ${
+                  statusTab === tab.key
+                    ? "bg-primary text-white shadow-sm"
+                    : "text-text-secondary hover:bg-background hover:text-primary"
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+
+                <span className="truncate">{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -650,8 +665,8 @@ export default function ZerodoseCampaignSection({
         </div>
       ) : filteredZerodoses.length === 0 ? (
         /* =========================================================
-           Empty
-        ========================================================= */
+     Empty
+  ========================================================= */
 
         <div className="flex flex-col items-center justify-center px-5 py-12 text-center">
           <div className="bg-primary/10 text-primary flex h-14 w-14 items-center justify-center rounded-2xl">
@@ -748,23 +763,35 @@ export default function ZerodoseCampaignSection({
                     </p>
                   </div>
 
-                  {/* Record Date */}
+                  {/* Recorded */}
 
                   <div>
                     <div className="text-text-secondary flex items-center gap-1.5 text-xs">
                       <Clock3 className="h-3.5 w-3.5 shrink-0" />
 
                       <span>Recorded</span>
+
+                      {statusTab === "recorded" && (
+                        <span className="text-text ml-auto text-xs font-medium">
+                          {formatDate(item.coveredDate)}
+                        </span>
+                      )}
                     </div>
 
                     <p className="text-text mt-1 text-sm font-medium">
                       {formatDate(item.recordDate)}
                     </p>
+
+                    {statusTab === "recorded" && (
+                      <p className="text-text-secondary mt-0.5 text-[11px]">
+                        Covered
+                      </p>
+                    )}
                   </div>
 
-                  {/* Visit Date */}
+                  {/* Visit / Covered */}
 
-                  {statusTab !== "covered" && (
+                  {statusTab !== "covered" ? (
                     <div>
                       <div className="text-text-secondary flex items-center gap-1.5 text-xs">
                         <CalendarDays className="h-3.5 w-3.5 shrink-0" />
@@ -774,6 +801,22 @@ export default function ZerodoseCampaignSection({
 
                       <p className="text-text mt-1 text-sm font-medium">
                         {formatDate(item.visitDate)}
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="text-text-secondary flex items-center gap-1.5 text-xs">
+                        <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+
+                        <span>Covered</span>
+
+                        <span className="text-text ml-auto text-xs font-medium">
+                          Day {getCampaignDay(item, "covered")}
+                        </span>
+                      </div>
+
+                      <p className="text-text mt-1 text-sm font-medium">
+                        {formatDate(item.coveredDate)}
                       </p>
                     </div>
                   )}
@@ -812,12 +855,18 @@ export default function ZerodoseCampaignSection({
                 {statusTab === "visited" && (
                   <div className="border-border mt-4 grid grid-cols-2 gap-3 border-t pt-4">
                     <div>
-                      <p className="text-text-secondary text-xs">
-                        Campaign Day
-                      </p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-text-secondary text-xs">
+                          Visit Date
+                        </p>
+
+                        <p className="text-text text-xs font-medium">
+                          Day {getCampaignDay(item, "visited")}
+                        </p>
+                      </div>
 
                       <p className="text-text mt-1 text-sm font-medium">
-                        Day {getCampaignDay(item)}
+                        {formatDate(item.visitDate)}
                       </p>
                     </div>
 
@@ -826,7 +875,7 @@ export default function ZerodoseCampaignSection({
                         Client Status
                       </p>
 
-                      <p className="text-text mt-1 text-sm font-medium capitalize">
+                      <p className="text-text mt-1 text-sm font-medium">
                         {formatClientStatus(item.clientStatus)}
                       </p>
                     </div>

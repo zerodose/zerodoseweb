@@ -9,10 +9,7 @@ import { getCampaigns } from "@/api/campaignApi";
 import { createZerodose, getZerodose, updateZerodose } from "@/api/zerodoseApi";
 import { getCurrentLocation } from "@/utils/location";
 
-export default function ZerodoseForm({
-  mode = "create",
-  zerodoseId = null,
-}) {
+export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
   const router = useRouter();
 
   const isEdit = mode === "edit";
@@ -239,8 +236,7 @@ export default function ZerodoseForm({
 
     const day =
       Math.floor(
-        (today.getTime() - campaignStart.getTime()) /
-          (1000 * 60 * 60 * 24),
+        (today.getTime() - campaignStart.getTime()) / (1000 * 60 * 60 * 24),
       ) + 1;
 
     const campaignDays =
@@ -308,9 +304,7 @@ export default function ZerodoseForm({
 
     await updateZerodose(zerodoseId, payload);
 
-    toast.success(
-      "Update request submitted. Supervisor approval is required.",
-    );
+    toast.success("Update request submitted. Supervisor approval is required.");
 
     router.back();
   };
@@ -412,27 +406,34 @@ export default function ZerodoseForm({
           Header
       ======================================================== */}
 
-      <div className="mt-4 mb-6 p-4 flex items-start gap-3">
+      <div className="mt-4 mb-6 px-2 py-6">
+        {/* Back */}
         <button
           type="button"
           onClick={() => router.back()}
           disabled={loading}
-          className="border-border bg-background text-text-secondary hover:bg-surface mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition disabled:cursor-not-allowed disabled:opacity-50"
+          className="border-border bg-background text-text-secondary hover:bg-surface flex h-9 w-9 items-center justify-center rounded-lg border transition disabled:cursor-not-allowed disabled:opacity-50"
         >
           <ArrowLeft size={18} />
         </button>
 
-        <div>
+        {/* Heading */}
+        <div className="mt-4 flex items-center gap-2">
+          <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+            <User size={20} />
+          </div>
+
           <h1 className="text-text text-2xl font-semibold">
             {isEdit ? "Update Zerodose" : "Add Zerodose"}
           </h1>
-
-          <p className="text-text-secondary mt-1 text-sm">
-            {isEdit
-              ? "Update zerodose child details."
-              : "Record a new zerodose child."}
-          </p>
         </div>
+
+        {/* Description */}
+        <p className="text-text-secondary mt-2 text-sm">
+          {isEdit
+            ? "Update zerodose child details."
+            : "Record a new zerodose child."}
+        </p>
       </div>
 
       {/* ========================================================
@@ -447,9 +448,7 @@ export default function ZerodoseForm({
             </div>
 
             <div>
-              <h2 className="text-text font-semibold">
-                Child Information
-              </h2>
+              <h2 className="text-text font-semibold">Child Information</h2>
 
               <p className="text-text-secondary text-sm">
                 {isEdit
@@ -561,20 +560,18 @@ export default function ZerodoseForm({
                   maxLength={11}
                   disabled={loading}
                   className={`border-border bg-input-background text-text placeholder:text-input-placeholder focus:border-primary focus:ring-primary-light h-11 w-full rounded-lg border pr-3 pl-10 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
-                    formData.contactNo &&
-                    !/^03\d{9}$/.test(formData.contactNo)
+                    formData.contactNo && !/^03\d{9}$/.test(formData.contactNo)
                       ? "border-red-500 focus:border-red-500 focus:ring-red-100"
                       : ""
                   }`}
                 />
               </div>
 
-              {formData.contactNo &&
-                !/^03\d{9}$/.test(formData.contactNo) && (
-                  <p className="mt-1.5 text-xs text-red-500">
-                    Enter a valid Pakistani mobile number (03XXXXXXXXX).
-                  </p>
-                )}
+              {formData.contactNo && !/^03\d{9}$/.test(formData.contactNo) && (
+                <p className="mt-1.5 text-xs text-red-500">
+                  Enter a valid Pakistani mobile number (03XXXXXXXXX).
+                </p>
+              )}
             </div>
           </div>
 

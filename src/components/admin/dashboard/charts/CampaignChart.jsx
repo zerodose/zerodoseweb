@@ -51,7 +51,7 @@ const LINE_CONFIG = {
   },
 };
 
-export default function CampaignChart({ counts = {} }) {
+export default function CampaignChart({ counts = {}, trendData = [] }) {
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth();
 
@@ -76,81 +76,348 @@ export default function CampaignChart({ counts = {} }) {
   }, [selectedYear, selectedMonth]);
 
   // ============================================================
-  // Demo / Fallback Data
+  // Normalize Date
   // ============================================================
 
-  const generateMonthData = () => {
+  const getDate = (value) => {
+    if (!value) return null;
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return null;
+    }
+
+    return date;
+  };
+
+  // ============================================================
+  // Complete Trend Data
+  //
+  // Sort everything first.
+  // Then Month / Quarter / Year views are generated from this.
+  // ============================================================
+
+  const sortedTrendData = useMemo(() => {
+    if (!Array.isArray(trendData)) {
+      return [];
+    }
+
+    return [...trendData].sort((a, b) => {
+      const aDate =
+        getDate(a?.recordDate) ||
+        getDate(a?.visitDate) ||
+        getDate(a?.coveredDate);
+
+      const bDate =
+        getDate(b?.recordDate) ||
+        getDate(b?.visitDate) ||
+        getDate(b?.coveredDate);
+
+      if (!aDate && !bDate) return 0;
+      if (!aDate) return 1;
+      if (!bDate) return -1;
+
+      return aDate.getTime() - bDate.getTime();
+    });
+  }, [trendData]);
+
+  // ============================================================
+  // Build Complete Daily Data
+  //
+  // Every record contributes to the appropriate status.
+  //
+  // recorded -> recordDate
+  // visited  -> visitDate
+  // covered  -> coveredDate
+  //
+  // Cumulative values are used so the chart shows trend.
+  // ============================================================
+
+  const dailyData = useMemo(() => {
+    const dailyMap = new Map();
+
+    sortedTrendData.forEach((item) => {
+      // --------------------------------------------------------
+      // Recorded
+      // --------------------------------------------------------
+
+      if (item?.vaccinationStatus === "recorded" || item?.recordDate) {
+        const date = getDate(item?.recordDate);
+
+        if (date) {
+          const year = date.getFullYear();
+          const month = date.getMonth();
+          const day = date.getDate();
+
+          const key = `${year}-${month}-${day}`;
+
+          if (!dailyMap.has(key)) {
+            dailyMap.set(key, {
+              year,
+              month,
+              day,
+              recorded: 0,
+              visited: 0,
+              covered: 0,
+            });
+          }
+
+          dailyMap.get(key).recorded += 1;
+        }
+      }
+
+      // --------------------------------------------------------
+      // Visited
+      // --------------------------------------------------------
+
+      if (item?.visitDate) {
+        const date = getDate(item.visitDate);
+
+        if (date) {
+          const year = date.getFullYear();
+          const month = date.getMonth();
+          const day = date.getDate();
+
+          const key = `${year}-${month}-${day}`;
+
+          if (!dailyMap.has(key)) {
+            dailyMap.set(key, {
+              year,
+              month,
+              day,
+              recorded: 0,
+              visited: 0,
+              covered: 0,
+            });
+          }
+
+          dailyMap.get(key).visited += 1;
+        }
+      }
+
+      // --------------------------------------------------------
+      // Covered
+      // --------------------------------------------------------
+
+      if (item?.coveredDate) {
+        const date = getDate(item.coveredDate);
+
+        if (date) {
+          const year = date.getFullYear();
+          const month = date.getMonth();
+          const day = date.getDate();
+
+          const key = `${year}-${month}-${day}`;
+
+          if (!dailyMap.has(key)) {
+            dailyMap.set(key, {
+              year,
+              month,
+              day,
+              recorded: 0,
+              visited: 0,
+              covered: 0,
+            });
+          }
+
+          dailyMap.get(key).covered += 1;
+        }
+      }
+    });
+
+    return [...dailyMap.values()].sort((a, b) => {
+      const aDate = new Date(a.year, a.month, a.day);
+      const bDate = new Date(b.year, b.month, b.day);
+
+      return aDate - bDate;
+    });
+  }, [sortedTrendData]);
+
+  // ============================================================
+  // Month Data
+  //
+  // Filter complete daily data for selected month.
+  // Then make it cumulative.
+  // ============================================================
+
+  const monthData = useMemo(() => {
+    const filtered = dailyData
+      .filter(
+        (item) => item.year === selectedYear && item.month === selectedMonth,
+      )
+      .sort((a, b) => a.day - b.day);
+
+    let recorded = 0;
+    let visited = 0;
+    let covered = 0;
+
     const result = [];
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const base = 25 + ((day * 7) % 40);
+      const item = filtered.find((entry) => entry.day === day);
+
+      recorded += item?.recorded || 0;
+      visited += item?.visited || 0;
+      covered += item?.covered || 0;
 
       result.push({
         label: String(day),
-        recorded: base + 20,
-        visited: base + 10,
-        covered: base,
+        recorded,
+        visited,
+        covered,
       });
     }
 
     return result;
-  };
+  }, [dailyData, selectedYear, selectedMonth, daysInMonth]);
 
-  const generateQuarterData = () => {
+  // ============================================================
+  // Quarter Data
+  //
+  // Filter selected year + selected quarter.
+  // Aggregate daily data into months.
+  // ============================================================
+
+  // ============================================================
+  // Quarter Data
+  //
+  // Q1 = Jan, Feb, Mar
+  // Q2 = Apr, May, Jun
+  // Q3 = Jul, Aug, Sep
+  // Q4 = Oct, Nov, Dec
+  //
+  // Each month includes the complete month's data.
+  // Values are cumulative across the selected quarter.
+  // ============================================================
+
+  // ============================================================
+  // Quarter Data
+  //
+  // Q1 = 01-Jan to 31-Mar
+  // Q2 = 01-Apr to 30-Jun
+  // Q3 = 01-Jul to 30-Sep
+  // Q4 = 01-Oct to 31-Dec
+  //
+  // Complete daily data is used.
+  // Nothing from the selected quarter is skipped.
+  // ============================================================
+
+  const quarterData = useMemo(() => {
     const startMonth = (selectedQuarter - 1) * 3;
+    const endMonth = startMonth + 2;
 
-    return MONTHS.slice(startMonth, startMonth + 3).map((month, index) => {
-      const base = 350 + index * 80;
+    const filtered = dailyData
+      .filter(
+        (item) =>
+          item.year === selectedYear &&
+          item.month >= startMonth &&
+          item.month <= endMonth,
+      )
+      .sort((a, b) => {
+        const aDate = new Date(a.year, a.month, a.day);
+        const bDate = new Date(b.year, b.month, b.day);
+
+        return aDate - bDate;
+      });
+
+    // Complete quarter date range
+    const startDate = new Date(selectedYear, startMonth, 1);
+    const endDate = new Date(selectedYear, endMonth + 1, 0);
+
+    const result = [];
+
+    let recorded = 0;
+    let visited = 0;
+    let covered = 0;
+
+    // ----------------------------------------------------------
+    // Add every day from quarter start to quarter end
+    // ----------------------------------------------------------
+
+    for (
+      let date = new Date(startDate);
+      date <= endDate;
+      date.setDate(date.getDate() + 1)
+    ) {
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const day = date.getDate();
+
+      const item = filtered.find(
+        (entry) =>
+          entry.year === year && entry.month === month && entry.day === day,
+      );
+
+      recorded += item?.recorded || 0;
+      visited += item?.visited || 0;
+      covered += item?.covered || 0;
+
+      result.push({
+        label: `${day}`,
+        month,
+        day,
+        recorded,
+        visited,
+        covered,
+      });
+    }
+
+    return result;
+  }, [dailyData, selectedYear, selectedQuarter]);
+
+  // ============================================================
+  // Year Data
+  //
+  // Filter selected year.
+  // Aggregate complete daily data into months.
+  // ============================================================
+
+  const yearData = useMemo(() => {
+    return MONTHS.map((month, monthIndex) => {
+      const monthItems = dailyData.filter(
+        (item) => item.year === selectedYear && item.month === monthIndex,
+      );
+
+      const recorded = monthItems.reduce(
+        (total, item) => total + item.recorded,
+        0,
+      );
+
+      const visited = monthItems.reduce(
+        (total, item) => total + item.visited,
+        0,
+      );
+
+      const covered = monthItems.reduce(
+        (total, item) => total + item.covered,
+        0,
+      );
 
       return {
         label: month,
-        recorded: base + 100,
-        visited: base + 60,
-        covered: base,
+        recorded,
+        visited,
+        covered,
       };
     });
-  };
-
-  const generateYearData = () => {
-    return MONTHS.map((month, index) => {
-      const base = 300 + index * 70;
-
-      return {
-        label: month,
-        recorded: base + 100,
-        visited: base + 60,
-        covered: base,
-      };
-    });
-  };
+  }, [dailyData, selectedYear]);
 
   // ============================================================
   // Chart Data
   // ============================================================
 
   const data = useMemo(() => {
-    /*
-      Future live API data will be connected here.
-
-      Expected structure:
-
-      counts = {
-        recorded: ...,
-        visited: ...,
-        covered: ...
-      }
-    */
-
     if (view === "month") {
-      return generateMonthData();
+      return monthData;
     }
 
     if (view === "quarter") {
-      return generateQuarterData();
+      return quarterData;
     }
 
-    return generateYearData();
-  }, [view, selectedYear, selectedMonth, selectedQuarter, daysInMonth, counts]);
+    return yearData;
+  }, [view, monthData, quarterData, yearData]);
 
   // ============================================================
   // Animation
@@ -184,7 +451,7 @@ export default function CampaignChart({ counts = {} }) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [view, selectedYear, selectedMonth, selectedQuarter]);
+  }, [view, selectedYear, selectedMonth, selectedQuarter, trendData]);
 
   // ============================================================
   // Chart Dimensions
@@ -301,13 +568,13 @@ export default function CampaignChart({ counts = {} }) {
   return (
     <div className="bg-background border-border flex h-[430px] min-w-0 flex-col overflow-hidden rounded-2xl border p-4 shadow-sm sm:p-6">
       {/* ======================================================
-    Header
-====================================================== */}
+          Header
+      ====================================================== */}
 
       <div className="mb-3 flex h-[82px] shrink-0 items-start justify-between gap-4">
         {/* ==================================================
-      Title
-  ================================================== */}
+            Title
+        ================================================== */}
 
         <div className="min-w-0 flex-1 pt-1">
           <p className="text-text-secondary text-xs leading-normal">
@@ -324,13 +591,13 @@ export default function CampaignChart({ counts = {} }) {
         </div>
 
         {/* ==================================================
-      Right Controls
-  ================================================== */}
+            Right Controls
+        ================================================== */}
 
         <div className="flex w-auto shrink-0 flex-col items-end gap-2">
           {/* ==================================================
-        View Tabs
-    ================================================== */}
+              View Tabs
+          ================================================== */}
 
           <div className="bg-surface border-border flex h-9 shrink-0 items-center rounded-lg border p-1">
             <button
@@ -371,8 +638,8 @@ export default function CampaignChart({ counts = {} }) {
           </div>
 
           {/* ==================================================
-        Selectors
-    ================================================== */}
+              Selectors
+          ================================================== */}
 
           <div className="flex h-9 items-center gap-2">
             {/* Year */}
@@ -576,9 +843,16 @@ export default function CampaignChart({ counts = {} }) {
                 y={height - 10}
                 textAnchor="middle"
                 dominantBaseline="auto"
-                className="fill-text-secondary text-black/50 font-semibold text-[15px]"
+                className="fill-text-secondary text-[15px] font-semibold text-black/50"
               >
-                {point.label}
+                {view === "quarter"
+                  ? point.day === 1
+                    ? MONTHS[point.month]
+                    : point.day ===
+                        new Date(point.year, point.month + 1, 0).getDate()
+                      ? MONTHS[point.month]
+                      : ""
+                  : point.label}
               </text>
             </g>
           ))}

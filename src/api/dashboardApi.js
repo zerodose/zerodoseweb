@@ -72,3 +72,7 @@ export const getSupervisorUnionCouncilCount = async (
 
   return response.data;
 };
+
+export const getCampaignTrend = async () => {
+  return api.get("/dashboard/campaign-trend");
+};

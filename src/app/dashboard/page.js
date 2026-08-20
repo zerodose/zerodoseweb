@@ -126,10 +126,8 @@ import TeamChart from "@/components/admin/dashboard/charts/TeamChart";
 import ZerodoseTrendChart from "@/components/admin/dashboard/charts/ZerodoseTrendChart";
 import UserDesignationChart from "@/components/admin/dashboard/charts/UserDesignationChart";
 import CoverageChart from "@/components/admin/dashboard/charts/CoverageChart";
-
+import { getCampaignTrend, getGlobalCount } from "@/api/dashboardApi";
 import DashboardStats from "@/components/admin/dashboard/DashboardStats";
-
-import { getGlobalCount } from "@/api/dashboardApi";
 
 export default async function DashboardPage() {
   // ============================================================
@@ -151,6 +149,19 @@ export default async function DashboardPage() {
     visited: 0,
     covered: 0,
   };
+  // ============================================================
+  // Get Complete Zerodose Trend Data
+  // ============================================================
+
+  let campaignTrend = [];
+
+  try {
+    const response = await getCampaignTrend();
+
+    campaignTrend = response?.data?.data || [];
+  } catch (error) {
+    console.error("Failed to fetch campaign trend:", error);
+  }
 
   // ============================================================
   // Get All Global Dashboard Counts
@@ -223,7 +234,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Campaign */}
         <ChartAnimation delay={100}>
-          <CampaignChart counts={counts} />
+          <CampaignChart counts={counts} trendData={campaignTrend} />
         </ChartAnimation>
 
         {/* Status */}

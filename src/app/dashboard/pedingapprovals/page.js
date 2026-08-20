@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 
 import Table from "@/components/admin/table/Table";
 
-// import { getPendingDistrictFPApprovals } from "@/api/userApi";
 import { getPendingUserApprovals } from "@/api/userApprovalsApi";
 export default function PendingApprovalsPage() {
   const router = useRouter();

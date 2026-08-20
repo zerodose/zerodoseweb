@@ -5,10 +5,9 @@ import { ArrowLeft, Check, X } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { getPendingApprovalUser, updateUserApproval } from "@/api/userApi";
-
 import TopHeader from "@/components/admin/ui/TopHeader";
 import ApprovalConfirmModal from "@/components/admin/ui/ApprovalConfirmModal";
+import { getPendingApprovalUser, updateUserApproval } from "@/api/userApprovalsApi";
 
 export default function PendingApprovalViewPage() {
   const router = useRouter();

@@ -2,13 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
 import {
   X,
-  ChevronDown,
   ChevronLeft,
   LayoutDashboard,
-  Map,
-  Building2,
   Network,
   UsersRound,
   UserCog,
@@ -17,58 +15,54 @@ import {
   CalendarDays,
   ClipboardCheck,
 } from "lucide-react";
+
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
-const districtFPSidebar = [
+const townFPSidebar = [
   {
     title: "Dashboard",
-    href: "/districtfp",
+    href: "/townfp",
     icon: LayoutDashboard,
   },
   {
     title: "Campaigns",
-    href: "/districtfp/campaigns",
+    href: "/townfp/campaigns",
     icon: CalendarDays,
   },
   {
-    title: "Towns",
-    href: "/districtfp/towns",
-    icon: Building2,
-  },
-  {
     title: "Union Councils",
-    href: "/districtfp/union-councils",
+    href: "/townfp/union-councils",
     icon: Network,
   },
   {
     title: "UCMOs",
-    href: "/districtfp/ucmos",
+    href: "/townfp/ucmos",
     icon: UsersRound,
   },
   {
     title: "Supervisors",
-    href: "/districtfp/supervisors",
+    href: "/townfp/supervisors",
     icon: UserCog,
   },
   {
     title: "Workers",
-    href: "/districtfp/workers",
+    href: "/townfp/workers",
     icon: Users,
   },
   {
     title: "Zerodose",
-    href: "/districtfp/zerodose",
+    href: "/townfp/zerodose",
     icon: Syringe,
   },
-    {
+  {
     title: "Pending Approvals",
-    href: "/districtfp/pendingapprovals",
+    href: "/townfp/pendingapprovals",
     icon: ClipboardCheck,
   },
 ];
 
-export default function DistrictFPSidebar({
+export default function TownFPSidebar({
   collapsed,
   onToggle,
   mobileOpen,
@@ -83,7 +77,7 @@ export default function DistrictFPSidebar({
   // ============================================================
 
   useEffect(() => {
-    districtFPSidebar.forEach((item) => {
+    townFPSidebar.forEach((item) => {
       if (!item.children?.length) return;
 
       const activeChild = item.children.some((child) =>
@@ -100,7 +94,7 @@ export default function DistrictFPSidebar({
   }, [pathname]);
 
   // ============================================================
-  // Close mobile sidebar when screen becomes desktop
+  // Close mobile sidebar on desktop
   // ============================================================
 
   useEffect(() => {
@@ -120,7 +114,7 @@ export default function DistrictFPSidebar({
   }, [mobileOpen, setMobileOpen]);
 
   // ============================================================
-  // Toggle Parent Menu
+  // Toggle Menu
   // ============================================================
 
   const toggleMenu = (title) => {
@@ -137,8 +131,8 @@ export default function DistrictFPSidebar({
   const isActive = (href) => {
     if (!href) return false;
 
-    if (href === "/districtfp") {
-      return pathname === "/districtfp";
+    if (href === "/townfp") {
+      return pathname === "/townfp";
     }
 
     return pathname.startsWith(href);
@@ -146,9 +140,7 @@ export default function DistrictFPSidebar({
 
   return (
     <>
-      {/* ========================================================
-          Mobile Overlay
-      ======================================================== */}
+      {/* Mobile Overlay */}
 
       {mobileOpen && (
         <button
@@ -159,18 +151,14 @@ export default function DistrictFPSidebar({
         />
       )}
 
-      {/* ========================================================
-          Sidebar
-      ======================================================== */}
+      {/* Sidebar */}
 
       <aside
         className={`border-border bg-background fixed inset-y-0 left-0 z-50 flex h-screen w-[256px] flex-col border-r shadow-xl transition-transform duration-300 ease-in-out md:static md:z-auto md:h-full md:w-full md:translate-x-0 md:border-r-0 md:shadow-none ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* ======================================================
-            Sidebar Header
-        ====================================================== */}
+        {/* Sidebar Header */}
 
         <div className="border-border relative flex h-16 shrink-0 items-center border-b px-4">
           {/* Logo / Brand */}
@@ -180,8 +168,6 @@ export default function DistrictFPSidebar({
               collapsed ? "md:w-10" : "md:w-auto"
             }`}
           >
-            {/* Logo */}
-
             <div className="text-primary-foreground flex shrink-0 items-center justify-center rounded-lg text-sm font-bold">
               <Image
                 src="/images/logo.png"
@@ -193,8 +179,6 @@ export default function DistrictFPSidebar({
               />
             </div>
 
-            {/* Brand */}
-
             <div
               className={`overflow-visible whitespace-nowrap transition-all duration-300 ${
                 collapsed ? "md:w-0 md:opacity-0" : "md:w-auto md:opacity-100"
@@ -202,15 +186,11 @@ export default function DistrictFPSidebar({
             >
               <p className="text-text text-base font-bold">Zerodose</p>
 
-              <p className="text-text-secondary text-[11px]">
-                District FP Panel
-              </p>
+              <p className="text-text-secondary text-[11px]">Town FP Panel</p>
             </div>
           </div>
 
-          {/* ====================================================
-              Desktop Toggle
-          ==================================================== */}
+          {/* Desktop Toggle */}
 
           <button
             type="button"
@@ -226,9 +206,7 @@ export default function DistrictFPSidebar({
             />
           </button>
 
-          {/* ====================================================
-              Mobile Close
-          ==================================================== */}
+          {/* Mobile Close */}
 
           <button
             type="button"
@@ -240,13 +218,11 @@ export default function DistrictFPSidebar({
           </button>
         </div>
 
-        {/* ======================================================
-            Navigation
-        ====================================================== */}
+        {/* Navigation */}
 
         <nav className="scrollbar-hide flex-1 overflow-y-auto p-3">
           <div className="space-y-1.5">
-            {districtFPSidebar.map((item) => {
+            {townFPSidebar.map((item) => {
               const Icon = item.icon;
 
               const hasChildren = item.children?.length > 0;
@@ -261,10 +237,6 @@ export default function DistrictFPSidebar({
 
               return (
                 <div key={item.title}>
-                  {/* ==================================================
-                      Parent With Children
-                  ================================================== */}
-
                   {hasChildren ? (
                     <button
                       type="button"
@@ -296,19 +268,12 @@ export default function DistrictFPSidebar({
                       </div>
 
                       {!collapsed && (
-                        <ChevronDown
-                          size={17}
-                          className={`shrink-0 transition-transform duration-300 ${
-                            openMenus[item.title] ? "rotate-180" : ""
-                          }`}
-                        />
+                        <span className="shrink-0">
+                          {/* Reserved for future child menus */}
+                        </span>
                       )}
                     </button>
                   ) : (
-                    /* ==================================================
-                       Normal Link
-                    ================================================== */
-
                     <Link
                       href={item.href}
                       title={collapsed ? item.title : undefined}
@@ -330,56 +295,13 @@ export default function DistrictFPSidebar({
                       </span>
                     </Link>
                   )}
-
-                  {/* ==================================================
-                      Children
-                  ================================================== */}
-
-                  {hasChildren && (
-                    <div
-                      className={`overflow-visible transition-all duration-300 ease-in-out ${
-                        openMenus[item.title] && !collapsed
-                          ? "max-h-96 opacity-100"
-                          : "max-h-0 opacity-0"
-                      }`}
-                    >
-                      <div className="border-border mt-1 ml-5 space-y-1 border-l pl-3">
-                        {item.children.map((child) => {
-                          const ChildIcon = child.icon;
-
-                          const childIsActive = isActive(child.href);
-
-                          return (
-                            <Link
-                              key={child.href}
-                              href={child.href}
-                              onClick={() => setMobileOpen(false)}
-                              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${
-                                childIsActive
-                                  ? "bg-primary-light text-primary font-medium"
-                                  : "text-text-secondary hover:bg-surface hover:text-text"
-                              }`}
-                            >
-                              {ChildIcon && (
-                                <ChildIcon size={16} className="shrink-0" />
-                              )}
-
-                              <span className="truncate">{child.title}</span>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
                 </div>
               );
             })}
           </div>
         </nav>
 
-        {/* ======================================================
-            Sidebar Footer
-        ====================================================== */}
+        {/* Sidebar Footer */}
 
         <div className="border-border shrink-0 border-t p-3">
           <div
@@ -400,12 +322,12 @@ export default function DistrictFPSidebar({
                 collapsed ? "md:hidden" : ""
               }`}
             >
-              District Focal Person
+              Town Focal Person
             </p>
 
             {collapsed && (
               <div className="text-text hidden text-center text-xs font-semibold md:block">
-                D
+                T
               </div>
             )}
           </div>

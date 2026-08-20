@@ -11,7 +11,7 @@ import CurrentCampaign from "@/components/ucmo/CurrentCampaign";
 import PreviousCampaigns from "@/components/ucmo/PreviousCampaigns";
 import { UsersRound } from "lucide-react";
 import ActionLinkButton from "@/components/admin/ui/ActionLinkButton";
-import { getPendingUserApprovals } from "@/api/user-approvalsApi";
+import { getPendingUserApprovals } from "@/api/userApprovalsApi";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");

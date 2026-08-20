@@ -4,11 +4,19 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 
+import District from "@/models/District";
+import Town from "@/models/Town";
+import UnionCouncil from "@/models/UnionCouncil";
+
 export async function GET(request) {
   try {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
+
+    // ============================================================
+    // Pagination
+    // ============================================================
 
     const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1);
 
@@ -17,13 +25,49 @@ export async function GET(request) {
       100,
     );
 
+    // ============================================================
+    // Filters
+    // ============================================================
+
     const search = searchParams.get("search")?.trim() || "";
+    const designation = searchParams.get("designation")?.trim() || "";
+
+    const district = searchParams.get("district")?.trim() || "";
+    const town = searchParams.get("town")?.trim() || "";
+    const unionCouncil = searchParams.get("unionCouncil")?.trim() || "";
+
+    // ============================================================
+    // Base Filter
+    // ============================================================
 
     const filter = {
-      designation: "districtFP",
       approvalStatus: "pending",
       isActive: true,
     };
+
+    // ============================================================
+    // Designation Filter
+    // ============================================================
+
+    if (designation) {
+      filter.designation = designation;
+    }
+
+    // ============================================================
+    // Scope Filters
+    // ============================================================
+
+    if (district && district !== "all") {
+      filter.district = district;
+    }
+
+    if (town && town !== "all") {
+      filter.town = town;
+    }
+
+    if (unionCouncil && unionCouncil !== "all") {
+      filter.unionCouncil = unionCouncil;
+    }
 
     // ============================================================
     // Search
@@ -75,6 +119,10 @@ export async function GET(request) {
       User.countDocuments(filter),
     ]);
 
+    // ============================================================
+    // Pagination Info
+    // ============================================================
+
     const totalPages = Math.max(Math.ceil(total / limit), 1);
 
     return NextResponse.json(
@@ -95,13 +143,12 @@ export async function GET(request) {
       },
     );
   } catch (error) {
-    console.error("Pending District FP approvals GET error:", error);
+    console.error("Pending user approvals GET error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message:
-          error?.message || "Failed to fetch pending District FP approvals.",
+        message: error?.message || "Failed to fetch pending user approvals.",
       },
       {
         status: 500,

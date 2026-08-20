@@ -1768,9 +1768,7 @@ export default function ZerodoseCampaignSection({
 
   const filteredZerodoses = useMemo(() => {
     return zerodoses.filter((item) => {
-      const status = String(
-        item?.vaccinationStatus || "",
-      ).toLowerCase();
+      const status = String(item?.vaccinationStatus || "").toLowerCase();
 
       return status === statusTab;
     });
@@ -1854,8 +1852,7 @@ export default function ZerodoseCampaignSection({
     if (!start || !current) return "-";
 
     const difference = Math.floor(
-      (current.getTime() - start.getTime()) /
-        (1000 * 60 * 60 * 24),
+      (current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
     );
 
     const campaignDay = difference + 1;
@@ -1876,10 +1873,8 @@ export default function ZerodoseCampaignSection({
 
     if (end) {
       const totalCampaignDays =
-        Math.floor(
-          (end.getTime() - start.getTime()) /
-            (1000 * 60 * 60 * 24),
-        ) + 1;
+        Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) +
+        1;
 
       if (totalCampaignDays > 0) {
         return Math.min(campaignDay, totalCampaignDays);
@@ -1894,10 +1889,7 @@ export default function ZerodoseCampaignSection({
 
     return status
       .split("_")
-      .map(
-        (word) =>
-          word.charAt(0).toUpperCase() + word.slice(1),
-      )
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
   };
 
@@ -2070,11 +2062,7 @@ export default function ZerodoseCampaignSection({
             disabled={loading}
             className="border-border bg-primary hover:bg-primary-dark flex w-fit shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <RefreshCw
-              className={`h-4 w-4 ${
-                loading ? "animate-spin" : ""
-              }`}
-            />
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </button>
         </div>
@@ -2090,7 +2078,7 @@ export default function ZerodoseCampaignSection({
       ========================================================= */}
 
       <div className="border-border border-b p-3 md:p-4">
-        <div className="bg-white border-border grid grid-cols-3 gap-1.5 rounded-2xl border p-1.5">
+        <div className="border-border grid grid-cols-3 gap-1.5 rounded-2xl border bg-white p-1.5">
           {statusTabs.map((tab) => {
             const Icon =
               tab.key === "recorded"
@@ -2099,8 +2087,7 @@ export default function ZerodoseCampaignSection({
                   ? CalendarDays
                   : Syringe;
 
-            const isDisabled =
-              loading && statusTab !== tab.key;
+            const isDisabled = loading && statusTab !== tab.key;
 
             return (
               <button
@@ -2114,7 +2101,7 @@ export default function ZerodoseCampaignSection({
                     : "text-text-secondary hover:bg-background hover:text-primary"
                 } ${
                   isDisabled
-                    ? "cursor-not-allowed opacity-50 hover:bg-transparent hover:text-text-secondary"
+                    ? "hover:text-text-secondary cursor-not-allowed opacity-50 hover:bg-transparent"
                     : ""
                 }`}
               >
@@ -2133,9 +2120,7 @@ export default function ZerodoseCampaignSection({
 
       {loading ? (
         <div className="space-y-3 p-3 md:space-y-4 md:p-5">
-          {[1, 2, 3].map((item) =>
-            renderCardSkeleton(item),
-          )}
+          {[1, 2, 3].map((item) => renderCardSkeleton(item))}
         </div>
       ) : filteredZerodoses.length === 0 ? (
         /* =========================================================
@@ -2148,10 +2133,7 @@ export default function ZerodoseCampaignSection({
           </div>
 
           <h3 className="text-text mt-4 font-semibold">
-            No{" "}
-            {statusTab.charAt(0).toUpperCase() +
-              statusTab.slice(1)}{" "}
-            Zerodose
+            No {statusTab.charAt(0).toUpperCase() + statusTab.slice(1)} Zerodose
           </h3>
 
           <p className="text-text-secondary mt-1 max-w-sm text-sm">
@@ -2172,9 +2154,7 @@ export default function ZerodoseCampaignSection({
             return (
               <div
                 key={item._id}
-                onClick={() =>
-                  router.push(`/worker/${item._id}`)
-                }
+                onClick={() => router.push(`/worker/${item._id}`)}
                 className="bg-background border-border hover:border-primary cursor-pointer rounded-xl border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md md:p-5"
               >
                 {/* =================================================
@@ -2215,9 +2195,7 @@ export default function ZerodoseCampaignSection({
                   {/* Right: Campaign Day */}
 
                   <div className="shrink-0 text-right">
-                    <p className="text-text-secondary text-xs">
-                      Campaign Day
-                    </p>
+                    <p className="text-text-secondary text-xs">Campaign Day</p>
 
                     <p className="text-text mt-1 text-sm font-semibold">
                       Day {getCampaignDay(item, statusTab)}
@@ -2226,8 +2204,8 @@ export default function ZerodoseCampaignSection({
                 </div>
 
                 {/* =================================================
-                    Child Information
-                ================================================= */}
+    Child Information
+================================================= */}
 
                 <div className="border-border mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t pt-4 md:grid-cols-4">
                   {/* Father */}
@@ -2258,6 +2236,20 @@ export default function ZerodoseCampaignSection({
                     </p>
                   </div>
 
+                  {/* Contact */}
+
+                  <div>
+                    <div className="text-text-secondary flex items-center gap-1.5 text-xs">
+                      <User className="h-3.5 w-3.5 shrink-0" />
+
+                      <span>Contact</span>
+                    </div>
+
+                    <p className="text-text mt-1 text-sm font-medium">
+                      {item.contactNo || "-"}
+                    </p>
+                  </div>
+
                   {/* Recorded */}
 
                   <div>
@@ -2272,147 +2264,52 @@ export default function ZerodoseCampaignSection({
                     </p>
                   </div>
 
-                  {/* Contact / Visit / Covered */}
+                  {/* Visited */}
 
-                  {statusTab === "recorded" ? (
-                    <div>
-                      <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-                        <User className="h-3.5 w-3.5 shrink-0" />
-
-                        <span>Contact</span>
-                      </div>
-
-                      <p className="text-text mt-1 text-sm font-medium">
-                        {item.contactNo || "-"}
-                      </p>
-                    </div>
-                  ) : statusTab !== "covered" ? (
+                  {statusTab === "visited" && (
                     <div>
                       <div className="text-text-secondary flex items-center gap-1.5 text-xs">
                         <CalendarDays className="h-3.5 w-3.5 shrink-0" />
 
-                        <span>Visit</span>
+                        <span>Visited Date</span>
                       </div>
 
                       <p className="text-text mt-1 text-sm font-medium">
                         {formatDate(item.visitDate)}
                       </p>
                     </div>
-                  ) : (
-                    <div>
-                      <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-                        <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                  )}
 
-                        <span>Covered</span>
+                  {/* Covered */}
+
+                  {statusTab === "covered" && (
+                    <>
+                      <div>
+                        <div className="text-text-secondary flex items-center gap-1.5 text-xs">
+                          <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+
+                          <span>Visited Date</span>
+                        </div>
+
+                        <p className="text-text mt-1 text-sm font-medium">
+                          {formatDate(item.visitDate)}
+                        </p>
                       </div>
 
-                      <p className="text-text mt-1 text-sm font-medium">
-                        {formatDate(item.coveredDate)}
-                      </p>
-                    </div>
+                      <div>
+                        <div className="text-text-secondary flex items-center gap-1.5 text-xs">
+                          <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+
+                          <span>Covered Date</span>
+                        </div>
+
+                        <p className="text-text mt-1 text-sm font-medium">
+                          {formatDate(item.coveredDate)}
+                        </p>
+                      </div>
+                    </>
                   )}
                 </div>
-
-                {/* =================================================
-                    Recorded
-                    Only Contact is shown in the main information
-                    row. Visit/Covered dates are not shown here.
-                ================================================= */}
-
-                {statusTab === "recorded" && (
-                  <div className="border-border mt-4 grid grid-cols-1 gap-3 border-t pt-4">
-                    <div>
-                      <p className="text-text-secondary text-xs">
-                        Contact
-                      </p>
-
-                      <p className="text-text mt-1 text-sm font-medium">
-                        {item.contactNo || "-"}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* =================================================
-                    Visited
-                    Record + Visit are already shown above.
-                    Only Client Status remains here.
-                ================================================= */}
-
-                {statusTab === "visited" && (
-                  <div className="border-border mt-4 grid grid-cols-1 gap-3 border-t pt-4">
-                    <div>
-                      <p className="text-text-secondary text-xs">
-                        Client Status
-                      </p>
-
-                      <p className="text-text mt-1 text-sm font-medium">
-                        {formatClientStatus(item.clientStatus)}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* =================================================
-                    Covered
-                    Record + Covered are already shown above.
-                    Only Covered Date remains here.
-                ================================================= */}
-
-                {statusTab === "covered" && (
-                  <div className="border-border mt-4 grid grid-cols-1 gap-3 border-t pt-4">
-                    <div>
-                      <p className="text-text-secondary text-xs">
-                        Covered Date
-                      </p>
-
-                      <p className="text-text mt-1 text-sm font-medium">
-                        {formatDate(item.coveredDate)}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* =================================================
-                    Desktop Extra Information
-                    Campaign Day remains in header.
-                ================================================= */}
-
-                {statusTab !== "covered" && (
-                  <div className="border-border mt-4 hidden grid-cols-2 gap-4 border-t pt-4 md:grid md:grid-cols-3">
-                    <div>
-                      <p className="text-text-secondary text-xs">
-                        Contact
-                      </p>
-
-                      <p className="text-text mt-1 text-sm font-medium">
-                        {item.contactNo || "-"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-text-secondary text-xs">
-                        Covered Date
-                      </p>
-
-                      <p className="text-text mt-1 text-sm font-medium">
-                        {statusTab === "recorded"
-                          ? formatDate(item.coveredDate)
-                          : "-"}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-text-secondary text-xs">
-                        Record Date
-                      </p>
-
-                      <p className="text-text mt-1 text-sm font-medium">
-                        {formatDate(item.recordDate)}
-                      </p>
-                    </div>
-                  </div>
-                )}
 
                 {/* =================================================
                     Address + Google Maps

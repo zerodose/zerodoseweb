@@ -1,38 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-const designationData = [
-  {
-    label: "UCMO",
-    value: 12,
-    percentage: 12,
-  },
-  {
-    label: "Supervisor",
-    value: 28,
-    percentage: 28,
-  },
-  {
-    label: "Vaccinator",
-    value: 45,
-    percentage: 45,
-  },
-  {
-    label: "Other Staff",
-    value: 15,
-    percentage: 15,
-  },
-];
+import { useEffect, useMemo, useState } from "react";
 
 const colors = [
   "bg-primary",
   "bg-emerald-500",
   "bg-amber-500",
   "bg-purple-500",
+  "bg-blue-500",
+  "bg-pink-500",
+  "bg-cyan-500",
 ];
 
-export default function UserDesignationChart() {
+export default function UserDesignationChart({ counts = {} }) {
   const [animated, setAnimated] = useState(false);
 
   useEffect(() => {
@@ -42,6 +22,53 @@ export default function UserDesignationChart() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // ============================================================
+  // Live User Designation Data
+  // Admin intentionally excluded
+  // ============================================================
+
+  const designationData = useMemo(
+    () => [
+      {
+        label: "UCMO",
+        value: Number(counts?.ucmos ?? 0),
+      },
+      {
+        label: "Supervisor",
+        value: Number(counts?.supervisors ?? 0),
+      },
+      {
+        label: "Vaccinator",
+        value: Number(counts?.vaccinators ?? 0),
+      },
+      {
+        label: "Other Staff",
+        value: Number(counts?.otherStaff ?? 0),
+      },
+      {
+        label: "Town Focal Person",
+        value: Number(counts?.townFP ?? 0),
+      },
+      {
+        label: "District Focal Person",
+        value: Number(counts?.districtFP ?? 0),
+      },
+      {
+        label: "Worker",
+        value: Number(counts?.workers ?? 0),
+      },
+    ],
+    [
+      counts?.ucmos,
+      counts?.supervisors,
+      counts?.vaccinators,
+      counts?.otherStaff,
+      counts?.townFP,
+      counts?.districtFP,
+      counts?.workers,
+    ],
+  );
 
   const total = designationData.reduce((sum, item) => sum + item.value, 0);
 
@@ -86,6 +113,10 @@ export default function UserDesignationChart() {
             />
 
             {designationData.map((item, index) => {
+              if (item.value <= 0 || total <= 0) {
+                return null;
+              }
+
               const circumference = 2 * Math.PI * 38;
               const segment = (item.value / total) * circumference;
 
@@ -113,7 +144,13 @@ export default function UserDesignationChart() {
                         ? "text-emerald-500"
                         : index === 2
                           ? "text-amber-500"
-                          : "text-purple-500",
+                          : index === 3
+                            ? "text-purple-500"
+                            : index === 4
+                              ? "text-blue-500"
+                              : index === 5
+                                ? "text-pink-500"
+                                : "text-cyan-500",
                   ].join(" ")}
                   style={{
                     transitionDelay: `${index * 150}ms`,
@@ -131,30 +168,43 @@ export default function UserDesignationChart() {
         </div>
 
         {/* Legend */}
+        {/* Legend */}
         <div className="w-full space-y-4">
-          {designationData.map((item, index) => (
-            <div key={item.label} className="flex items-center justify-between">
-              <div className="flex min-w-0 items-center gap-3">
-                <span
-                  className={`h-3 w-3 shrink-0 rounded-full ${colors[index]}`}
-                />
+          {designationData.map((item, index) => {
+            const percentage =
+              total > 0 ? Math.round((item.value / total) * 100) : 0;
 
-                <span className="text-text truncate text-sm font-medium">
-                  {item.label}
-                </span>
+            return (
+              <div
+                key={item.label}
+                className="flex items-center justify-between"
+              >
+                {/* Designation */}
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <span
+                    className={`h-3 w-3 shrink-0 rounded-full ${colors[index]}`}
+                  />
+
+                  <span className="text-text truncate text-sm font-medium">
+                    {item.label}
+                  </span>
+                </div>
+
+                {/* Count + Percentage Columns */}
+                <div className="grid w-[90px] shrink-0 grid-cols-2 items-center text-right">
+                  {/* Count */}
+                  <span className="text-text text-sm font-bold">
+                    {item.value}
+                  </span>
+
+                  {/* Percentage */}
+                  <span className="text-text-secondary text-xs">
+                    {percentage}%
+                  </span>
+                </div>
               </div>
-
-              <div className="ml-3 flex items-center gap-2">
-                <span className="text-text text-sm font-bold">
-                  {item.value}
-                </span>
-
-                <span className="text-text-secondary text-xs">
-                  ({item.percentage}%)
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

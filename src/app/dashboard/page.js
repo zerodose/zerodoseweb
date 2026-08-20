@@ -1,4 +1,3 @@
-
 import ActivityChart from "@/components/admin/dashboard/charts/ActivityChart";
 import CampaignChart from "@/components/admin/dashboard/charts/CampaignChart";
 import CampaignComparisonChart from "@/components/admin/dashboard/charts/CampaignComparisonChart";
@@ -23,9 +22,15 @@ export default async function DashboardPage() {
     towns: 0,
     unionCouncils: 0,
     campaigns: 0,
+
     ucmos: 0,
     supervisors: 0,
     workers: 0,
+    vaccinators: 0,
+    otherStaff: 0,
+    townFP: 0,
+    districtFP: 0,
+
     teams: 0,
     zerodose: 0,
 
@@ -58,9 +63,15 @@ export default async function DashboardPage() {
         "towns",
         "unionCouncils",
         "campaigns",
+
         "ucmos",
         "supervisors",
         "workers",
+        "vaccinators",
+        "otherStaff",
+        "townFP",
+        "districtFP",
+
         "teams",
         "zerodose",
         "recorded",
@@ -76,9 +87,15 @@ export default async function DashboardPage() {
       towns: data.towns ?? 0,
       unionCouncils: data.unionCouncils ?? 0,
       campaigns: data.campaigns ?? 0,
+
       ucmos: data.ucmos ?? 0,
       supervisors: data.supervisors ?? 0,
       workers: data.workers ?? 0,
+      vaccinators: data.vaccinators ?? 0,
+      otherStaff: data.otherStaff ?? 0,
+      townFP: data.townFP ?? 0,
+      districtFP: data.districtFP ?? 0,
+
       teams: data.teams ?? 0,
       zerodose: data.zerodose ?? 0,
 
@@ -128,7 +145,7 @@ export default async function DashboardPage() {
 
         {/* Recorded vs Covered */}
         <ChartAnimation delay={700}>
-          <RecordedCoveredChart counts={counts} trendData={campaignTrend}  />
+          <RecordedCoveredChart counts={counts} trendData={campaignTrend} />
         </ChartAnimation>
 
         {/* District */}

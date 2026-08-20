@@ -108,7 +108,7 @@ export default function AdminSidebar({
           type="button"
           aria-label="Close menu"
           onClick={() => setMobileOpen(false)}
-          className="fixed inset-0 z-40 cursor-default md:hidden"
+          className="fixed inset-0 z-40 cursor-default bg-black/50 backdrop-blur-[2px] md:hidden"
         />
       )}
 
@@ -259,7 +259,7 @@ export default function AdminSidebar({
                           <span
                             className={`ml-auto flex h-5 min-w-5 items-center justify-center rounded-lg px-1.5 text-[10px] font-bold ${
                               active
-                                ? "text-transparent bg-transparent"
+                                ? "bg-transparent text-transparent"
                                 : "bg-primary text-text"
                             }`}
                           >
@@ -312,7 +312,7 @@ export default function AdminSidebar({
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="border-border shrink-0 border-t p-3">
+        <div className="border-border shrink-0 border-t p-3 pb-16 md:pb-3">
           <div
             className={`bg-surface rounded-lg px-3 py-2.5 transition-all ${
               collapsed ? "md:px-2" : ""

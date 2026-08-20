@@ -216,6 +216,8 @@ export default function Page() {
           const approvalResponses = await Promise.all(
             approvalDesignations.map((designation) =>
               getPendingUserApprovals({
+                page: 1,
+                limit: 10,
                 designation,
                 unionCouncil: authUnionCouncilId,
               }),
@@ -652,7 +654,7 @@ export default function Page() {
           </div>
 
           <div className="flex align-bottom">
-            <UCMOActions pendingApprovals={pendingApprovals} />
+            <UCMOActions pendingApprovals={pendingApprovals} loading={loading}/>
           </div>
         </div>
 

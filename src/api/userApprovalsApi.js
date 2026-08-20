@@ -13,7 +13,7 @@ export async function getPendingUserApprovals({
   town = "",
   unionCouncil = "",
 } = {}) {
-  const response = await api.get("/users/pending-approvals", {
+  const response = await api.get("/users/pendingapprovals", {
     params: {
       page,
       limit,
@@ -33,7 +33,7 @@ export async function getPendingUserApprovals({
 // ============================================================
 
 export async function getPendingApprovalUser(id) {
-  const response = await api.get(`/users/pending-approvals/${id}`);
+  const response = await api.get(`/users/pendingapprovals/${id}`);
 
   return response.data;
 }
@@ -43,7 +43,7 @@ export async function getPendingApprovalUser(id) {
 // ============================================================
 
 export async function updateUserApproval(id, approvalStatus, approverId) {
-  const response = await api.put(`/users/pending-approvals/${id}`, {
+  const response = await api.put(`/users/pendingapprovals/${id}`, {
     approvalStatus,
     approverId,
   });
@@ -61,7 +61,7 @@ export async function getPendingApprovalCount({
   town = "",
   unionCouncil = "",
 } = {}) {
-  const response = await api.get("/users/pending-approvals/count", {
+  const response = await api.get("/users/pendingapprovals/count", {
     params: {
       designation,
       district,

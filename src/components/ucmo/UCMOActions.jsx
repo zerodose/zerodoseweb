@@ -49,10 +49,10 @@
 
 "use client";
 
-import { Clock3, ChevronRight } from "lucide-react";
+import { Clock3, ChevronRight, RefreshCw } from "lucide-react";
 import Link from "next/link";
 
-export default function UCMOActions({ pendingApprovals = 0 }) {
+export default function UCMOActions({ pendingApprovals = 0, loading = false }) {
   return (
     <Link
       href="/ucmo/pendingapprovals"
@@ -68,6 +68,8 @@ export default function UCMOActions({ pendingApprovals = 0 }) {
         <span className="bg-primary flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[11px] font-bold text-white">
           {pendingApprovals}
         </span>
+      ) : loading ? (
+        <RefreshCw size={16} className="text-primary animate-spin" />
       ) : (
         <span className="bg-surface border-border text-text-secondary rounded-full border px-2 py-0.5 text-[10px] font-medium">
           None

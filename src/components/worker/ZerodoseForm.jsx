@@ -352,44 +352,46 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
   if (checking) {
     return (
       <div className="w-full animate-pulse">
-        <div className="mt-4 mb-6 flex items-start gap-3">
-          <div className="bg-surface mt-1 h-9 w-9 shrink-0 rounded-lg" />
-
-          <div className="flex-1">
-            <div className="bg-surface h-7 w-44 rounded-md" />
-            <div className="bg-surface mt-2 h-4 w-64 rounded-md" />
+        {/* ======================================================== Header Skeleton ======================================================== */}
+        <div className="mb-6 px-4 pt-4 md:px-6">
+          <div className="relative overflow-hidden rounded-2xl bg-gray-300 p-5 shadow-sm md:p-6">
+            <div className="relative z-10">
+              <div className="mb-3 flex items-center gap-2">
+                <div className="h-5 w-5 rounded bg-gray-400" />
+                <div className="h-4 w-32 rounded bg-gray-400" />
+              </div>
+              <div className="h-8 w-52 rounded-md bg-gray-400" />
+              <div className="mt-2 h-4 w-72 max-w-full rounded bg-gray-400" />
+            </div>
+            <div className="absolute -right-5 -bottom-8 h-36 w-36 rounded-full bg-gray-400/60" />
           </div>
         </div>
-
-        <div className="border-border bg-background rounded-xl border shadow-sm">
-          <div className="p-5 sm:p-6">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="bg-surface h-10 w-10 rounded-lg" />
-
-              <div>
-                <div className="bg-surface h-5 w-36 rounded-md" />
-                <div className="bg-surface mt-2 h-4 w-52 rounded-md" />
+        {/* ======================================================== Form Skeleton ======================================================== */}
+        <div className="border-border bg-background rounded-2xl border shadow-sm">
+          <div className="p-6 sm:p-8 md:p-9">
+            <div className="mb-7 flex items-center gap-3">
+              <div className="h-11 w-11 rounded-xl bg-gray-300" />
+              <div className="space-y-2">
+                <div className="h-5 w-40 rounded-md bg-gray-300" />
+                <div className="h-4 w-56 rounded-md bg-gray-300" />
               </div>
             </div>
-
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {[1, 2, 3, 4].map((item) => (
                 <div key={item}>
-                  <div className="bg-surface mb-2 h-4 w-24 rounded-md" />
-                  <div className="bg-surface h-11 w-full rounded-lg" />
+                  <div className="mb-2 h-4 w-24 rounded-md bg-gray-300" />
+                  <div className="h-12 w-full rounded-lg bg-gray-300" />
                 </div>
               ))}
             </div>
-
-            <div className="mt-5">
-              <div className="bg-surface mb-2 h-4 w-20 rounded-md" />
-              <div className="bg-surface h-[76px] w-full rounded-lg" />
+            <div className="mt-6">
+              <div className="mb-2 h-4 w-20 rounded-md bg-gray-300" />
+              <div className="h-24 w-full rounded-lg bg-gray-300" />
             </div>
           </div>
-
-          <div className="border-border flex justify-end gap-3 border-t p-5 sm:p-6">
-            <div className="bg-surface h-11 w-24 rounded-lg" />
-            <div className="bg-surface h-11 w-32 rounded-lg" />
+          <div className="border-border flex flex-col-reverse gap-3 border-t p-6 sm:flex-row sm:justify-end sm:p-7">
+            <div className="h-11 w-full rounded-lg bg-gray-300 sm:w-24" />
+            <div className="h-11 w-full rounded-lg bg-gray-300 sm:w-32" />
           </div>
         </div>
       </div>
@@ -406,34 +408,39 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
           Header
       ======================================================== */}
 
-      <div className="mt-4 mb-6 px-2 py-6">
-        {/* Back */}
-        <button
-          type="button"
-          onClick={() => router.back()}
-          disabled={loading}
-          className="border-border bg-background text-text-secondary hover:bg-surface flex h-9 w-9 items-center justify-center rounded-lg border transition disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <ArrowLeft size={18} />
-        </button>
-
-        {/* Heading */}
-        <div className="mt-4 flex items-center gap-2">
-          <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
-            <User size={20} />
+      <div className="mb-6 px-4 pt-4 md:px-6">
+        <div className="bg-primary relative overflow-hidden rounded-2xl p-5 shadow-sm md:p-6">
+          <div className="relative z-10">
+            {/* Back Button */}
+            <button
+              type="button"
+              onClick={() => router.back()}
+              disabled={loading}
+              className="mb-5 flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+              title="Go back"
+            >
+              <ArrowLeft size={18} />
+            </button>
+            {/* Heading */}
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white">
+                <User className="h-6 w-6" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-2xl font-bold text-white md:text-3xl">
+                  {isEdit ? "Update Zerodose" : "Add Zerodose"}
+                </h1>
+                <p className="mt-1 text-sm leading-relaxed text-white/80">
+                  {isEdit
+                    ? "Update zerodose child details."
+                    : "Record a new zerodose child."}
+                </p>
+              </div>
+            </div>
           </div>
-
-          <h1 className="text-text text-2xl font-semibold">
-            {isEdit ? "Update Zerodose" : "Add Zerodose"}
-          </h1>
+          {/* Decorative Background Icon */}
+          <User className="pointer-events-none absolute -right-5 -bottom-8 h-36 w-36 text-white/10" />
         </div>
-
-        {/* Description */}
-        <p className="text-text-secondary mt-2 text-sm">
-          {isEdit
-            ? "Update zerodose child details."
-            : "Record a new zerodose child."}
-        </p>
       </div>
 
       {/* ========================================================
@@ -441,16 +448,21 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
       ======================================================== */}
 
       <div className="border-border bg-background rounded-xl border shadow-sm">
-        <div className="p-5 sm:p-6">
-          <div className="mb-5 flex items-center gap-3">
-            <div className="bg-primary-light text-primary flex h-10 w-10 items-center justify-center rounded-lg">
-              <User size={20} />
+        <div className="p-6 sm:p-8 md:p-9">
+          <div className="mb-7 flex items-center gap-3">
+            
+            <div className="bg-primary-light text-primary flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
+              
+              <User className="h-5 w-5" />
             </div>
-
-            <div>
-              <h2 className="text-text font-semibold">Child Information</h2>
-
-              <p className="text-text-secondary text-sm">
+            <div className="min-w-0">
+              
+              <h2 className="text-text text-base font-semibold">
+                
+                Child Information
+              </h2>
+              <p className="text-text-secondary mt-0.5 text-sm">
+                
                 {isEdit
                   ? "Update child details below."
                   : "Enter child details below."}
@@ -458,7 +470,7 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* Child Name */}
 
             <div>
@@ -577,7 +589,7 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
 
           {/* Address */}
 
-          <div className="mt-5">
+          <div className="mt-6">
             <label className="text-text mb-2 block text-sm font-medium">
               Address
             </label>
@@ -598,7 +610,7 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
             Buttons
         ====================================================== */}
 
-        <div className="border-border flex flex-col-reverse gap-3 border-t p-5 sm:flex-row sm:justify-end sm:p-6">
+        <div className="border-border flex flex-col-reverse gap-3 border-t p-6 sm:flex-row sm:justify-end sm:p-6">
           <button
             type="button"
             onClick={() => router.back()}
@@ -985,7 +997,7 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
 //         </div>
 
 //         <div className="border-border bg-background rounded-xl border shadow-sm">
-//           <div className="p-5 sm:p-6">
+//           <div className="p-6 sm:p-8 md:p-9">
 //             <div className="mb-5 flex items-center gap-3">
 //               <div className="bg-surface h-10 w-10 shrink-0 rounded-lg" />
 
@@ -1057,7 +1069,7 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
 //       ======================================================== */}
 
 //       <div className="border-border bg-background rounded-xl border shadow-sm">
-//         <div className="p-5 sm:p-6">
+//         <div className="p-6 sm:p-8 md:p-9">
 //           {/* Section Header */}
 
 //           <div className="mb-5 flex items-center gap-3">

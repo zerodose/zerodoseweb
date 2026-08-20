@@ -128,7 +128,7 @@ export default async function DashboardPage() {
 
         {/* Recorded vs Covered */}
         <ChartAnimation delay={700}>
-          <RecordedCoveredChart counts={counts} />
+          <RecordedCoveredChart counts={counts} trendData={campaignTrend}  />
         </ChartAnimation>
 
         {/* District */}

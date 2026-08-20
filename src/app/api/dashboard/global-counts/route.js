@@ -261,19 +261,19 @@ export async function GET(request) {
 
     if (metrics.includes("recorded")) {
       data.recorded = await Zerodose.countDocuments({
-        status: "recorded",
+        vaccinationStatus: "recorded",
       });
     }
 
     if (metrics.includes("visited")) {
       data.visited = await Zerodose.countDocuments({
-        status: "visited",
+        vaccinationStatus: "visited",
       });
     }
 
     if (metrics.includes("covered")) {
       data.covered = await Zerodose.countDocuments({
-        status: "covered",
+        vaccinationStatus: "covered",
       });
     }
 

@@ -106,12 +106,12 @@ export async function POST(request) {
     }
 
     const APPROVAL_HIERARCHY = {
+      districtFP: "admin",
+      townFP: "districtFP",
       ucmo: "townFP",
       supervisor: "ucmo",
       vaccinator: "ucmo",
-      otherStaff: "townFP",
-      townFP: "districtFP",
-      districtFP: "admin",
+      otherStaff: "ucmo",
       worker: null,
       admin: null,
     };

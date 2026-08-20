@@ -14,6 +14,7 @@ const APPROVAL_HIERARCHY = {
   ucmo: ["townFP"],
   supervisor: ["ucmo"],
   vaccinator: ["ucmo"],
+  otherStaff: ["ucmo"],
 };
 
 // ============================================================

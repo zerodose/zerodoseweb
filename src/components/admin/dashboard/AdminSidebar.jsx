@@ -39,7 +39,19 @@ export default function AdminSidebar({
   useEffect(() => {
     const loadPendingApprovalCount = async () => {
       try {
-        const response = await getPendingApprovalCount();
+        const authUser = JSON.parse(localStorage.getItem("authUser") || "{}");
+
+        const userId = authUser?.id || authUser?._id;
+
+        if (!userId) {
+          setPendingApprovalCount(0);
+          return;
+        }
+
+        const response = await getPendingApprovalCount({
+          userId,
+          designation: "admin",
+        });
 
         setPendingApprovalCount(response?.count || 0);
       } catch (error) {
@@ -96,7 +108,7 @@ export default function AdminSidebar({
           type="button"
           aria-label="Close menu"
           onClick={() => setMobileOpen(false)}
-          className="fixed inset-0 z-[999] cursor-default bg-black/40 backdrop-blur-[2px] md:hidden"
+          className="fixed inset-0 z-40 cursor-default md:hidden"
         />
       )}
 
@@ -247,8 +259,8 @@ export default function AdminSidebar({
                           <span
                             className={`ml-auto flex h-5 min-w-5 items-center justify-center rounded-lg px-1.5 text-[10px] font-bold ${
                               active
-                                ? "text-primary bg-white"
-                                : "bg-surface text-text"
+                                ? "text-transparent bg-transparent"
+                                : "bg-primary text-text"
                             }`}
                           >
                             {pendingApprovalCount}

@@ -7,7 +7,10 @@ import { toast } from "sonner";
 
 import TopHeader from "@/components/admin/ui/TopHeader";
 import ApprovalConfirmModal from "@/components/admin/ui/ApprovalConfirmModal";
-import { getPendingApprovalUser, updateUserApproval } from "@/api/userApprovalsApi";
+import {
+  getPendingApprovalUser,
+  updateUserApproval,
+} from "@/api/userApprovalsApi";
 
 export default function PendingApprovalViewPage() {
   const router = useRouter();
@@ -81,7 +84,16 @@ export default function PendingApprovalViewPage() {
     try {
       setUpdating(true);
 
-      const response = await updateUserApproval(user._id, status);
+      const authUser = JSON.parse(localStorage.getItem("authUser") || "{}");
+
+      const approverId = authUser?.id || authUser?._id;
+
+      if (!approverId) {
+        toast.error("Approver information not found.");
+        return;
+      }
+
+      const response = await updateUserApproval(user._id, status, approverId);
 
       if (!response?.success) {
         toast.error(response?.message || `Failed to ${actionText} user.`);
@@ -97,7 +109,7 @@ export default function PendingApprovalViewPage() {
       setConfirmationModalOpen(false);
       setApprovalAction(null);
 
-      router.push("/dashboard/pedingapprovals");
+      router.push("/dashboard/pendingapprovals");
     } catch (error) {
       console.error("Approval update error:", error);
 

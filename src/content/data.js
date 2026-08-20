@@ -52,7 +52,7 @@ export const dashboardSidebar = [
   },
   {
     title: "Pending Approvals",
-    href: "/dashboard/pedingapprovals",
+    href: "/dashboard/pendingapprovals",
     icon: ClipboardCheck,
   },
 

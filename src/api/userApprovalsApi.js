@@ -56,13 +56,15 @@ export async function updateUserApproval(id, approvalStatus, approverId) {
 // ============================================================
 
 export async function getPendingApprovalCount({
-  designation = "",
+  userId,
+  designation,
   district = "",
   town = "",
   unionCouncil = "",
 } = {}) {
   const response = await api.get("/users/pendingapprovals/count", {
     params: {
+      userId,
       designation,
       district,
       town,

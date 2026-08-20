@@ -201,7 +201,7 @@ export default function PendingApprovalsPage() {
       // ========================================================
 
       onRowClick={(user) => {
-        router.push(`/dashboard/pedingapprovals/${user._id}`);
+        router.push(`/dashboard/pendingapprovals/${user._id}`);
       }}
     />
   );

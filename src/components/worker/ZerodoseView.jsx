@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  User,
-  Users,
-  MapPin,
-  CalendarDays,
-  Phone,
-  Map,
-} from "lucide-react";
+import { User, Users, MapPin, CalendarDays, Phone, Map } from "lucide-react";
 
 export default function ZerodoseView({ data }) {
   // ============================================================
@@ -20,13 +13,7 @@ export default function ZerodoseView({ data }) {
     }
 
     if (typeof value === "object") {
-      return (
-        value.name ||
-        value.fullName ||
-        value.label ||
-        value.title ||
-        "-"
-      );
+      return value.name || value.fullName || value.label || value.title || "-";
     }
 
     return String(value);
@@ -79,7 +66,7 @@ export default function ZerodoseView({ data }) {
           {label}
         </label>
 
-        <div className="border-border bg-input-background text-text min-h-11 rounded-lg border px-3 py-2.5 text-sm">
+        <div className="border-border bg-input-background capitalize text-text min-h-11 rounded-lg border px-3 py-2.5 text-sm">
           {value || "-"}
         </div>
       </div>
@@ -130,40 +117,22 @@ export default function ZerodoseView({ data }) {
           </div>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <DetailField
-              label="Campaign"
-              value={getName(data.campaign)}
-            />
+            <DetailField label="Campaign" value={getName(data.campaign)} />
 
-            <DetailField
-              label="District"
-              value={getName(data.district)}
-            />
+            <DetailField label="District" value={getName(data.district)} />
 
-            <DetailField
-              label="Town"
-              value={getName(data.town)}
-            />
+            <DetailField label="Town" value={getName(data.town)} />
 
             <DetailField
               label="Union Council"
               value={getName(data.unionCouncil)}
             />
 
-            <DetailField
-              label="UCMO"
-              value={getName(data.ucmo)}
-            />
+            <DetailField label="UCMO" value={getName(data.ucmo)} />
 
-            <DetailField
-              label="Supervisor"
-              value={getName(data.supervisor)}
-            />
+            <DetailField label="Supervisor" value={getName(data.supervisor)} />
 
-            <DetailField
-              label="User"
-              value={getName(data.user)}
-            />
+            <DetailField label="User" value={getName(data.user)} />
 
             <DetailField
               label="Team Number"
@@ -183,9 +152,7 @@ export default function ZerodoseView({ data }) {
             </div>
 
             <div>
-              <h2 className="text-text font-semibold">
-                Child Information
-              </h2>
+              <h2 className="text-text font-semibold">Child Information</h2>
 
               <p className="text-text-secondary text-sm">
                 Zerodose child details.
@@ -194,36 +161,20 @@ export default function ZerodoseView({ data }) {
           </div>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <DetailField
-              label="Child Name"
-              value={data.childName}
-            />
+            <DetailField label="Child Name" value={data.childName} />
 
-            <DetailField
-              label="Father Name"
-              value={data.fatherName}
-            />
+            <DetailField label="Father Name" value={data.fatherName} />
 
             <DetailField
               label="Age (In Month)"
               value={formatNumber(data.age)}
             />
 
-            <DetailField
-              label="Contact No"
-              value={data.contactNo || "-"}
-            />
+            <DetailField label="Contact No" value={data.contactNo || "-"} />
 
-            <DetailField
-              label="Day"
-              value={formatNumber(data.day)}
-            />
+            <DetailField label="Day" value={formatNumber(data.day)} />
 
-            <DetailField
-              label="Address"
-              value={data.address}
-              fullWidth
-            />
+            <DetailField label="Address" value={data.address} fullWidth />
           </div>
         </div>
 
@@ -238,9 +189,7 @@ export default function ZerodoseView({ data }) {
             </div>
 
             <div>
-              <h2 className="text-text font-semibold">
-                Status Information
-              </h2>
+              <h2 className="text-text font-semibold">Status Information</h2>
 
               <p className="text-text-secondary text-sm">
                 Record, visit and vaccination status.
@@ -287,9 +236,7 @@ export default function ZerodoseView({ data }) {
             </div>
 
             <div>
-              <h2 className="text-text font-semibold">
-                Location Information
-              </h2>
+              <h2 className="text-text font-semibold">Location Information</h2>
 
               <p className="text-text-secondary text-sm">
                 GPS coordinates of the Zerodose record.
@@ -297,16 +244,29 @@ export default function ZerodoseView({ data }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <DetailField
-              label="Latitude"
-              value={formatNumber(latitude)}
-            />
+          {/* ============================================================
+    Location Information
+============================================================ */}
 
-            <DetailField
-              label="Longitude"
-              value={formatNumber(longitude)}
-            />
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <DetailField label="Latitude" value={formatNumber(latitude)} />
+
+            <DetailField label="Longitude" value={formatNumber(longitude)} />
+
+            {/* Google Maps Location */}
+            {latitude != null && longitude != null && (
+              <div className="md:col-span-2">
+                <a
+                  href={`https://www.google.com/maps?q=${latitude},${longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:text-primary-dark inline-flex items-center gap-2 text-sm font-medium transition"
+                >
+                  <MapPin className="h-4 w-4" />
+                  Open Location in Google Maps
+                </a>
+              </div>
+            )}
           </div>
         </div>
 
@@ -321,9 +281,7 @@ export default function ZerodoseView({ data }) {
             </div>
 
             <div>
-              <h2 className="text-text font-semibold">
-                Record Information
-              </h2>
+              <h2 className="text-text font-semibold">Record Information</h2>
 
               <p className="text-text-secondary text-sm">
                 Zerodose record metadata.
@@ -332,10 +290,7 @@ export default function ZerodoseView({ data }) {
           </div>
 
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <DetailField
-              label="Zerodose ID"
-              value={data._id}
-            />
+            <DetailField label="Zerodose ID" value={data._id} />
 
             <DetailField
               label="Created At"

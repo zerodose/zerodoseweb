@@ -32,7 +32,7 @@ export async function GET(request) {
       admin: ["districtFP"],
       districtFP: ["townFP"],
       townFP: ["ucmo"],
-      ucmo: ["supervisor", "vaccinator"],
+      ucmo: ["supervisor", "vaccinator", "otherStaff"],
     };
 
     const pendingDesignations = approvalMap[designation];

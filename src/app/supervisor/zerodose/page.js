@@ -5,11 +5,12 @@ import { useEffect, useMemo, useState } from "react";
 import { getCampaigns } from "@/api/campaignApi";
 import { getZerodoses } from "@/api/zerodoseApi";
 import { getUsers } from "@/api/userApi";
-
+import { Users, CircleCheck, SyringeIcon, Syringe, LucideSyringe } from "lucide-react";
 import ZerodoseTabs from "@/components/supervisor/zerodose/ZerodoseTabs";
 import CurrentCampaign from "@/components/supervisor/zerodose/CurrentCampaign";
 import PreviousCampaigns from "@/components/supervisor/zerodose/PreviousCampaigns";
 import ZerodosePageSkeleton from "@/components/supervisor/zerodose/ZerodosePageSkeleton";
+import ClientPageHeader from "@/components/ui/ClientPageHeader";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
@@ -347,12 +348,22 @@ export default function Page() {
           PAGE HEADER
       ====================================================== */}
 
-      <div className="mb-6 md:mb-7">
-        <h1 className="text-text text-2xl font-bold md:text-3xl">Zerodose</h1>
+      <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <ClientPageHeader
+          title="Zerodose"
+          description="View campaign-wise Zerodose records and team details"
+          onBack={() => window.history.back()}
+        />
 
-        <p className="text-text-secondary mt-1 text-sm">
-          View campaign-wise Zerodose records and team details
-        </p>
+        {/* CURRENT ZERODOSE COUNT */}
+        <div className="border-primary/20 bg-primary-light text-primary flex w-fit items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-sm">
+          <LucideSyringe size={18} />
+
+          <span>
+            {currentData.length}{" "}
+            {currentData.length === 1 ? "Zerodose" : "Zerodoses"}
+          </span>
+        </div>
       </div>
 
       {/* ======================================================

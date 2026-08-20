@@ -538,7 +538,10 @@ export default function Page() {
 
       const responses = await Promise.all(
         approvalDesignations.map((designation) =>
-          getPendingUserApprovals(unionCouncilId, designation),
+          getPendingUserApprovals({
+            designation,
+            unionCouncil: unionCouncilId,
+          }),
         ),
       );
 
@@ -564,6 +567,8 @@ export default function Page() {
 
         return (response?.data || []).map((user) => ({
           ...user,
+
+          // Explicitly keep designation for UI/card
           approvalDesignation: designation,
         }));
       });

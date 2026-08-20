@@ -215,7 +215,10 @@ export default function Page() {
 
           const approvalResponses = await Promise.all(
             approvalDesignations.map((designation) =>
-              getPendingUserApprovals(authUnionCouncilId, designation),
+              getPendingUserApprovals({
+                designation,
+                unionCouncil: authUnionCouncilId,
+              }),
             ),
           );
 

@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 
 import Table from "@/components/admin/table/Table";
 
-import { getPendingDistrictFPApprovals } from "@/api/userApi";
-
+// import { getPendingDistrictFPApprovals } from "@/api/userApi";
+import { getPendingUserApprovals } from "@/api/userApprovalsApi";
 export default function PendingApprovalsPage() {
   const router = useRouter();
 
@@ -36,10 +36,11 @@ export default function PendingApprovalsPage() {
     try {
       setLoading(true);
 
-      const response = await getPendingDistrictFPApprovals({
+      const response = await getPendingUserApprovals({
         page: pagination.page,
         limit: pagination.limit,
         search,
+        designation: "districtFP",
       });
 
       const formattedUsers = (response.data || []).map((user) => ({

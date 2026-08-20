@@ -136,10 +136,13 @@ export default function DashboardStats({ stats = {} }) {
                 Icon
             ================================================= */}
 
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between items-center">
               <div className="bg-primary-light flex h-10 w-10 items-center justify-center rounded-xl">
                 <Icon className="text-primary h-5 w-5" />
               </div>
+               <p className="text-text mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+                {value.toLocaleString()}
+              </p>
             </div>
 
             {/* =================================================
@@ -151,9 +154,6 @@ export default function DashboardStats({ stats = {} }) {
                 {item.title}
               </p>
 
-              <p className="text-text mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
-                {value.toLocaleString()}
-              </p>
             </div>
           </div>
         );

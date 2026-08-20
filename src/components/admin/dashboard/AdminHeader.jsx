@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-
 import { Menu, User, Settings, LogOut, ChevronDown } from "lucide-react";
+import Image from "next/image";
 
 export default function AdminHeader({ onMenuClick }) {
   const router = useRouter();
@@ -115,13 +115,34 @@ export default function AdminHeader({ onMenuClick }) {
         </button>
 
         {/* Page Title */}
-
+        {/* Desktop */}
         <h1
           onClick={() => router.push("/dashboard")}
-          className="text-text cursor-pointer truncate text-base font-semibold sm:text-lg"
+          className="text-text hidden cursor-pointer truncate text-base font-semibold md:flex md:text-lg"
         >
           Zerodose Dashboard
         </h1>
+
+        {/* Mobile */}
+        <div className="flex min-w-0 items-center gap-3 md:hidden">
+          {/* Logo */}
+          <div className="text-primary-foreground flex shrink-0 items-center justify-center rounded-lg text-sm font-bold">
+            <Image
+              src="/images/logo.png"
+              alt="Zerodose Logo"
+              width={35}
+              height={35}
+              className="h-auto w-[35px]"
+              priority
+            />
+          </div>
+
+          {/* Brand */}
+          <div className="overflow-visible whitespace-nowrap">
+            <p className="text-text text-base font-bold">Zerodose</p>
+            <p className="text-text-secondary text-[11px]">Admin Panel</p>
+          </div>
+        </div>
       </div>
 
       {/* ======================================================
@@ -145,7 +166,7 @@ export default function AdminHeader({ onMenuClick }) {
           {/* Desktop User Info */}
 
           <div className="hidden text-left lg:block">
-            <p className="text-text max-w-32 uppercase truncate text-sm font-semibold">
+            <p className="text-text max-w-32 truncate text-sm font-semibold uppercase">
               {user.name}
             </p>
 
@@ -182,11 +203,11 @@ export default function AdminHeader({ onMenuClick }) {
               {/* Name + Designation */}
 
               <div className="min-w-0">
-                <p className="text-text truncate uppercase text-sm font-semibold">
+                <p className="text-text truncate text-sm font-semibold uppercase">
                   {user.name}
                 </p>
 
-                <p className="text-text-secondary truncate uppercase text-xs capitalize">
+                <p className="text-text-secondary truncate text-xs capitalize uppercase">
                   {user.designation}
                 </p>
               </div>

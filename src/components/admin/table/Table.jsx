@@ -77,7 +77,7 @@ export default function Table({
   // ============================================================
   // States
   // ============================================================
-
+ 
   const [search, setSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortConfig, setSortConfig] = useState({
@@ -779,7 +779,7 @@ export default function Table({
           ================================================= */}
 
           {selectedRows.length > 0 && (
-            <div className="bg-primary-light text-primary flex h-10 min-w-28 items-center justify-center rounded-lg px-3 text-xs font-medium">
+            <div className="bg-primary-light text-primary hidden h-10 min-w-28 items-center justify-center rounded-lg px-3 text-xs font-medium md:flex">
               {selectedRows.length} selected
             </div>
           )}
@@ -942,7 +942,7 @@ export default function Table({
               </button>
 
               {filterOpen && (
-                <div className="border-border bg-background absolute top-12 right-0 z-50 w-72 rounded-xl border p-2 shadow-xl">
+                <div className="border-border bg-background absolute top-12 left-0 z-50 w-72 rounded-xl border p-2 shadow-xl">
                   <div className="flex items-center justify-between px-2 py-2">
                     <p className="text-text text-sm font-semibold">
                       Filter Data
@@ -1156,6 +1156,12 @@ export default function Table({
                   </button>
                 </div>
               )}
+            </div>
+          )}
+
+          {selectedRows.length > 0 && (
+            <div className="bg-primary-light text-primary col-span-2 flex h-10 w-full items-center justify-center rounded-lg px-3 text-xs font-medium md:hidden lg:col-span-1 lg:w-auto lg:min-w-28">
+              {selectedRows.length} selected
             </div>
           )}
         </div>

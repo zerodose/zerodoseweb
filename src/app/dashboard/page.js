@@ -1,3 +1,120 @@
+// import ActivityChart from "@/components/admin/dashboard/charts/ActivityChart";
+// import CampaignChart from "@/components/admin/dashboard/charts/CampaignChart";
+// import CampaignComparisonChart from "@/components/admin/dashboard/charts/CampaignComparisonChart";
+// import ChartAnimation from "@/components/admin/dashboard/charts/ChartAnimation";
+// import DistrictChart from "@/components/admin/dashboard/charts/DistrictChart";
+// import RecordedCoveredChart from "@/components/admin/dashboard/charts/RecordedCoveredChart";
+// import StatusChart from "@/components/admin/dashboard/charts/StatusChart";
+// import TeamChart from "@/components/admin/dashboard/charts/TeamChart";
+
+// import ZerodoseTrendChart from "@/components/admin/dashboard/charts/ZerodoseTrendChart";
+// import UserDesignationChart from "@/components/admin/dashboard/charts/UserDesignationChart";
+// import CoverageChart from "@/components/admin/dashboard/charts/CoverageChart";
+
+// import DashboardStats from "@/components/admin/dashboard/DashboardStats";
+
+// import { getGlobalCount } from "@/api/dashboardApi";
+
+// export default async function DashboardPage() {
+//   let counts = {
+//     districts: 0,
+//     campaigns: 0,
+//     supervisors: 0,
+//     teams: 0,
+//     zerodose: 0,
+//   };
+//   try {
+//     const response = await getGlobalCount(
+//       "districts,campaigns,supervisors,teams,zerodose",
+//     );
+
+//     const data = response?.data || {};
+
+//    counts = {
+//   districts: data.districts ?? 0,
+//   campaigns: data.campaigns ?? 0,
+//   supervisors: data.supervisors ?? 0,
+//   teams: data.teams ?? 0,
+//   zerodose: data.zerodose ?? 0,
+// };
+//   } catch (error) {
+//     console.error("Failed to fetch dashboard counts:", error);
+//   }
+
+//   return (
+//     <div>
+//       {/* =================================================
+//           Dashboard Stats
+//       ================================================= */}
+
+//       <DashboardStats
+//         stats={{
+//           campaigns: counts.campaigns,
+//           districts: counts.districts,
+//           supervisors: counts.supervisors,
+//           teams: counts.teams,
+//           zerodose: counts.zerodose,
+//           covered: 0,
+//         }}
+//       />
+
+//       {/* =================================================
+//           Charts
+//       ================================================= */}
+
+//       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+//         {/* Campaign */}
+//         <ChartAnimation delay={100}>
+//           <CampaignChart />
+//         </ChartAnimation>
+
+//         {/* Status */}
+//         <ChartAnimation delay={400}>
+//           <StatusChart />
+//         </ChartAnimation>
+
+//         {/* Recorded vs Covered */}
+//         <ChartAnimation delay={700}>
+//           <RecordedCoveredChart />
+//         </ChartAnimation>
+//         {/* District */}
+//         <ChartAnimation delay={250}>
+//           <DistrictChart />
+//         </ChartAnimation>
+
+//         {/* User Designation */}
+//         <ChartAnimation delay={1300}>
+//           <UserDesignationChart />
+//         </ChartAnimation>
+//         {/* Team */}
+//         <ChartAnimation delay={550}>
+//           <TeamChart />
+//         </ChartAnimation>
+
+//         {/* Campaign Comparison */}
+//         <ChartAnimation delay={850}>
+//           <CampaignComparisonChart />
+//         </ChartAnimation>
+
+//         {/* Activity */}
+//         <ChartAnimation delay={1000}>
+//           <ActivityChart />
+//         </ChartAnimation>
+
+//         {/* Zerodose Trend */}
+//         <ChartAnimation delay={1150}>
+//           <ZerodoseTrendChart />
+//         </ChartAnimation>
+
+//         {/* Coverage */}
+//         <ChartAnimation delay={1450}>
+//           <CoverageChart />
+//         </ChartAnimation>
+//       </div>
+//     </div>
+//   );
+// }
+
 import ActivityChart from "@/components/admin/dashboard/charts/ActivityChart";
 import CampaignChart from "@/components/admin/dashboard/charts/CampaignChart";
 import CampaignComparisonChart from "@/components/admin/dashboard/charts/CampaignComparisonChart";
@@ -6,7 +123,6 @@ import DistrictChart from "@/components/admin/dashboard/charts/DistrictChart";
 import RecordedCoveredChart from "@/components/admin/dashboard/charts/RecordedCoveredChart";
 import StatusChart from "@/components/admin/dashboard/charts/StatusChart";
 import TeamChart from "@/components/admin/dashboard/charts/TeamChart";
-
 import ZerodoseTrendChart from "@/components/admin/dashboard/charts/ZerodoseTrendChart";
 import UserDesignationChart from "@/components/admin/dashboard/charts/UserDesignationChart";
 import CoverageChart from "@/components/admin/dashboard/charts/CoverageChart";
@@ -16,30 +132,72 @@ import DashboardStats from "@/components/admin/dashboard/DashboardStats";
 import { getGlobalCount } from "@/api/dashboardApi";
 
 export default async function DashboardPage() {
+  // ============================================================
+  // Default Dashboard Counts
+  // ============================================================
+
   let counts = {
     districts: 0,
+    towns: 0,
+    unionCouncils: 0,
     campaigns: 0,
+    ucmos: 0,
     supervisors: 0,
+    workers: 0,
     teams: 0,
     zerodose: 0,
+
+    recorded: 0,
+    visited: 0,
+    covered: 0,
   };
+
+  // ============================================================
+  // Get All Global Dashboard Counts
+  // ============================================================
+
   try {
     const response = await getGlobalCount(
-      "districts,campaigns,supervisors,teams,zerodose",
+      [
+        "districts",
+        "towns",
+        "unionCouncils",
+        "campaigns",
+        "ucmos",
+        "supervisors",
+        "workers",
+        "teams",
+        "zerodose",
+        "recorded",
+        "visited",
+        "covered",
+      ].join(","),
     );
 
     const data = response?.data || {};
 
-   counts = {
-  districts: data.districts ?? 0,
-  campaigns: data.campaigns ?? 0,
-  supervisors: data.supervisors ?? 0,
-  teams: data.teams ?? 0,
-  zerodose: data.zerodose ?? 0,
-};
+    counts = {
+      districts: data.districts ?? 0,
+      towns: data.towns ?? 0,
+      unionCouncils: data.unionCouncils ?? 0,
+      campaigns: data.campaigns ?? 0,
+      ucmos: data.ucmos ?? 0,
+      supervisors: data.supervisors ?? 0,
+      workers: data.workers ?? 0,
+      teams: data.teams ?? 0,
+      zerodose: data.zerodose ?? 0,
+
+      recorded: data.recorded ?? 0,
+      visited: data.visited ?? 0,
+      covered: data.covered ?? 0,
+    };
   } catch (error) {
     console.error("Failed to fetch dashboard counts:", error);
   }
+
+  // ============================================================
+  // Dashboard
+  // ============================================================
 
   return (
     <div>
@@ -54,7 +212,7 @@ export default async function DashboardPage() {
           supervisors: counts.supervisors,
           teams: counts.teams,
           zerodose: counts.zerodose,
-          covered: 0,
+          covered: counts.covered,
         }}
       />
 
@@ -65,50 +223,52 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Campaign */}
         <ChartAnimation delay={100}>
-          <CampaignChart />
+          <CampaignChart counts={counts} />
         </ChartAnimation>
 
         {/* Status */}
         <ChartAnimation delay={400}>
-          <StatusChart />
+          <StatusChart counts={counts} />
         </ChartAnimation>
 
         {/* Recorded vs Covered */}
         <ChartAnimation delay={700}>
-          <RecordedCoveredChart />
+          <RecordedCoveredChart counts={counts} />
         </ChartAnimation>
+
         {/* District */}
         <ChartAnimation delay={250}>
-          <DistrictChart />
+          <DistrictChart counts={counts} />
         </ChartAnimation>
 
         {/* User Designation */}
         <ChartAnimation delay={1300}>
-          <UserDesignationChart />
+          <UserDesignationChart counts={counts} />
         </ChartAnimation>
+
         {/* Team */}
         <ChartAnimation delay={550}>
-          <TeamChart />
+          <TeamChart counts={counts} />
         </ChartAnimation>
 
         {/* Campaign Comparison */}
         <ChartAnimation delay={850}>
-          <CampaignComparisonChart />
+          <CampaignComparisonChart counts={counts} />
         </ChartAnimation>
 
         {/* Activity */}
         <ChartAnimation delay={1000}>
-          <ActivityChart />
+          <ActivityChart counts={counts} />
         </ChartAnimation>
 
         {/* Zerodose Trend */}
         <ChartAnimation delay={1150}>
-          <ZerodoseTrendChart />
+          <ZerodoseTrendChart counts={counts} />
         </ChartAnimation>
 
         {/* Coverage */}
         <ChartAnimation delay={1450}>
-          <CoverageChart />
+          <CoverageChart counts={counts} />
         </ChartAnimation>
       </div>
     </div>

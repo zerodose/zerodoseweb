@@ -7,7 +7,7 @@
 //   return (
 //     <div className="mb-6">
 //       <Link
-//         href="/ucmo/supervisor-approvals"
+//         href="/ucmo/pendingapprovals"
 //         className="border-border bg-surface hover:border-primary/40 hover:bg-primary-light group flex w-full items-center justify-between rounded-2xl border p-4 shadow-sm transition md:p-5"
 //       >
 //         <div className="flex min-w-0 items-center gap-3">
@@ -55,7 +55,7 @@ import Link from "next/link";
 export default function UCMOActions({ pendingApprovals = 0 }) {
   return (
     <Link
-      href="/ucmo/supervisor-approvals"
+      href="/ucmo/pendingapprovals"
       className="border-border bg-primary/20 hover:border-primary/40 hover:bg-primary-light group inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 shadow-sm transition-all"
     >
       <Clock3 size={16} className="text-primary" />

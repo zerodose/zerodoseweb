@@ -200,22 +200,45 @@ export default function Page() {
         // PENDING SUPERVISOR APPROVALS
         // --------------------------------------------------------
 
+        // --------------------------------------------------------
+        // PENDING APPROVALS
+        // UCMO APPROVES:
+        // supervisor + vaccinator + otherStaff
+        // --------------------------------------------------------
+
         if (authUnionCouncilId) {
-          const approvalsResponse =
-            await getPendingUserApprovals(authUnionCouncilId, "supervisor");
+          const approvalDesignations = [
+            "supervisor",
+            "vaccinator",
+            "otherStaff",
+          ];
 
-          if (!approvalsResponse?.success) {
-            throw new Error(
-              approvalsResponse?.message ||
-                "Failed to fetch pending supervisor approvals.",
-            );
-          }
-
-          setPendingApprovals(
-            Array.isArray(approvalsResponse.data)
-              ? approvalsResponse.data.length
-              : 0,
+          const approvalResponses = await Promise.all(
+            approvalDesignations.map((designation) =>
+              getPendingUserApprovals(authUnionCouncilId, designation),
+            ),
           );
+
+          approvalResponses.forEach((response, index) => {
+            if (!response?.success) {
+              throw new Error(
+                response?.message ||
+                  `Failed to fetch ${approvalDesignations[index]} approvals.`,
+              );
+            }
+          });
+
+          const totalPendingApprovals = approvalResponses.reduce(
+            (total, response) => {
+              return (
+                total +
+                (Array.isArray(response?.data) ? response.data.length : 0)
+              );
+            },
+            0,
+          );
+
+          setPendingApprovals(totalPendingApprovals);
         } else {
           setPendingApprovals(0);
         }

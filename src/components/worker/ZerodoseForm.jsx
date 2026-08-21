@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { getCampaigns } from "@/api/campaignApi";
 import { createZerodose, getZerodose, updateZerodose } from "@/api/zerodoseApi";
 import { getCurrentLocation } from "@/utils/location";
+import Loader from "../ui/Loader";
 
 export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
   const router = useRouter();
@@ -407,6 +408,11 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
       {/* ========================================================
           Header
       ======================================================== */}
+ {loading && (
+      <Loader
+        text={isEdit ? "Updating Zerodose..." : "Adding Zerodose..."}
+      />
+    )}
 
       <div className="mb-6 px-4 pt-4 md:px-6">
         <div className="bg-primary relative overflow-hidden rounded-2xl p-5 shadow-sm md:p-6">

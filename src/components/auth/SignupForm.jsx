@@ -380,9 +380,6 @@ export default function SignupForm() {
         });
       }
     } catch (error) {
-      // console.error("Signup error:", error);
-      // console.error("Response:", error?.response?.data);
-
       const message =
         error?.response?.data?.message ||
         error?.message ||
@@ -408,6 +405,103 @@ export default function SignupForm() {
     });
   };
 
+  const handleVerifyEmail = async (code) => {
+    try {
+      setVerificationLoading(true);
+      setVerificationError("");
+
+      const response = await verifyEmail({
+        email: verificationEmail,
+        code,
+      });
+
+      if (response?.success) {
+        toast.success("Email verified successfully!", {
+          description: "Your account has been verified.",
+        });
+
+        setShowVerifyModal(false);
+
+        if (selectedDesignation === "admin") {
+          if (pathname === "/dashboard/users") {
+            router.back();
+            return;
+          }
+        }
+
+        router.push("/auth/login");
+
+      } else {
+        const message = response?.message || "Email verification failed.";
+
+        setVerificationError(message);
+
+        toast.error("Verification failed", {
+          description: message,
+        });
+      }
+    } catch (error) {
+      // console.error("Email verification error:", error);
+
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Invalid verification code.";
+
+      setVerificationError(message);
+
+      toast.error("Verification failed", {
+        description: message,
+      });
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    try {
+      setResendLoading(true);
+      setVerificationError("");
+
+      const response = await resendVerification({
+        email: verificationEmail,
+      });
+
+      if (response?.success) {
+        setVerificationError("");
+
+        toast.success("Verification code sent!", {
+          description: `A new verification code was sent to ${verificationEmail}.`,
+        });
+      } else {
+        const message =
+          response?.message || "Failed to resend verification code.";
+
+        setVerificationError(message);
+
+        toast.error("Failed to resend code", {
+          description: message,
+        });
+      }
+    } catch (error) {
+      // console.error("Resend verification error:", error);
+      // console.error("Response:", error?.response?.data);
+
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Failed to resend verification code.";
+
+      setVerificationError(message);
+
+      toast.error("Failed to resend code", {
+        description: message,
+      });
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   return (
     <>
       {/* =====================================================
@@ -420,7 +514,7 @@ export default function SignupForm() {
           Main
       ===================================================== */}
 
-      <main className="bg-surface min-h-screen w-full px-4 py-16 ">
+      <main className="bg-surface min-h-screen w-full px-4 py-16">
         <div className="mx-auto w-full">
           <div className="border-border bg-background rounded-2xl border p-6 shadow-sm sm:p-8">
             {/* =================================================
@@ -698,52 +792,52 @@ export default function SignupForm() {
                     ================================================= */}
 
                     {/* {requiresDistrict && ( */}
-                      <div>
-                        <Controller
-                          name="district"
-                          control={control}
-                          rules={{
-                            required: requiresDistrict
-                              ? "Please select a district."
-                              : false,
-                          }}
-                          render={({ field }) => (
-                            <Select
-                              label="District"
-                              name={field.name}
-                              value={field.value}
-                              onChange={(e) => {
-                                field.onChange(e);
+                    <div>
+                      <Controller
+                        name="district"
+                        control={control}
+                        rules={{
+                          required: requiresDistrict
+                            ? "Please select a district."
+                            : false,
+                        }}
+                        render={({ field }) => (
+                          <Select
+                            label="District"
+                            name={field.name}
+                            value={field.value}
+                            onChange={(e) => {
+                              field.onChange(e);
 
-                                setValue("town", "");
-                                setValue("unionCouncil", "");
+                              setValue("town", "");
+                              setValue("unionCouncil", "");
 
-                                setTowns([]);
-                                setUnionCouncils([]);
+                              setTowns([]);
+                              setUnionCouncils([]);
 
-                                clearErrors(["town", "unionCouncil"]);
-                              }}
-                              options={districts.map((district) => ({
-                                value: district._id,
-                                label: district.name,
-                              }))}
-                              placeholder="Select district"
-                              searchPlaceholder="Search district..."
-                              searchable
-                              loading={districtLoading}
-                              disabled={loading}
-                              required
-                              error={errors.district?.message}
-                            />
-                          )}
-                        />
-
-                        {errors.district && (
-                          <p className="mt-1.5 text-xs text-red-500">
-                            {errors.district.message}
-                          </p>
+                              clearErrors(["town", "unionCouncil"]);
+                            }}
+                            options={districts.map((district) => ({
+                              value: district._id,
+                              label: district.name,
+                            }))}
+                            placeholder="Select district"
+                            searchPlaceholder="Search district..."
+                            searchable
+                            loading={districtLoading}
+                            disabled={loading}
+                            required
+                            error={errors.district?.message}
+                          />
                         )}
-                      </div>
+                      />
+
+                      {errors.district && (
+                        <p className="mt-1.5 text-xs text-red-500">
+                          {errors.district.message}
+                        </p>
+                      )}
+                    </div>
                     {/* // )} */}
 
                     {/* =================================================
@@ -1028,111 +1122,8 @@ export default function SignupForm() {
             }
           }}
 
-          // ===================================================
-          // Verify Email
-          // ===================================================
-
-          onVerify={async (code) => {
-            try {
-              setVerificationLoading(true);
-              setVerificationError("");
-
-              const response = await verifyEmail({
-                email: verificationEmail,
-                code,
-              });
-
-              if (response?.success) {
-                toast.success("Email verified successfully!", {
-                  description: "Your account has been verified.",
-                });
-
-                setShowVerifyModal(false);
-
-                if (pathname === "/dashboard/users/addUser") {
-                  router.back();
-                  return;
-                }
-
-                router.push(
-                  dashboardRoutes[selectedDesignation] || "/dashboard",
-                );
-              } else {
-                const message =
-                  response?.message || "Email verification failed.";
-
-                setVerificationError(message);
-
-                toast.error("Verification failed", {
-                  description: message,
-                });
-              }
-            } catch (error) {
-              console.error("Email verification error:", error);
-
-              const message =
-                error?.response?.data?.message ||
-                error?.message ||
-                "Invalid verification code.";
-
-              setVerificationError(message);
-
-              toast.error("Verification failed", {
-                description: message,
-              });
-            } finally {
-              setVerificationLoading(false);
-            }
-          }}
-
-          // ===================================================
-          // Resend Verification
-          // ===================================================
-
-          onResend={async () => {
-            try {
-              setResendLoading(true);
-              setVerificationError("");
-
-              const response = await resendVerification({
-                email: verificationEmail,
-              });
-
-              if (response?.success) {
-                setVerificationError("");
-
-                toast.success("Verification code sent!", {
-                  description: `A new verification code was sent to ${verificationEmail}.`,
-                });
-              } else {
-                const message =
-                  response?.message || "Failed to resend verification code.";
-
-                setVerificationError(message);
-
-                toast.error("Failed to resend code", {
-                  description: message,
-                });
-              }
-            } catch (error) {
-              console.error("Resend verification error:", error);
-
-              console.error("Response:", error?.response?.data);
-
-              const message =
-                error?.response?.data?.message ||
-                error?.message ||
-                "Failed to resend verification code.";
-
-              setVerificationError(message);
-
-              toast.error("Failed to resend code", {
-                description: message,
-              });
-            } finally {
-              setResendLoading(false);
-            }
-          }}
+          onVerify={handleVerifyEmail}
+          onResend={handleResendVerification}
         />
       </main>
     </>

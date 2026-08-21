@@ -164,6 +164,13 @@ export async function POST(request) {
       unionCouncil: user.unionCouncil,
       designation: user.designation,
       teamNumber: user.teamNumber ?? null,
+       ucmo: user.ucmo
+    ? {
+        id: user.ucmo._id.toString(),
+        name: user.ucmo.name,
+        designation: user.ucmo.designation,
+      }
+    : null,
 
       supervisor: user.supervisor
         ? {

@@ -301,7 +301,7 @@ export async function POST(request) {
         approvalStatus: "approved",
         unionCouncil: normalizedUnionCouncil,
       })
-        .select("_id")
+        .select("_id ucmo")
         .lean();
 
       if (!supervisorDoc) {
@@ -334,6 +334,7 @@ export async function POST(request) {
         contactNumber: normalizedContactNumber,
         district: normalizedDistrict,
         town: normalizedTown,
+        ucmo: supervisorDoc.ucmo || null,
         unionCouncil: normalizedUnionCouncil,
         designation,
         approvalStatus: approvalData.approvalStatus,
@@ -362,6 +363,30 @@ export async function POST(request) {
         },
         { status: 201 },
       );
+    }
+
+    let currentUcmo = null;
+
+    if (["supervisor", "vaccinator", "otherStaff"].includes(designation)) {
+      currentUcmo = await User.findOne({
+        designation: "ucmo",
+        isActive: true,
+        approvalStatus: "approved",
+        unionCouncil: normalizedUnionCouncil,
+      })
+        .select("_id")
+        .lean();
+
+      if (!currentUcmo) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "Active approved UCMO not found in the selected Union Council.",
+          },
+          { status: 400 },
+        );
+      }
     }
 
     const verificationCode = generateVerificationCode();

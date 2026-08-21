@@ -9,12 +9,12 @@ import User from "@/models/User";
 // ============================================================
 
 const APPROVAL_HIERARCHY = {
-  districtFP: ["admin"],
-  townFP: ["districtFP"],
-  ucmo: ["townFP"],
+  districtfp: ["admin"],
+  townfp: ["districtfp"],
+  ucmo: ["townfp"],
   supervisor: ["ucmo"],
   vaccinator: ["ucmo"],
-  otherStaff: ["ucmo"],
+  otherstaff: ["ucmo"],
 };
 
 // ============================================================
@@ -52,9 +52,7 @@ export async function GET(request, { params }) {
       approvalStatus: "pending",
       isActive: true,
     })
-      .select(
-        "-password -emailVerificationCode -emailVerificationExpires",
-      )
+      .select("-password -emailVerificationCode -emailVerificationExpires")
       .populate("district", "_id name code")
       .populate("town", "_id name code")
       .populate("unionCouncil", "_id name code")
@@ -97,8 +95,7 @@ export async function GET(request, { params }) {
     return NextResponse.json(
       {
         success: false,
-        message:
-          error?.message || "Failed to load pending approval.",
+        message: error?.message || "Failed to load pending approval.",
       },
       {
         status: 500,
@@ -139,10 +136,7 @@ export async function PUT(request, { params }) {
 
     const body = await request.json();
 
-    const {
-      approvalStatus,
-      approverId,
-    } = body;
+    const { approvalStatus, approverId } = body;
 
     // ============================================================
     // Validate Approval Status
@@ -164,10 +158,7 @@ export async function PUT(request, { params }) {
     // Validate Approver ID
     // ============================================================
 
-    if (
-      !approverId ||
-      !mongoose.Types.ObjectId.isValid(approverId)
-    ) {
+    if (!approverId || !mongoose.Types.ObjectId.isValid(approverId)) {
       return NextResponse.json(
         {
           success: false,
@@ -187,9 +178,7 @@ export async function PUT(request, { params }) {
       _id: approverId,
       isActive: true,
     })
-      .select(
-        "_id name designation district town unionCouncil",
-      )
+      .select("_id name designation district town unionCouncil")
       .lean();
 
     if (!approver) {
@@ -230,8 +219,7 @@ export async function PUT(request, { params }) {
     // Get Required Approver
     // ============================================================
 
-    const requiredApprovers =
-      APPROVAL_HIERARCHY[user.designation];
+    const requiredApprovers = APPROVAL_HIERARCHY[user.designation];
 
     if (!requiredApprovers) {
       return NextResponse.json(
@@ -268,10 +256,10 @@ export async function PUT(request, { params }) {
     // ============================================================
 
     // ------------------------------------------------------------
-    // DistrictFP → approves TownFP from same district
+    // districtfp → approves TownFP from same district
     // ------------------------------------------------------------
 
-    if (user.designation === "townFP") {
+    if (user.designation === "townfp") {
       if (
         !approver.district ||
         !user.district ||
@@ -280,8 +268,7 @@ export async function PUT(request, { params }) {
         return NextResponse.json(
           {
             success: false,
-            message:
-              "You can only approve TownFP requests from your district.",
+            message: "You can only approve TownFP requests from your district.",
           },
           {
             status: 403,
@@ -303,8 +290,7 @@ export async function PUT(request, { params }) {
         return NextResponse.json(
           {
             success: false,
-            message:
-              "You can only approve UCMO requests from your town.",
+            message: "You can only approve UCMO requests from your town.",
           },
           {
             status: 403,
@@ -324,14 +310,12 @@ export async function PUT(request, { params }) {
       if (
         !approver.unionCouncil ||
         !user.unionCouncil ||
-        String(approver.unionCouncil) !==
-          String(user.unionCouncil)
+        String(approver.unionCouncil) !== String(user.unionCouncil)
       ) {
         return NextResponse.json(
           {
             success: false,
-            message:
-              "You can only approve users from your union council.",
+            message: "You can only approve users from your union council.",
           },
           {
             status: 403,
@@ -392,9 +376,7 @@ export async function PUT(request, { params }) {
     return NextResponse.json(
       {
         success: false,
-        message:
-          error?.message ||
-          "Failed to update pending user approval.",
+        message: error?.message || "Failed to update pending user approval.",
       },
       {
         status: 500,

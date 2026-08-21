@@ -2,65 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-import {
-  X,
-  ChevronLeft,
-  LayoutDashboard,
-  Network,
-  UsersRound,
-  UserCog,
-  Users,
-  Syringe,
-  CalendarDays,
-  ClipboardCheck,
-} from "lucide-react";
-
+import { X, ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
-const townFPSidebar = [
-  {
-    title: "Dashboard",
-    href: "/townfp",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Campaigns",
-    href: "/townfp/campaigns",
-    icon: CalendarDays,
-  },
-  {
-    title: "Union Councils",
-    href: "/townfp/union-councils",
-    icon: Network,
-  },
-  {
-    title: "UCMOs",
-    href: "/townfp/ucmos",
-    icon: UsersRound,
-  },
-  {
-    title: "Supervisors",
-    href: "/townfp/supervisors",
-    icon: UserCog,
-  },
-  {
-    title: "Workers",
-    href: "/townfp/workers",
-    icon: Users,
-  },
-  {
-    title: "Zerodose",
-    href: "/townfp/zerodose",
-    icon: Syringe,
-  },
-  {
-    title: "Pending Approvals",
-    href: "/townfp/pendingapprovals",
-    icon: ClipboardCheck,
-  },
-];
+import { townfpSidebarData } from "@/content/data";
+import { getPendingApprovalCount } from "@/api/userApprovalsApi";
 
 export default function TownFPSidebar({
   collapsed,
@@ -71,13 +18,14 @@ export default function TownFPSidebar({
   const pathname = usePathname();
 
   const [openMenus, setOpenMenus] = useState({});
+  const [pendingApprovalCount, setPendingApprovalCount] = useState(0);
 
   // ============================================================
   // Automatically open active parent
   // ============================================================
 
   useEffect(() => {
-    townFPSidebar.forEach((item) => {
+    townfpSidebarData.forEach((item) => {
       if (!item.children?.length) return;
 
       const activeChild = item.children.some((child) =>
@@ -91,6 +39,38 @@ export default function TownFPSidebar({
         }));
       }
     });
+  }, [pathname]);
+
+  // ============================================================
+  // Get Pending UCMO Approval Count
+  // ============================================================
+
+  useEffect(() => {
+    const loadPendingApprovalCount = async () => {
+      try {
+        const authUser = JSON.parse(localStorage.getItem("authUser") || "{}");
+
+        const userId = authUser?.id || authUser?._id;
+
+        if (!userId) {
+          setPendingApprovalCount(0);
+          return;
+        }
+
+        const response = await getPendingApprovalCount({
+          userId,
+          designation: "townfp",
+        });
+
+        setPendingApprovalCount(response?.count || 0);
+      } catch (error) {
+        console.error("Get pending UCMO approval count error:", error);
+
+        setPendingApprovalCount(0);
+      }
+    };
+
+    loadPendingApprovalCount();
   }, [pathname]);
 
   // ============================================================
@@ -138,6 +118,10 @@ export default function TownFPSidebar({
     return pathname.startsWith(href);
   };
 
+  // ============================================================
+  // Render
+  // ============================================================
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -161,8 +145,6 @@ export default function TownFPSidebar({
         {/* Sidebar Header */}
 
         <div className="border-border relative flex h-16 shrink-0 items-center border-b px-4">
-          {/* Logo / Brand */}
-
           <div
             className={`flex min-w-0 items-center gap-3 transition-all duration-300 ${
               collapsed ? "md:w-10" : "md:w-auto"
@@ -222,7 +204,7 @@ export default function TownFPSidebar({
 
         <nav className="scrollbar-hide flex-1 overflow-y-auto p-3">
           <div className="space-y-1.5">
-            {townFPSidebar.map((item) => {
+            {townfpSidebarData.map((item) => {
               const Icon = item.icon;
 
               const hasChildren = item.children?.length > 0;
@@ -237,6 +219,8 @@ export default function TownFPSidebar({
 
               return (
                 <div key={item.title}>
+                  {/* Parent */}
+
                   {hasChildren ? (
                     <button
                       type="button"
@@ -266,14 +250,10 @@ export default function TownFPSidebar({
                           {item.title}
                         </span>
                       </div>
-
-                      {!collapsed && (
-                        <span className="shrink-0">
-                          {/* Reserved for future child menus */}
-                        </span>
-                      )}
                     </button>
                   ) : (
+                    /* Normal Link */
+
                     <Link
                       href={item.href}
                       title={collapsed ? item.title : undefined}
@@ -293,7 +273,62 @@ export default function TownFPSidebar({
                       >
                         {item.title}
                       </span>
+
+                      {/* Pending Approval Count */}
+
+                      {item.title === "Pending Approvals" &&
+                        !collapsed &&
+                        pendingApprovalCount > 0 && (
+                          <span
+                            className={`ml-auto flex h-5 min-w-5 items-center justify-center rounded-lg px-1.5 text-[10px] font-bold ${
+                              active
+                                ? "bg-surface text-primary"
+                                : "bg-primary text-white"
+                            }`}
+                          >
+                            {pendingApprovalCount}
+                          </span>
+                        )}
                     </Link>
+                  )}
+
+                  {/* Children */}
+
+                  {hasChildren && (
+                    <div
+                      className={`overflow-visible transition-all duration-300 ease-in-out ${
+                        openMenus[item.title] && !collapsed
+                          ? "max-h-96 opacity-100"
+                          : "max-h-0 opacity-0"
+                      }`}
+                    >
+                      <div className="border-border mt-1 ml-5 space-y-1 border-l pl-3">
+                        {item.children.map((child) => {
+                          const ChildIcon = child.icon;
+
+                          const childIsActive = isActive(child.href);
+
+                          return (
+                            <Link
+                              key={child.href}
+                              href={child.href}
+                              onClick={() => setMobileOpen(false)}
+                              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${
+                                childIsActive
+                                  ? "bg-primary-light text-primary font-medium"
+                                  : "text-text-secondary hover:bg-surface hover:text-text"
+                              }`}
+                            >
+                              {ChildIcon && (
+                                <ChildIcon size={16} className="shrink-0" />
+                              )}
+
+                              <span className="truncate">{child.title}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
                 </div>
               );

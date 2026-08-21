@@ -55,9 +55,9 @@ const userSchema = new mongoose.Schema(
           "ucmo",
           "supervisor",
           "vaccinator",
-          "otherStaff",
-          "townFP",
-          "districtFP",
+          "otherstaff",
+          "townfp",
+          "districtfp",
         ].includes(this.designation)
           ? "pending"
           : null;
@@ -70,9 +70,9 @@ const userSchema = new mongoose.Schema(
               "ucmo",
               "supervisor",
               "vaccinator",
-              "otherStaff",
-              "townFP",
-              "districtFP",
+              "otherstaff",
+              "townfp",
+              "districtfp",
             ].includes(this.designation)
           );
         },
@@ -106,9 +106,9 @@ const userSchema = new mongoose.Schema(
           "ucmo",
           "supervisor",
           "vaccinator",
-          "otherStaff",
-          "townFP",
-          "districtFP",
+          "otherstaff",
+          "townfp",
+          "districtfp",
           "worker",
           "admin",
         ],
@@ -143,9 +143,9 @@ const userSchema = new mongoose.Schema(
           "ucmo",
           "supervisor",
           "vaccinator",
-          "otherStaff",
+          "otherstaff",
           "worker",
-          "townFP",
+          "townfp",
         ].includes(this.designation);
       },
       default: null,
@@ -155,9 +155,9 @@ const userSchema = new mongoose.Schema(
             "ucmo",
             "supervisor",
             "vaccinator",
-            "otherStaff",
+            "otherstaff",
             "worker",
-            "townFP",
+            "townfp",
           ].includes(this.designation);
 
           if (!requiresTown) {
@@ -190,7 +190,7 @@ const userSchema = new mongoose.Schema(
           "ucmo",
           "supervisor",
           "vaccinator",
-          "otherStaff",
+          "otherstaff",
           "worker",
         ].includes(this.designation);
       },
@@ -201,7 +201,7 @@ const userSchema = new mongoose.Schema(
             "ucmo",
             "supervisor",
             "vaccinator",
-            "otherStaff",
+            "otherstaff",
             "worker",
           ].includes(this.designation);
 

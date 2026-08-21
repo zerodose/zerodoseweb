@@ -85,7 +85,7 @@ export default function Page() {
       case "vaccinator":
         return "Vaccinator";
 
-      case "otherStaff":
+      case "otherstaff":
         return "Other Staff";
 
       default:
@@ -125,7 +125,7 @@ export default function Page() {
       // UCMO CAN APPROVE THESE 3 DESIGNATIONS
       // ==========================================================
 
-      const approvalDesignations = ["supervisor", "vaccinator", "otherStaff"];
+      const approvalDesignations = ["supervisor", "vaccinator", "otherstaff"];
 
       // ==========================================================
       // FETCH ALL 3 APPROVAL TYPES
@@ -273,8 +273,8 @@ export default function Page() {
     (user) => user?.approvalDesignation === "vaccinator",
   );
 
-  const otherStaffApprovals = approvals.filter(
-    (user) => user?.approvalDesignation === "otherStaff",
+  const otherstaffApprovals = approvals.filter(
+    (user) => user?.approvalDesignation === "otherstaff",
   );
 
   // ============================================================
@@ -526,7 +526,7 @@ export default function Page() {
           description:
             "Review and manage pending other staff registration requests.",
           icon: Users,
-          users: otherStaffApprovals,
+          users: otherstaffApprovals,
         })}
       </div>
     </div>

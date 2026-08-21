@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import Table from "@/components/admin/table/Table";
-
 import { getPendingUserApprovals } from "@/api/userApprovalsApi";
 
 export default function PendingApprovalsPage() {
@@ -44,23 +43,22 @@ export default function PendingApprovalsPage() {
 
       const authUser = JSON.parse(storedUser);
 
-      if (authUser.designation !== "townFP") {
+      // Designations are lowercase
+      if (String(authUser?.designation || "").toLowerCase() !== "townfp") {
         router.replace("/dashboard");
         return;
       }
 
       const currentTownId =
-        authUser.town?._id ||
-        authUser.town?.id ||
-        authUser.town ||
-        "";
+        authUser?.town?._id || authUser?.town?.id || authUser?.town || "";
 
       if (!currentTownId) {
-        console.error("TownFP town ID not found.");
+        console.error("Town focal person town ID not found.");
+        setLoading(false);
         return;
       }
 
-      setTownId(currentTownId);
+      setTownId(String(currentTownId));
     } catch (error) {
       console.error("Load auth user error:", error);
 
@@ -73,7 +71,9 @@ export default function PendingApprovalsPage() {
   // ============================================================
 
   const getPendingApprovalsData = async () => {
-    if (!townId) return;
+    if (!townId) {
+      return;
+    }
 
     try {
       setLoading(true);
@@ -84,29 +84,30 @@ export default function PendingApprovalsPage() {
         search,
 
         // ========================================================
-        // TownFP Approval Policy
-        // TownFP approves UCMOs
+        // TownFP approves UCMO
         // ========================================================
 
         designation: "ucmo",
+
+        // Only UCMOs belonging to logged-in TownFP's town
         town: townId,
       });
 
-      const formattedUsers = (response.data || []).map((user) => ({
+      const formattedUsers = (response?.data || []).map((user) => ({
         ...user,
 
-        districtName: user.district?.name || "-",
-        townName: user.town?.name || "-",
-        unionCouncilName: user.unionCouncil?.name || "-",
+        districtName: user?.district?.name || "-",
+        townName: user?.town?.name || "-",
+        unionCouncilName: user?.unionCouncil?.name || "-",
 
-        approvalStatus: user.approvalStatus || "pending",
+        approvalStatus: user?.approvalStatus || "pending",
       }));
 
       setUsers(formattedUsers);
 
       setPagination((previous) => ({
         ...previous,
-        ...(response.pagination || {}),
+        ...(response?.pagination || {}),
       }));
     } catch (error) {
       console.error("Get pending UCMO approvals error:", error);
@@ -130,19 +131,16 @@ export default function PendingApprovalsPage() {
   // ============================================================
 
   useEffect(() => {
-    if (!townId) return;
+    if (!townId) {
+      return;
+    }
 
     const timer = setTimeout(() => {
       getPendingApprovalsData();
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [
-    townId,
-    pagination.page,
-    pagination.limit,
-    search,
-  ]);
+  }, [townId, pagination.page, pagination.limit, search]);
 
   // ============================================================
   // Search

@@ -30,7 +30,7 @@ export default function PendingApprovalsPage() {
   });
 
   // ============================================================
-  // Get Current DistrictFP
+  // Get Current districtfp
   // ============================================================
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function PendingApprovalsPage() {
 
       const authUser = JSON.parse(storedUser);
 
-      if (authUser.designation !== "districtFP") {
+      if (authUser.designation !== "districtfp") {
         router.replace("/dashboard");
         return;
       }
@@ -78,9 +78,9 @@ export default function PendingApprovalsPage() {
         search,
 
         // ========================================================
-        // DistrictFP Approval Policy
+        // districtfp Approval Policy
         // ========================================================
-        designation: "townFP",
+        designation: "townfp",
         district: districtId,
       });
 
@@ -101,7 +101,7 @@ export default function PendingApprovalsPage() {
         ...(response.pagination || {}),
       }));
     } catch (error) {
-      console.error("Get pending TownFP approvals error:", error);
+      console.error("Get pending town focal person approvals error:", error);
 
       setUsers([]);
 

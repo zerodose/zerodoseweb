@@ -47,8 +47,7 @@ export async function PUT(request, { params }) {
     // ============================================================
 
     const authUserId =
-      request.headers.get("x-user-id") ||
-      request.headers.get("x-auth-user-id");
+      request.headers.get("x-user-id") || request.headers.get("x-auth-user-id");
 
     /*
       If your auth middleware already puts the logged-in user ID
@@ -79,7 +78,7 @@ export async function PUT(request, { params }) {
 
     const user = await User.findOne({
       _id: id,
-      designation: "districtFP",
+      designation: "districtfp",
       approvalStatus: "pending",
     });
 
@@ -87,8 +86,7 @@ export async function PUT(request, { params }) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Pending District Focal Person approval not found.",
+          message: "Pending District Focal Person approval not found.",
         },
         {
           status: 404,
@@ -117,9 +115,7 @@ export async function PUT(request, { params }) {
     // ============================================================
 
     const updatedUser = await User.findById(user._id)
-      .select(
-        "-password -emailVerificationCode -emailVerificationExpires",
-      )
+      .select("-password -emailVerificationCode -emailVerificationExpires")
       .populate("district", "_id name code")
       .populate("town", "_id name code")
       .populate("unionCouncil", "_id name code")
@@ -152,9 +148,7 @@ export async function PUT(request, { params }) {
         {
           success: false,
           message:
-            messages.length > 0
-              ? messages.join(", ")
-              : "Validation failed.",
+            messages.length > 0 ? messages.join(", ") : "Validation failed.",
         },
         {
           status: 400,
@@ -165,8 +159,7 @@ export async function PUT(request, { params }) {
     return NextResponse.json(
       {
         success: false,
-        message:
-          error?.message || "Failed to update approval status.",
+        message: error?.message || "Failed to update approval status.",
       },
       {
         status: 500,

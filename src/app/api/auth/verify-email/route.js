@@ -146,7 +146,7 @@ export async function POST(request) {
       pendingRegistration;
 
     const locationRequirements = {
-      districtFP: {
+      districtfp: {
         district: true,
         town: false,
         unionCouncil: false,
@@ -171,7 +171,7 @@ export async function POST(request) {
         town: true,
         unionCouncil: true,
       },
-      otherStaff: {
+      otherstaff: {
         district: true,
         town: true,
         unionCouncil: true,
@@ -337,9 +337,9 @@ export async function POST(request) {
       "ucmo",
       "supervisor",
       "vaccinator",
-      "otherStaff",
+      "otherstaff",
       "townFP",
-      "districtFP",
+      "districtfp",
     ];
 
     const approvalStatus = approvalRequiredDesignations.includes(designation)
@@ -376,7 +376,7 @@ export async function POST(request) {
       supervisorCode: pendingRegistration.supervisorCode,
 
       supervisor: pendingRegistration.supervisor,
-      
+
       ucmo: pendingRegistration.ucmo || null,
 
       teamNumber: pendingRegistration.teamNumber,

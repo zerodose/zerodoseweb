@@ -1,8 +1,8 @@
 "use client";
 
-import DistrictFPHeader from "@/components/districtfp/DistrictFPHeader";
-import DistrictFPSidebar from "@/components/districtfp/DistrictFPSidebar";
 import { useEffect, useState } from "react";
+import DistrictfpHeader from "@/components/districtfp/DistrictFPHeader";
+import DistrictFPSidebar from "@/components/districtfp/DistrictFPSidebar";
 
 const SIDEBAR_STORAGE_KEY = "district-fp-sidebar-settings";
 
@@ -110,7 +110,7 @@ export default function DistrictFPLayout({ children }) {
       {/* Main Area */}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <DistrictFPHeader onMenuClick={handleMobileOpen} />
+        <DistrictfpHeader onMenuClick={handleMobileOpen} />
 
         <main className="bg-surface min-h-0 flex-1 overflow-y-auto">
           <div className="p-4">{children}</div>
@@ -119,3 +119,91 @@ export default function DistrictFPLayout({ children }) {
     </div>
   );
 }
+
+// "use client";
+
+// import { useEffect, useState } from "react";
+
+// import Sidebar from "@/components/layout/Sidebar";
+// import { districtfpSidebar } from "@/content/data";
+// import PageHeaderWithDesignation from "@/components/ui/PageHeaderWithDesignation";
+
+// export default function districtfpLayout({ children }) {
+//   const [mobileOpen, setMobileOpen] = useState(false);
+//   const [user, setUser] = useState(null);
+
+//   // ============================================================
+//   // Logged-in District FP
+//   // ============================================================
+
+//   useEffect(() => {
+//     if (typeof window === "undefined") return;
+
+//     try {
+//       const authUser = localStorage.getItem("authUser");
+
+//       if (!authUser) return;
+
+//       const parsedUser = JSON.parse(authUser);
+
+//       setUser(parsedUser);
+//     } catch (error) {
+//       console.error("Invalid authUser:", error);
+//     }
+//   }, []);
+
+//   // ============================================================
+//   // District FP Data
+//   // ============================================================
+
+//   const districtCode =
+//     user?.district?.code ||
+//     user?.districtId?.code ||
+//     "";
+
+//   const districtName =
+//     user?.district?.name ||
+//     user?.districtId?.name ||
+//     "";
+
+//   return (
+//     <div className="bg-surface flex min-h-screen">
+//       {/* ========================================================
+//           Sidebar
+//       ======================================================== */}
+
+//       <Sidebar
+//         items={districtfpSidebar}
+//         mobileOpen={mobileOpen}
+//         setMobileOpen={setMobileOpen}
+//       />
+
+//       {/* ========================================================
+//           Main
+//       ======================================================== */}
+
+//       <div className="flex min-w-0 flex-1 flex-col">
+//         <main className="flex-1 bg-white p-4 sm:px-4 sm:py-5 md:px-10 md:py-6">
+//           {/* ======================================================
+//               District FP Header
+//           ====================================================== */}
+
+//           <PageHeaderWithDesignation
+//             name={user?.name}
+//             designation={user?.designation || "districtfp"}
+//             onMenuClick={() => setMobileOpen(true)}
+//             dashboardRoute="/districtfp"
+//             districtCode={districtCode}
+//             districtName={districtName}
+//           />
+
+//           {/* ======================================================
+//               Page Content
+//           ====================================================== */}
+
+//           {children}
+//         </main>
+//       </div>
+//     </div>
+//   );
+// }

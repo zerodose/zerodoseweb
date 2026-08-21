@@ -925,7 +925,7 @@ export async function POST(request) {
 // ucmo        -> UCMO ID
 // vaccinator  -> own UC
 // townFP      -> own Town
-// districtFP  -> own District
+// districtfp  -> own District
 // admin       -> all
 //
 // ============================================================
@@ -1000,7 +1000,7 @@ export async function POST(request) {
 //     //
 //     // Future district-level designation.
 //     //
-//     case "districtFP":
+//     case "districtfp":
 //       if (!user.district) {
 //         return {
 //           error: "District FP is not assigned to a District.",
@@ -1490,7 +1490,7 @@ export async function GET(request) {
       // Future district-level designation.
       // ======================================================
 
-      case "districtFP": {
+      case "districtfp": {
         if (!loggedInUser.district) {
           return NextResponse.json(
             {

@@ -18,7 +18,7 @@ import { getUnionCouncilDropdown } from "@/api/unionCouncilApi";
 import { createUser, getUser, updateUser } from "@/api/userApi";
 
 import { verifyEmail, resendVerification } from "@/api/authApi";
-import { dashboardRoutes } from "@/content/data";
+import { designationRoutes } from "@/content/data";
 
 export default function AdminSignupForm({ mode = "add", userId = null }) {
   const router = useRouter();
@@ -60,7 +60,7 @@ export default function AdminSignupForm({ mode = "add", userId = null }) {
       label: "Vaccinator",
     },
     {
-      value: "otherStaff",
+      value: "otherstaff",
       label: "Other Staff",
     },
     {
@@ -68,7 +68,7 @@ export default function AdminSignupForm({ mode = "add", userId = null }) {
       label: "Town Focal Person",
     },
     {
-      value: "districtFP",
+      value: "districtfp",
       label: "District Focal Person",
     },
   ];
@@ -87,7 +87,7 @@ export default function AdminSignupForm({ mode = "add", userId = null }) {
       label: "Vaccinator",
     },
     {
-      value: "otherStaff",
+      value: "otherstaff",
       label: "Other Staff",
     },
     {
@@ -95,7 +95,7 @@ export default function AdminSignupForm({ mode = "add", userId = null }) {
       label: "Town Focal Person",
     },
     {
-      value: "districtFP",
+      value: "districtfp",
       label: "District Focal Person",
     },
     {
@@ -1358,7 +1358,7 @@ export default function AdminSignupForm({ mode = "add", userId = null }) {
                   }
 
                   router.push(
-                    dashboardRoutes[selectedDesignation] || "/dashboard",
+                    designationRoutes[selectedDesignation] || "/dashboard",
                   );
                 } else {
                   const message =

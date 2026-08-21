@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
-import { dashboardSidebar } from "@/content/data";
+import { adminSidebarData } from "@/content/data";
 import Image from "next/image";
 import { getPendingApprovalCount } from "@/api/userApprovalsApi";
 
@@ -20,7 +20,7 @@ export default function AdminSidebar({
 
   // Automatically open active parent
   useEffect(() => {
-    dashboardSidebar.forEach((item) => {
+    adminSidebarData.forEach((item) => {
       if (!item.children?.length) return;
 
       const activeChild = item.children.some((child) =>
@@ -178,7 +178,7 @@ export default function AdminSidebar({
         {/* Navigation */}
         <nav className="scrollbar-hide flex-1 overflow-y-auto p-3">
           <div className="space-y-1.5">
-            {dashboardSidebar.map((item) => {
+            {adminSidebarData.map((item) => {
               const Icon = item.icon;
               const hasChildren = item.children?.length > 0;
               const active = isActive(item.href);
@@ -259,7 +259,7 @@ export default function AdminSidebar({
                           <span
                             className={`ml-auto flex h-5 min-w-5 items-center justify-center rounded-lg px-1.5 text-[10px] font-bold ${
                               active
-                                ? "bg-transparent text-transparent"
+                                ? "bg-surface text-primary"
                                 : "bg-primary text-white"
                             }`}
                           >

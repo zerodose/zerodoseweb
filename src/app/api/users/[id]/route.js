@@ -173,9 +173,9 @@ export async function PUT(request, { params }) {
       "ucmo",
       "supervisor",
       "vaccinator",
-      "otherStaff",
+      "otherstaff",
       "townFP",
-      "districtFP",
+      "districtfp",
       "worker",
       "admin",
     ];
@@ -193,7 +193,7 @@ export async function PUT(request, { params }) {
     // =================================================
     // Location requirements based on designation
     //
-    // districtFP:
+    // districtfp:
     //   district required
     //   town null
     //   unionCouncil null
@@ -203,7 +203,7 @@ export async function PUT(request, { params }) {
     //   town required
     //   unionCouncil null
     //
-    // ucmo / supervisor / vaccinator / otherStaff / worker:
+    // ucmo / supervisor / vaccinator / otherstaff / worker:
     //   district required
     //   town required
     //   unionCouncil required
@@ -218,9 +218,9 @@ export async function PUT(request, { params }) {
       "ucmo",
       "supervisor",
       "vaccinator",
-      "otherStaff",
+      "otherstaff",
       "townFP",
-      "districtFP",
+      "districtfp",
       "worker",
     ].includes(finalDesignation);
 
@@ -228,7 +228,7 @@ export async function PUT(request, { params }) {
       "ucmo",
       "supervisor",
       "vaccinator",
-      "otherStaff",
+      "otherstaff",
       "townFP",
       "worker",
     ].includes(finalDesignation);
@@ -237,7 +237,7 @@ export async function PUT(request, { params }) {
       "ucmo",
       "supervisor",
       "vaccinator",
-      "otherStaff",
+      "otherstaff",
       "worker",
     ].includes(finalDesignation);
 
@@ -290,7 +290,7 @@ export async function PUT(request, { params }) {
 
     if (!requiresTown && finalTown !== null) {
       if (designation !== undefined || town !== undefined) {
-        // For districtFP/admin, town must not be retained.
+        // For districtfp/admin, town must not be retained.
         // It will be cleared below.
       }
     }
@@ -333,7 +333,7 @@ export async function PUT(request, { params }) {
     // ucmo
     // supervisor
     // vaccinator
-    // otherStaff
+    // otherstaff
     // worker
     // =================================================
 
@@ -364,7 +364,7 @@ export async function PUT(request, { params }) {
     // ucmo
     // supervisor
     // vaccinator
-    // otherStaff
+    // otherstaff
     // worker
     // =================================================
 
@@ -926,10 +926,10 @@ export async function DELETE(request, { params }) {
 //       "vaccinator",
 //       "worker",
 //       "supervisor",
-//       "otherStaff",
+//       "otherstaff",
 //       "ucmo",
 //       "townFP",
-//       "districtFP",
+//       "districtfp",
 //       "admin",
 //     ];
 

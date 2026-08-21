@@ -203,14 +203,14 @@ export default function Page() {
         // --------------------------------------------------------
         // PENDING APPROVALS
         // UCMO APPROVES:
-        // supervisor + vaccinator + otherStaff
+        // supervisor + vaccinator + otherstaff
         // --------------------------------------------------------
 
         if (authUnionCouncilId) {
           const approvalDesignations = [
             "supervisor",
             "vaccinator",
-            "otherStaff",
+            "otherstaff",
           ];
 
           const approvalResponses = await Promise.all(
@@ -654,7 +654,10 @@ export default function Page() {
           </div>
 
           <div className="flex align-bottom">
-            <UCMOActions pendingApprovals={pendingApprovals} loading={loading}/>
+            <UCMOActions
+              pendingApprovals={pendingApprovals}
+              loading={loading}
+            />
           </div>
         </div>
 

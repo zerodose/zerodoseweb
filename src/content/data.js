@@ -11,10 +11,13 @@ import {
   Syringe,
   Map,
   ClipboardCheck,
+  CalendarDays,
+  Network,
+  UsersRound,
+  UserCog,
 } from "lucide-react";
 
-export const dashboardSidebar = [
-
+export const adminSidebarData = [
   {
     title: "Dashboard",
     href: "/dashboard",
@@ -66,7 +69,96 @@ export const dashboardSidebar = [
     icon: Settings,
   },
 ];
+export const districtSidebarData = [
+  {
+    title: "Dashboard",
+    href: "/districtfp",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Campaigns",
+    href: "/districtfp/campaigns",
+    icon: CalendarDays,
+  },
+  {
+    title: "Towns",
+    href: "/districtfp/towns",
+    icon: Building2,
+  },
+  {
+    title: "Union Councils",
+    href: "/districtfp/union-councils",
+    icon: Network,
+  },
+  {
+    title: "UCMOs",
+    href: "/districtfp/ucmos",
+    icon: UsersRound,
+  },
+  {
+    title: "Supervisors",
+    href: "/districtfp/supervisors",
+    icon: UserCog,
+  },
+  {
+    title: "Workers",
+    href: "/districtfp/workers",
+    icon: Users,
+  },
+  {
+    title: "Zerodose",
+    href: "/districtfp/zerodose",
+    icon: Syringe,
+  },
+  {
+    title: "Pending Approvals",
+    href: "/districtfp/pendingapprovals",
+    icon: ClipboardCheck,
+  },
+];
 
+export const townfpSidebarData = [
+  {
+    title: "Dashboard",
+    href: "/townfp",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Campaigns",
+    href: "/townfp/campaigns",
+    icon: CalendarDays,
+  },
+  {
+    title: "Union Councils",
+    href: "/townfp/union-councils",
+    icon: Network,
+  },
+  {
+    title: "UCMOs",
+    href: "/townfp/ucmos",
+    icon: UsersRound,
+  },
+  {
+    title: "Supervisors",
+    href: "/townfp/supervisors",
+    icon: UserCog,
+  },
+  {
+    title: "Workers",
+    href: "/townfp/workers",
+    icon: Users,
+  },
+  {
+    title: "Zerodose",
+    href: "/townfp/zerodose",
+    icon: Syringe,
+  },
+  {
+    title: "Pending Approvals",
+    href: "/townfp/pendingapprovals",
+    icon: ClipboardCheck,
+  },
+];
 export const ucmoSidebar = [
   {
     title: "Dashboard",
@@ -259,13 +351,23 @@ export const previousCampaigns = [
   },
 ];
 
-export const dashboardRoutes = {
+export const designationRoutes = {
   admin: "/dashboard",
-  worker: "/worker",
-  supervisor: "/supervisor",
+  districtfp: "/districtfp",
+  townfp: "/townfp",
   ucmo: "/ucmo",
-  otherStaff: "/otherStaff",
-  townFP: "/townfp",
-  districtFP: "/districtfp",
+  supervisor: "/supervisor",
   vaccinator: "/vaccinator",
+  worker: "/worker",
 };
+
+// export const designationRoutes = {
+//   admin: "/dashboard",
+//   districtfp: "/districtfp",
+//   townfp: "/townfp",
+//   supervisor: "/supervisor",
+//   ucmo: "/ucmo",
+//   otherstaff: "/otherstaff",
+//   vaccinator: "/vaccinator",
+//   worker: "/worker",
+// };

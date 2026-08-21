@@ -59,7 +59,7 @@ export async function POST(request) {
     };
 
     const locationRequirements = {
-      districtFP: {
+      districtfp: {
         district: true,
         town: false,
         unionCouncil: false,
@@ -84,7 +84,7 @@ export async function POST(request) {
         town: true,
         unionCouncil: true,
       },
-      otherStaff: {
+      otherstaff: {
         district: true,
         town: true,
         unionCouncil: true,
@@ -367,7 +367,7 @@ export async function POST(request) {
 
     let currentUcmo = null;
 
-    if (["supervisor", "vaccinator", "otherStaff"].includes(designation)) {
+    if (["supervisor", "vaccinator", "otherstaff"].includes(designation)) {
       currentUcmo = await User.findOne({
         designation: "ucmo",
         isActive: true,

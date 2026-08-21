@@ -39,7 +39,7 @@ export default function PendingApprovalsPage() {
         page: pagination.page,
         limit: pagination.limit,
         search,
-        designation: "districtFP",
+        designation: "districtfp",
       });
 
       const formattedUsers = (response.data || []).map((user) => ({

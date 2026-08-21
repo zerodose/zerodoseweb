@@ -44,7 +44,7 @@ export default function PendingApprovalViewPage() {
 
       const authUser = JSON.parse(storedUser);
 
-      if (authUser.designation !== "townFP") {
+      if (authUser.designation !== "townfp") {
         router.replace("/dashboard");
         return;
       }
@@ -52,7 +52,7 @@ export default function PendingApprovalViewPage() {
       const currentApproverId = authUser.id || authUser._id || "";
 
       if (!currentApproverId) {
-        toast.error("Current TownFP ID not found.");
+        toast.error("Current Town focal person ID not found.");
 
         router.replace("/auth/login");
         return;
@@ -125,7 +125,7 @@ export default function PendingApprovalViewPage() {
     }
 
     if (!approverId) {
-      toast.error("Current TownFP ID not found.");
+      toast.error("Current Town focal person ID not found.");
       return;
     }
 
@@ -143,7 +143,7 @@ export default function PendingApprovalViewPage() {
     }
 
     if (!approverId) {
-      toast.error("Current TownFP ID not found.");
+      toast.error("Current Town focal person ID not found.");
       return;
     }
 
@@ -250,7 +250,7 @@ export default function PendingApprovalViewPage() {
 
           {/* Email */}
 
-          <InfoField label="Email" value={user.email} />
+          <InfoField label="Email" value={user.email} capitalize={false} />
 
           {/* Contact */}
 
@@ -340,14 +340,18 @@ export default function PendingApprovalViewPage() {
 // Info Field
 // ============================================================
 
-function InfoField({ label, value }) {
+function InfoField({ label, value, capitalize = true }) {
   return (
     <div>
       <label className="text-text-secondary mb-2 block text-sm font-medium">
         {label}
       </label>
 
-      <div className="bg-input-background border-border text-text capitalize rounded-lg border px-4 py-3 text-sm">
+      <div
+        className={`bg-input-background border-border text-text rounded-lg border px-4 py-3 text-sm ${
+          capitalize ? "capitalize" : ""
+        }`}
+      >
         {value || "-"}
       </div>
     </div>

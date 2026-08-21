@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { designationRoutes } from "@/content/data";
 
 export default function AuthGuard({ children }) {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function AuthGuard({ children }) {
 
   useEffect(() => {
     const publicRoutes = [
+      "/",
       "/auth/login",
       "/auth/signup",
       "/auth/verify-email",
@@ -20,13 +22,19 @@ export default function AuthGuard({ children }) {
 
     const authUser = localStorage.getItem("authUser");
 
-    // Public route — no authentication required
+    // ============================================================
+    // Public route
+    // ============================================================
+
     if (publicRoutes.includes(pathname)) {
       setIsCheckingAuth(false);
       return;
     }
 
+    // ============================================================
     // Protected route but no auth
+    // ============================================================
+
     if (!authUser) {
       setIsCheckingAuth(false);
       router.replace("/auth/login");
@@ -36,7 +44,10 @@ export default function AuthGuard({ children }) {
     try {
       const parsedUser = JSON.parse(authUser);
 
+      // ============================================================
       // Invalid auth data
+      // ============================================================
+
       if (!parsedUser?.expiresAt) {
         localStorage.removeItem("authUser");
         setIsCheckingAuth(false);
@@ -44,9 +55,12 @@ export default function AuthGuard({ children }) {
         return;
       }
 
+      // ============================================================
+      // Session expiration
+      // ============================================================
+
       const remainingTime = parsedUser.expiresAt - Date.now();
 
-      // Session expired
       if (remainingTime <= 0) {
         localStorage.removeItem("authUser");
         setIsCheckingAuth(false);
@@ -54,7 +68,60 @@ export default function AuthGuard({ children }) {
         return;
       }
 
-      // Session is valid
+      // ============================================================
+      // Designation-based route protection
+      // ============================================================
+
+      const designation = String(parsedUser?.designation || "")
+        .trim()
+        .toLowerCase();
+
+      // const designationRoutes = {
+      //   admin: "/dashboard",
+      //   districtfp: "/districtfp",
+      //   townfp: "/townfp",
+      //   ucmo: "/ucmo",
+      //   supervisor: "/supervisor",
+      //   vaccinator: "/vaccinator",
+      //   worker: "/worker",
+      // };
+
+      const allowedBaseRoute = designationRoutes[designation];
+
+      // ============================================================
+      // Invalid / unknown designation
+      // ============================================================
+
+      if (!allowedBaseRoute) {
+        console.error("Invalid user designation:", parsedUser?.designation);
+
+        localStorage.removeItem("authUser");
+        setIsCheckingAuth(false);
+        router.replace("/auth/login");
+        return;
+      }
+
+      // ============================================================
+      // Check whether current route belongs to user's designation
+      // ============================================================
+
+      const isAllowedRoute =
+        pathname === allowedBaseRoute ||
+        pathname.startsWith(`${allowedBaseRoute}/`);
+
+      if (!isAllowedRoute) {
+        setIsCheckingAuth(false);
+
+        // Send user to their own dashboard
+        router.replace(allowedBaseRoute);
+
+        return;
+      }
+
+      // ============================================================
+      // Session is valid + route is allowed
+      // ============================================================
+
       setIsCheckingAuth(false);
 
       // Automatically logout when session expires
@@ -73,7 +140,10 @@ export default function AuthGuard({ children }) {
     }
   }, [pathname, router]);
 
-  // Don't render protected content while checking authentication
+  // ============================================================
+  // Don't render protected content while checking
+  // ============================================================
+
   if (isCheckingAuth) {
     return null;
   }

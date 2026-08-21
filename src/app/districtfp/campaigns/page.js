@@ -8,7 +8,7 @@ import exportPDF from "@/utils/export/exportPDF";
 import exportExcel from "@/utils/export/exportExcel";
 import { getCampaigns } from "@/api/campaignApi";
 
-export default function DistrictFPCampaignsPage() {
+export default function districtfpCampaignsPage() {
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState("current");

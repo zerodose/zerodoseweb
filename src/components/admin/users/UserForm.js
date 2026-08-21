@@ -420,9 +420,9 @@ export default function UserForm({ mode = "create", userId = null }) {
                 <option value="ucmo">UCMO</option>
                 <option value="supervisor">Supervisor</option>
                 <option value="vaccinator">Vaccinator</option>
-                <option value="otherStaff">Other Staff</option>
+                <option value="otherstaff">Other Staff</option>
                 <option value="townFP">Town Focal Person</option>
-                <option value="districtFP">District Focal Person</option>
+                <option value="districtfp">District Focal Person</option>
               </select>
             </div>
 

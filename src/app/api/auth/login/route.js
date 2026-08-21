@@ -4,6 +4,8 @@ import { SignJWT } from "jose";
 
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
+import District from "@/models/District";
+import Town from "@/models/Town";
 import UnionCouncil from "@/models/UnionCouncil";
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -110,12 +112,12 @@ export async function POST(request) {
     }
 
     const APPROVAL_HIERARCHY = {
-      districtFP: "admin",
-      townFP: "districtFP",
-      ucmo: "townFP",
+      districtfp: "admin",
+      townfp: "districtfp",
+      ucmo: "townfp",
       supervisor: "ucmo",
       vaccinator: "ucmo",
-      otherStaff: "ucmo",
+      otherstaff: "ucmo",
       worker: null,
       admin: null,
     };
@@ -164,13 +166,13 @@ export async function POST(request) {
       unionCouncil: user.unionCouncil,
       designation: user.designation,
       teamNumber: user.teamNumber ?? null,
-       ucmo: user.ucmo
-    ? {
-        id: user.ucmo._id.toString(),
-        name: user.ucmo.name,
-        designation: user.ucmo.designation,
-      }
-    : null,
+      ucmo: user.ucmo
+        ? {
+            id: user.ucmo._id.toString(),
+            name: user.ucmo.name,
+            designation: user.ucmo.designation,
+          }
+        : null,
 
       supervisor: user.supervisor
         ? {

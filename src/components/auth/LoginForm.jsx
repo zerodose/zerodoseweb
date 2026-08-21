@@ -10,7 +10,7 @@
 // import { useRouter } from "next/navigation";
 // import Loader from "@/components/ui/Loader";
 // import { requestLocationPermission } from "@/utils/locationPermission";
-// import { dashboardRoutes } from "@/content/data";
+// import { designationRoutes } from "@/content/data";
 
 // export default function LoginForm() {
 //   const router = useRouter();
@@ -99,7 +99,7 @@
 //         console.log("LOCATION: permission check completed");
 //       }
 
-//       const route = dashboardRoutes[designation];
+//       const route = designationRoutes[designation];
 
 //       // console.log("User designation:", designation);
 
@@ -136,7 +136,7 @@
 //       // Location Based on Designation
 //       // ============================================================
 
-//       if (user.designation === "districtFP") {
+//       if (user.designation === "districtfp") {
 //         authUser.district = user.district || null;
 //       }
 
@@ -417,7 +417,7 @@ import { loginUser } from "@/api/authApi";
 import { useRouter } from "next/navigation";
 import Loader from "@/components/ui/Loader";
 import { requestLocationPermission } from "@/utils/locationPermission";
-import { dashboardRoutes } from "@/content/data";
+import { designationRoutes } from "@/content/data";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -731,7 +731,7 @@ export default function LoginForm() {
       // Dashboard Route
       // =================================================
 
-      const route = dashboardRoutes[designation];
+      const route = designationRoutes[designation];
 
       if (!route) {
         throw new Error(

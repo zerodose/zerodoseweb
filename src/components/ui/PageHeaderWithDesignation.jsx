@@ -1051,7 +1051,10 @@ export default function PageHeaderWithDesignation({
   // ============================================================
 
   const showMenu =
-    normalizedDesignation === "supervisor" || normalizedDesignation === "ucmo";
+    normalizedDesignation === "supervisor" ||
+    normalizedDesignation === "ucmo" ||
+    normalizedDesignation === "townfp" ||
+    normalizedDesignation === "districtfp";
 
   // ============================================================
   // Profile

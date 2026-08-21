@@ -153,7 +153,7 @@ function populateZerodose(query) {
 // townFP:
 //   Own Town.
 //
-// districtFP:
+// districtfp:
 //   Own District.
 //
 // admin:
@@ -230,7 +230,7 @@ function canAccessZerodose(user, zerodose) {
   // DISTRICT FP
   // ==========================================================
 
-  if (user.designation === "districtFP") {
+  if (user.designation === "districtfp") {
     return objectIdEquals(user.district, zerodose.district);
   }
 

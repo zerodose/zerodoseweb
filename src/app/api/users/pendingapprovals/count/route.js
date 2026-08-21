@@ -29,10 +29,10 @@ export async function GET(request) {
     // ============================================================
 
     const approvalMap = {
-      admin: ["districtFP"],
-      districtFP: ["townFP"],
-      townFP: ["ucmo"],
-      ucmo: ["supervisor", "vaccinator", "otherStaff"],
+      admin: ["districtfp"],
+      districtfp: ["townfp"],
+      townfp: ["ucmo"],
+      ucmo: ["supervisor", "vaccinator", "otherstaff"],
     };
 
     const pendingDesignations = approvalMap[designation];
@@ -96,7 +96,7 @@ export async function GET(request) {
 
     // Admin
     // ------------------------------------------------------------
-    // Admin sees all pending DistrictFP requests.
+    // Admin sees all pending districtfp requests.
     //
     // No additional scope filter required.
     //
@@ -105,11 +105,11 @@ export async function GET(request) {
       // Nothing extra
     }
 
-    // DistrictFP
+    // districtfp
     // ------------------------------------------------------------
-    // DistrictFP sees only TownFP requests from its district.
+    // districtfp sees only TownFP requests from its district.
     //
-    else if (designation === "districtFP") {
+    else if (designation === "districtfp") {
       if (!approver.district) {
         return NextResponse.json(
           {
@@ -129,7 +129,7 @@ export async function GET(request) {
     // ------------------------------------------------------------
     // TownFP sees only UCMO requests from its town.
     //
-    else if (designation === "townFP") {
+    else if (designation === "townfp") {
       if (!approver.town) {
         return NextResponse.json(
           {

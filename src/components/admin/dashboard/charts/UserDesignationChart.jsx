@@ -44,7 +44,7 @@ export default function UserDesignationChart({ counts = {} }) {
       },
       {
         label: "Other Staff",
-        value: Number(counts?.otherStaff ?? 0),
+        value: Number(counts?.otherstaff ?? 0),
       },
       {
         label: "Town Focal Person",
@@ -52,7 +52,7 @@ export default function UserDesignationChart({ counts = {} }) {
       },
       {
         label: "District Focal Person",
-        value: Number(counts?.districtFP ?? 0),
+        value: Number(counts?.districtfp ?? 0),
       },
       {
         label: "Worker",
@@ -63,9 +63,9 @@ export default function UserDesignationChart({ counts = {} }) {
       counts?.ucmos,
       counts?.supervisors,
       counts?.vaccinators,
-      counts?.otherStaff,
+      counts?.otherstaff,
       counts?.townFP,
-      counts?.districtFP,
+      counts?.districtfp,
       counts?.workers,
     ],
   );

@@ -22,10 +22,14 @@ export default function PendingApprovalViewPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
+  // ============================================================
   // Current logged-in DistrictFP ID
+  // ============================================================
+
   const [approverId, setApproverId] = useState("");
 
   const [confirmationModalOpen, setConfirmationModalOpen] = useState(false);
+
   const [approvalAction, setApprovalAction] = useState(null);
 
   // ============================================================
@@ -43,20 +47,25 @@ export default function PendingApprovalViewPage() {
 
       const authUser = JSON.parse(storedUser);
 
-      if (authUser.designation !== "districtFP") {
+      // Current user MUST be districtfp
+      if (
+        String(authUser?.designation || "")
+          .trim()
+          .toLowerCase() !== "districtfp"
+      ) {
         router.replace("/dashboard");
         return;
       }
 
-      const currentApproverId = authUser.id || authUser._id || "";
+      const currentApproverId = authUser?.id || authUser?._id || "";
 
       if (!currentApproverId) {
-        toast.error("Current DistrictFP ID not found.");
+        toast.error("Current districtfp ID not found.");
         router.replace("/auth/login");
         return;
       }
 
-      setApproverId(currentApproverId);
+      setApproverId(String(currentApproverId));
     } catch (error) {
       console.error("Load auth user error:", error);
 
@@ -79,16 +88,25 @@ export default function PendingApprovalViewPage() {
 
         if (!response?.success || !response?.data) {
           toast.error(
-            response?.message || "Pending TownFP approval not found.",
+            response?.message ||
+              "Pending Town Focal Person approval not found.",
           );
 
           router.back();
           return;
         }
 
-        // Extra client-side safety check
-        if (response.data.designation !== "townFP") {
-          toast.error("This approval request is not for a TownFP.");
+        // ======================================================
+        // Extra safety check
+        // Only TownFP can be approved from DistrictFP dashboard
+        // ======================================================
+
+        const pendingDesignation = String(response.data?.designation || "")
+          .trim()
+          .toLowerCase();
+
+        if (pendingDesignation !== "townfp") {
+          toast.error("This approval request is not for a Town Focal Person.");
 
           router.back();
           return;
@@ -100,7 +118,7 @@ export default function PendingApprovalViewPage() {
 
         toast.error(
           error?.response?.data?.message ||
-            "Failed to load pending TownFP approval.",
+            "Failed to load pending Town Focal Person approval.",
         );
 
         router.back();
@@ -124,7 +142,7 @@ export default function PendingApprovalViewPage() {
     }
 
     if (!approverId) {
-      toast.error("Current DistrictFP ID not found.");
+      toast.error("Current districtfp ID not found.");
       return;
     }
 
@@ -142,7 +160,7 @@ export default function PendingApprovalViewPage() {
     }
 
     if (!approverId) {
-      toast.error("Current DistrictFP ID not found.");
+      toast.error("Current districtfp ID not found.");
       return;
     }
 
@@ -156,7 +174,9 @@ export default function PendingApprovalViewPage() {
       const response = await updateUserApproval(user._id, status, approverId);
 
       if (!response?.success) {
-        toast.error(response?.message || `Failed to ${actionText} TownFP.`);
+        toast.error(
+          response?.message || `Failed to ${actionText} Town Focal Person.`,
+        );
 
         return;
       }
@@ -170,12 +190,14 @@ export default function PendingApprovalViewPage() {
       setConfirmationModalOpen(false);
       setApprovalAction(null);
 
+      // DistrictFP dashboard
       router.push("/districtfp/pendingapprovals");
     } catch (error) {
-      console.error("TownFP approval update error:", error);
+      console.error("Town Focal Person approval update error:", error);
 
       toast.error(
-        error?.response?.data?.message || `Failed to ${actionText} TownFP.`,
+        error?.response?.data?.message ||
+          `Failed to ${actionText} Town Focal Person.`,
       );
     } finally {
       setUpdating(false);
@@ -190,7 +212,7 @@ export default function PendingApprovalViewPage() {
     return (
       <div className="mx-auto w-full max-w-7xl">
         <TopHeader
-          title="Pending TownFP Approval"
+          title="Pending Town Focal Person Approval"
           description="Review Town Focal Person registration."
           onBack={() => router.back()}
         />
@@ -220,19 +242,19 @@ export default function PendingApprovalViewPage() {
 
   return (
     <div className="mx-auto w-full max-w-7xl">
-      {/* ============================================================
+      {/* ========================================================
           Header
-      ============================================================ */}
+      ======================================================== */}
 
       <TopHeader
-        title="Pending TownFP Approval"
+        title="Pending Town Focal Person Approval"
         description="Review Town Focal Person registration."
         onBack={() => router.back()}
       />
 
-      {/* ============================================================
+      {/* ========================================================
           Registration Information
-      ============================================================ */}
+      ======================================================== */}
 
       <div className="bg-background border-border rounded-2xl border shadow-sm">
         <div className="border-border border-b p-6">
@@ -279,9 +301,9 @@ export default function PendingApprovalViewPage() {
           />
         </div>
 
-        {/* ==========================================================
+        {/* ======================================================
             Actions
-        ========================================================== */}
+        ====================================================== */}
 
         <div className="border-border flex flex-col gap-3 border-t p-6 sm:flex-row sm:justify-end">
           {/* Reject */}
@@ -312,9 +334,9 @@ export default function PendingApprovalViewPage() {
         </div>
       </div>
 
-      {/* ============================================================
+      {/* ========================================================
           Confirmation Modal
-      ============================================================ */}
+      ======================================================== */}
 
       <ApprovalConfirmModal
         open={confirmationModalOpen}

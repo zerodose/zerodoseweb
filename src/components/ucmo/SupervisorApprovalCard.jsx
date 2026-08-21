@@ -257,7 +257,7 @@ const getDesignationLabel = (designation) => {
     case "vaccinator":
       return "Vaccinator";
 
-    case "otherStaff":
+    case "otherstaff":
       return "Other Staff";
 
     default:

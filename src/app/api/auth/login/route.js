@@ -70,7 +70,7 @@ export async function POST(request) {
       .select("+password")
       .populate("district", "_id name code")
       .populate("town", "_id name")
-      .populate("unionCouncil", "_id name")
+      .populate("unionCouncil", "_id name code")
       .populate("supervisor", "_id name designation supervisorCode")
       .populate("ucmo", "_id name designation")
       .lean();

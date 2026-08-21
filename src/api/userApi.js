@@ -40,6 +40,7 @@ export async function getUsers({
   district = "",
   town = "",
   unionCouncil = "",
+   ucmo = "",
   supervisor = "",
   isActive,
 } = {}) {
@@ -55,6 +56,7 @@ export async function getUsers({
       district,
       town,
       unionCouncil,
+       ucmo,
       supervisor,
       isActive,
     },
@@ -118,7 +120,7 @@ export async function permanentlyDeleteUser(id) {
 // ============================================================
 
 export async function transferWorkers(data) {
-  const response = await api.patch("/users/transfer-workers", data);
+  const response = await api.put("/users/transfer-workers", data);
 
   return response.data;
 }

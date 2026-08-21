@@ -234,7 +234,15 @@ const userSchema = new mongoose.Schema(
       default: null,
       validate: {
         validator: async function (value) {
-          if (this.designation === "worker") {
+          const requiresUcmo = [
+            "worker",
+            "supervisor",
+            "vaccinator",
+            "otherstaff",
+          ].includes(this.designation);
+
+          // Worker, Supervisor, Vaccinator ke liye UCMO required hai
+          if (requiresUcmo) {
             if (!value) {
               return false;
             }
@@ -248,12 +256,13 @@ const userSchema = new mongoose.Schema(
             return !!ucmo;
           }
 
+          // Baaki designations ke liye UCMO nahi hona chahiye
           return !value;
         },
-        message: "A valid active UCMO is required only for workers.",
+        message:
+          "A valid active UCMO is required for workers, supervisors, vaccinators, and other staff.",
       },
     },
-
     supervisor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

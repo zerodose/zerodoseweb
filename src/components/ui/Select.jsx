@@ -150,7 +150,7 @@ const Select = forwardRef(function Select(
       {label && (
         <label
           htmlFor={name}
-          className="text-text mb-2 block text-sm font-medium"
+          className="text-text z-50 mb-2 block text-sm font-medium"
         >
           {label}
 
@@ -226,7 +226,7 @@ const Select = forwardRef(function Select(
 
         {open && !isDisabled && (
           <div
-            className="border-border bg-background absolute z-50 mt-2 w-full overflow-hidden rounded-xl border shadow-lg ring-1 ring-black/5"
+            className="border-border bg-background absolute top-full left-0 z-[9999] mt-2 w-full overflow-hidden rounded-xl border shadow-lg ring-1 ring-black/5"
             role="listbox"
           >
             {searchable && (

@@ -644,21 +644,18 @@ export default function Page() {
               HEADER
           ====================================================== */}
 
-        <div className="mb-4 flex items-center justify-between md:mb-6">
-          <div>
+        <div className="mb-4 flex flex-col md:mb-6">
+          <div className="flex justify-between items-center mb-4">
             <h1 className="text-text text-2xl font-bold md:text-3xl">UCMO</h1>
-
-            <p className="text-text-secondary mt-1 text-sm">
-              Manage supervisors and campaign-wise Zerodose records
-            </p>
-          </div>
-
-          <div className="flex align-bottom">
             <UCMOActions
               pendingApprovals={pendingApprovals}
               loading={loading}
             />
           </div>
+
+          <p className="text-text-secondary mt-1 text-sm">
+            Manage supervisors and campaign-wise Zerodose records
+          </p>
         </div>
 
         {/* ======================================================
@@ -680,17 +677,16 @@ export default function Page() {
           recordedZerodose={currentRecordedZerodoseCount}
           coveredZerodose={currentCoveredZerodoseCount}
           activeTeams={activeTeamsCount}
-          previousCampaigns={previousCampaigns.length}
         />
 
         {/* ======================================================
               ACTIONS
           ====================================================== */}
 
-        <div className="flex gap-3">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <ActionLinkButton
             href="/ucmo/supervisor-management"
-            label="Supervisor Management"
+            label="Teams Management"
             icon={UsersRound}
           />
 

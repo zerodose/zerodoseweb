@@ -12,6 +12,30 @@
 //   XCircle,
 // } from "lucide-react";
 
+// // ============================================================
+// // DESIGNATION LABEL
+// // ============================================================
+
+// const getDesignationLabel = (designation) => {
+//   switch (designation) {
+//     case "supervisor":
+//       return "Supervisor";
+
+//     case "vaccinator":
+//       return "Vaccinator";
+
+//     case "otherstaff":
+//       return "Other Staff";
+
+//     default:
+//       return "User";
+//   }
+// };
+
+// // ============================================================
+// // APPROVAL CARD
+// // ============================================================
+
 // export default function SupervisorApprovalCard({
 //   supervisor,
 //   expanded,
@@ -20,12 +44,17 @@
 //   onApprove,
 //   onReject,
 // }) {
+//   const designation = supervisor?.approvalDesignation;
+//   const designationLabel = getDesignationLabel(designation);
+
+//   const isSupervisor = designation === "supervisor";
+
 //   return (
 //     <div
 //       className={`group overflow-hidden rounded-2xl border transition-all duration-200 ${
 //         expanded
 //           ? "border-primary/30 bg-white shadow-md"
-//           : "border-border bg-white hover:border-primary/40 hover:bg-primary-light shadow-sm hover:shadow-md"
+//           : "border-border hover:border-primary/40 hover:bg-primary-light bg-white shadow-sm hover:shadow-md"
 //       }`}
 //     >
 //       {/* ========================================================
@@ -67,10 +96,19 @@
 //             </div>
 
 //             <div className="text-text-secondary mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-//               <span className="font-medium">
-//                 {supervisor?.supervisorCode || "No code"}
-//               </span>
+//               {/* Designation */}
+//               <span className="font-medium">{designationLabel}</span>
 
+//               {/* Supervisor Code - only supervisor */}
+//               {isSupervisor && supervisor?.supervisorCode && (
+//                 <>
+//                   <span className="text-gray-300">•</span>
+
+//                   <span>{supervisor.supervisorCode}</span>
+//                 </>
+//               )}
+
+//               {/* Union Council */}
 //               {supervisor?.unionCouncil?.name && (
 //                 <>
 //                   <span className="text-gray-300">•</span>
@@ -101,10 +139,6 @@
 //           DETAILS
 //       ======================================================== */}
 
-//       {/* ========================================================
-//     DETAILS
-// ======================================================== */}
-
 //       <div
 //         className={`grid transition-all duration-300 ease-in-out ${
 //           expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
@@ -121,7 +155,7 @@
 
 //                 <div>
 //                   <p className="text-text text-sm font-semibold">
-//                     Supervisor Information
+//                     {designationLabel} Information
 //                   </p>
 
 //                   <p className="text-text-secondary text-xs">
@@ -144,11 +178,14 @@
 //                   value={supervisor?.contactNumber}
 //                 />
 
-//                 <DetailItem
-//                   icon={UserCheck}
-//                   label="Supervisor Code"
-//                   value={supervisor?.supervisorCode}
-//                 />
+//                 {/* Supervisor Code only for Supervisor */}
+//                 {isSupervisor && (
+//                   <DetailItem
+//                     icon={UserCheck}
+//                     label="Supervisor Code"
+//                     value={supervisor?.supervisorCode}
+//                   />
+//                 )}
 
 //                 <DetailItem
 //                   label="District"
@@ -166,7 +203,7 @@
 //             </div>
 
 //             {/* Actions */}
-//             <div className=" border-border flex flex-col gap-2 border-t p-4 sm:flex-row sm:justify-end md:px-5">
+//             <div className="border-border flex flex-col gap-2 border-t p-4 sm:flex-row sm:justify-end md:px-5">
 //               <button
 //                 type="button"
 //                 disabled={processing}
@@ -186,7 +223,7 @@
 //               >
 //                 <CheckCircle2 size={17} />
 
-//                 {processing ? "Processing..." : "Approve Supervisor"}
+//                 {processing ? "Processing..." : `Approve ${designationLabel}`}
 //               </button>
 //             </div>
 //           </div>
@@ -202,7 +239,7 @@
 
 // function DetailItem({ icon: Icon, label, value }) {
 //   return (
-//     <div className="group bg-white border-border hover:border-primary/30 relative overflow-hidden rounded-xl border p-3.5 transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-md">
+//     <div className="group border-border hover:border-primary/30 relative overflow-hidden rounded-xl border bg-white p-3.5 transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-md">
 //       {/* Left accent */}
 //       <div className="bg-primary absolute top-0 bottom-0 left-0 w-0.5 opacity-60" />
 
@@ -286,8 +323,8 @@ export default function SupervisorApprovalCard({
     <div
       className={`group overflow-hidden rounded-2xl border transition-all duration-200 ${
         expanded
-          ? "border-primary/30 bg-white shadow-md"
-          : "border-border hover:border-primary/40 hover:bg-primary-light bg-white shadow-sm hover:shadow-md"
+          ? "border-primary/30 bg-background shadow-md"
+          : "border-border bg-background hover:border-primary/40 hover:bg-primary-light shadow-sm hover:shadow-md"
       }`}
     >
       {/* ========================================================
@@ -308,8 +345,8 @@ export default function SupervisorApprovalCard({
           <div
             className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition ${
               expanded
-                ? "bg-primary text-white shadow-sm"
-                : "bg-primary/10 text-primary"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-primary-light text-primary"
             }`}
           >
             <Users size={19} />
@@ -322,7 +359,7 @@ export default function SupervisorApprovalCard({
                 {supervisor?.name || "-"}
               </p>
 
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-700">
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
                 <Clock3 size={10} />
                 Pending
               </span>
@@ -335,7 +372,7 @@ export default function SupervisorApprovalCard({
               {/* Supervisor Code - only supervisor */}
               {isSupervisor && supervisor?.supervisorCode && (
                 <>
-                  <span className="text-gray-300">•</span>
+                  <span className="text-gray dark:text-gray-dark">•</span>
 
                   <span>{supervisor.supervisorCode}</span>
                 </>
@@ -344,7 +381,7 @@ export default function SupervisorApprovalCard({
               {/* Union Council */}
               {supervisor?.unionCouncil?.name && (
                 <>
-                  <span className="text-gray-300">•</span>
+                  <span className="text-gray dark:text-gray-dark">•</span>
 
                   <span>{supervisor.unionCouncil.name}</span>
                 </>
@@ -356,7 +393,7 @@ export default function SupervisorApprovalCard({
         {/* Arrow */}
         <div
           className={`bg-surface text-text-secondary flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-300 ${
-            expanded ? "bg-primary/15 text-primary" : ""
+            expanded ? "bg-primary-light text-primary" : ""
           }`}
         >
           <ChevronRight
@@ -382,7 +419,7 @@ export default function SupervisorApprovalCard({
             <div className="p-4 md:p-5">
               {/* Section title */}
               <div className="mb-4 flex items-center gap-2">
-                <div className="bg-primary/10 text-primary flex h-8 w-8 items-center justify-center rounded-lg">
+                <div className="bg-primary-light text-primary flex h-8 w-8 items-center justify-center rounded-lg">
                   <UserCheck size={16} />
                 </div>
 
@@ -441,7 +478,7 @@ export default function SupervisorApprovalCard({
                 type="button"
                 disabled={processing}
                 onClick={onReject}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:border-red-300 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:border-red-300 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 dark:hover:border-red-800 dark:hover:bg-red-900/40"
               >
                 <XCircle size={17} />
 
@@ -452,7 +489,7 @@ export default function SupervisorApprovalCard({
                 type="button"
                 disabled={processing}
                 onClick={onApprove}
-                className="bg-primary hover:bg-primary-dark inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+                className="bg-primary hover:bg-primary-dark text-primary-foreground inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold shadow-sm transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <CheckCircle2 size={17} />
 
@@ -472,13 +509,13 @@ export default function SupervisorApprovalCard({
 
 function DetailItem({ icon: Icon, label, value }) {
   return (
-    <div className="group border-border hover:border-primary/30 relative overflow-hidden rounded-xl border bg-white p-3.5 transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-md">
+    <div className="group border-border hover:border-primary/30 bg-background relative overflow-hidden rounded-xl border p-3.5 transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-md">
       {/* Left accent */}
       <div className="bg-primary absolute top-0 bottom-0 left-0 w-0.5 opacity-60" />
 
       <div className="flex items-start gap-3">
         {/* Icon */}
-        <div className="bg-primary/10 text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+        <div className="bg-primary-light text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
           {Icon ? (
             <Icon size={15} />
           ) : (

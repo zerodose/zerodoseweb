@@ -83,8 +83,8 @@ export default function UCMOLayout({ children }) {
   return (
     <div className="bg-surface flex min-h-screen">
       {/* ========================================================
-          Sidebar
-      ======================================================== */}
+      Sidebar
+  ======================================================== */}
 
       <Sidebar
         items={ucmoSidebar}
@@ -93,14 +93,14 @@ export default function UCMOLayout({ children }) {
       />
 
       {/* ========================================================
-          Main
-      ======================================================== */}
+      Main
+  ======================================================== */}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <main className="flex-1 bg-white p-4 sm:px-4 sm:py-5 md:px-10 md:py-6">
+        <main className="bg-background flex-1 p-4 sm:px-4 sm:py-5 md:px-10 md:py-6">
           {/* ======================================================
-            UCMO Header
-        ====================================================== */}
+          UCMO Header
+      ====================================================== */}
 
           <PageHeaderWithDesignation
             name={user?.name}
@@ -113,8 +113,8 @@ export default function UCMOLayout({ children }) {
           />
 
           {/* ======================================================
-            Page Content
-            ====================================================== */}
+          Page Content
+      ====================================================== */}
 
           {children}
         </main>

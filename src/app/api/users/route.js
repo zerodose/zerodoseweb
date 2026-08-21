@@ -21,6 +21,203 @@ import {
   deletePendingRegistration,
 } from "@/lib/pendingRegistrations";
 
+export async function GET(request) {
+  try {
+    await connectDB();
+
+    const { searchParams } = new URL(request.url);
+
+    const page = Math.max(
+      Number.parseInt(searchParams.get("page") || "1", 10),
+      1,
+    );
+
+    const limit = Math.min(
+      Math.max(Number.parseInt(searchParams.get("limit") || "10", 10), 1),
+      100,
+    );
+
+    const search = searchParams.get("search")?.trim() || "";
+
+    const designation = searchParams.get("designation")?.trim() || "";
+    const district = searchParams.get("district")?.trim() || "";
+    const town = searchParams.get("town")?.trim() || "";
+    const unionCouncil = searchParams.get("unionCouncil")?.trim() || "";
+    const ucmo = searchParams.get("ucmo")?.trim() || "";
+    const supervisor = searchParams.get("supervisor")?.trim() || "";
+    const isActiveParam = searchParams.get("isActive");
+
+    const filter = {};
+
+    if (search) {
+      filter.$or = [
+        {
+          name: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          email: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          contactNumber: {
+            $regex: search,
+            $options: "i",
+          },
+        },
+      ];
+    }
+
+    if (designation) {
+      filter.designation = designation;
+    }
+
+    if (district) {
+      if (!mongoose.Types.ObjectId.isValid(district)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid district ID",
+          },
+          { status: 400 },
+        );
+      }
+
+      filter.district = district;
+    }
+
+    if (town) {
+      if (!mongoose.Types.ObjectId.isValid(town)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid town ID",
+          },
+          { status: 400 },
+        );
+      }
+
+      filter.town = town;
+    }
+
+    if (unionCouncil) {
+      if (!mongoose.Types.ObjectId.isValid(unionCouncil)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid Union Council ID",
+          },
+          { status: 400 },
+        );
+      }
+
+      filter.unionCouncil = unionCouncil;
+    }
+
+    if (ucmo) {
+  if (!mongoose.Types.ObjectId.isValid(ucmo)) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Invalid UCMO ID",
+      },
+      { status: 400 },
+    );
+  }
+
+  filter.ucmo = ucmo;
+}
+
+    if (supervisor) {
+      if (!mongoose.Types.ObjectId.isValid(supervisor)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid supervisor ID",
+          },
+          { status: 400 },
+        );
+      }
+
+      filter.supervisor = supervisor;
+    }
+
+    if (isActiveParam === "true") {
+      filter.isActive = true;
+    }
+
+    if (isActiveParam === "false") {
+      filter.isActive = false;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      User.find(filter)
+        .select("-password")
+        .populate("district", "_id name code")
+        .populate("town", "_id name code")
+        .populate("unionCouncil", "_id name code")
+        .populate("supervisor", "_id name contactNumber")
+        .populate("ucmo", "_id name contactNumber")
+        .populate("approvedBy", "_id name designation")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+
+      User.countDocuments(filter),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: users,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
+        filters: {
+          search,
+          designation,
+          district,
+          town,
+          unionCouncil,
+          ucmo,
+          supervisor,
+          isActive:
+            isActiveParam === "true"
+              ? true
+              : isActiveParam === "false"
+                ? false
+                : null,
+        },
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    console.error("Get users error:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to fetch users",
+      },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(request) {
   try {
     await connectDB();
@@ -484,187 +681,6 @@ export async function POST(request) {
       {
         success: false,
         message: error?.message || "Failed to create user.",
-      },
-      { status: 500 },
-    );
-  }
-}
-
-export async function GET(request) {
-  try {
-    await connectDB();
-
-    const { searchParams } = new URL(request.url);
-
-    const page = Math.max(
-      Number.parseInt(searchParams.get("page") || "1", 10),
-      1,
-    );
-
-    const limit = Math.min(
-      Math.max(Number.parseInt(searchParams.get("limit") || "10", 10), 1),
-      100,
-    );
-
-    const search = searchParams.get("search")?.trim() || "";
-
-    const designation = searchParams.get("designation")?.trim() || "";
-    const district = searchParams.get("district")?.trim() || "";
-    const town = searchParams.get("town")?.trim() || "";
-    const unionCouncil = searchParams.get("unionCouncil")?.trim() || "";
-    const supervisor = searchParams.get("supervisor")?.trim() || "";
-    const isActiveParam = searchParams.get("isActive");
-
-    const filter = {};
-
-    if (search) {
-      filter.$or = [
-        {
-          name: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          email: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-        {
-          contactNumber: {
-            $regex: search,
-            $options: "i",
-          },
-        },
-      ];
-    }
-
-    if (designation) {
-      filter.designation = designation;
-    }
-
-    if (district) {
-      if (!mongoose.Types.ObjectId.isValid(district)) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Invalid district ID",
-          },
-          { status: 400 },
-        );
-      }
-
-      filter.district = district;
-    }
-
-    if (town) {
-      if (!mongoose.Types.ObjectId.isValid(town)) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Invalid town ID",
-          },
-          { status: 400 },
-        );
-      }
-
-      filter.town = town;
-    }
-
-    if (unionCouncil) {
-      if (!mongoose.Types.ObjectId.isValid(unionCouncil)) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Invalid Union Council ID",
-          },
-          { status: 400 },
-        );
-      }
-
-      filter.unionCouncil = unionCouncil;
-    }
-
-    if (supervisor) {
-      if (!mongoose.Types.ObjectId.isValid(supervisor)) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Invalid supervisor ID",
-          },
-          { status: 400 },
-        );
-      }
-
-      filter.supervisor = supervisor;
-    }
-
-    if (isActiveParam === "true") {
-      filter.isActive = true;
-    }
-
-    if (isActiveParam === "false") {
-      filter.isActive = false;
-    }
-
-    const skip = (page - 1) * limit;
-
-    const [users, total] = await Promise.all([
-      User.find(filter)
-        .select("-password")
-        .populate("district", "_id name code")
-        .populate("town", "_id name code")
-        .populate("unionCouncil", "_id name code")
-        .populate("supervisor", "_id name contactNumber")
-        .populate("ucmo", "_id name contactNumber")
-        .populate("approvedBy", "_id name designation")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-
-      User.countDocuments(filter),
-    ]);
-
-    const totalPages = Math.ceil(total / limit);
-
-    return NextResponse.json(
-      {
-        success: true,
-        data: users,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-          hasNextPage: page < totalPages,
-          hasPreviousPage: page > 1,
-        },
-        filters: {
-          search,
-          designation,
-          district,
-          town,
-          unionCouncil,
-          supervisor,
-          isActive:
-            isActiveParam === "true"
-              ? true
-              : isActiveParam === "false"
-                ? false
-                : null,
-        },
-      },
-      { status: 200 },
-    );
-  } catch (error) {
-    console.error("Get users error:", error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Failed to fetch users",
       },
       { status: 500 },
     );

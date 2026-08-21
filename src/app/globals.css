@@ -1,86 +1,109 @@
+
 @import "tailwindcss";
 
 :root {
-  /* Main */
+  /* ============================================================
+     MAIN
+  ============================================================ */
+
   --primary: #40a5fe;
   --primary-foreground: #ffffff;
 
-  /* Blue family */
+  /* ============================================================
+     PRIMARY BLUE FAMILY
+  ============================================================ */
+
   --primary-light: #eaf6ff;
   --primary-soft: #c2e9fb;
   --primary-dark: #2088e8;
 
-  /* Backgrounds */
+  /* ============================================================
+     BACKGROUNDS
+  ============================================================ */
+
   --background: #ffffff;
   --surface: #f8fafc;
   --surface-blue: #f3f9ff;
 
-  /* Text */
+  /* ============================================================
+     TEXT
+  ============================================================ */
+
   --foreground: #11181c;
   --text: #11181c;
   --text-secondary: #687076;
 
-  /* Gray */
+  /* ============================================================
+     GRAY
+  ============================================================ */
+
   --gray-light: #e5e7eb;
   --gray: #9ba1a6;
   --gray-dark: #687076;
 
-  /* Icons */
+  /* ============================================================
+     ICONS
+  ============================================================ */
+
   --icon: #687076;
   --icon-selected: #40a5fe;
 
-  /* Form */
+  /* ============================================================
+     FORM
+  ============================================================ */
+
   --input-background: #ffffff;
   --input-placeholder: #9ba1a6;
 
-  /* Border */
+  /* ============================================================
+     BORDER
+  ============================================================ */
+
   --border: #dce3e8;
 
-  /* Muted */
+  /* ============================================================
+     MUTED
+  ============================================================ */
+
   --muted: #687076;
 }
 
 @theme inline {
-  /* Background */
   --color-background: var(--background);
   --color-surface: var(--surface);
   --color-surface-blue: var(--surface-blue);
 
-  /* Primary */
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-light: var(--primary-light);
   --color-primary-soft: var(--primary-soft);
   --color-primary-dark: var(--primary-dark);
 
-  /* Text */
   --color-foreground: var(--foreground);
   --color-text: var(--text);
   --color-text-secondary: var(--text-secondary);
 
-  /* Gray */
   --color-gray-light: var(--gray-light);
   --color-gray: var(--gray);
   --color-gray-dark: var(--gray-dark);
 
-  /* Icons */
   --color-icon: var(--icon);
   --color-icon-selected: var(--icon-selected);
 
-  /* Form */
   --color-input-background: var(--input-background);
   --color-input-placeholder: var(--input-placeholder);
 
-  /* Border */
   --color-border: var(--border);
 
-  /* Muted */
   --color-muted: var(--muted);
 
-  /* Fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
+
+/* ============================================================
+   DARK MODE
+============================================================ */
 
 @media (prefers-color-scheme: dark) {
   :root {
@@ -88,7 +111,7 @@
     --primary: #40a5fe;
     --primary-foreground: #ffffff;
 
-    /* Blue family */
+    /* Primary family */
     --primary-light: #102a3d;
     --primary-soft: #164a70;
     --primary-dark: #69b9ff;
@@ -130,6 +153,10 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* ============================================================
+   DASHBOARD ANIMATION
+============================================================ */
+
 @keyframes dashboardChart {
   from {
     opacity: 0;
@@ -142,7 +169,10 @@ body {
   }
 }
 
-/* Remove number input spinners */
+/* ============================================================
+   REMOVE NUMBER INPUT SPINNERS
+============================================================ */
+
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -153,90 +183,3 @@ input[type="number"] {
   appearance: textfield;
   -moz-appearance: textfield;
 }
-
-/* Primary:
-
-bg-primary
-text-primary
-border-primary
-
-Primary variations:
-
-bg-primary-light
-bg-primary-soft
-bg-primary-dark
-
-text-primary-light
-text-primary-dark
-
-border-primary
-
-Background:
-
-bg-background
-bg-surface
-bg-surface-blue
-
-Text:
-
-text-foreground
-text-text
-text-text-secondary
-
-Gray:
-
-bg-gray-light
-bg-gray
-bg-gray-dark
-
-text-gray
-text-gray-dark
-
-Form:
-
-bg-input-background
-text-input-placeholder
-
-Border:
-
-border-border
-
-Icons:
-
-text-icon
-
-text-icon-selected
-
-Muted:
-
-text-muted
-Example — tumhara Login button
-
-Ab:
-
-<button className="bg-primary text-primary-foreground hover:bg-primary-dark">
-  Sign In
-</button>
-
-Input:
-
-<input
-  className="
-    bg-input-background
-    text-text
-    placeholder:text-input-placeholder
-    border-border
-    focus:border-primary
-    focus:ring-primary-light
-  "
-/>
-
-Card:
-
-<div className="bg-background border border-border">
-
-Page:
-
-<main className="bg-surface text-text">
-
-Is approach ka faida ye hai ke components mein actual hex colors kahin nahi honge. Agar future mein Zerodose ka blue #40A5FE se change karke kisi aur blue par karna ho, sirf global.css change hoga aur poori web app update ho jayegi. */

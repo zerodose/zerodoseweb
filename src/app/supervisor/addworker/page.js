@@ -47,9 +47,8 @@ export default function Page() {
 
       reset();
 
-      setTimeout(() => {
-        router.push("/supervisor");
-      }, 1000);
+      // Route change intentionally removed.
+      // Page isi screen par rahega.
     } catch (error) {
       setError(
         error?.response?.data?.message ||
@@ -62,7 +61,7 @@ export default function Page() {
   };
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen">
       {/* =====================================================
           Header
       ===================================================== */}

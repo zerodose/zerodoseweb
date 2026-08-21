@@ -9,7 +9,6 @@ import ZerodoseCampaignSection from "@/components/worker/ZerodoseCampaignSection
 
 import { getZerodoses } from "@/api/zerodoseApi";
 import { getCampaigns } from "@/api/campaignApi";
-import WorkerPageHeader from "@/components/worker/WorkerPageHeader";
 
 export default function Page() {
   const [campaign, setCampaign] = useState(null);
@@ -22,28 +21,6 @@ export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
 
   const [previousZerodoses, setPreviousZerodoses] = useState([]);
-
-  // ============================================================
-  // Logged-in Worker
-  // ============================================================
-
-  const [worker, setWorker] = useState(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    try {
-      const authUser = localStorage.getItem("authUser");
-
-      if (!authUser) return;
-
-      const user = JSON.parse(authUser);
-
-      setWorker(user);
-    } catch (error) {
-      console.error("Invalid authUser:", error);
-    }
-  }, []);
 
   // ============================================================
   // Campaign
@@ -208,13 +185,7 @@ export default function Page() {
 
   return (
     <div className="min-h-full p-4 md:p-6">
-      <WorkerPageHeader
-        name={worker?.name}
-        teamNumber={worker?.teamNumber}
-        supervisorName={worker?.supervisorId?.name}
-        supervisorCode={worker?.supervisorId?.supervisorCode}
-      />
-
+      
       {error && (
         <div className="border-border bg-surface mb-5 flex items-center justify-between gap-3 rounded-xl border p-4">
           <p className="text-text-secondary text-sm">{error}</p>

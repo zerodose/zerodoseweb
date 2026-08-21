@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 export default function AuthGuard({ children }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    const authUser = localStorage.getItem("authUser");
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
+  useEffect(() => {
     const publicRoutes = [
       "/auth/login",
       "/auth/signup",
@@ -18,40 +18,46 @@ export default function AuthGuard({ children }) {
       "/",
     ];
 
-    if (!authUser) {
-      if (!publicRoutes.includes(pathname)) {
-        router.replace("/auth/login");
-      }
+    const authUser = localStorage.getItem("authUser");
 
+    // Public route — no authentication required
+    if (publicRoutes.includes(pathname)) {
+      setIsCheckingAuth(false);
+      return;
+    }
+
+    // Protected route but no auth
+    if (!authUser) {
+      setIsCheckingAuth(false);
+      router.replace("/auth/login");
       return;
     }
 
     try {
       const parsedUser = JSON.parse(authUser);
 
-      if (!parsedUser.expiresAt) {
+      // Invalid auth data
+      if (!parsedUser?.expiresAt) {
         localStorage.removeItem("authUser");
+        setIsCheckingAuth(false);
         router.replace("/auth/login");
         return;
       }
 
       const remainingTime = parsedUser.expiresAt - Date.now();
 
-      // Already expired
+      // Session expired
       if (remainingTime <= 0) {
         localStorage.removeItem("authUser");
+        setIsCheckingAuth(false);
         router.replace("/auth/login");
         return;
       }
 
-      // console.log(
-      //   "Auth expires at:",
-      //   new Date(parsedUser.expiresAt).toLocaleString(),
-      // );
+      // Session is valid
+      setIsCheckingAuth(false);
 
-      // console.log("Remaining minutes:", Math.ceil(remainingTime / 1000 / 60));
-
-      // Automatically logout exactly when expiry time arrives
+      // Automatically logout when session expires
       const timer = setTimeout(() => {
         localStorage.removeItem("authUser");
         router.replace("/auth/login");
@@ -62,9 +68,15 @@ export default function AuthGuard({ children }) {
       console.error("Invalid authUser:", error);
 
       localStorage.removeItem("authUser");
+      setIsCheckingAuth(false);
       router.replace("/auth/login");
     }
   }, [pathname, router]);
+
+  // Don't render protected content while checking authentication
+  if (isCheckingAuth) {
+    return null;
+  }
 
   return children;
 }

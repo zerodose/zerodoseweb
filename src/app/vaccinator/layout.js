@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import PageHeaderWithDesignation from "@/components/ui/PageHeaderWithDesignation";
 
-export default function WorkerLayout({ children }) {
+export default function VaccinatorLayout({ children }) {
   const [user, setUser] = useState(null);
 
   // ============================================================
-  // Logged-in Worker
+  // Logged-in Vaccinator
   // ============================================================
 
   useEffect(() => {
@@ -27,27 +27,26 @@ export default function WorkerLayout({ children }) {
   }, []);
 
   // ============================================================
-  // Extract Worker Data
+  // Extract Vaccinator Data
   // ============================================================
 
-  const designation = user?.designation || "worker";
+  const designation = user?.designation || "vaccinator";
 
-  const teamNumber = user?.teamNumber;
+  const ucCode = user?.unionCouncil?.code || user?.unionCouncilId?.code || "";
 
-  const supervisorName =
-    user?.supervisor?.name || user?.supervisorId?.name || "";
+  const ucName = user?.unionCouncil?.name || user?.unionCouncilId?.name || "";
 
   return (
     <div className="min-h-full p-4 md:p-6">
       {/* ========================================================
-          Permanent Worker Header
+          Permanent Vaccinator Header
       ======================================================== */}
 
       <PageHeaderWithDesignation
         name={user?.name}
         designation={designation}
-        teamNumber={teamNumber}
-        supervisorName={supervisorName}
+        ucCode={ucCode}
+        ucName={ucName}
       />
 
       {/* ========================================================

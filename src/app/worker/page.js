@@ -184,7 +184,7 @@ export default function Page() {
   // ============================================================
 
   return (
-    <div className="min-h-full p-4 md:p-6">
+    <div className="min-h-full">
       
       {error && (
         <div className="border-border bg-surface mb-5 flex items-center justify-between gap-3 rounded-xl border p-4">

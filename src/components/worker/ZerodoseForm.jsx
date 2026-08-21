@@ -354,7 +354,7 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
     return (
       <div className="w-full animate-pulse">
         {/* ======================================================== Header Skeleton ======================================================== */}
-        <div className="mb-6 px-4 pt-4 md:px-6">
+        <div className="mb-6 pt-4">
           <div className="relative overflow-hidden rounded-2xl bg-gray-300 p-5 shadow-sm md:p-6">
             <div className="relative z-10">
               <div className="mb-3 flex items-center gap-2">
@@ -414,7 +414,7 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
       />
     )}
 
-      <div className="mb-6 px-4 pt-4 md:px-6">
+      <div className="my-6">
         <div className="bg-primary relative overflow-hidden rounded-2xl p-5 shadow-sm md:p-6">
           <div className="relative z-10">
             {/* Back Button */}

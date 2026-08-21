@@ -142,7 +142,8 @@ export async function POST(request) {
       );
     }
 
-    const { designation, district, town, unionCouncil } = pendingRegistration;
+    const { designation, district, town, unionCouncil, ucmo } =
+      pendingRegistration;
 
     const locationRequirements = {
       districtFP: {
@@ -308,21 +309,24 @@ export async function POST(request) {
       }
     }
 
-    if (normalizedUnionCouncil) {
-      const unionCouncilDoc = await UnionCouncil.findOne({
-        _id: normalizedUnionCouncil,
-        town: normalizedTown,
+    let currentUcmo = null;
+
+    if (["supervisor", "vaccinator"].includes(designation)) {
+      currentUcmo = await User.findOne({
+        designation: "ucmo",
+        isActive: true,
         district: normalizedDistrict,
+        town: normalizedTown,
+        unionCouncil: normalizedUnionCouncil,
       })
         .select("_id")
         .lean();
 
-      if (!unionCouncilDoc) {
+      if (!currentUcmo) {
         return NextResponse.json(
           {
             success: false,
-            message:
-              "Union Council does not belong to the selected town and district.",
+            message: "No active UCMO found for the selected Union Council.",
           },
           { status: 400 },
         );
@@ -372,6 +376,8 @@ export async function POST(request) {
       supervisorCode: pendingRegistration.supervisorCode,
 
       supervisor: pendingRegistration.supervisor,
+      
+      ucmo: pendingRegistration.ucmo || null,
 
       teamNumber: pendingRegistration.teamNumber,
 

@@ -383,6 +383,7 @@ export async function POST(request) {
       supervisorCode:
         designation === "supervisor" ? normalizedSupervisorCode : null,
       supervisor: null,
+      ucmo: currentUcmo?._id || null,
       teamNumber: null,
       password: hashedPassword,
       isActive: typeof isActive === "boolean" ? isActive : true,
@@ -390,7 +391,6 @@ export async function POST(request) {
       emailVerificationExpires: verificationExpires,
       createdAt: Date.now(),
     };
-
     setPendingRegistration(normalizedEmail, pendingData);
 
     try {

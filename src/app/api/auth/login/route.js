@@ -66,8 +66,12 @@ export async function POST(request) {
       isActive: true,
     })
       .select("+password")
-      .populate("unionCouncil", "_id name code")
-      .populate("supervisor", "_id name supervisorCode");
+      .populate("district", "_id name code")
+      .populate("town", "_id name")
+      .populate("unionCouncil", "_id name")
+      .populate("supervisor", "_id name designation supervisorCode")
+      .populate("ucmo", "_id name designation")
+      .lean();
 
     if (!user) {
       return NextResponse.json(

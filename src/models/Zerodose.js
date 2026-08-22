@@ -100,6 +100,18 @@ const zerodoseSchema = new Schema(
       type: String,
       trim: true,
     },
+            houseNumber: {
+      type: Number,
+      required: true,
+      index: true,
+    },
+
+    gender: {
+      type: String,
+      enum: ["male", "female"],
+      required: true,
+      index: true,
+    },
 
     day: {
       type: Number,
@@ -121,6 +133,20 @@ const zerodoseSchema = new Schema(
     coveredDate: {
       type: Date,
       default: null,
+    },
+
+    qrCode: {
+      type: String,
+      trim: true,
+      default: null,
+      index: true,
+    },
+
+    vaccinator: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
     },
 
     location: {

@@ -19,21 +19,15 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
 
   const isEdit = mode === "edit";
 
-  // ============================================================
-  // Form State
-  // ============================================================
-
   const [formData, setFormData] = useState({
     childName: "",
     fatherName: "",
     age: "",
+    gender: "",
+    houseNumber: "",
     address: "",
     contactNo: "",
   });
-
-  // ============================================================
-  // State
-  // ============================================================
 
   const [campaign, setCampaign] = useState(null);
   const [zerodose, setZerodose] = useState(null);
@@ -41,18 +35,10 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
 
-  // ============================================================
-  // Load
-  // ============================================================
-
   useEffect(() => {
     const loadData = async () => {
       try {
         setChecking(true);
-
-        // ------------------------------------------------------
-        // Update Mode
-        // ------------------------------------------------------
 
         if (isEdit) {
           if (!zerodoseId) {
@@ -80,6 +66,11 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
               data.age !== undefined && data.age !== null
                 ? String(data.age)
                 : "",
+            gender: data.gender || "",
+            houseNumber:
+              data.houseNumber !== undefined && data.houseNumber !== null
+                ? String(data.houseNumber)
+                : "",
             address: data.address || "",
             contactNo: data.contactNo || "",
           });
@@ -87,10 +78,6 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
           setChecking(false);
           return;
         }
-
-        // ------------------------------------------------------
-        // Create Mode
-        // ------------------------------------------------------
 
         const response = await getCampaigns({
           status: "current",
@@ -145,10 +132,6 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
     loadData();
   }, [isEdit, zerodoseId, router]);
 
-  // ============================================================
-  // Handle Change
-  // ============================================================
-
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -157,10 +140,6 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
       [name]: value,
     }));
   };
-
-  // ============================================================
-  // Validation
-  // ============================================================
 
   const validateForm = () => {
     if (!formData.childName.trim()) {
@@ -185,6 +164,28 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
       return false;
     }
 
+    if (!formData.gender) {
+      toast.error("Gender is required.");
+      return false;
+    }
+
+    if (!["male", "female"].includes(formData.gender)) {
+      toast.error("Gender must be male or female.");
+      return false;
+    }
+
+    if (formData.houseNumber === "") {
+      toast.error("House number is required.");
+      return false;
+    }
+
+    const houseNumber = Number(formData.houseNumber);
+
+    if (!Number.isInteger(houseNumber) || houseNumber < 0) {
+      toast.error("House number must be a valid number.");
+      return false;
+    }
+
     if (!formData.address.trim()) {
       toast.error("Address is required.");
       return false;
@@ -200,25 +201,13 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
     return true;
   };
 
-  // ============================================================
-  // Create
-  // ============================================================
-
   const handleCreate = async () => {
     if (!campaign) {
       toast.error("No active campaign found.");
       return;
     }
 
-    // ----------------------------------------------------------
-    // Get Current GPS
-    // ----------------------------------------------------------
-
     const location = await getCurrentLocation();
-
-    // ----------------------------------------------------------
-    // Campaign Day
-    // ----------------------------------------------------------
 
     const campaignStart = new Date(campaign.startDate);
 
@@ -255,14 +244,12 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
       return;
     }
 
-    // ----------------------------------------------------------
-    // Payload
-    // ----------------------------------------------------------
-
     const payload = {
       childName: formData.childName.trim(),
       fatherName: formData.fatherName.trim(),
       age: Number(formData.age),
+      gender: formData.gender,
+      houseNumber: Number(formData.houseNumber),
       address: formData.address.trim(),
       contactNo: formData.contactNo.trim() || null,
       location,
@@ -275,19 +262,11 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
     router.back();
   };
 
-  // ============================================================
-  // Update
-  // ============================================================
-
   const handleUpdate = async () => {
     if (!zerodoseId) {
       toast.error("Invalid Zerodose ID.");
       return;
     }
-
-    // ----------------------------------------------------------
-    // Logged-in worker
-    // ----------------------------------------------------------
 
     const storedUser = localStorage.getItem("authUser");
 
@@ -306,25 +285,17 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
       return;
     }
 
-    // ----------------------------------------------------------
-    // Get NEW GPS location
-    // ----------------------------------------------------------
-
     const location = await getCurrentLocation();
-
-    // ----------------------------------------------------------
-    // Submit temporary update
-    // ----------------------------------------------------------
 
     const payload = {
       workerId: authUser.id,
-
       childName: formData.childName.trim(),
       fatherName: formData.fatherName.trim(),
       age: Number(formData.age),
+      gender: formData.gender,
+      houseNumber: Number(formData.houseNumber),
       address: formData.address.trim(),
       contactNo: formData.contactNo.trim() || null,
-
       location,
     };
 
@@ -334,10 +305,6 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
 
     router.back();
   };
-
-  // ============================================================
-  // Submit
-  // ============================================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -371,14 +338,9 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
     }
   };
 
-  // ============================================================
-  // Loading Skeleton
-  // ============================================================
-
   if (checking) {
     return (
       <div className="w-full animate-pulse">
-        {/* ======================================================== Header Skeleton ======================================================== */}
         <div className="mb-6 pt-4">
           <div className="relative overflow-hidden rounded-2xl bg-gray-300 p-5 shadow-sm md:p-6">
             <div className="relative z-10">
@@ -392,7 +354,7 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
             <div className="absolute -right-5 -bottom-8 h-36 w-36 rounded-full bg-gray-400/60" />
           </div>
         </div>
-        {/* ======================================================== Form Skeleton ======================================================== */}
+
         <div className="border-border bg-background rounded-2xl border shadow-sm">
           <div className="p-6 sm:p-8 md:p-9">
             <div className="mb-7 flex items-center gap-3">
@@ -402,19 +364,22 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
                 <div className="h-4 w-56 rounded-md bg-gray-300" />
               </div>
             </div>
+
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {[1, 2, 3, 4].map((item) => (
+              {[1, 2, 3, 4, 5, 6].map((item) => (
                 <div key={item}>
                   <div className="mb-2 h-4 w-24 rounded-md bg-gray-300" />
                   <div className="h-12 w-full rounded-lg bg-gray-300" />
                 </div>
               ))}
             </div>
+
             <div className="mt-6">
               <div className="mb-2 h-4 w-20 rounded-md bg-gray-300" />
               <div className="h-24 w-full rounded-lg bg-gray-300" />
             </div>
           </div>
+
           <div className="border-border flex flex-col-reverse gap-3 border-t p-6 sm:flex-row sm:justify-end sm:p-7">
             <div className="h-11 w-full rounded-lg bg-gray-300 sm:w-24" />
             <div className="h-11 w-full rounded-lg bg-gray-300 sm:w-32" />
@@ -424,15 +389,8 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
     );
   }
 
-  // ============================================================
-  // UI
-  // ============================================================
-
   return (
     <div className="w-full">
-      {/* ========================================================
-          Header
-      ======================================================== */}
       {loading && (
         <Loader text={isEdit ? "Updating Zerodose..." : "Adding Zerodose..."} />
       )}
@@ -440,7 +398,6 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
       <div className="my-6">
         <div className="bg-primary relative overflow-hidden rounded-2xl p-5 shadow-sm md:p-6">
           <div className="relative z-10">
-            {/* Back Button */}
             <button
               type="button"
               onClick={() => router.back()}
@@ -450,15 +407,17 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
             >
               <ArrowLeft size={18} />
             </button>
-            {/* Heading */}
+
             <div className="flex items-start gap-3">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white">
                 <User className="h-6 w-6" />
               </div>
+
               <div className="min-w-0">
                 <h1 className="text-2xl font-bold text-white md:text-3xl">
                   {isEdit ? "Update Zerodose" : "Add Zerodose"}
                 </h1>
+
                 <p className="mt-1 text-sm leading-relaxed text-white/80">
                   {isEdit
                     ? "Update zerodose child details."
@@ -467,14 +426,10 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
               </div>
             </div>
           </div>
-          {/* Decorative Background Icon */}
+
           <User className="pointer-events-none absolute -right-5 -bottom-8 h-36 w-36 text-white/10" />
         </div>
       </div>
-
-      {/* ========================================================
-          Form
-      ======================================================== */}
 
       <div className="border-border bg-background rounded-xl border shadow-sm">
         <div className="p-6 sm:p-8 md:p-9">
@@ -482,10 +437,12 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
             <div className="bg-primary-light text-primary flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
               <User className="h-5 w-5" />
             </div>
+
             <div className="min-w-0">
               <h2 className="text-text text-base font-semibold">
                 Child Information
               </h2>
+
               <p className="text-text-secondary mt-0.5 text-sm">
                 {isEdit
                   ? "Update child details below."
@@ -495,8 +452,6 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {/* Child Name */}
-
             <div>
               <label className="text-text mb-2 block text-sm font-medium">
                 Child Name
@@ -513,8 +468,6 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
               />
             </div>
 
-            {/* Father Name */}
-
             <div>
               <label className="text-text mb-2 block text-sm font-medium">
                 Father Name
@@ -530,8 +483,6 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
                 className="border-border bg-input-background text-text placeholder:text-input-placeholder focus:border-primary focus:ring-primary-light h-11 w-full rounded-lg border px-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
               />
             </div>
-
-            {/* Age */}
 
             <div>
               <label className="text-text mb-2 block text-sm font-medium">
@@ -554,7 +505,7 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
 
                   const number = Number(value);
 
-                  if (number >= 0 && number <= 59) {
+                  if (Number.isInteger(number) && number >= 0 && number <= 59) {
                     handleChange(e);
                   }
                 }}
@@ -564,7 +515,53 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
               />
             </div>
 
-            {/* Contact */}
+            <div>
+              <label className="text-text mb-2 block text-sm font-medium">
+                Gender
+              </label>
+
+              <select
+                name="gender"
+                value={formData.gender}
+                onChange={handleChange}
+                disabled={loading}
+                className="border-border bg-input-background text-text focus:border-primary focus:ring-primary-light h-11 w-full rounded-lg border px-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-text mb-2 block text-sm font-medium">
+                House Number
+              </label>
+
+              <input
+                type="number"
+                name="houseNumber"
+                min="0"
+                value={formData.houseNumber}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  if (value === "") {
+                    handleChange(e);
+                    return;
+                  }
+
+                  const number = Number(value);
+
+                  if (Number.isInteger(number) && number >= 0) {
+                    handleChange(e);
+                  }
+                }}
+                placeholder="Enter house number"
+                disabled={loading}
+                className="border-border bg-input-background text-text placeholder:text-input-placeholder focus:border-primary focus:ring-primary-light h-11 w-full [appearance:textfield] rounded-lg border px-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+              />
+            </div>
 
             <div>
               <label className="text-text mb-2 block text-sm font-medium">
@@ -611,8 +608,6 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
             </div>
           </div>
 
-          {/* Address */}
-
           <div className="mt-6">
             <label className="text-text mb-2 block text-sm font-medium">
               Address
@@ -629,10 +624,6 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
             />
           </div>
         </div>
-
-        {/* ======================================================
-            Buttons
-        ====================================================== */}
 
         <div className="border-border flex flex-col-reverse gap-3 border-t p-6 sm:flex-row sm:justify-end sm:p-6">
           <button
@@ -663,621 +654,3 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
     </div>
   );
 }
-
-// "use client";
-
-// import { useEffect, useState } from "react";
-// import { useRouter } from "next/navigation";
-// import { User, Phone, ArrowLeft } from "lucide-react";
-// import { toast } from "sonner";
-
-// import { getCampaigns } from "@/api/campaignApi";
-// import { createZerodose, getZerodose, updateZerodose } from "@/api/zerodoseApi";
-// import { getCurrentLocation } from "@/utils/location";
-
-// export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
-//   const router = useRouter();
-
-//   const isUpdate = mode === "update";
-
-//   // ============================================================
-//   // Form State
-//   // ============================================================
-
-//   const [formData, setFormData] = useState({
-//     childName: "",
-//     fatherName: "",
-//     age: "",
-//     address: "",
-//     contactNo: "",
-//   });
-
-//   // ============================================================
-//   // Campaign State
-//   // ============================================================
-
-//   const [campaign, setCampaign] = useState(null);
-
-//   const [loading, setLoading] = useState(false);
-//   const [loadingData, setLoadingData] = useState(true);
-
-//   // ============================================================
-//   // Load Campaign
-//   // ============================================================
-
-//   useEffect(() => {
-//     const loadCampaign = async () => {
-//       try {
-//         const response = await getCampaigns({
-//           status: "current",
-//           limit: 1,
-//         });
-
-//         const campaigns = response?.data || [];
-
-//         const today = new Date();
-
-//         const activeCampaign = campaigns.find((item) => {
-//           if (!item?.startDate || !item?.endDate) {
-//             return false;
-//           }
-
-//           const startDate = new Date(item.startDate);
-//           const endDate = new Date(item.endDate);
-
-//           if (
-//             Number.isNaN(startDate.getTime()) ||
-//             Number.isNaN(endDate.getTime())
-//           ) {
-//             return false;
-//           }
-
-//           endDate.setHours(23, 59, 59, 999);
-
-//           return today >= startDate && today <= endDate;
-//         });
-
-//         if (!activeCampaign) {
-//           toast.error("There is no active campaign.");
-
-//           router.replace("/worker");
-//           return;
-//         }
-
-//         setCampaign(activeCampaign);
-//       } catch (error) {
-//         console.error("Campaign check error:", error);
-
-//         toast.error(
-//           error?.response?.data?.message ||
-//             "Unable to verify the current campaign.",
-//         );
-
-//         router.replace("/worker");
-//       }
-//     };
-
-//     loadCampaign();
-//   }, [router]);
-
-//   // ============================================================
-//   // Load Existing Zerodose For Update
-//   // ============================================================
-
-//   useEffect(() => {
-//     if (!isUpdate || !zerodoseId) {
-//       setLoadingData(false);
-//       return;
-//     }
-
-//     const loadZerodose = async () => {
-//       try {
-//         setLoadingData(true);
-
-//         const response = await getZerodose(zerodoseId);
-
-//         const item = response?.data || response;
-
-//         if (!item) {
-//           toast.error("Zerodose record not found.");
-//           router.replace("/worker");
-//           return;
-//         }
-
-//         setFormData({
-//           childName: item.childName || "",
-//           fatherName: item.fatherName || "",
-//           age:
-//             item.age !== undefined && item.age !== null ? String(item.age) : "",
-//           address: item.address || "",
-//           contactNo: item.contactNo || "",
-//         });
-//       } catch (error) {
-//         console.error("Get zerodose error:", error);
-
-//         toast.error(
-//           error?.response?.data?.message ||
-//             error?.message ||
-//             "Failed to load zerodose.",
-//         );
-
-//         router.back();
-//       } finally {
-//         setLoadingData(false);
-//       }
-//     };
-
-//     loadZerodose();
-//   }, [isUpdate, zerodoseId, router]);
-
-//   // ============================================================
-//   // Handle Change
-//   // ============================================================
-
-//   const handleChange = (e) => {
-//     const { name, value } = e.target;
-
-//     setFormData((previous) => ({
-//       ...previous,
-//       [name]: value,
-//     }));
-//   };
-
-//   // ============================================================
-//   // Calculate Campaign Day
-//   // ============================================================
-
-//   const getCampaignDay = () => {
-//     if (!campaign?.startDate || !campaign?.endDate) {
-//       throw new Error("Invalid campaign dates.");
-//     }
-
-//     const campaignStart = new Date(campaign.startDate);
-//     const campaignEnd = new Date(campaign.endDate);
-
-//     if (
-//       Number.isNaN(campaignStart.getTime()) ||
-//       Number.isNaN(campaignEnd.getTime())
-//     ) {
-//       throw new Error("Invalid campaign dates.");
-//     }
-
-//     campaignStart.setHours(0, 0, 0, 0);
-//     campaignEnd.setHours(0, 0, 0, 0);
-
-//     const today = new Date();
-//     today.setHours(0, 0, 0, 0);
-
-//     const day =
-//       Math.floor(
-//         (today.getTime() - campaignStart.getTime()) / (1000 * 60 * 60 * 24),
-//       ) + 1;
-
-//     const campaignDays =
-//       Math.floor(
-//         (campaignEnd.getTime() - campaignStart.getTime()) /
-//           (1000 * 60 * 60 * 24),
-//       ) + 1;
-
-//     if (day < 1 || day > campaignDays) {
-//       throw new Error("Today is outside the current campaign period.");
-//     }
-
-//     return day;
-//   };
-
-//   // ============================================================
-//   // Validation
-//   // ============================================================
-
-//   const validateForm = () => {
-//     if (!formData.childName.trim()) {
-//       toast.error("Child name is required.");
-//       return false;
-//     }
-
-//     if (!formData.fatherName.trim()) {
-//       toast.error("Father name is required.");
-//       return false;
-//     }
-
-//     if (formData.age === "") {
-//       toast.error("Age is required.");
-//       return false;
-//     }
-
-//     const age = Number(formData.age);
-
-//     if (!Number.isInteger(age) || age < 0 || age > 59) {
-//       toast.error("Age must be between 0 and 59.");
-//       return false;
-//     }
-
-//     if (!formData.address.trim()) {
-//       toast.error("Address is required.");
-//       return false;
-//     }
-
-//     const contactNo = formData.contactNo.trim();
-
-//     if (contactNo && !/^03\d{9}$/.test(contactNo)) {
-//       toast.error("Please enter a valid Pakistani mobile number.");
-//       return false;
-//     }
-
-//     return true;
-//   };
-
-//   // ============================================================
-//   // Submit
-//   // ============================================================
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     if (loading) {
-//       return;
-//     }
-
-//     if (!campaign) {
-//       toast.error("No active campaign found.");
-//       return;
-//     }
-
-//     if (!validateForm()) {
-//       return;
-//     }
-
-//     try {
-//       setLoading(true);
-
-//       // ========================================================
-//       // Always get NEW GPS location
-//       // ========================================================
-
-//       const location = await getCurrentLocation();
-
-//       const age = Number(formData.age);
-
-//       // ========================================================
-//       // CREATE
-//       // ========================================================
-
-//       if (!isUpdate) {
-//         const day = getCampaignDay();
-
-//         const payload = {
-//           childName: formData.childName.trim(),
-//           fatherName: formData.fatherName.trim(),
-//           age,
-//           address: formData.address.trim(),
-//           contactNo: formData.contactNo.trim() || null,
-//           location,
-//         };
-
-//         await createZerodose(payload);
-
-//         toast.success("Zerodose recorded successfully.");
-
-//         router.back();
-//         return;
-//       }
-
-//       // ========================================================
-//       // UPDATE
-//       // ========================================================
-
-//       if (!zerodoseId) {
-//         throw new Error("Zerodose ID is missing.");
-//       }
-
-//       const payload = {
-//         childName: formData.childName.trim(),
-//         fatherName: formData.fatherName.trim(),
-//         age,
-//         address: formData.address.trim(),
-//         contactNo: formData.contactNo.trim() || null,
-
-//         // IMPORTANT:
-//         // Update always sends the NEW current GPS location.
-//         location,
-//       };
-
-//       await updateZerodose(zerodoseId, payload);
-
-//       toast.success("Zerodose update request submitted successfully.");
-
-//       router.back();
-//     } catch (error) {
-//       console.error(
-//         isUpdate ? "Update zerodose error:" : "Add zerodose error:",
-//         error,
-//       );
-
-//       toast.error(
-//         error?.response?.data?.message ||
-//           error?.message ||
-//           (isUpdate ? "Failed to update zerodose." : "Failed to add zerodose."),
-//       );
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   // ============================================================
-//   // Loading Skeleton
-//   // ============================================================
-
-//   if (loadingData) {
-//     return (
-//       <div className="w-full animate-pulse">
-//         <div className="mt-4 mb-6 flex items-start gap-3">
-//           <div className="bg-surface mt-1 h-9 w-9 shrink-0 rounded-lg" />
-
-//           <div className="flex-1">
-//             <div className="bg-surface h-7 w-40 rounded-md" />
-//             <div className="bg-surface mt-2 h-4 w-64 rounded-md" />
-//           </div>
-//         </div>
-
-//         <div className="border-border bg-background rounded-xl border shadow-sm">
-//           <div className="p-6 sm:p-8 md:p-9">
-//             <div className="mb-5 flex items-center gap-3">
-//               <div className="bg-surface h-10 w-10 shrink-0 rounded-lg" />
-
-//               <div className="flex-1">
-//                 <div className="bg-surface h-5 w-36 rounded-md" />
-//                 <div className="bg-surface mt-2 h-4 w-52 rounded-md" />
-//               </div>
-//             </div>
-
-//             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-//               {[1, 2, 3, 4].map((item) => (
-//                 <div key={item}>
-//                   <div className="bg-surface mb-2 h-4 w-24 rounded-md" />
-//                   <div className="bg-surface h-11 w-full rounded-lg" />
-//                 </div>
-//               ))}
-//             </div>
-
-//             <div className="mt-5">
-//               <div className="bg-surface mb-2 h-4 w-20 rounded-md" />
-//               <div className="bg-surface h-[76px] w-full rounded-lg" />
-//             </div>
-//           </div>
-
-//           <div className="border-border flex flex-col-reverse gap-3 border-t p-5 sm:flex-row sm:justify-end sm:p-6">
-//             <div className="bg-surface h-11 w-full rounded-lg sm:w-24" />
-//             <div className="bg-surface h-11 w-full rounded-lg sm:w-32" />
-//           </div>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   // ============================================================
-//   // UI
-//   // ============================================================
-
-//   return (
-//     <div className="w-full">
-//       {/* ========================================================
-//           Header
-//       ======================================================== */}
-
-//       <div className="mt-4 mb-6 flex items-start gap-3">
-//         <button
-//           type="button"
-//           onClick={() => router.back()}
-//           disabled={loading}
-//           className="border-border bg-background text-text-secondary hover:bg-surface mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition disabled:cursor-not-allowed disabled:opacity-50"
-//         >
-//           <ArrowLeft size={18} />
-//         </button>
-
-//         <div>
-//           <h1 className="text-text text-2xl font-semibold">
-//             {isUpdate ? "Update Zerodose" : "Add Zerodose"}
-//           </h1>
-
-//           <p className="text-text-secondary mt-1 text-sm">
-//             {isUpdate
-//               ? "Update zerodose child details."
-//               : "Record a new zerodose child."}
-//           </p>
-//         </div>
-//       </div>
-
-//       {/* ========================================================
-//           Form Card
-//       ======================================================== */}
-
-//       <div className="border-border bg-background rounded-xl border shadow-sm">
-//         <div className="p-6 sm:p-8 md:p-9">
-//           {/* Section Header */}
-
-//           <div className="mb-5 flex items-center gap-3">
-//             <div className="bg-primary-light text-primary flex h-10 w-10 items-center justify-center rounded-lg">
-//               <User size={20} />
-//             </div>
-
-//             <div>
-//               <h2 className="text-text font-semibold">Child Information</h2>
-
-//               <p className="text-text-secondary text-sm">
-//                 Enter child details below.
-//               </p>
-//             </div>
-//           </div>
-
-//           {/* Fields */}
-
-//           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-//             {/* Child Name */}
-
-//             <div>
-//               <label className="text-text mb-2 block text-sm font-medium">
-//                 Child Name
-//               </label>
-
-//               <input
-//                 type="text"
-//                 name="childName"
-//                 value={formData.childName}
-//                 onChange={handleChange}
-//                 placeholder="Enter child name"
-//                 disabled={loading}
-//                 className="border-border bg-input-background text-text placeholder:text-input-placeholder focus:border-primary focus:ring-primary-light h-11 w-full rounded-lg border px-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
-//               />
-//             </div>
-
-//             {/* Father Name */}
-
-//             <div>
-//               <label className="text-text mb-2 block text-sm font-medium">
-//                 Father Name
-//               </label>
-
-//               <input
-//                 type="text"
-//                 name="fatherName"
-//                 value={formData.fatherName}
-//                 onChange={handleChange}
-//                 placeholder="Enter father name"
-//                 disabled={loading}
-//                 className="border-border bg-input-background text-text placeholder:text-input-placeholder focus:border-primary focus:ring-primary-light h-11 w-full rounded-lg border px-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
-//               />
-//             </div>
-
-//             {/* Age */}
-
-//             <div>
-//               <label className="text-text mb-2 block text-sm font-medium">
-//                 Age (In Month)
-//               </label>
-
-//               <input
-//                 type="number"
-//                 name="age"
-//                 min="0"
-//                 max="59"
-//                 value={formData.age}
-//                 onChange={(e) => {
-//                   const value = e.target.value;
-
-//                   if (value === "") {
-//                     handleChange(e);
-//                     return;
-//                   }
-
-//                   const number = Number(value);
-
-//                   if (number >= 0 && number <= 59) {
-//                     handleChange(e);
-//                   }
-//                 }}
-//                 placeholder="Enter age"
-//                 disabled={loading}
-//                 className="border-border bg-input-background text-text placeholder:text-input-placeholder focus:border-primary focus:ring-primary-light h-11 w-full [appearance:textfield] rounded-lg border px-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
-//               />
-//             </div>
-
-//             {/* Contact */}
-
-//             <div>
-//               <label className="text-text mb-2 block text-sm font-medium">
-//                 Contact No
-//               </label>
-
-//               <div className="relative">
-//                 <Phone
-//                   size={17}
-//                   className="text-text-secondary absolute top-1/2 left-3 -translate-y-1/2"
-//                 />
-
-//                 <input
-//                   type="tel"
-//                   name="contactNo"
-//                   value={formData.contactNo}
-//                   onChange={(e) => {
-//                     const value = e.target.value
-//                       .replace(/\D/g, "")
-//                       .slice(0, 11);
-
-//                     setFormData((previous) => ({
-//                       ...previous,
-//                       contactNo: value,
-//                     }));
-//                   }}
-//                   placeholder="03XXXXXXXXX"
-//                   inputMode="numeric"
-//                   maxLength={11}
-//                   disabled={loading}
-//                   className={`border-border bg-input-background text-text placeholder:text-input-placeholder focus:border-primary focus:ring-primary-light h-11 w-full rounded-lg border pr-3 pl-10 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
-//                     formData.contactNo && !/^03\d{9}$/.test(formData.contactNo)
-//                       ? "border-red-500 focus:border-red-500 focus:ring-red-100"
-//                       : ""
-//                   }`}
-//                 />
-//               </div>
-
-//               {formData.contactNo && !/^03\d{9}$/.test(formData.contactNo) && (
-//                 <p className="mt-1.5 text-xs text-red-500">
-//                   Enter a valid Pakistani mobile number (03XXXXXXXXX).
-//                 </p>
-//               )}
-//             </div>
-//           </div>
-
-//           {/* Address */}
-
-//           <div className="mt-5">
-//             <label className="text-text mb-2 block text-sm font-medium">
-//               Address
-//             </label>
-
-//             <textarea
-//               name="address"
-//               value={formData.address}
-//               onChange={handleChange}
-//               rows={3}
-//               placeholder="Enter complete address"
-//               disabled={loading}
-//               className="border-border bg-input-background text-text placeholder:text-input-placeholder focus:border-primary focus:ring-primary-light w-full resize-none rounded-lg border px-3 py-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
-//             />
-//           </div>
-//         </div>
-
-//         {/* ======================================================
-//             Buttons
-//         ====================================================== */}
-
-//         <div className="border-border flex flex-col-reverse gap-3 border-t p-5 sm:flex-row sm:justify-end sm:p-6">
-//           <button
-//             type="button"
-//             onClick={() => router.back()}
-//             disabled={loading}
-//             className="border-border text-text hover:bg-surface h-11 rounded-lg border px-5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
-//           >
-//             Cancel
-//           </button>
-
-//           <button
-//             type="button"
-//             onClick={handleSubmit}
-//             disabled={loading || !campaign}
-//             className="bg-primary hover:bg-primary-dark flex h-11 items-center justify-center gap-2 rounded-lg px-6 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-60"
-//           >
-//             {loading
-//               ? isUpdate
-//                 ? "Updating..."
-//                 : "Saving..."
-//               : isUpdate
-//                 ? "Update Zerodose"
-//                 : "Add Zerodose"}
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }

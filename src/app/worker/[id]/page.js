@@ -42,8 +42,13 @@ export default function ZerodoseDetailPage() {
         setLoading(true);
 
         const response = await getZerodose(id);
-
         const data = response?.data || response;
+
+        if (!data) {
+          toast.error("Zerodose not found.");
+          router.back();
+          return;
+        }
 
         setZerodose(data);
       } catch (error) {
@@ -142,10 +147,6 @@ export default function ZerodoseDetailPage() {
 
   return (
     <div className="min-h-full">
-      {/* =========================================================
-          Header
-      ========================================================= */}
-
       <div className="mt-4 mb-6 flex items-start gap-3">
         <button
           type="button"
@@ -156,40 +157,26 @@ export default function ZerodoseDetailPage() {
         </button>
 
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h1 className="text-text text-2xl font-semibold">
-                Zerodose Details
-              </h1>
+          <h1 className="text-text text-2xl font-semibold">Zerodose Details</h1>
 
-              <p className="text-text-secondary mt-1 text-sm">
-                View complete zerodose record information.
-              </p>
-            </div>
-          </div>
+          <p className="text-text-secondary mt-1 text-sm">
+            View complete zerodose record information.
+          </p>
         </div>
       </div>
 
-      {/* =========================================================
-          Main Record Card
-      ========================================================= */}
-
       <div className="space-y-5">
-        {/* =======================================================
-            Summary
-        ======================================================= */}
-
         <div className="border-border bg-background rounded-2xl border shadow-sm">
-          <div className="flex items-center justify-between p-5 md:p-6">
-            <div className="flex items-start gap-4">
+          <div className="flex items-center justify-between gap-4 p-5 md:p-6">
+            <div className="flex min-w-0 items-start gap-4">
               <div className="bg-primary/10 text-primary flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl">
                 <Syringe className="h-7 w-7" />
               </div>
 
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-text text-xl font-semibold">
-                    {zerodose.childName}
+                  <h2 className="text-text text-xl font-semibold break-words">
+                    {zerodose.childName || "-"}
                   </h2>
 
                   <span
@@ -204,22 +191,17 @@ export default function ZerodoseDetailPage() {
                 </p>
               </div>
             </div>
-            <div>
-              <button
-                type="button"
-                onClick={() => router.push(`/worker/${zerodose._id}/update`)}
-                className="border-border bg-background text-text-secondary hover:bg-surface hover:text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition"
-                title="Edit Zerodose"
-              >
-                <Edit className="h-4 w-4" />
-              </button>
-            </div>
+
+            <button
+              type="button"
+              onClick={() => router.push(`/worker/${zerodose._id}/update`)}
+              className="border-border bg-background text-text-secondary hover:bg-surface hover:text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition"
+              title="Edit Zerodose"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
           </div>
         </div>
-
-        {/* =======================================================
-            Child Information
-        ======================================================= */}
 
         <DetailSection
           icon={Baby}
@@ -241,7 +223,11 @@ export default function ZerodoseDetailPage() {
           <DetailItem
             icon={Baby}
             label="Age"
-            value={`${zerodose.age ?? "-"} months`}
+            value={
+              zerodose.age !== undefined && zerodose.age !== null
+                ? `${zerodose.age} months`
+                : "-"
+            }
           />
 
           <DetailItem
@@ -250,12 +236,12 @@ export default function ZerodoseDetailPage() {
             value={zerodose.contactNo || "-"}
           />
 
-          <DetailItem icon={MapPin} label="Address" value={zerodose.address} />
+          <DetailItem
+            icon={MapPin}
+            label="Address"
+            value={zerodose.address || "-"}
+          />
         </DetailSection>
-
-        {/* =======================================================
-            Campaign Information
-        ======================================================= */}
 
         <DetailSection
           icon={CalendarDays}
@@ -270,8 +256,24 @@ export default function ZerodoseDetailPage() {
 
           <DetailItem
             icon={Hash}
+            label="Campaign Year"
+            value={zerodose.campaign?.year ?? "-"}
+          />
+
+          <DetailItem
+            icon={CalendarDays}
+            label="Campaign Month"
+            value={zerodose.campaign?.month ?? "-"}
+          />
+
+          <DetailItem
+            icon={Hash}
             label="Campaign Day"
-            value={zerodose.day != null ? `Day ${zerodose.day}` : "-"}
+            value={
+              zerodose.day !== undefined && zerodose.day !== null
+                ? `Day ${zerodose.day}`
+                : "-"
+            }
           />
 
           <DetailItem
@@ -304,10 +306,6 @@ export default function ZerodoseDetailPage() {
             value={getClientStatus()}
           />
         </DetailSection>
-
-        {/* =======================================================
-            Assignment Information
-        ======================================================= */}
 
         <DetailSection
           icon={Users}
@@ -355,11 +353,19 @@ export default function ZerodoseDetailPage() {
             label="Recorded By"
             value={zerodose.user?.name || "-"}
           />
-        </DetailSection>
 
-        {/* =======================================================
-            Location
-        ======================================================= */}
+          <DetailItem
+            icon={User}
+            label="Team Leader"
+            value={zerodose.teamLeader?.name || "-"}
+          />
+
+          <DetailItem
+            icon={User}
+            label="Team Member"
+            value={zerodose.teamMember?.name || "-"}
+          />
+        </DetailSection>
 
         <DetailSection
           icon={Navigation}
@@ -394,58 +400,27 @@ export default function ZerodoseDetailPage() {
             )}
         </DetailSection>
 
-        {/* =======================================================
-            Update / Delete Information
-        ======================================================= */}
-
-        {(zerodose.updateRequested ||
-          zerodose.updateApproved ||
-          zerodose.deleteRequested ||
-          zerodose.deleteApproved) && (
-          <DetailSection
+        <DetailSection
+          icon={Clock3}
+          title="Record Information"
+          description="Record creation and last modification information."
+        >
+          <DetailItem
             icon={Clock3}
-            title="Approval Information"
-            description="Update and delete request status."
-          >
-            <DetailItem
-              label="Update Requested"
-              value={zerodose.updateRequested ? "Yes" : "No"}
-            />
+            label="Created At"
+            value={formatDateTime(zerodose.createdAt)}
+          />
 
-            <DetailItem
-              label="Update Approved"
-              value={zerodose.updateApproved ? "Yes" : "No"}
-            />
-
-            <DetailItem
-              label="Delete Requested"
-              value={zerodose.deleteRequested ? "Yes" : "No"}
-            />
-
-            <DetailItem
-              label="Delete Approved"
-              value={zerodose.deleteApproved ? "Yes" : "No"}
-            />
-
-            <DetailItem
-              label="Created At"
-              value={formatDateTime(zerodose.createdAt)}
-            />
-
-            <DetailItem
-              label="Updated At"
-              value={formatDateTime(zerodose.updatedAt)}
-            />
-          </DetailSection>
-        )}
+          <DetailItem
+            icon={Clock3}
+            label="Updated At"
+            value={formatDateTime(zerodose.updatedAt)}
+          />
+        </DetailSection>
       </div>
     </div>
   );
 }
-
-/* ================================================================
-   Detail Section
-================================================================ */
 
 function DetailSection({ icon: Icon, title, description, children }) {
   return (
@@ -468,9 +443,6 @@ function DetailSection({ icon: Icon, title, description, children }) {
     </section>
   );
 }
-/* ================================================================
-   Detail Item
-================================================================ */
 
 function DetailItem({ icon: Icon, label, value }) {
   return (

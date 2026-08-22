@@ -208,69 +208,70 @@ export async function DELETE(request, { params }) {
       return NextResponse.json(
         {
           success: false,
-          message: "Invalid Zerodose ID.",
+          message: "Invalid Pending Zerodose ID.",
         },
         { status: 400 },
       );
     }
 
-    const zerodose = await Zerodose.findById(id).lean();
+    const pendingZerodose = await PendingZerodose.findById(id).lean();
 
-    if (!zerodose) {
+    if (!pendingZerodose) {
       return NextResponse.json(
         {
           success: false,
-          message: "Zerodose not found.",
+          message: "Pending Zerodose not found.",
         },
         { status: 404 },
       );
     }
 
+    // Actual Zerodose verify karein
+    const zerodose = await Zerodose.findById(
+      pendingZerodose.zerodose,
+    ).lean();
+
+    if (!zerodose) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Actual Zerodose not found.",
+        },
+        { status: 404 },
+      );
+    }
+
+    // Sirf original worker apni pending request delete kar sakta hai
     if (!objectIdEquals(zerodose.user, worker._id)) {
       return NextResponse.json(
         {
           success: false,
-          message: "You are not authorized to delete this Zerodose.",
+          message:
+            "You are not authorized to delete this pending Zerodose.",
         },
         { status: 403 },
       );
     }
 
-    const pendingZerodose = await PendingZerodose.findOne({
-      zerodose: zerodose._id,
-      status: "pending",
-    }).lean();
-
-    if (pendingZerodose) {
-      return NextResponse.json(
-        {
-          success: false,
-          message:
-            "This Zerodose has a pending update request and cannot be deleted.",
-        },
-        { status: 400 },
-      );
-    }
-
-    await Zerodose.deleteOne({
-      _id: zerodose._id,
-      user: worker._id,
+    await PendingZerodose.deleteOne({
+      _id: pendingZerodose._id,
     });
 
     return NextResponse.json(
       {
         success: true,
-        message: "Zerodose deleted successfully.",
+        message: "Pending Zerodose deleted successfully.",
       },
       { status: 200 },
     );
   } catch (error) {
-    console.error("Delete worker Zerodose error:", error);
+    console.error("Delete pending Zerodose error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: error?.message || "Failed to delete Zerodose.",
+        message:
+          error?.message || "Failed to delete pending Zerodose.",
       },
       { status: 500 },
     );

@@ -532,7 +532,13 @@ export default function Page() {
     try {
       setProcessingId(zerodoseId);
 
-      const response = await updateZerodoseApproval(zerodoseId, action);
+      const response = await updateZerodoseApproval(
+        pendingZerodose.zerodose,
+        "approved",
+        supervisorId,
+      );
+
+      await deletePendingZerodose(pendingZerodose._id);
 
       if (!response?.success) {
         throw new Error(

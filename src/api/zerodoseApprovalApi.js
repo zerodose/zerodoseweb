@@ -68,10 +68,16 @@ export const updateZerodoseApproval = async (
   action,
   supervisorId,
 ) => {
-  const response = await api.put(`/zerodose/pendingZerodose/${zerodoseId}`, {
+  const response = await api.put(`/zerodose/${zerodoseId}`, {
     action,
     supervisorId,
   });
+
+  return response?.data;
+};
+
+export const deletePendingZerodose = async (pendingId) => {
+  const response = await api.delete(`/zerodose/worker/${pendingId}`);
 
   return response?.data;
 };

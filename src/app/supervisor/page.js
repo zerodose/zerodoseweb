@@ -12,6 +12,7 @@ import CampaignTabs from "@/components/supervisor/CampaignTabs";
 import CurrentCampaign from "@/components/supervisor/CurrentCampaign";
 import PreviousCampaigns from "@/components/supervisor/PreviousCampaigns";
 import UCMOActions from "@/components/ucmo/UCMOActions";
+import { getPendingZerodoseCount } from "@/api/zerodoseApprovalApi";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
@@ -22,6 +23,9 @@ export default function Page() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [pendingApprovals, setPendingApprovals] = useState(0);
+  const [pendingApprovalsLoading, setPendingApprovalsLoading] = useState(true);
 
   const getId = (value) => {
     if (!value) {
@@ -152,6 +156,41 @@ export default function Page() {
     };
 
     fetchSupervisorData();
+  }, []);
+
+  useEffect(() => {
+    const fetchPendingApprovals = async () => {
+      try {
+        setPendingApprovalsLoading(true);
+
+        const storedAuthUser = JSON.parse(
+          localStorage.getItem("authUser") || "{}",
+        );
+
+        if (!storedAuthUser?.id) {
+          setPendingApprovals(0);
+          return;
+        }
+
+        const supervisorId = String(storedAuthUser.id);
+
+        const response = await getPendingZerodoseCount(supervisorId);
+
+        if (!response?.success) {
+          setPendingApprovals(0);
+          return;
+        }
+
+        setPendingApprovals(response.count || 0);
+      } catch (error) {
+        console.error("Pending Zerodose count error:", error);
+        setPendingApprovals(0);
+      } finally {
+        setPendingApprovalsLoading(false);
+      }
+    };
+
+    fetchPendingApprovals();
   }, []);
 
   const supervisorUnionCouncilId = useMemo(() => {
@@ -361,14 +400,6 @@ export default function Page() {
 
   return (
     <div className="min-h-full">
-      {/* <div className="mb-6 md:mb-7">
-        <h1 className="text-text text-2xl font-bold md:text-3xl">Supervisor</h1>
-
-        <p className="text-text-secondary mt-1 text-sm">
-          Manage teams and campaign-wise Zerodose records
-        </p>
-      </div> */}
-
       <div className="mb-4 flex flex-col md:mb-6">
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-text text-2xl font-bold md:text-3xl">
@@ -377,10 +408,9 @@ export default function Page() {
           <UCMOActions
             link={"/supervisor/zerodoseApproval"}
             name={"Zerodose Approval"}
-            // pendingApprovals={pendingApprovals}
+            pendingApprovals={pendingApprovals}
             loading={loading}
           />
-          {/* <UCMOActions pendingApprovals={pendingApprovals} loading={loading} /> */}
         </div>
 
         <p className="text-text-secondary mt-1 text-sm">

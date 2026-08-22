@@ -279,7 +279,7 @@ export async function PUT(request, { params }) {
       return NextResponse.json(
         {
           success: false,
-          message: "Only supervisors can update Zerodose.",
+          message: "Only supervisors can approve Zerodose updates.",
         },
         {
           status: 403,
@@ -301,6 +301,22 @@ export async function PUT(request, { params }) {
       );
     }
 
+    const body = await request.json();
+
+    const action = body?.action;
+
+    if (!["approved", "rejected"].includes(action)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Valid action is required: approve or reject.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
     const zerodose = await Zerodose.findById(id);
 
     if (!zerodose) {
@@ -315,11 +331,12 @@ export async function PUT(request, { params }) {
       );
     }
 
+    // Only the supervisor assigned to this Zerodose can approve/reject it.
     if (!objectIdEquals(user._id, zerodose.supervisor)) {
       return NextResponse.json(
         {
           success: false,
-          message: "You are not authorized to update this Zerodose.",
+          message: "You are not authorized to approve this Zerodose update.",
         },
         {
           status: 403,
@@ -327,7 +344,55 @@ export async function PUT(request, { params }) {
       );
     }
 
-    const body = await request.json();
+    const PendingZerodose = (await import("@/models/PendingZerodose")).default;
+
+    const pendingZerodose = await PendingZerodose.findOne({
+      zerodose: zerodose._id,
+      supervisor: user._id,
+      status: "pending",
+    });
+
+    if (!pendingZerodose) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "No pending update request found for this Zerodose.",
+        },
+        {
+          status: 404,
+        },
+      );
+    }
+
+    // ---------------------------------------------------------
+    // REJECT
+    // ---------------------------------------------------------
+    if (action === "reject") {
+      pendingZerodose.status = "rejected";
+      pendingZerodose.rejectedBy = user._id;
+      pendingZerodose.rejectedAt = new Date();
+
+      await pendingZerodose.save();
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Zerodose update request rejected successfully.",
+          data: {
+            zerodoseId: zerodose._id,
+            pendingZerodoseId: pendingZerodose._id,
+            status: pendingZerodose.status,
+          },
+        },
+        {
+          status: 200,
+        },
+      );
+    }
+
+    // ---------------------------------------------------------
+    // APPROVE
+    // ---------------------------------------------------------
 
     const allowedFields = [
       "childName",
@@ -340,13 +405,24 @@ export async function PUT(request, { params }) {
       "location",
     ];
 
-    const receivedFields = Object.keys(body);
+    const changedFields = Array.isArray(pendingZerodose.changedFields)
+      ? pendingZerodose.changedFields
+      : [];
 
-    if (receivedFields.length === 0) {
+    const newData = pendingZerodose.newData || {};
+
+    // Safety check:
+    // Pending request itself must never contain a field
+    // outside the fields workers are allowed to edit.
+    const invalidChangedFields = changedFields.filter(
+      (field) => !allowedFields.includes(field),
+    );
+
+    if (invalidChangedFields.length > 0) {
       return NextResponse.json(
         {
           success: false,
-          message: "No update data provided.",
+          message: `Invalid update fields: ${invalidChangedFields.join(", ")}.`,
         },
         {
           status: 400,
@@ -354,24 +430,13 @@ export async function PUT(request, { params }) {
       );
     }
 
-    const invalidFields = receivedFields.filter(
-      (field) => !allowedFields.includes(field),
-    );
+    // ---------------------------------------------------------
+    // Apply ONLY changed fields
+    // Everything else in actual Zerodose remains untouched.
+    // ---------------------------------------------------------
 
-    if (invalidFields.length > 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: `Supervisor cannot update: ${invalidFields.join(", ")}.`,
-        },
-        {
-          status: 403,
-        },
-      );
-    }
-
-    if (body.childName !== undefined) {
-      if (typeof body.childName !== "string" || !body.childName.trim()) {
+    if (changedFields.includes("childName")) {
+      if (typeof newData.childName !== "string" || !newData.childName.trim()) {
         return NextResponse.json(
           {
             success: false,
@@ -383,11 +448,14 @@ export async function PUT(request, { params }) {
         );
       }
 
-      zerodose.childName = body.childName.trim();
+      zerodose.childName = newData.childName.trim();
     }
 
-    if (body.fatherName !== undefined) {
-      if (typeof body.fatherName !== "string" || !body.fatherName.trim()) {
+    if (changedFields.includes("fatherName")) {
+      if (
+        typeof newData.fatherName !== "string" ||
+        !newData.fatherName.trim()
+      ) {
         return NextResponse.json(
           {
             success: false,
@@ -399,16 +467,13 @@ export async function PUT(request, { params }) {
         );
       }
 
-      zerodose.fatherName = body.fatherName.trim();
+      zerodose.fatherName = newData.fatherName.trim();
     }
 
-    if (body.age !== undefined) {
-      if (
-        typeof body.age !== "number" ||
-        !Number.isInteger(body.age) ||
-        body.age < 0 ||
-        body.age > 59
-      ) {
+    if (changedFields.includes("age")) {
+      const age = Number(newData.age);
+
+      if (!Number.isInteger(age) || age < 0 || age > 59) {
         return NextResponse.json(
           {
             success: false,
@@ -420,11 +485,11 @@ export async function PUT(request, { params }) {
         );
       }
 
-      zerodose.age = body.age;
+      zerodose.age = age;
     }
 
-    if (body.address !== undefined) {
-      if (typeof body.address !== "string" || !body.address.trim()) {
+    if (changedFields.includes("address")) {
+      if (typeof newData.address !== "string" || !newData.address.trim()) {
         return NextResponse.json(
           {
             success: false,
@@ -436,15 +501,16 @@ export async function PUT(request, { params }) {
         );
       }
 
-      zerodose.address = body.address.trim();
+      zerodose.address = newData.address.trim();
     }
 
-    if (body.contactNo !== undefined) {
+    if (changedFields.includes("contactNo")) {
+      const contactNo = newData.contactNo;
+
       if (
-        body.contactNo !== null &&
-        body.contactNo !== "" &&
-        (typeof body.contactNo !== "string" ||
-          !/^03\d{9}$/.test(body.contactNo.trim()))
+        contactNo !== null &&
+        contactNo !== "" &&
+        (typeof contactNo !== "string" || !/^03\d{9}$/.test(contactNo.trim()))
       ) {
         return NextResponse.json(
           {
@@ -457,15 +523,14 @@ export async function PUT(request, { params }) {
         );
       }
 
-      zerodose.contactNo = body.contactNo?.trim() || null;
+      zerodose.contactNo =
+        typeof contactNo === "string" ? contactNo.trim() : null;
     }
 
-    if (body.houseNumber !== undefined) {
-      if (
-        typeof body.houseNumber !== "number" ||
-        !Number.isInteger(body.houseNumber) ||
-        body.houseNumber < 0
-      ) {
+    if (changedFields.includes("houseNumber")) {
+      const houseNumber = Number(newData.houseNumber);
+
+      if (!Number.isInteger(houseNumber) || houseNumber < 0) {
         return NextResponse.json(
           {
             success: false,
@@ -477,11 +542,11 @@ export async function PUT(request, { params }) {
         );
       }
 
-      zerodose.houseNumber = body.houseNumber;
+      zerodose.houseNumber = houseNumber;
     }
 
-    if (body.gender !== undefined) {
-      if (!["male", "female"].includes(body.gender)) {
+    if (changedFields.includes("gender")) {
+      if (!["male", "female"].includes(newData.gender)) {
         return NextResponse.json(
           {
             success: false,
@@ -493,15 +558,14 @@ export async function PUT(request, { params }) {
         );
       }
 
-      zerodose.gender = body.gender;
+      zerodose.gender = newData.gender;
     }
 
-    if (body.location !== undefined) {
-      if (
-        !body.location ||
-        typeof body.location.latitude !== "number" ||
-        typeof body.location.longitude !== "number"
-      ) {
+    if (changedFields.includes("location")) {
+      const latitude = Number(newData.location?.latitude);
+      const longitude = Number(newData.location?.longitude);
+
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
         return NextResponse.json(
           {
             success: false,
@@ -513,7 +577,7 @@ export async function PUT(request, { params }) {
         );
       }
 
-      if (body.location.latitude < -90 || body.location.latitude > 90) {
+      if (latitude < -90 || latitude > 90) {
         return NextResponse.json(
           {
             success: false,
@@ -525,7 +589,7 @@ export async function PUT(request, { params }) {
         );
       }
 
-      if (body.location.longitude < -180 || body.location.longitude > 180) {
+      if (longitude < -180 || longitude > 180) {
         return NextResponse.json(
           {
             success: false,
@@ -538,27 +602,38 @@ export async function PUT(request, { params }) {
       }
 
       zerodose.location = {
-        latitude: body.location.latitude,
-        longitude: body.location.longitude,
+        latitude,
+        longitude,
       };
     }
 
+    // Save actual Zerodose FIRST.
     await zerodose.save();
 
-    const populated = await getZerodose(id);
+    // Mark pending request approved.
+    pendingZerodose.status = "approved";
+    pendingZerodose.approvedBy = user._id;
+    pendingZerodose.approvedAt = new Date();
+
+    await pendingZerodose.save();
+
+    const populated = await populateZerodose(
+      Zerodose.findById(zerodose._id),
+    ).lean();
 
     return NextResponse.json(
       {
         success: true,
-        message: "Zerodose updated successfully.",
+        message: "Zerodose update approved successfully.",
         data: populated,
+        pendingZerodoseId: pendingZerodose._id,
       },
       {
         status: 200,
       },
     );
   } catch (error) {
-    console.error("Update Zerodose error:", error);
+    console.error("Zerodose approval error:", error);
 
     if (error?.name === "ValidationError") {
       return NextResponse.json(
@@ -589,7 +664,7 @@ export async function PUT(request, { params }) {
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to update Zerodose.",
+        message: error?.message || "Failed to process Zerodose approval.",
       },
       {
         status: 500,

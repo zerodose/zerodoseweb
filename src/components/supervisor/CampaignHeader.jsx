@@ -1,16 +1,7 @@
 "use client";
 
+import { formatDate } from "@/lib/formatDate";
 import { CalendarDays } from "lucide-react";
-
-function formatDate(date) {
-  if (!date) return "-";
-
-  return new Date(date).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
 
 export default function CampaignHeader({
   campaign,

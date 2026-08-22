@@ -349,24 +349,6 @@ export default function ZerodoseView({ data }) {
     return String(value);
   };
 
-  const formatDate = (date) => {
-    if (!date) {
-      return "-";
-    }
-
-    const parsedDate = new Date(date);
-
-    if (Number.isNaN(parsedDate.getTime())) {
-      return "-";
-    }
-
-    return parsedDate.toLocaleDateString("en-PK", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
   const formatDateTime = (date) => {
     if (!date) {
       return "-";

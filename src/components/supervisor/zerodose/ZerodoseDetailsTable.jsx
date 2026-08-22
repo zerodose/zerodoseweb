@@ -9,6 +9,7 @@ import {
   Search,
   Syringe,
 } from "lucide-react";
+import { formatDate } from "@/lib/formatDate";
 
 export default function ZerodoseDetailsTable({ data = [] }) {
   const [search, setSearch] = useState("");
@@ -27,24 +28,6 @@ export default function ZerodoseDetailsTable({ data = [] }) {
     }
 
     return worker?.name || "-";
-  };
-
-  const formatDate = (value) => {
-    if (!value) {
-      return "-";
-    }
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return "-";
-    }
-
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
   };
 
   const getStatus = (item) => {

@@ -18,6 +18,7 @@ import Pagination from "./Pagination";
 import TableSkeleton from "./TableSkeleton";
 import SearchInput from "./SearchInput";
 import PageHeader from "../ui/PageHeader";
+import { formatDate } from "@/lib/formatDate";
 
 export default function Table({
   data = [],
@@ -225,32 +226,6 @@ export default function Table({
       .replace(/[_-]/g, " ")
       .replace(/\b\w/g, (char) => char.toUpperCase())
       .trim();
-  };
-
-  // ============================================================
-  // Format Date
-  // ============================================================
-
-  const formatDate = (value) => {
-    if (!value) {
-      return "-";
-    }
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return "-";
-    }
-
-    const day = String(date.getDate()).padStart(2, "0");
-
-    const month = date.toLocaleString("en-US", {
-      month: "short",
-    });
-
-    const year = date.getFullYear();
-
-    return `${day} ${month} ${year}`;
   };
 
   // ============================================================

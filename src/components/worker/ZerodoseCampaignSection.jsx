@@ -1,6 +1,7 @@
 
 "use client";
 
+import { formatDate } from "@/lib/formatDate";
 import {
   CalendarDays,
   MapPin,
@@ -25,7 +26,7 @@ export default function ZerodoseCampaignSection({
   onRefresh,
 
   getStatus,
-  formatDate,
+  
 }) {
   const router = useRouter();
 

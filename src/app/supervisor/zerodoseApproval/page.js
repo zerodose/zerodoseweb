@@ -30,6 +30,7 @@ import {
 
 import ClientPageHeader from "@/components/ui/ClientPageHeader";
 import Loader from "@/components/ui/Loader";
+import { formatDate } from "@/lib/formatDate";
 
 export default function Page() {
   const router = useRouter();
@@ -99,28 +100,6 @@ export default function Page() {
     } catch {
       return {};
     }
-  };
-
-  // ============================================================
-  // FORMAT DATE
-  // ============================================================
-
-  const formatDate = (value) => {
-    if (!value) {
-      return "—";
-    }
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return "—";
-    }
-
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
   };
 
   // ============================================================

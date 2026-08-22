@@ -46,24 +46,6 @@ export default function Page() {
   // FORMAT DATE
   // ============================================================
 
-  const formatDate = (date) => {
-    if (!date) {
-      return "-";
-    }
-
-    const parsedDate = new Date(date);
-
-    if (Number.isNaN(parsedDate.getTime())) {
-      return "-";
-    }
-
-    return parsedDate.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
   // ============================================================
   // CAMPAIGN STATUS
   // ============================================================
@@ -714,7 +696,6 @@ export default function Page() {
             campaign={currentCampaign}
             supervisors={currentSupervisors}
             loading={loading}
-            formatDate={formatDate}
           />
         )}
 
@@ -726,7 +707,6 @@ export default function Page() {
           <PreviousCampaigns
             campaigns={previousCampaignsWithSupervisors}
             loading={loading}
-            formatDate={formatDate}
           />
         )}
       </div>

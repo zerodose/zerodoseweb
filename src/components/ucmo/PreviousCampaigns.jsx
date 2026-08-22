@@ -11,11 +11,12 @@ import {
 import { useState } from "react";
 
 import SupervisorCard from "./SupervisorCard";
+import { formatDate } from "@/lib/formatDate";
 
 export default function PreviousCampaigns({
   campaigns = [],
   loading = false,
-  formatDate,
+  
 }) {
   const [expandedCampaigns, setExpandedCampaigns] = useState({});
 

@@ -118,7 +118,7 @@ export default function ZerodoseStats({
   ];
 
   return (
-    <section className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+    <section className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
       {cards.map((card) => {
         const Icon = card.icon;
 

@@ -77,7 +77,7 @@ export default function WorkerActions({ campaign }) {
   }
 
   return (
-    <section className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-4 md:gap-4">
+    <section className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-4 md:gap-4">
       {/* =====================================================
           Add Zerodose
       ===================================================== */}

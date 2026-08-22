@@ -1,14 +1,14 @@
 "use client";
 
+import { formatDate } from "@/lib/formatDate";
 import { CalendarDays } from "lucide-react";
 
 export default function CurrentCampaignCard({
   campaign,
   loading,
-  formatDate,
 }) {
   return (
-    <section className="mb-6">
+    <section className="mb-4">
       <div className="bg-primary relative overflow-hidden rounded-2xl p-5 shadow-sm md:p-6">
         <div className="relative z-10">
           <div className="mb-2 flex items-center gap-2 text-white/80">

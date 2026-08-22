@@ -12,8 +12,7 @@ import { useState } from "react";
 import ZerodoseList from "./ZerodoseList";
 
 export default function SupervisorCard({
-  supervisor,
-  formatDate,
+  supervisor,  
   previous = false,
 }) {
   const [expanded, setExpanded] = useState(false);

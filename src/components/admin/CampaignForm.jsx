@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import Select from "@/components/ui/Select";
 import { createCampaign, updateCampaign } from "@/api/campaignApi";
+import { formatDate } from "@/lib/formatDate";
 
 const CAMPAIGN_TYPES = [
   {
@@ -457,16 +458,4 @@ function DateField({ label, name, value, onChange, disabled }) {
       />
     </div>
   );
-}
-
-function formatDate(date) {
-  if (!date) {
-    return "-";
-  }
-
-  return new Date(date).toLocaleDateString("en-PK", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
 }

@@ -3,12 +3,12 @@
 import { CalendarDays, Users, Package } from "lucide-react";
 
 import SupervisorCard from "./SupervisorCard";
+import { formatDate } from "@/lib/formatDate";
 
 export default function CurrentCampaign({
   campaign,
   supervisors = [],
   loading = false,
-  formatDate,
 }) {
   if (loading) {
     return (

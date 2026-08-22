@@ -137,16 +137,6 @@ export default function Page() {
   // Helpers
   // ============================================================
 
-  const formatDate = (date) => {
-    if (!date) return "-";
-
-    return new Date(date).toLocaleDateString("en-PK", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-
   const getStatus = (item) => {
     if (item.vaccinationStatus === "covered") {
       return {
@@ -171,17 +161,9 @@ export default function Page() {
     };
   };
 
-  // ============================================================
-  // Refresh
-  // ============================================================
-
   const handleRefresh = async () => {
     await Promise.all([loadCampaign(), loadZerodose()]);
   };
-
-  // ============================================================
-  // UI
-  // ============================================================
 
   return (
     <div className="min-h-full">
@@ -203,7 +185,6 @@ export default function Page() {
       <CurrentCampaignCard
         campaign={campaign}
         loading={loadingCampaign}
-        formatDate={formatDate}
       />
 
       <ZerodoseStats
@@ -224,16 +205,10 @@ export default function Page() {
         loading={loadingZerodose}
         onRefresh={handleRefresh}
         getStatus={getStatus}
-        formatDate={formatDate}
       />
     </div>
   );
 }
-
-
-
-
-
 
 //  const campaignStart = new Date(campaign.startDate);
 

@@ -288,7 +288,6 @@ export async function POST(request) {
     endOfToday.setHours(23, 59, 59, 999);
 
     const activeCampaign = await Campaign.findOne({
-      isActive: true,
       startDate: {
         $lte: endOfToday,
       },

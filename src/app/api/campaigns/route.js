@@ -200,6 +200,10 @@ export async function POST(request) {
       );
     }
 
+    // ==================================================
+    // DATE PARSING
+    // ==================================================
+
     const start = new Date(startDate);
     const end = new Date(endDate);
 
@@ -227,6 +231,14 @@ export async function POST(request) {
       );
     }
 
+    // ==================================================
+    // MAKE END DATE INCLUSIVE
+    // Campaign runs until 23:59:59.999 of selected
+    // end date.
+    // ==================================================
+
+    end.setHours(23, 59, 59, 999);
+
     if (start > end) {
       return NextResponse.json(
         {
@@ -238,6 +250,10 @@ export async function POST(request) {
         },
       );
     }
+
+    // ==================================================
+    // VALIDATE SCOPE
+    // ==================================================
 
     const allowedScopes = [
       "nationwide",
@@ -257,6 +273,10 @@ export async function POST(request) {
         },
       );
     }
+
+    // ==================================================
+    // CHECK OVERLAPPING CAMPAIGN
+    // ==================================================
 
     const existingCampaign = await Campaign.findOne({
       startDate: {
@@ -278,6 +298,10 @@ export async function POST(request) {
         },
       );
     }
+
+    // ==================================================
+    // CREATE CAMPAIGN
+    // ==================================================
 
     const campaign = await Campaign.create({
       name,

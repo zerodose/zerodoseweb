@@ -103,24 +103,18 @@ export async function GET(request) {
     const now = new Date();
 
     if (status === "current") {
+      const startOfToday = new Date(now);
+      startOfToday.setHours(0, 0, 0, 0);
+
+      const endOfToday = new Date(now);
+      endOfToday.setHours(23, 59, 59, 999);
+
       query.startDate = {
-        $lte: now,
+        $lte: endOfToday,
       };
 
       query.endDate = {
-        $gte: now,
-      };
-    }
-
-    if (status === "upcoming") {
-      query.startDate = {
-        $gt: now,
-      };
-    }
-
-    if (status === "previous") {
-      query.endDate = {
-        $lt: now,
+        $gte: startOfToday,
       };
     }
 

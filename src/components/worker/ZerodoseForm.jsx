@@ -87,35 +87,13 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
 
         const campaigns = response?.data || [];
 
-        const today = new Date();
-
-        const activeCampaign = campaigns.find((item) => {
-          if (!item?.startDate || !item?.endDate) {
-            return false;
-          }
-
-          const startDate = new Date(item.startDate);
-          const endDate = new Date(item.endDate);
-
-          if (
-            Number.isNaN(startDate.getTime()) ||
-            Number.isNaN(endDate.getTime())
-          ) {
-            return false;
-          }
-
-          endDate.setHours(23, 59, 59, 999);
-
-          return today >= startDate && today <= endDate;
-        });
-
-        if (!activeCampaign) {
+        if (!campaigns.length) {
           toast.error("There is no active campaign.");
           router.replace("/worker");
           return;
         }
 
-        setCampaign(activeCampaign);
+        setCampaign(campaigns[0]);
       } catch (error) {
         console.error("Zerodose form load error:", error);
 

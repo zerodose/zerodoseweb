@@ -281,32 +281,23 @@ export async function POST(request) {
 
     const today = new Date();
 
-    const campaigns = await Campaign.find({
+    const startOfToday = new Date(today);
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const endOfToday = new Date(today);
+    endOfToday.setHours(23, 59, 59, 999);
+
+    const activeCampaign = await Campaign.findOne({
       isActive: true,
+      startDate: {
+        $lte: endOfToday,
+      },
+      endDate: {
+        $gte: startOfToday,
+      },
     })
       .sort({ startDate: 1 })
       .lean();
-
-    const activeCampaign = campaigns.find((campaign) => {
-      if (!campaign.startDate || !campaign.endDate) {
-        return false;
-      }
-
-      const startDate = new Date(campaign.startDate);
-      const endDate = new Date(campaign.endDate);
-
-      if (
-        Number.isNaN(startDate.getTime()) ||
-        Number.isNaN(endDate.getTime())
-      ) {
-        return false;
-      }
-
-      startDate.setHours(0, 0, 0, 0);
-      endDate.setHours(23, 59, 59, 999);
-
-      return today >= startDate && today <= endDate;
-    });
 
     if (!activeCampaign) {
       return NextResponse.json(

@@ -644,7 +644,7 @@ export default function ZerodoseDetailPage() {
 
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-text text-xl font-semibold break-words">
+                  <h2 className="text-text text-xl font-semibold break-words capitalize">
                     {zerodose.childName || "-"}
                   </h2>
 
@@ -720,6 +720,20 @@ export default function ZerodoseDetailPage() {
           />
 
           <DetailItem icon={MapPin} label="Address" value={zerodose.address} />
+          {zerodose.location?.latitude != null &&
+            zerodose.location?.longitude != null && (
+              <div className="md:col-span-2">
+                <a
+                  href={`https://www.google.com/maps?q=${zerodose.location.latitude},${zerodose.location.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:text-primary-dark inline-flex items-center gap-2 text-sm font-medium"
+                >
+                  <MapPin className="h-4 w-4" />
+                  Open Location in Google Maps
+                </a>
+              </div>
+            )}
         </DetailSection>
 
         {/* Campaign Information */}
@@ -870,20 +884,6 @@ export default function ZerodoseDetailPage() {
             value={zerodose.location?.longitude}
           />
 
-          {zerodose.location?.latitude != null &&
-            zerodose.location?.longitude != null && (
-              <div className="md:col-span-2">
-                <a
-                  href={`https://www.google.com/maps?q=${zerodose.location.latitude},${zerodose.location.longitude}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:text-primary-dark inline-flex items-center gap-2 text-sm font-medium"
-                >
-                  <MapPin className="h-4 w-4" />
-                  Open Location in Google Maps
-                </a>
-              </div>
-            )}
         </DetailSection>
 
         {/* Record Information */}
@@ -1048,7 +1048,7 @@ function DetailItem({ icon: Icon, label, value }) {
         <span>{label}</span>
       </div>
 
-      <p className="text-text mt-1.5 text-sm font-medium break-words">
+      <p className="text-text mt-1.5 text-sm font-medium break-words capitalize">
         {value !== null && value !== undefined && value !== "" ? value : "-"}
       </p>
     </div>

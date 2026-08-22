@@ -14,9 +14,6 @@ if (!JWT_SECRET) {
   throw new Error("JWT_SECRET is not configured");
 }
 
-// --------------------------------------------------
-// GET AUTHENTICATED USER
-// --------------------------------------------------
 async function getAuthUser(request) {
   try {
     const token = request.cookies.get("auth_token")?.value;
@@ -51,16 +48,9 @@ async function getAuthUser(request) {
   }
 }
 
-// --------------------------------------------------
-// POST - CREATE ZERO DOSE
-// --------------------------------------------------
 export async function POST(request) {
   try {
     await connectDB();
-
-    // ==================================================
-    // 1. AUTHENTICATION
-    // ==================================================
 
     const authUser = await getAuthUser(request);
 
@@ -74,7 +64,6 @@ export async function POST(request) {
       );
     }
 
-    // Only worker can create Zerodose
     if (authUser.designation !== "worker") {
       return NextResponse.json(
         {
@@ -85,26 +74,19 @@ export async function POST(request) {
       );
     }
 
-    // ==================================================
-    // 2. FRONTEND INPUT
-    // ==================================================
-    //
-    // ONLY these values are accepted from frontend:
-    //
-    // childName
-    // fatherName
-    // age
-    // gender
-    // houseNumber
-    // address
-    // contactNo
-    // location
-    //
-    // campaign/day/user/team/etc are NOT accepted
-    // from frontend.
-    // ==================================================
+    let body;
 
-    const body = await request.json();
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid request body",
+        },
+        { status: 400 },
+      );
+    }
 
     const {
       childName,
@@ -117,24 +99,21 @@ export async function POST(request) {
       location,
     } = body;
 
-    // ==================================================
-    // 3. FRONTEND REQUIRED FIELDS
-    // ==================================================
-
     if (
-      !childName ||
-      !fatherName ||
+      childName === undefined ||
+      childName === null ||
+      fatherName === undefined ||
+      fatherName === null ||
       age === undefined ||
       age === null ||
-      !gender ||
+      gender === undefined ||
+      gender === null ||
       houseNumber === undefined ||
       houseNumber === null ||
-      !address ||
-      !location ||
-      location.latitude === undefined ||
-      location.latitude === null ||
-      location.longitude === undefined ||
-      location.longitude === null
+      address === undefined ||
+      address === null ||
+      location === undefined ||
+      location === null
     ) {
       return NextResponse.json(
         {
@@ -145,9 +124,21 @@ export async function POST(request) {
       );
     }
 
-    // ==================================================
-    // 4. GET AUTHENTICATED WORKER
-    // ==================================================
+    if (
+      typeof location !== "object" ||
+      location.latitude === undefined ||
+      location.latitude === null ||
+      location.longitude === undefined ||
+      location.longitude === null
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Location latitude and longitude are required",
+        },
+        { status: 400 },
+      );
+    }
 
     const workerUser = await User.findById(authUser._id)
       .select(
@@ -169,22 +160,13 @@ export async function POST(request) {
       );
     }
 
-    // ==================================================
-    // 5. GET ALL DETAILS FROM WORKER
-    // ==================================================
-
     const userId = workerUser._id;
-
     const districtId = workerUser.district;
     const townId = workerUser.town;
     const unionCouncilId = workerUser.unionCouncil;
     const ucmoId = workerUser.ucmo;
     const supervisorId = workerUser.supervisor;
     const teamNumber = workerUser.teamNumber;
-
-    // --------------------------------------------------
-    // Validate worker assignment
-    // --------------------------------------------------
 
     if (!districtId) {
       return NextResponse.json(
@@ -246,10 +228,6 @@ export async function POST(request) {
       );
     }
 
-    // ==================================================
-    // 6. VALIDATE OBJECT IDS FROM DATABASE
-    // ==================================================
-
     const objectIdFields = {
       worker: userId,
       district: districtId,
@@ -271,28 +249,14 @@ export async function POST(request) {
       }
     }
 
-    // ==================================================
-    // 7. GET CURRENT ACTIVE CAMPAIGN
-    // ==================================================
-    //
-    // Campaign is NOT received from frontend.
-    // Backend automatically finds current active campaign.
-    // ==================================================
-
-    const today = new Date();
-
-    const startOfToday = new Date(today);
-    startOfToday.setHours(0, 0, 0, 0);
-
-    const endOfToday = new Date(today);
-    endOfToday.setHours(23, 59, 59, 999);
+    const now = new Date();
 
     const activeCampaign = await Campaign.findOne({
       startDate: {
-        $lte: endOfToday,
+        $lte: now,
       },
       endDate: {
-        $gte: startOfToday,
+        $gte: now,
       },
     })
       .sort({ startDate: 1 })
@@ -302,7 +266,7 @@ export async function POST(request) {
       return NextResponse.json(
         {
           success: false,
-          message: "There is no active campaign for today",
+          message: "There is no active campaign at this time",
         },
         { status: 400 },
       );
@@ -310,28 +274,50 @@ export async function POST(request) {
 
     const campaignId = activeCampaign._id;
 
-    // ==================================================
-    // 8. CALCULATE CAMPAIGN DAY
-    // ==================================================
-
     const campaignStart = new Date(activeCampaign.startDate);
     const campaignEnd = new Date(activeCampaign.endDate);
 
-    campaignStart.setHours(0, 0, 0, 0);
-    campaignEnd.setHours(0, 0, 0, 0);
+    if (
+      Number.isNaN(campaignStart.getTime()) ||
+      Number.isNaN(campaignEnd.getTime())
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Campaign has invalid start or end date",
+        },
+        { status: 400 },
+      );
+    }
 
-    const currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0);
+    if (now < campaignStart || now > campaignEnd) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Today is outside the current campaign period",
+        },
+        { status: 400 },
+      );
+    }
+
+    const campaignStartDay = new Date(campaignStart);
+    campaignStartDay.setHours(0, 0, 0, 0);
+
+    const currentDay = new Date(now);
+    currentDay.setHours(0, 0, 0, 0);
+
+    const campaignEndDay = new Date(campaignEnd);
+    campaignEndDay.setHours(0, 0, 0, 0);
 
     const day =
       Math.floor(
-        (currentDate.getTime() - campaignStart.getTime()) /
+        (currentDay.getTime() - campaignStartDay.getTime()) /
           (1000 * 60 * 60 * 24),
       ) + 1;
 
     const campaignDays =
       Math.floor(
-        (campaignEnd.getTime() - campaignStart.getTime()) /
+        (campaignEndDay.getTime() - campaignStartDay.getTime()) /
           (1000 * 60 * 60 * 24),
       ) + 1;
 
@@ -345,13 +331,9 @@ export async function POST(request) {
       );
     }
 
-    // ==================================================
-    // 9. GET TEAM LEADER + TEAM MEMBER
-    // ==================================================
-
     const parsedTeamNumber = Number(teamNumber);
 
-    if (!Number.isFinite(parsedTeamNumber)) {
+    if (!Number.isInteger(parsedTeamNumber) || parsedTeamNumber < 0) {
       return NextResponse.json(
         {
           success: false,
@@ -401,10 +383,6 @@ export async function POST(request) {
       );
     }
 
-    // ==================================================
-    // 10. MAKE SURE WORKER BELONGS TO THIS TEAM
-    // ==================================================
-
     const isWorkerInTeam = teamWorkers.some(
       (worker) => worker._id.toString() === userId.toString(),
     );
@@ -418,10 +396,6 @@ export async function POST(request) {
         { status: 400 },
       );
     }
-
-    // ==================================================
-    // 11. GET UCMO + SUPERVISOR
-    // ==================================================
 
     const [ucmoUser, supervisorUser] = await Promise.all([
       User.findById(ucmoId)
@@ -437,10 +411,6 @@ export async function POST(request) {
         .lean(),
     ]);
 
-    // ==================================================
-    // 12. VALIDATE UCMO
-    // ==================================================
-
     if (!ucmoUser || ucmoUser.designation !== "ucmo" || !ucmoUser.isActive) {
       return NextResponse.json(
         {
@@ -450,10 +420,6 @@ export async function POST(request) {
         { status: 400 },
       );
     }
-
-    // ==================================================
-    // 13. VALIDATE SUPERVISOR
-    // ==================================================
 
     if (
       !supervisorUser ||
@@ -469,28 +435,27 @@ export async function POST(request) {
       );
     }
 
-    // ==================================================
-    // 14. VALIDATE LOCATION
-    // ==================================================
-
     const latitude = Number(location.latitude);
     const longitude = Number(location.longitude);
 
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    if (
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude) ||
+      latitude < -90 ||
+      latitude > 90 ||
+      longitude < -180 ||
+      longitude > 180
+    ) {
       return NextResponse.json(
         {
           success: false,
-          message: "Invalid location",
+          message: "Invalid latitude or longitude",
         },
         { status: 400 },
       );
     }
 
-    // ==================================================
-    // 15. VALIDATE GENDER
-    // ==================================================
-
-    if (!["male", "female"].includes(gender)) {
+    if (!["male", "female"].includes(String(gender).toLowerCase())) {
       return NextResponse.json(
         {
           success: false,
@@ -500,9 +465,7 @@ export async function POST(request) {
       );
     }
 
-    // ==================================================
-    // 16. PARSE + VALIDATE AGE
-    // ==================================================
+    const cleanGender = String(gender).trim().toLowerCase();
 
     const parsedAge = Number(age);
 
@@ -515,10 +478,6 @@ export async function POST(request) {
         { status: 400 },
       );
     }
-
-    // ==================================================
-    // 17. PARSE + VALIDATE HOUSE NUMBER
-    // ==================================================
 
     const parsedHouseNumber = Number(houseNumber);
 
@@ -535,10 +494,6 @@ export async function POST(request) {
         { status: 400 },
       );
     }
-
-    // ==================================================
-    // 18. VALIDATE TEXT VALUES
-    // ==================================================
 
     const cleanChildName = String(childName).trim();
     const cleanFatherName = String(fatherName).trim();
@@ -574,11 +529,12 @@ export async function POST(request) {
       );
     }
 
-    // ==================================================
-    // 19. VALIDATE CONTACT NUMBER
-    // ==================================================
-
-    const cleanContactNo = contactNo ? String(contactNo).trim() : null;
+    const cleanContactNo =
+      contactNo !== undefined &&
+      contactNo !== null &&
+      String(contactNo).trim() !== ""
+        ? String(contactNo).trim()
+        : null;
 
     if (cleanContactNo && !/^03\d{9}$/.test(cleanContactNo)) {
       return NextResponse.json(
@@ -589,10 +545,6 @@ export async function POST(request) {
         { status: 400 },
       );
     }
-
-    // ==================================================
-    // 20. CHECK DUPLICATE
-    // ==================================================
 
     const existingZerodose = await Zerodose.findOne({
       campaign: campaignId,
@@ -612,19 +564,9 @@ export async function POST(request) {
       );
     }
 
-    // ==================================================
-    // 21. CREATE ZERO DOSE
-    // ==================================================
-
-    const zerodose = await Zerodose.create({
-      // -----------------------------------------------
-      // Automatically determined from active campaign
-      // -----------------------------------------------
+    const zerodoseData = {
       campaign: campaignId,
 
-      // -----------------------------------------------
-      // Automatically determined from authenticated user
-      // -----------------------------------------------
       district: districtId,
       town: townId,
       unionCouncil: unionCouncilId,
@@ -632,60 +574,74 @@ export async function POST(request) {
       supervisor: supervisorId,
       user: userId,
 
-      // -----------------------------------------------
-      // Automatically determined from worker's team
-      // -----------------------------------------------
       teamLeader: teamLeaderUser._id,
       teamMember: teamMemberUser._id,
       teamNumber: parsedTeamNumber,
 
-      // -----------------------------------------------
-      // Frontend child information
-      // -----------------------------------------------
       houseNumber: parsedHouseNumber,
       childName: cleanChildName,
       fatherName: cleanFatherName,
-      gender,
+      gender: cleanGender,
       age: parsedAge,
       address: cleanAddress,
       contactNo: cleanContactNo,
 
-      // -----------------------------------------------
-      // Automatically calculated campaign day
-      // -----------------------------------------------
       day,
 
-      // -----------------------------------------------
-      // Automatically created
-      // -----------------------------------------------
       recordDate: new Date(),
 
       visitDate: null,
       coveredDate: null,
 
-      // -----------------------------------------------
-      // Frontend location
-      // -----------------------------------------------
       location: {
         latitude,
         longitude,
       },
 
-      // -----------------------------------------------
-      // Defaults
-      // -----------------------------------------------
       qrCode: null,
       vaccinator: null,
       clientStatus: null,
       vaccinationStatus: "recorded",
-    });
+    };
 
-    // ==================================================
-    // 22. POPULATE CREATED RECORD
-    // ==================================================
+    let zerodose;
+
+    try {
+      zerodose = await Zerodose.create(zerodoseData);
+    } catch (error) {
+      console.error("Zerodose.create error:", error);
+
+      if (error?.name === "ValidationError") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Zerodose validation failed",
+            errors: Object.values(error.errors || {}).map((err) => ({
+              field: err.path,
+              message: err.message,
+              value: err.value,
+            })),
+          },
+          { status: 400 },
+        );
+      }
+
+      if (error?.code === 11000) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Duplicate Zerodose record",
+            error: error.keyValue || null,
+          },
+          { status: 409 },
+        );
+      }
+
+      throw error;
+    }
 
     const populatedZerodose = await Zerodose.findById(zerodose._id)
-      .populate("campaign", "name year month startDate endDate")
+      .populate("campaign", "name scope year month startDate endDate")
       .populate("district", "name code")
       .populate("town", "name code")
       .populate("unionCouncil", "name code")
@@ -706,10 +662,6 @@ export async function POST(request) {
       .populate("vaccinator", "name email contactNumber designation")
       .lean();
 
-    // ==================================================
-    // 23. SUCCESS
-    // ==================================================
-
     return NextResponse.json(
       {
         success: true,
@@ -721,22 +673,49 @@ export async function POST(request) {
   } catch (error) {
     console.error("POST /api/zerodose error:", error);
 
-    if (error instanceof mongoose.Error.ValidationError) {
+    if (error?.name === "ValidationError") {
       return NextResponse.json(
         {
           success: false,
           message: "Validation failed",
-          errors: Object.values(error.errors).map((err) => err.message),
+          errors: Object.values(error.errors || {}).map((err) => ({
+            field: err.path,
+            message: err.message,
+            value: err.value,
+          })),
         },
         { status: 400 },
+      );
+    }
+
+    if (error?.name === "CastError") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid database value",
+          field: error.path,
+          value: error.value,
+        },
+        { status: 400 },
+      );
+    }
+
+    if (error?.code === 11000) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Duplicate Zerodose record",
+          error: error.keyValue || null,
+        },
+        { status: 409 },
       );
     }
 
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to create Zerodose record",
-        error: error.message,
+        message: error?.message || "Failed to create Zerodose record",
+        errorName: error?.name || "UnknownError",
       },
       { status: 500 },
     );

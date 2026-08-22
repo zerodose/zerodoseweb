@@ -2,10 +2,6 @@ import mongoose from "mongoose";
 
 const PendingZerodoseSchema = new mongoose.Schema(
   {
-    // ------------------------------------------------------------
-    // Original Zerodose
-    // ------------------------------------------------------------
-
     zerodose: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Zerodose",
@@ -14,10 +10,6 @@ const PendingZerodoseSchema = new mongoose.Schema(
       index: true,
     },
 
-    // ------------------------------------------------------------
-    // Worker who requested the update
-    // ------------------------------------------------------------
-
     requestedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -25,23 +17,12 @@ const PendingZerodoseSchema = new mongoose.Schema(
       index: true,
     },
 
-    // ------------------------------------------------------------
-    // Supervisor who will approve
-    // ------------------------------------------------------------
-
     supervisor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
       index: true,
     },
-
-    // ------------------------------------------------------------
-    // Old values
-    //
-    // These are stored so supervisor can clearly see:
-    // OLD -> NEW
-    // ------------------------------------------------------------
 
     oldData: {
       childName: {
@@ -69,6 +50,17 @@ const PendingZerodoseSchema = new mongoose.Schema(
         default: null,
       },
 
+      houseNumber: {
+        type: Number,
+        default: null,
+      },
+
+      gender: {
+        type: String,
+        enum: ["male", "female"],
+        default: null,
+      },
+
       location: {
         latitude: {
           type: Number,
@@ -81,10 +73,6 @@ const PendingZerodoseSchema = new mongoose.Schema(
         },
       },
     },
-
-    // ------------------------------------------------------------
-    // New requested values
-    // ------------------------------------------------------------
 
     newData: {
       childName: {
@@ -112,6 +100,17 @@ const PendingZerodoseSchema = new mongoose.Schema(
         default: null,
       },
 
+      houseNumber: {
+        type: Number,
+        default: null,
+      },
+
+      gender: {
+        type: String,
+        enum: ["male", "female"],
+        default: null,
+      },
+
       location: {
         latitude: {
           type: Number,
@@ -125,10 +124,6 @@ const PendingZerodoseSchema = new mongoose.Schema(
       },
     },
 
-    // ------------------------------------------------------------
-    // Which fields actually changed
-    // ------------------------------------------------------------
-
     changedFields: [
       {
         type: String,
@@ -138,14 +133,12 @@ const PendingZerodoseSchema = new mongoose.Schema(
           "age",
           "address",
           "contactNo",
+          "houseNumber",
+          "gender",
           "location",
         ],
       },
     ],
-
-    // ------------------------------------------------------------
-    // Status
-    // ------------------------------------------------------------
 
     status: {
       type: String,
@@ -153,10 +146,6 @@ const PendingZerodoseSchema = new mongoose.Schema(
       default: "pending",
       index: true,
     },
-
-    // ------------------------------------------------------------
-    // Supervisor approval
-    // ------------------------------------------------------------
 
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,

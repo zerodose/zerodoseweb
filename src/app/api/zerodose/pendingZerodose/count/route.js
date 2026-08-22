@@ -4,12 +4,8 @@ import { jwtVerify } from "jose";
 
 import { connectDB } from "@/lib/db";
 
-import Zerodose from "@/models/Zerodose";
+import PendingZerodose from "@/models/PendingZerodose";
 import User from "@/models/User";
-import Campaign from "@/models/Campaign";
-import District from "@/models/District";
-import Town from "@/models/Town";
-import UnionCouncil from "@/models/UnionCouncil";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -19,17 +15,20 @@ if (!JWT_SECRET) {
 
 const secret = new TextEncoder().encode(JWT_SECRET);
 
-// ============================================================
-// Helpers
-// ============================================================
-
 function isValidObjectId(value) {
   return mongoose.Types.ObjectId.isValid(value);
 }
 
-// ============================================================
-// Authentication
-// ============================================================
+function objectIdEquals(first, second) {
+  if (!first || !second) {
+    return false;
+  }
+
+  const firstId = first?._id || first;
+  const secondId = second?._id || second;
+
+  return String(firstId) === String(secondId);
+}
 
 async function getAuthenticatedUser(request) {
   const token = request.cookies.get("auth_token")?.value;
@@ -55,6 +54,8 @@ async function getAuthenticatedUser(request) {
 
     payload = result.payload;
   } catch (error) {
+    console.error("Pending Zerodose count JWT error:", error);
+
     return {
       error: NextResponse.json(
         {
@@ -82,14 +83,12 @@ async function getAuthenticatedUser(request) {
     };
   }
 
-  await connectDB();
-
   const user = await User.findOne({
     _id: payload.userId,
     isActive: true,
   })
     .select(
-      "_id name designation district town unionCouncil ucmo supervisor teamNumber workerRole",
+      "_id name designation district town unionCouncil ucmo supervisor supervisorCode",
     )
     .lean();
 
@@ -112,22 +111,9 @@ async function getAuthenticatedUser(request) {
   };
 }
 
-// ============================================================
-// GET
-// Pending Zerodose Count
-// ============================================================
-//
-// GET /api/zerodose/pendingZerodose/count
-//
-// ============================================================
-
 export async function GET(request) {
   try {
     await connectDB();
-
-    // ========================================================
-    // Authentication
-    // ========================================================
 
     const auth = await getAuthenticatedUser(request);
 
@@ -137,20 +123,11 @@ export async function GET(request) {
 
     const user = auth.user;
 
-    // ========================================================
-    // Permission
-    // ========================================================
-
-    if (
-      !["supervisor", "ucmo", "admin"].includes(
-        user.designation,
-      )
-    ) {
+    if (!["supervisor", "ucmo", "admin"].includes(user.designation)) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "You are not authorized to view pending Zerodose count.",
+          message: "You are not authorized to view pending Zerodose count.",
         },
         {
           status: 403,
@@ -158,60 +135,166 @@ export async function GET(request) {
       );
     }
 
-    // ========================================================
-    // Filter
-    // ========================================================
-
-    const filter = {
-      updateRequested: true,
-    };
-
-    // ========================================================
-    // Supervisor
-    // ========================================================
-
     if (user.designation === "supervisor") {
-      filter.supervisor = user._id;
-    }
+      const count = await PendingZerodose.countDocuments({
+        supervisor: user._id,
+        status: "pending",
+      });
 
-    // ========================================================
-    // UCMO
-    // ========================================================
+      return NextResponse.json(
+        {
+          success: true,
+          count,
+        },
+        {
+          status: 200,
+        },
+      );
+    }
 
     if (user.designation === "ucmo") {
-      filter.ucmo = user._id;
+      const supervisors = await User.find({
+        designation: "supervisor",
+        isActive: true,
+        ucmo: user._id,
+      })
+        .select("_id name supervisorCode")
+        .lean();
+
+      const supervisorIds = supervisors.map((supervisor) => supervisor._id);
+
+      if (supervisorIds.length === 0) {
+        return NextResponse.json(
+          {
+            success: true,
+            total: 0,
+            supervisors: [],
+          },
+          {
+            status: 200,
+          },
+        );
+      }
+
+      const counts = await PendingZerodose.aggregate([
+        {
+          $match: {
+            supervisor: {
+              $in: supervisorIds,
+            },
+            status: "pending",
+          },
+        },
+        {
+          $group: {
+            _id: "$supervisor",
+            count: {
+              $sum: 1,
+            },
+          },
+        },
+      ]);
+
+      const countMap = new Map(
+        counts.map((item) => [String(item._id), item.count]),
+      );
+
+      const supervisorCounts = supervisors.map((supervisor) => ({
+        _id: supervisor._id,
+        name: supervisor.name,
+        supervisorCode: supervisor.supervisorCode || null,
+        count: countMap.get(String(supervisor._id)) || 0,
+      }));
+
+      const total = supervisorCounts.reduce(
+        (sum, supervisor) => sum + supervisor.count,
+        0,
+      );
+
+      return NextResponse.json(
+        {
+          success: true,
+          total,
+          supervisors: supervisorCounts,
+        },
+        {
+          status: 200,
+        },
+      );
     }
 
-    // ========================================================
-    // Count
-    // ========================================================
+    if (user.designation === "admin") {
+      const counts = await PendingZerodose.aggregate([
+        {
+          $match: {
+            status: "pending",
+          },
+        },
+        {
+          $group: {
+            _id: "$supervisor",
+            count: {
+              $sum: 1,
+            },
+          },
+        },
+      ]);
 
-    const count = await Zerodose.countDocuments(filter);
+      const supervisorIds = counts.map((item) => item._id);
 
-    // ========================================================
-    // Response
-    // ========================================================
+      const supervisors = await User.find({
+        _id: {
+          $in: supervisorIds,
+        },
+        designation: "supervisor",
+      })
+        .select("_id name supervisorCode")
+        .lean();
 
-    return NextResponse.json(
-      {
-        success: true,
-        count,
-      },
-      {
-        status: 200,
-      },
-    );
-  } catch (error) {
-    console.error(
-      "Get pending Zerodose count error:",
-      error,
-    );
+      const countMap = new Map(
+        counts.map((item) => [String(item._id), item.count]),
+      );
+
+      const supervisorCounts = supervisors.map((supervisor) => ({
+        _id: supervisor._id,
+        name: supervisor.name,
+        supervisorCode: supervisor.supervisorCode || null,
+        count: countMap.get(String(supervisor._id)) || 0,
+      }));
+
+      const total = supervisorCounts.reduce(
+        (sum, supervisor) => sum + supervisor.count,
+        0,
+      );
+
+      return NextResponse.json(
+        {
+          success: true,
+          total,
+          supervisors: supervisorCounts,
+        },
+        {
+          status: 200,
+        },
+      );
+    }
 
     return NextResponse.json(
       {
         success: false,
-        message:
-          "Failed to fetch pending Zerodose count.",
+        message: "Invalid user designation.",
+      },
+      {
+        status: 403,
+      },
+    );
+  } catch (error) {
+    console.error("Pending Zerodose count error:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: error?.message || "Failed to fetch pending Zerodose count.",
       },
       {
         status: 500,

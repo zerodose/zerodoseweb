@@ -6,40 +6,14 @@ import Zerodose from "@/models/Zerodose";
 import PendingZerodose from "@/models/PendingZerodose";
 import User from "@/models/User";
 
-export async function PUT(request, { params }) {
+export async function POST(request) {
   try {
     await connectDB();
-
-    const { id } = await params;
-
-    // ============================================================
-    // Validate Zerodose ID
-    // ============================================================
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid Zerodose ID.",
-        },
-        { status: 400 },
-      );
-    }
-
-    // ============================================================
-    // Get logged-in worker
-    //
-    // Current application stores authUser in localStorage.
-    // Therefore workerId should be sent from frontend.
-    //
-    // IMPORTANT:
-    // If your backend later has JWT/session authentication,
-    // replace this with server-side authenticated user.
-    // ============================================================
 
     const body = await request.json();
 
     const workerId = body?.workerId;
+    const zerodoseId = body?.zerodoseId;
 
     if (!workerId) {
       return NextResponse.json(
@@ -61,9 +35,25 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // ============================================================
-    // Find worker
-    // ============================================================
+    if (!zerodoseId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Zerodose ID is required.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(zerodoseId)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid Zerodose ID.",
+        },
+        { status: 400 },
+      );
+    }
 
     const worker = await User.findOne({
       _id: workerId,
@@ -81,11 +71,7 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // ============================================================
-    // Find Zerodose
-    // ============================================================
-
-    const zerodose = await Zerodose.findById(id);
+    const zerodose = await Zerodose.findById(zerodoseId);
 
     if (!zerodose) {
       return NextResponse.json(
@@ -97,10 +83,6 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // ============================================================
-    // Worker can only update his own Zerodose
-    // ============================================================
-
     if (String(zerodose.user) !== String(workerId)) {
       return NextResponse.json(
         {
@@ -110,10 +92,6 @@ export async function PUT(request, { params }) {
         { status: 403 },
       );
     }
-
-    // ============================================================
-    // Supervisor must exist
-    // ============================================================
 
     if (!zerodose.supervisor) {
       return NextResponse.json(
@@ -125,9 +103,21 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // ============================================================
-    // Get requested values
-    // ============================================================
+    const supervisor = await User.findOne({
+      _id: zerodose.supervisor,
+      designation: "supervisor",
+      isActive: true,
+    }).lean();
+
+    if (!supervisor) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Active supervisor not found.",
+        },
+        { status: 400 },
+      );
+    }
 
     const requestedData = {
       childName:
@@ -155,6 +145,16 @@ export async function PUT(request, { params }) {
           ? body.contactNo || null
           : zerodose.contactNo,
 
+      houseNumber:
+        body.houseNumber !== undefined && body.houseNumber !== null
+          ? Number(body.houseNumber)
+          : zerodose.houseNumber,
+
+      gender:
+        body.gender !== undefined && body.gender !== null
+          ? body.gender
+          : zerodose.gender,
+
       location:
         body.location &&
         body.location.latitude !== undefined &&
@@ -168,10 +168,6 @@ export async function PUT(request, { params }) {
               longitude: zerodose.location?.longitude ?? null,
             },
     };
-
-    // ============================================================
-    // Validation
-    // ============================================================
 
     if (!requestedData.childName) {
       return NextResponse.json(
@@ -217,10 +213,7 @@ export async function PUT(request, { params }) {
       );
     }
 
-    if (
-      requestedData.contactNo &&
-      !/^03\d{9}$/.test(requestedData.contactNo)
-    ) {
+    if (requestedData.contactNo && !/^03\d{9}$/.test(requestedData.contactNo)) {
       return NextResponse.json(
         {
           success: false,
@@ -230,9 +223,43 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // ============================================================
-    // Compare OLD vs NEW
-    // ============================================================
+    if (
+      !Number.isInteger(requestedData.houseNumber) ||
+      requestedData.houseNumber < 0
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "House number must be a valid number.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!["male", "female"].includes(requestedData.gender)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Gender must be male or female.",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (
+      requestedData.location.latitude === null ||
+      requestedData.location.longitude === null ||
+      !Number.isFinite(requestedData.location.latitude) ||
+      !Number.isFinite(requestedData.location.longitude)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Valid latitude and longitude are required.",
+        },
+        { status: 400 },
+      );
+    }
 
     const changedFields = [];
 
@@ -256,6 +283,14 @@ export async function PUT(request, { params }) {
       changedFields.push("contactNo");
     }
 
+    if (Number(zerodose.houseNumber) !== Number(requestedData.houseNumber)) {
+      changedFields.push("houseNumber");
+    }
+
+    if (zerodose.gender !== requestedData.gender) {
+      changedFields.push("gender");
+    }
+
     const oldLatitude = zerodose.location?.latitude ?? null;
     const oldLongitude = zerodose.location?.longitude ?? null;
 
@@ -269,10 +304,6 @@ export async function PUT(request, { params }) {
       changedFields.push("location");
     }
 
-    // ============================================================
-    // Nothing changed
-    // ============================================================
-
     if (changedFields.length === 0) {
       return NextResponse.json(
         {
@@ -283,20 +314,10 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // ============================================================
-    // Check existing pending request
-    // ============================================================
-
     const existingPending = await PendingZerodose.findOne({
       zerodose: zerodose._id,
       status: "pending",
     });
-
-    // ============================================================
-    // If pending request already exists
-    //
-    // Replace it with latest worker changes.
-    // ============================================================
 
     if (existingPending) {
       existingPending.requestedBy = workerId;
@@ -308,6 +329,8 @@ export async function PUT(request, { params }) {
         age: zerodose.age,
         address: zerodose.address,
         contactNo: zerodose.contactNo,
+        houseNumber: zerodose.houseNumber,
+        gender: zerodose.gender,
         location: {
           latitude: zerodose.location?.latitude ?? null,
           longitude: zerodose.location?.longitude ?? null,
@@ -333,15 +356,9 @@ export async function PUT(request, { params }) {
       });
     }
 
-    // ============================================================
-    // Create NEW pending request
-    // ============================================================
-
     const pending = await PendingZerodose.create({
       zerodose: zerodose._id,
-
       requestedBy: workerId,
-
       supervisor: zerodose.supervisor,
 
       oldData: {
@@ -350,6 +367,8 @@ export async function PUT(request, { params }) {
         age: zerodose.age,
         address: zerodose.address,
         contactNo: zerodose.contactNo,
+        houseNumber: zerodose.houseNumber,
+        gender: zerodose.gender,
         location: {
           latitude: zerodose.location?.latitude ?? null,
           longitude: zerodose.location?.longitude ?? null,
@@ -372,7 +391,7 @@ export async function PUT(request, { params }) {
       { status: 201 },
     );
   } catch (error) {
-    console.error("Pending Zerodose update error:", error);
+    console.error("Pending Zerodose worker update error:", error);
 
     return NextResponse.json(
       {

@@ -4,34 +4,13 @@ import { jwtVerify } from "jose";
 
 import { connectDB } from "@/lib/db";
 
-import Zerodose from "@/models/Zerodose";
+import PendingZerodose from "@/models/PendingZerodose";
 import User from "@/models/User";
-
-// ============================================================
-// IMPORTANT MODEL REGISTRATION
-// ============================================================
-// These imports make sure Mongoose knows about every referenced
-// model before populate() is executed.
-//
-// Without these imports you can get:
-// MissingSchemaError: Schema hasn't been registered for model
-// "Campaign"
-// ============================================================
-
+import Zerodose from "@/models/Zerodose";
 import Campaign from "@/models/Campaign";
 import District from "@/models/District";
 import Town from "@/models/Town";
 import UnionCouncil from "@/models/UnionCouncil";
-
-// Avoid unused import warnings in some environments.
-void Campaign;
-void District;
-void Town;
-void UnionCouncil;
-
-// ============================================================
-// JWT
-// ============================================================
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -41,28 +20,9 @@ if (!JWT_SECRET) {
 
 const secret = new TextEncoder().encode(JWT_SECRET);
 
-// ============================================================
-// HELPERS
-// ============================================================
-
 function isValidObjectId(value) {
   return mongoose.Types.ObjectId.isValid(value);
 }
-
-function objectIdEquals(first, second) {
-  if (!first || !second) {
-    return false;
-  }
-
-  const firstId = first?._id || first;
-  const secondId = second?._id || second;
-
-  return firstId.toString() === secondId.toString();
-}
-
-// ============================================================
-// AUTHENTICATION
-// ============================================================
 
 async function getAuthenticatedUser(request) {
   const token = request.cookies.get("auth_token")?.value;
@@ -85,7 +45,6 @@ async function getAuthenticatedUser(request) {
 
   try {
     const result = await jwtVerify(token, secret);
-
     payload = result.payload;
   } catch (error) {
     console.error("Pending Zerodose JWT error:", error);
@@ -158,75 +117,62 @@ async function getAuthenticatedUser(request) {
   };
 }
 
-// ============================================================
-// POPULATE
-// ============================================================
-
-function populateZerodose(query) {
+function populatePendingZerodose(query) {
   return query
-    .populate("campaign", "name year month startDate endDate isActive")
-    .populate("district", "name code")
-    .populate("town", "name code")
-    .populate("unionCouncil", "name code")
-    .populate("ucmo", "name contactNumber")
-    .populate("supervisor", "name contactNumber supervisorCode")
-    .populate("user", "name contactNumber designation workerRole teamNumber")
+    .populate({
+      path: "zerodose",
+      populate: [
+        {
+          path: "campaign",
+          select: "name year month startDate endDate isActive",
+        },
+        {
+          path: "district",
+          select: "name code",
+        },
+        {
+          path: "town",
+          select: "name code",
+        },
+        {
+          path: "unionCouncil",
+          select: "name code",
+        },
+        {
+          path: "ucmo",
+          select: "name contactNumber",
+        },
+        {
+          path: "supervisor",
+          select: "name contactNumber supervisorCode",
+        },
+        {
+          path: "user",
+          select: "name contactNumber designation workerRole teamNumber",
+        },
+        {
+          path: "teamLeader",
+          select: "name contactNumber designation workerRole teamNumber",
+        },
+        {
+          path: "teamMember",
+          select: "name contactNumber designation workerRole teamNumber",
+        },
+      ],
+    })
     .populate(
-      "teamLeader",
+      "requestedBy",
       "name contactNumber designation workerRole teamNumber",
     )
     .populate(
-      "teamMember",
-      "name contactNumber designation workerRole teamNumber",
+      "supervisor",
+      "name contactNumber supervisorCode designation unionCouncil ucmo",
     );
 }
 
-// ============================================================
-// NORMALIZE UPDATE DATA
-// ============================================================
-
-function normalizeUpdateData(updateData) {
-  if (!updateData) {
-    return {};
-  }
-
-  if (typeof updateData !== "object" || Array.isArray(updateData)) {
-    return {};
-  }
-
-  return updateData;
-}
-
-// ============================================================
-// GET
-// Pending Zerodose Update Requests
-//
-// GET /api/zerodose/pendingZerodose
-//
-// Optional:
-// ?supervisor=<id>
-//
-// Supervisor:
-//   Only sees own pending requests.
-//
-// UCMO:
-//   Sees pending requests belonging to that UCMO.
-//
-// Admin:
-//   Sees all pending requests.
-// ============================================================
-
 export async function GET(request) {
   try {
-    // ========================================================
-    // DATABASE
-    // ========================================================
-
     await connectDB();
-
-    // ========================================================
-    // AUTH
-    // ========================================================
 
     const auth = await getAuthenticatedUser(request);
 
@@ -235,10 +181,6 @@ export async function GET(request) {
     }
 
     const user = auth.user;
-
-    // ========================================================
-    // PERMISSION
-    // ========================================================
 
     if (!["supervisor", "ucmo", "admin"].includes(user.designation)) {
       return NextResponse.json(
@@ -252,88 +194,9 @@ export async function GET(request) {
       );
     }
 
-    // ========================================================
-    // QUERY PARAMETERS
-    // ========================================================
-
     const { searchParams } = new URL(request.url);
 
-    const requestedSupervisorId = searchParams.get("supervisor");
-
-    // ========================================================
-    // BASE FILTER
-    // ========================================================
-
-    const filter = {
-      updateRequested: true,
-    };
-
-    // ========================================================
-    // SUPERVISOR SCOPE
-    // ========================================================
-    //
-    // IMPORTANT:
-    // Never trust the supervisor ID coming from the frontend.
-    // The authenticated supervisor controls the scope.
-    //
-    // ========================================================
-
-    if (user.designation === "supervisor") {
-      filter.supervisor = user._id;
-    }
-
-    // ========================================================
-    // UCMO SCOPE
-    // ========================================================
-
-    if (user.designation === "ucmo") {
-      filter.ucmo = user._id;
-
-      // If a supervisor ID was supplied, validate that the
-      // requested supervisor belongs to this UCMO scope.
-      if (requestedSupervisorId) {
-        if (!isValidObjectId(requestedSupervisorId)) {
-          return NextResponse.json(
-            {
-              success: false,
-              message: "Invalid supervisor ID.",
-            },
-            {
-              status: 400,
-            },
-          );
-        }
-
-        filter.supervisor = new mongoose.Types.ObjectId(requestedSupervisorId);
-      }
-    }
-
-    // ========================================================
-    // ADMIN SCOPE
-    // ========================================================
-
-    if (user.designation === "admin" && requestedSupervisorId) {
-      if (!isValidObjectId(requestedSupervisorId)) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Invalid supervisor ID.",
-          },
-          {
-            status: 400,
-          },
-        );
-      }
-
-      filter.supervisor = new mongoose.Types.ObjectId(requestedSupervisorId);
-    }
-
-    // ========================================================
-    // PAGINATION
-    // ========================================================
-
     const pageValue = Number(searchParams.get("page") || 1);
-
     const limitValue = Number(searchParams.get("limit") || 10);
 
     const page =
@@ -346,76 +209,48 @@ export async function GET(request) {
 
     const skip = (page - 1) * limit;
 
-    // ========================================================
-    // TOTAL
-    // ========================================================
+    const filter = {
+      status: "pending",
+    };
 
-    const total = await Zerodose.countDocuments(filter);
+    if (user.designation === "supervisor") {
+      filter.supervisor = user._id;
+    }
 
-    // ========================================================
-    // FETCH
-    // ========================================================
+    if (user.designation === "ucmo") {
+      const supervisors = await User.find({
+        designation: "supervisor",
+        isActive: true,
+        ucmo: user._id,
+      })
+        .select("_id")
+        .lean();
 
-    const data = await populateZerodose(
-      Zerodose.find(filter)
+      const supervisorIds = supervisors.map((supervisor) => supervisor._id);
+
+      filter.supervisor = {
+        $in: supervisorIds,
+      };
+    }
+
+    const total = await PendingZerodose.countDocuments(filter);
+
+    const data = await populatePendingZerodose(
+      PendingZerodose.find(filter)
         .sort({
-          updateRequestedAt: -1,
+          createdAt: -1,
           _id: -1,
         })
         .skip(skip)
         .limit(limit),
     ).lean();
 
-    // ========================================================
-    // NORMALIZE DATA
-    // ========================================================
-    //
-    // We keep the complete Zerodose object.
-    //
-    // We additionally make sure updateData is always an object
-    // so the frontend can safely calculate changed fields.
-    //
-    // ========================================================
-
-    const normalizedData = data.map((item) => {
-      const normalizedUpdateData = normalizeUpdateData(item?.updateData);
-
-      return {
-        ...item,
-
-        updateData:
-          Object.keys(normalizedUpdateData).length > 0
-            ? normalizedUpdateData
-            : (item?.updateData ?? null),
-
-        updateChangeCount: Object.keys(normalizedUpdateData).length,
-
-        // Worker who actually owns the Zerodose.
-        //
-        // This is important because your response already
-        // contains the worker here:
-        //
-        // user: {
-        //   name: "Muhammad Qasim",
-        //   workerRole: "teamLeader"
-        // }
-        //
-        worker: item?.user || null,
-      };
-    });
-
-    // ========================================================
-    // PAGINATION
-    // ========================================================
-
     const totalPages = total > 0 ? Math.ceil(total / limit) : 1;
 
     return NextResponse.json(
       {
         success: true,
-
-        data: normalizedData,
-
+        data,
         pagination: {
           page,
           limit,
@@ -435,7 +270,7 @@ export async function GET(request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to fetch pending Zerodose.",
+        message: error?.message || "Failed to fetch pending Zerodose.",
       },
       {
         status: 500,

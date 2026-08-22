@@ -71,6 +71,11 @@ const zerodoseSchema = new Schema(
       index: true,
     },
 
+    houseNumber: {
+      type: Number,
+      required: true,
+    },
+
     childName: {
       type: String,
       required: true,
@@ -81,6 +86,12 @@ const zerodoseSchema = new Schema(
       type: String,
       required: true,
       trim: true,
+    },
+
+    gender: {
+      type: String,
+      enum: ["male", "female"],
+      required: true,
     },
 
     age: {
@@ -99,18 +110,6 @@ const zerodoseSchema = new Schema(
     contactNo: {
       type: String,
       trim: true,
-    },
-            houseNumber: {
-      type: Number,
-      required: true,
-      index: true,
-    },
-
-    gender: {
-      type: String,
-      enum: ["male", "female"],
-      required: true,
-      index: true,
     },
 
     day: {
@@ -135,20 +134,6 @@ const zerodoseSchema = new Schema(
       default: null,
     },
 
-    qrCode: {
-      type: String,
-      trim: true,
-      default: null,
-      index: true,
-    },
-
-    vaccinator: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      default: null,
-      index: true,
-    },
-
     location: {
       latitude: {
         type: Number,
@@ -159,6 +144,19 @@ const zerodoseSchema = new Schema(
         type: Number,
         required: true,
       },
+    },
+
+    qrCode: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
+    vaccinator: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
     },
 
     clientStatus: {
@@ -174,10 +172,6 @@ const zerodoseSchema = new Schema(
       default: "recorded",
       index: true,
     },
-
-    // =====================================================
-    // UPDATE APPROVAL
-    // =====================================================
 
     updateRequested: {
       type: Boolean,
@@ -216,10 +210,6 @@ const zerodoseSchema = new Schema(
       type: Date,
       default: null,
     },
-
-    // =====================================================
-    // DELETE APPROVAL
-    // =====================================================
 
     deleteRequested: {
       type: Boolean,

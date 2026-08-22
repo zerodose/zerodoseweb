@@ -229,7 +229,7 @@ export default function ZerodoseCampaignSection({
 
       {/* Extra Information */}
       <div className="border-border mt-4 grid grid-cols-2 gap-4 border-t pt-4 md:grid-cols-3">
-        {[1, 2, 3].map((item) => (
+        {[1].map((item) => (
           <div key={item} className="space-y-2">
             <div className="h-3 w-20 animate-pulse rounded bg-gray-200" />
             <div className="h-4 w-28 animate-pulse rounded bg-gray-200" />
@@ -461,7 +461,7 @@ export default function ZerodoseCampaignSection({
 
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-text truncate text-base font-semibold">
+                        <h3 className="text-text truncate text-base font-semibold capitalize">
                           {item.childName}
                         </h3>
 
@@ -503,7 +503,7 @@ export default function ZerodoseCampaignSection({
                       <span>Father</span>
                     </div>
 
-                    <p className="text-text mt-1 truncate text-sm font-medium">
+                    <p className="text-text mt-1 truncate text-sm font-medium  capitalize">
                       {item.fatherName || "-"}
                     </p>
                   </div>
@@ -607,7 +607,7 @@ export default function ZerodoseCampaignSection({
                     <div className="flex min-w-0 flex-1 items-start gap-2">
                       <MapPin className="text-text-secondary mt-0.5 h-4 w-4 shrink-0" />
 
-                      <p className="text-text-secondary text-xs leading-5">
+                      <p className="text-text-secondary text-xs leading-5 capitalize">
                         {item.address}
                       </p>
                     </div>

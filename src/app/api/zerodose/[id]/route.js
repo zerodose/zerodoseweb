@@ -120,10 +120,7 @@ function populateZerodose(query) {
     .populate("unionCouncil", "name code")
     .populate("ucmo", "name contactNumber")
     .populate("supervisor", "name contactNumber supervisorCode")
-    .populate(
-      "user",
-      "name contactNumber designation workerRole teamNumber",
-    )
+    .populate("user", "name contactNumber designation workerRole teamNumber")
     .populate(
       "teamLeader",
       "name contactNumber designation workerRole teamNumber",
@@ -132,10 +129,7 @@ function populateZerodose(query) {
       "teamMember",
       "name contactNumber designation workerRole teamNumber",
     )
-    .populate(
-      "vaccinator",
-      "name contactNumber designation",
-    );
+    .populate("vaccinator", "name contactNumber designation");
 }
 
 function canAccessZerodose(user, zerodose) {
@@ -156,13 +150,9 @@ function canAccessZerodose(user, zerodose) {
       return false;
     }
 
-    const sameSupervisor = objectIdEquals(
-      user.supervisor,
-      zerodose.supervisor,
-    );
+    const sameSupervisor = objectIdEquals(user.supervisor, zerodose.supervisor);
 
-    const sameTeam =
-      Number(user.teamNumber) === Number(zerodose.teamNumber);
+    const sameTeam = Number(user.teamNumber) === Number(zerodose.teamNumber);
 
     return sameSupervisor && sameTeam;
   }
@@ -204,8 +194,6 @@ export async function GET(request, { params }) {
       return auth.error;
     }
 
-    const user = auth.user;
-
     const { id } = await params;
 
     if (!id || !isValidObjectId(id)) {
@@ -230,18 +218,6 @@ export async function GET(request, { params }) {
         },
         {
           status: 404,
-        },
-      );
-    }
-
-    if (!canAccessZerodose(user, zerodose)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "You are not authorized to view this Zerodose.",
-        },
-        {
-          status: 403,
         },
       );
     }
@@ -378,10 +354,7 @@ export async function PUT(request, { params }) {
     }
 
     if (body.childName !== undefined) {
-      if (
-        typeof body.childName !== "string" ||
-        !body.childName.trim()
-      ) {
+      if (typeof body.childName !== "string" || !body.childName.trim()) {
         return NextResponse.json(
           {
             success: false,
@@ -397,10 +370,7 @@ export async function PUT(request, { params }) {
     }
 
     if (body.fatherName !== undefined) {
-      if (
-        typeof body.fatherName !== "string" ||
-        !body.fatherName.trim()
-      ) {
+      if (typeof body.fatherName !== "string" || !body.fatherName.trim()) {
         return NextResponse.json(
           {
             success: false,
@@ -437,10 +407,7 @@ export async function PUT(request, { params }) {
     }
 
     if (body.address !== undefined) {
-      if (
-        typeof body.address !== "string" ||
-        !body.address.trim()
-      ) {
+      if (typeof body.address !== "string" || !body.address.trim()) {
         return NextResponse.json(
           {
             success: false,
@@ -473,8 +440,7 @@ export async function PUT(request, { params }) {
         );
       }
 
-      zerodose.contactNo =
-        body.contactNo?.trim() || null;
+      zerodose.contactNo = body.contactNo?.trim() || null;
     }
 
     if (body.houseNumber !== undefined) {
@@ -530,10 +496,7 @@ export async function PUT(request, { params }) {
         );
       }
 
-      if (
-        body.location.latitude < -90 ||
-        body.location.latitude > 90
-      ) {
+      if (body.location.latitude < -90 || body.location.latitude > 90) {
         return NextResponse.json(
           {
             success: false,
@@ -545,10 +508,7 @@ export async function PUT(request, { params }) {
         );
       }
 
-      if (
-        body.location.longitude < -180 ||
-        body.location.longitude > 180
-      ) {
+      if (body.location.longitude < -180 || body.location.longitude > 180) {
         return NextResponse.json(
           {
             success: false,

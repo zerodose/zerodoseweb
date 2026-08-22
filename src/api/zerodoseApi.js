@@ -129,3 +129,28 @@ export const deleteZerodose = async (id) => {
 
   return response.data;
 };
+
+export const submitZerodoseUpdate = async (id, payload) => {
+  const response = await api.put(
+    `/zerodose/pendingZerodose/${id}/update`,
+    payload,
+  );
+
+  return response.data;
+};
+
+export const rejectZerodoseUpdate = async (
+  pendingId,
+  supervisorId,
+  rejectionReason = "",
+) => {
+  const response = await api.put(
+    `/zerodose/pendingZerodose/${pendingId}/reject`,
+    {
+      supervisorId,
+      rejectionReason,
+    },
+  );
+
+  return response.data;
+};

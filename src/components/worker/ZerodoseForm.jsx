@@ -6,7 +6,11 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 import { getCampaigns } from "@/api/campaignApi";
-import { createZerodose, getZerodose, updateZerodose } from "@/api/zerodoseApi";
+import {
+  createZerodose,
+  getZerodose,
+  submitZerodoseUpdate,
+} from "@/api/zerodoseApi";
 import { getCurrentLocation } from "@/utils/location";
 import Loader from "../ui/Loader";
 
@@ -282,28 +286,49 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
     }
 
     // ----------------------------------------------------------
+    // Logged-in worker
+    // ----------------------------------------------------------
+
+    const storedUser = localStorage.getItem("authUser");
+
+    let authUser = null;
+
+    if (storedUser) {
+      try {
+        authUser = JSON.parse(storedUser);
+      } catch (error) {
+        console.error("Failed to parse authUser:", error);
+      }
+    }
+
+    if (!authUser?.id) {
+      toast.error("Unable to identify logged-in worker.");
+      return;
+    }
+
+    // ----------------------------------------------------------
     // Get NEW GPS location
     // ----------------------------------------------------------
 
     const location = await getCurrentLocation();
 
     // ----------------------------------------------------------
-    // Update Payload
+    // Submit temporary update
     // ----------------------------------------------------------
 
     const payload = {
+      workerId: authUser.id,
+
       childName: formData.childName.trim(),
       fatherName: formData.fatherName.trim(),
       age: Number(formData.age),
       address: formData.address.trim(),
       contactNo: formData.contactNo.trim() || null,
 
-      // IMPORTANT:
-      // Worker update always sends the NEW current location.
       location,
     };
 
-    await updateZerodose(zerodoseId, payload);
+    await submitZerodoseUpdate(zerodoseId, payload);
 
     toast.success("Update request submitted. Supervisor approval is required.");
 
@@ -408,11 +433,9 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
       {/* ========================================================
           Header
       ======================================================== */}
- {loading && (
-      <Loader
-        text={isEdit ? "Updating Zerodose..." : "Adding Zerodose..."}
-      />
-    )}
+      {loading && (
+        <Loader text={isEdit ? "Updating Zerodose..." : "Adding Zerodose..."} />
+      )}
 
       <div className="my-6">
         <div className="bg-primary relative overflow-hidden rounded-2xl p-5 shadow-sm md:p-6">
@@ -456,19 +479,14 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
       <div className="border-border bg-background rounded-xl border shadow-sm">
         <div className="p-6 sm:p-8 md:p-9">
           <div className="mb-7 flex items-center gap-3">
-            
             <div className="bg-primary-light text-primary flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
-              
               <User className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              
               <h2 className="text-text text-base font-semibold">
-                
                 Child Information
               </h2>
               <p className="text-text-secondary mt-0.5 text-sm">
-                
                 {isEdit
                   ? "Update child details below."
                   : "Enter child details below."}

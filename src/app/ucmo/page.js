@@ -645,9 +645,11 @@ export default function Page() {
           ====================================================== */}
 
         <div className="mb-4 flex flex-col md:mb-6">
-          <div className="flex justify-between items-center mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <h1 className="text-text text-2xl font-bold md:text-3xl">UCMO</h1>
             <UCMOActions
+              link={"/ucmo/pendingapprovals"}
+              name={"Supervisor Approvals"}
               pendingApprovals={pendingApprovals}
               loading={loading}
             />

@@ -11,6 +11,7 @@ import SupervisorActions from "@/components/supervisor/SupervisorActions";
 import CampaignTabs from "@/components/supervisor/CampaignTabs";
 import CurrentCampaign from "@/components/supervisor/CurrentCampaign";
 import PreviousCampaigns from "@/components/supervisor/PreviousCampaigns";
+import UCMOActions from "@/components/ucmo/UCMOActions";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
@@ -360,8 +361,27 @@ export default function Page() {
 
   return (
     <div className="min-h-full">
-      <div className="mb-6 md:mb-7">
+      {/* <div className="mb-6 md:mb-7">
         <h1 className="text-text text-2xl font-bold md:text-3xl">Supervisor</h1>
+
+        <p className="text-text-secondary mt-1 text-sm">
+          Manage teams and campaign-wise Zerodose records
+        </p>
+      </div> */}
+
+      <div className="mb-4 flex flex-col md:mb-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h1 className="text-text text-2xl font-bold md:text-3xl">
+            Supervisor
+          </h1>
+          <UCMOActions
+            link={"/supervisor/zerodoseApproval"}
+            name={"Zerodose Approval"}
+            // pendingApprovals={pendingApprovals}
+            loading={loading}
+          />
+          {/* <UCMOActions pendingApprovals={pendingApprovals} loading={loading} /> */}
+        </div>
 
         <p className="text-text-secondary mt-1 text-sm">
           Manage teams and campaign-wise Zerodose records

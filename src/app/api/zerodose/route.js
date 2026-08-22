@@ -16,7 +16,7 @@ if (!JWT_SECRET) {
 
 async function getAuthUser(request) {
   try {
-    const token = request.cookies.get("token")?.value;
+    const token = request.cookies.get("auth_token")?.value;
 
     if (!token) {
       return null;
@@ -38,7 +38,8 @@ async function getAuthUser(request) {
     }
 
     return user;
-  } catch {
+  } catch (error) {
+    console.error("JWT auth error:", error);
     return null;
   }
 }

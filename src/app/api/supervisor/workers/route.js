@@ -6,6 +6,15 @@ import User from "@/models/User";
 import District from "@/models/District";
 import Town from "@/models/Town";
 import UnionCouncil from "@/models/UnionCouncil";
+import { jwtVerify } from "jose";
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET is not configured");
+}
+
+const secret = new TextEncoder().encode(JWT_SECRET);
 
 export async function POST(request) {
   try {
@@ -16,12 +25,12 @@ export async function POST(request) {
     const { name, contactNumber, teamNumber, workerRole } = body;
 
     // ============================================================
-    // Get Logged-in User ID
+    // Authenticate Supervisor From JWT
     // ============================================================
 
-    const supervisor = request.headers.get("x-user-id");
+    const token = request.cookies.get("auth_token")?.value;
 
-    if (!supervisor) {
+    if (!token) {
       return NextResponse.json(
         {
           success: false,
@@ -31,23 +40,43 @@ export async function POST(request) {
       );
     }
 
-    // ============================================================
-    // Validate User ID
-    // ============================================================
+    let payload;
 
-    if (!mongoose.Types.ObjectId.isValid(supervisor)) {
+    try {
+      const verified = await jwtVerify(token, secret);
+      payload = verified.payload;
+    } catch {
       return NextResponse.json(
         {
           success: false,
-          message: "Invalid supervisor ID.",
+          message: "Invalid or expired authentication token.",
         },
-        { status: 400 },
+        { status: 401 },
       );
     }
 
-    // ============================================================
-    // Get Logged-in Supervisor
-    // ============================================================
+    const supervisor = payload.userId;
+    const designation = payload.designation;
+
+    if (!supervisor || !mongoose.Types.ObjectId.isValid(supervisor)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid authentication token.",
+        },
+        { status: 401 },
+      );
+    }
+
+    if (designation !== "supervisor") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Only a supervisor can add workers.",
+        },
+        { status: 403 },
+      );
+    }
 
     const supervisorDoc = await User.findOne({
       _id: supervisor,

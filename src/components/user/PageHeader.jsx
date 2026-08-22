@@ -3,13 +3,14 @@
 import { useState } from "react";
 import {
   User,
-  LogOut,
   ChevronDown,
   X,
   Mail,
   Shield,
   CalendarDays,
 } from "lucide-react";
+import LogoutButton from "../ui/LogoutButton";
+import { logoutUser } from "@/api/authApi";
 
 export default function PageHeader({ title, subtitle }) {
   const [open, setOpen] = useState(false);
@@ -45,27 +46,6 @@ export default function PageHeader({ title, subtitle }) {
       console.error("Profile fetch error:", error);
     } finally {
       setLoadingProfile(false);
-    }
-  };
-
-  // Logout
-  const handleLogout = async () => {
-    try {
-      setLoggingOut(true);
-
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Logout failed.");
-      }
-
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Logout error:", error);
-      setLoggingOut(false);
     }
   };
 
@@ -129,17 +109,10 @@ export default function PageHeader({ title, subtitle }) {
                   <span>Profile</span>
                 </button>
 
-                {/* Logout */}
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  disabled={loggingOut}
-                  className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <LogOut size={18} className="text-text-secondary" />
-
-                  <span>{loggingOut ? "Logging out..." : "Logout"}</span>
-                </button>
+               <LogoutButton
+                              logout={logoutUser}
+                              setProfileOpen={setProfileOpen}
+                            />
               </div>
             </>
           )}

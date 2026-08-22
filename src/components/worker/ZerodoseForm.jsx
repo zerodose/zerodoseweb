@@ -13,6 +13,7 @@ import {
 } from "@/api/zerodoseApi";
 import { getCurrentLocation } from "@/utils/location";
 import Loader from "../ui/Loader";
+import Select from "../ui/Select";
 
 export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
   const router = useRouter();
@@ -515,23 +516,25 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
               />
             </div>
 
-            <div>
-              <label className="text-text mb-2 block text-sm font-medium">
-                Gender
-              </label>
-
-              <select
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                disabled={loading}
-                className="border-border bg-input-background text-text focus:border-primary focus:ring-primary-light h-11 w-full rounded-lg border px-3 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <option value="">Select gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
-            </div>
+            <Select
+              label="Gender"
+              name="gender"
+              value={formData.gender}
+              onChange={handleChange}
+              options={[
+                {
+                  value: "male",
+                  label: "Male",
+                },
+                {
+                  value: "female",
+                  label: "Female",
+                },
+              ]}
+              placeholder="Select gender"
+              disabled={loading}
+              required
+            />
 
             <div>
               <label className="text-text mb-2 block text-sm font-medium">

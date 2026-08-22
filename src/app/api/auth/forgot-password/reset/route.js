@@ -18,10 +18,7 @@ export async function POST(request) {
     const resetToken = body?.resetToken?.trim();
     const password = body?.password;
     
-    console.log("body for reset token=2=>", body)
-    // ============================================================
-    // Validation
-    // ============================================================
+    // console.log("body for reset token=2=>", body)
 
     if (!resetToken) {
       return NextResponse.json(

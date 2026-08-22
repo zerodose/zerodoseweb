@@ -124,7 +124,6 @@ export default function AuthGuard({ children }) {
 
       setIsCheckingAuth(false);
 
-      // Automatically logout when session expires
       const timer = setTimeout(() => {
         localStorage.removeItem("authUser");
         router.replace("/auth/login");

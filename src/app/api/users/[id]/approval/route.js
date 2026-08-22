@@ -4,6 +4,16 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 
+import { jwtVerify } from "jose";
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET is not configured");
+}
+
+const secret = new TextEncoder().encode(JWT_SECRET);
+
 export async function PUT(request, { params }) {
   try {
     await connectDB();
@@ -42,35 +52,65 @@ export async function PUT(request, { params }) {
       );
     }
 
-    // ============================================================
-    // Get Logged-in Admin
-    // ============================================================
+    const token = request.cookies.get("auth_token")?.value;
 
-    const authUserId =
-      request.headers.get("x-user-id") || request.headers.get("x-auth-user-id");
-
-    /*
-      If your auth middleware already puts the logged-in user ID
-      somewhere else, use that value here.
-
-      This route intentionally does not accept approvedBy from
-      the frontend.
-    */
-
-    let approvedBy = null;
-
-    if (authUserId && mongoose.Types.ObjectId.isValid(authUserId)) {
-      const adminUser = await User.findOne({
-        _id: authUserId,
-        designation: "admin",
-      })
-        .select("_id")
-        .lean();
-
-      if (adminUser) {
-        approvedBy = adminUser._id;
-      }
+    if (!token) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Authentication required.",
+        },
+        { status: 401 },
+      );
     }
+
+    let payload;
+
+    try {
+      const verified = await jwtVerify(token, secret);
+      payload = verified.payload;
+    } catch {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid or expired authentication token.",
+        },
+        { status: 401 },
+      );
+    }
+
+    const authUserId = payload.userId;
+    const designation = payload.designation;
+
+    if (!authUserId || designation !== "admin") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Only an admin can approve District Focal Persons.",
+        },
+        { status: 403 },
+      );
+    }
+
+    const adminUser = await User.findOne({
+      _id: authUserId,
+      designation: "admin",
+      isActive: true,
+    })
+      .select("_id")
+      .lean();
+
+    if (!adminUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Authenticated admin account was not found or is inactive.",
+        },
+        { status: 403 },
+      );
+    }
+
+    const approvedBy = adminUser._id;
 
     // ============================================================
     // Find Pending District FP
@@ -100,13 +140,8 @@ export async function PUT(request, { params }) {
 
     user.approvalStatus = approvalStatus;
 
-    if (approvalStatus === "approved") {
-      user.approvedBy = approvedBy;
-      user.approvedAt = new Date();
-    } else {
-      user.approvedBy = approvedBy;
-      user.approvedAt = new Date();
-    }
+    user.approvedBy = approvedBy;
+    user.approvedAt = new Date();
 
     await user.save();
 

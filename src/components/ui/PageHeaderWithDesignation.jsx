@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import {
   Menu,
   User,
-  LogOut,
   ChevronDown,
   X,
   Mail,
   Shield,
   CalendarDays,
 } from "lucide-react";
+import LogoutButton from "./LogoutButton";
+import { logoutUser } from "@/api/authApi";
 
 export default function PageHeaderWithDesignation({
   name = "",
@@ -98,19 +99,6 @@ export default function PageHeaderWithDesignation({
     } finally {
       setLoadingProfile(false);
     }
-  };
-
-  // ============================================================
-  // Logout
-  // ============================================================
-
-  const handleLogout = () => {
-    setLoggingOut(true);
-    setProfileOpen(false);
-
-    localStorage.removeItem("authUser");
-
-    router.push("/");
   };
 
   // ============================================================
@@ -411,18 +399,10 @@ export default function PageHeaderWithDesignation({
                     <span>Profile</span>
                   </button>
 
-                  {/* Logout */}
-
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    disabled={loggingOut}
-                    className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <LogOut size={18} className="text-text-secondary" />
-
-                    <span>{loggingOut ? "Logging out..." : "Logout"}</span>
-                  </button>
+                  <LogoutButton
+                    logout={logoutUser}
+                    setProfileOpen={setProfileOpen}
+                  />
                 </div>
               </div>
             </>

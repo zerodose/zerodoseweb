@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, User, Settings, LogOut, ChevronDown } from "lucide-react";
+import { Menu, User, Settings,  ChevronDown } from "lucide-react";
+import LogoutButton from "../ui/LogoutButton";
+import { logoutUser } from "@/api/authApi";
 
 export default function Header({
   onMenuClick,
@@ -77,25 +79,11 @@ export default function Header({
     return "U";
   };
 
-  // ============================================================
-  // Navigation
-  // ============================================================
-
   const goTo = (route) => {
     if (!route) return;
 
     setProfileOpen(false);
     router.push(route);
-  };
-
-  // ============================================================
-  // Logout
-  // ============================================================
-
-  const handleLogout = () => {
-    setProfileOpen(false);
-    localStorage.removeItem("authUser");
-    router.push("/");
   };
 
   return (
@@ -219,17 +207,10 @@ export default function Header({
                 <span>Settings</span>
               </button>
 
-              {/* Logout */}
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-red-500 transition hover:bg-red-50"
-              >
-                <LogOut size={17} />
-
-                <span>Logout</span>
-              </button>
+              <LogoutButton
+                logout={logoutUser}
+                setProfileOpen={setProfileOpen}
+              />
             </div>
           </div>
         )}

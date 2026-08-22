@@ -13,7 +13,7 @@ export async function POST(request) {
 
     const body = await request.json();
 
-    console.log("Body of Verify route==>", body);
+    // console.log("Body of Verify route==>", body);
     const mobile = body?.mobile?.trim();
     const code = body?.code?.trim();
 

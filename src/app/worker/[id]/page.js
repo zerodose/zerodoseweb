@@ -1018,7 +1018,7 @@ export default function ZerodoseDetailPage() {
 
 function DetailSection({ icon: Icon, title, description, children }) {
   return (
-    <section className="border-border bg-primary/10 overflow-hidden rounded-2xl border shadow-sm">
+    <section className="border-border bg-background overflow-hidden rounded-2xl border shadow-sm">
       <div className="border-border flex items-center gap-3 border-b p-4 md:p-5">
         <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
           <Icon className="h-5 w-5" />

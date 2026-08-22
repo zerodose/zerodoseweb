@@ -256,32 +256,43 @@ export async function POST(request) {
     // ============================================================
 
     const existingTeamWorkers = await User.find({
-      supervisor: supervisorDoc._id,
+      unionCouncil: supervisorDoc.unionCouncil,
       teamNumber: parsedTeamNumber,
       designation: "worker",
       isActive: true,
     })
-      .select("_id name workerRole teamNumber")
+      .select("_id name workerRole teamNumber supervisor")
       .lean();
 
-    // ============================================================
-    // Maximum 2 Workers Per Team
-    // ============================================================
+    // Same team number kisi doosre supervisor ko assigned nahi hona chahiye
+    const existingOtherSupervisorWorker = existingTeamWorkers.find(
+      (worker) =>
+        worker.supervisor?.toString() !== supervisorDoc._id.toString(),
+    );
 
-    if (existingTeamWorkers.length >= 2) {
+    if (existingOtherSupervisorWorker) {
       return NextResponse.json(
         {
           success: false,
-          message: "This team already has two workers.",
+          message:
+            "This team number is already assigned to another supervisor in this Union Council.",
         },
         { status: 409 },
       );
     }
 
-    // ============================================================
-    // Prevent Duplicate Team Role
-    // ============================================================
+    // Maximum 2 active workers
+    if (existingTeamWorkers.length >= 2) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "This team already has two active workers.",
+        },
+        { status: 409 },
+      );
+    }
 
+    // Same role duplicate nahi hona chahiye
     const existingRole = existingTeamWorkers.find(
       (worker) => worker.workerRole === workerRole,
     );
@@ -298,7 +309,6 @@ export async function POST(request) {
         { status: 409 },
       );
     }
-
     // ============================================================
     // Duplicate Contact Number
     // ============================================================

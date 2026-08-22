@@ -15,8 +15,7 @@ import { usePathname } from "next/navigation";
 import { getDistrictDropdown } from "@/api/districtApi";
 import { getTownDropdown } from "@/api/townApi";
 import { getUnionCouncilDropdown } from "@/api/unionCouncilApi";
-import { createUser } from "@/api/userApi";
-
+import { createUser, getUcmoDropdown } from "@/api/userApi";
 import { verifyEmail, resendVerification } from "@/api/authApi";
 import { designationRoutes } from "@/content/data";
 
@@ -78,6 +77,7 @@ export default function SignupForm() {
       district: "",
       town: "",
       unionCouncil: "",
+      ucmo: "",
       designation: "",
       supervisorCode: "",
       password: "",
@@ -91,6 +91,7 @@ export default function SignupForm() {
 
   const selectedDistrict = watch("district");
   const selectedTown = watch("town");
+  const selectedUnionCouncil = watch("unionCouncil");
   const selectedDesignation = watch("designation");
   const password = watch("password");
 
@@ -129,6 +130,7 @@ export default function SignupForm() {
 
   const isAdmin = selectedDesignation === "admin";
 
+  const showUcmoField = requiresUnionCouncil && selectedDesignation !== "ucmo";
   // =====================================================
   // Dropdown Data
   // =====================================================
@@ -136,7 +138,7 @@ export default function SignupForm() {
   const [districts, setDistricts] = useState([]);
   const [towns, setTowns] = useState([]);
   const [unionCouncils, setUnionCouncils] = useState([]);
-
+  const [ucmos, setUcmos] = useState([]);
   // =====================================================
   // Dropdown Loading
   // =====================================================
@@ -144,6 +146,7 @@ export default function SignupForm() {
   const [districtLoading, setDistrictLoading] = useState(true);
   const [townLoading, setTownLoading] = useState(false);
   const [ucLoading, setUcLoading] = useState(false);
+  const [ucmoLoading, setUcmoLoading] = useState(false);
 
   // =====================================================
   // Form Loading
@@ -280,6 +283,52 @@ export default function SignupForm() {
   }, [selectedTown, requiresUnionCouncil]);
 
   // =====================================================
+  // Load Active UCMOs When Union Council Changes
+  // =====================================================
+
+  useEffect(() => {
+    const loadUcmos = async () => {
+      if (
+        !selectedUnionCouncil ||
+        !requiresUnionCouncil ||
+        selectedDesignation === "ucmo"
+      ) {
+        setUcmos([]);
+        setValue("ucmo", "");
+        return;
+      }
+
+      try {
+        setUcmoLoading(true);
+
+        const response = await getUcmoDropdown(selectedUnionCouncil);
+
+        setUcmos(response?.data || []);
+      } catch (error) {
+        console.error("Get UCMOs error:", error);
+
+        setUcmos([]);
+
+        toast.error("Failed to load UCMOs", {
+          description:
+            error?.response?.data?.message ||
+            error?.message ||
+            "Please try again.",
+        });
+      } finally {
+        setUcmoLoading(false);
+      }
+    };
+
+    loadUcmos();
+  }, [
+    selectedUnionCouncil,
+    selectedDesignation,
+    requiresUnionCouncil,
+    setValue,
+  ]);
+
+  // =====================================================
   // Clear Supervisor Code When Designation Changes
   // =====================================================
 
@@ -353,6 +402,11 @@ export default function SignupForm() {
         town: requiresTown ? data.town : null,
 
         unionCouncil: requiresUnionCouncil ? data.unionCouncil : null,
+
+        ucmo:
+          requiresUnionCouncil && selectedDesignation !== "ucmo"
+            ? data.ucmo
+            : null,
 
         designation: data.designation,
 
@@ -769,11 +823,12 @@ export default function SignupForm() {
               {!isAdmin && (
                 <section>
                   <h2 className="text-text text-lg font-semibold">Location</h2>
-
                   <div
                     className={`mt-4 grid grid-cols-1 gap-5 ${
                       requiresUnionCouncil
-                        ? "sm:grid-cols-3"
+                        ? showUcmoField
+                          ? "sm:grid-cols-4"
+                          : "sm:grid-cols-3"
                         : requiresTown
                           ? "sm:grid-cols-2"
                           : "sm:grid-cols-1"
@@ -803,11 +858,13 @@ export default function SignupForm() {
 
                               setValue("town", "");
                               setValue("unionCouncil", "");
+                              setValue("ucmo", "");
 
                               setTowns([]);
                               setUnionCouncils([]);
+                              setUcmos([]);
 
-                              clearErrors(["town", "unionCouncil"]);
+                              clearErrors(["town", "unionCouncil", "ucmo"]);
                             }}
                             options={districts.map((district) => ({
                               value: district._id,
@@ -855,9 +912,13 @@ export default function SignupForm() {
                                 field.onChange(e);
 
                                 setValue("unionCouncil", "");
+                                setValue("ucmo", "");
+
                                 setUnionCouncils([]);
+                                setUcmos([]);
 
                                 clearErrors("unionCouncil");
+                                clearErrors("ucmo");
                               }}
                               options={towns.map((town) => ({
                                 value: town._id,
@@ -931,6 +992,60 @@ export default function SignupForm() {
                         {errors.unionCouncil && (
                           <p className="mt-1.5 text-xs text-red-500">
                             {errors.unionCouncil.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* =================================================
+      UCMO
+  ================================================= */}
+
+                    {showUcmoField && (
+                      <div>
+                        <Controller
+                          name="ucmo"
+                          control={control}
+                          rules={{
+                            required: showUcmoField
+                              ? "Please select a UCMO."
+                              : false,
+                          }}
+                          render={({ field }) => (
+                            <Select
+                              label="UCMO"
+                              name={field.name}
+                              value={field.value}
+                              onChange={field.onChange}
+                              options={ucmos.map((ucmo) => ({
+                                value: ucmo._id,
+                                label: ucmo.name,
+                              }))}
+                              placeholder={
+                                !selectedUnionCouncil
+                                  ? "Select Union Council first"
+                                  : ucmos.length === 0
+                                    ? "No active UCMO found"
+                                    : "Select UCMO"
+                              }
+                              searchPlaceholder="Search UCMO..."
+                              searchable
+                              loading={ucmoLoading}
+                              disabled={
+                                loading ||
+                                !selectedUnionCouncil ||
+                                ucmoLoading ||
+                                ucmos.length === 0
+                              }
+                              required
+                              error={errors.ucmo?.message}
+                            />
+                          )}
+                        />
+
+                        {errors.ucmo && (
+                          <p className="mt-1.5 text-xs text-red-500">
+                            {errors.ucmo.message}
                           </p>
                         )}
                       </div>

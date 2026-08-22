@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { Menu, User, Settings, ChevronDown } from "lucide-react";
 import LogoutButton from "../ui/LogoutButton";
+import { logoutUser } from "@/api/authApi";
 
 export default function TownFPHeader({ onMenuClick }) {
   const router = useRouter();

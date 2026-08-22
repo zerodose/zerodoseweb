@@ -290,17 +290,17 @@ const userSchema = new mongoose.Schema(
     },
 
     supervisorCode: {
-      type: String,
-      trim: true,
-      uppercase: true,
+      type: Number,
       default: null,
       validate: {
         validator: function (value) {
           if (this.designation === "supervisor") {
-            return !!value && value.trim().length > 0;
+            return (
+              value !== null && value !== undefined && !Number.isNaN(value)
+            );
           }
 
-          return !value;
+          return value === null || value === undefined;
         },
         message: "Supervisor Code is required only for supervisor designation.",
       },
@@ -368,6 +368,21 @@ userSchema.index(
     unique: true,
     partialFilterExpression: {
       designation: "supervisor",
+      isActive: true,
+    },
+  },
+);
+
+userSchema.index(
+  {
+    unionCouncil: 1,
+    teamNumber: 1,
+    workerRole: 1,
+  },
+  {
+    unique: true,
+    partialFilterExpression: {
+      designation: "worker",
       isActive: true,
     },
   },

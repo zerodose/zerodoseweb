@@ -51,6 +51,13 @@ const zerodoseSchema = new Schema(
       index: true,
     },
 
+    teamNumber: {
+      type: Number,
+      required: function () {
+        return this.designation === "worker";
+      },
+      index: true,
+    },
     teamLeader: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -61,12 +68,6 @@ const zerodoseSchema = new Schema(
     teamMember: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
-      index: true,
-    },
-
-    teamNumber: {
-      type: Number,
       required: true,
       index: true,
     },
@@ -248,6 +249,8 @@ const zerodoseSchema = new Schema(
     timestamps: true,
   },
 );
+
+
 
 const Zerodose =
   mongoose.models.Zerodose || mongoose.model("Zerodose", zerodoseSchema);

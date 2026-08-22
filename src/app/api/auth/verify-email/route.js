@@ -333,6 +333,45 @@ export async function POST(request) {
       }
     }
 
+    // ============================================================
+    // Supervisor Code Uniqueness Within Union Council
+    // ============================================================
+
+    if (designation === "supervisor") {
+      const normalizedSupervisorCode = pendingRegistration.supervisorCode
+        ?.trim()
+        .toUpperCase();
+
+      if (!normalizedSupervisorCode) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Supervisor code is required.",
+          },
+          { status: 400 },
+        );
+      }
+
+      const existingSupervisor = await User.findOne({
+        designation: "supervisor",
+        isActive: true,
+        unionCouncil: normalizedUnionCouncil,
+        supervisorCode: normalizedSupervisorCode,
+      })
+        .select("_id name supervisorCode")
+        .lean();
+
+      if (existingSupervisor) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Supervisor code already exists in this Union Council.",
+          },
+          { status: 409 },
+        );
+      }
+    }
+
     const approvalRequiredDesignations = [
       "ucmo",
       "supervisor",

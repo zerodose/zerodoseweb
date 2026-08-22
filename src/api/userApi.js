@@ -128,3 +128,11 @@ export async function transferWorkers(data) {
 // ============================================================
 // Pending District FP Approvals
 // ============================================================
+
+export const getUcmoDropdown = async (unionCouncilId) => {
+  const response = await api.get(
+    `/users/ucmo-dropdown?unionCouncil=${unionCouncilId}`,
+  );
+
+  return response.data;
+};

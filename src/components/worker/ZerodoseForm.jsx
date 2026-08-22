@@ -210,41 +210,6 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
 
     const location = await getCurrentLocation();
 
-    const campaignStart = new Date(campaign.startDate);
-
-    if (Number.isNaN(campaignStart.getTime())) {
-      throw new Error("Invalid campaign start date.");
-    }
-
-    campaignStart.setHours(0, 0, 0, 0);
-
-    const campaignEnd = new Date(campaign.endDate);
-
-    if (Number.isNaN(campaignEnd.getTime())) {
-      throw new Error("Invalid campaign end date.");
-    }
-
-    campaignEnd.setHours(0, 0, 0, 0);
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const day =
-      Math.floor(
-        (today.getTime() - campaignStart.getTime()) / (1000 * 60 * 60 * 24),
-      ) + 1;
-
-    const campaignDays =
-      Math.floor(
-        (campaignEnd.getTime() - campaignStart.getTime()) /
-          (1000 * 60 * 60 * 24),
-      ) + 1;
-
-    if (day < 1 || day > campaignDays) {
-      toast.error("Today is outside the current campaign period.");
-      return;
-    }
-
     const payload = {
       childName: formData.childName.trim(),
       fatherName: formData.fatherName.trim(),
@@ -545,6 +510,7 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
                 type="number"
                 name="houseNumber"
                 min="0"
+                max="999"
                 value={formData.houseNumber}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -554,9 +520,18 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
                     return;
                   }
 
+                  // Maximum 3 digits
+                  if (value.length > 3) {
+                    return;
+                  }
+
                   const number = Number(value);
 
-                  if (Number.isInteger(number) && number >= 0) {
+                  if (
+                    Number.isInteger(number) &&
+                    number >= 0 &&
+                    number <= 999
+                  ) {
                     handleChange(e);
                   }
                 }}

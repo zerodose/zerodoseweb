@@ -14,6 +14,9 @@ if (!JWT_SECRET) {
   throw new Error("JWT_SECRET is not configured");
 }
 
+// --------------------------------------------------
+// GET AUTHENTICATED USER
+// --------------------------------------------------
 async function getAuthUser(request) {
   try {
     const token = request.cookies.get("auth_token")?.value;
@@ -31,6 +34,10 @@ async function getAuthUser(request) {
       return null;
     }
 
+    if (!mongoose.Types.ObjectId.isValid(payload.userId)) {
+      return null;
+    }
+
     const user = await User.findById(payload.userId).lean();
 
     if (!user || !user.isActive) {
@@ -44,13 +51,17 @@ async function getAuthUser(request) {
   }
 }
 
+// --------------------------------------------------
+// POST - CREATE ZERO DOSE
+// --------------------------------------------------
 export async function POST(request) {
   try {
     await connectDB();
 
-    // --------------------------------------------------
-    // 1. AUTHENTICATED USER
-    // --------------------------------------------------
+    // ==================================================
+    // 1. AUTHENTICATION
+    // ==================================================
+
     const authUser = await getAuthUser(request);
 
     if (!authUser) {
@@ -74,42 +85,56 @@ export async function POST(request) {
       );
     }
 
-    // --------------------------------------------------
+    // ==================================================
     // 2. FRONTEND INPUT
-    // --------------------------------------------------
+    // ==================================================
+    //
+    // ONLY these values are accepted from frontend:
+    //
+    // childName
+    // fatherName
+    // age
+    // gender
+    // houseNumber
+    // address
+    // contactNo
+    // location
+    //
+    // campaign/day/user/team/etc are NOT accepted
+    // from frontend.
+    // ==================================================
+
     const body = await request.json();
 
     const {
-      campaign,
-      houseNumber,
       childName,
       fatherName,
-      gender,
       age,
+      gender,
+      houseNumber,
       address,
       contactNo,
-      day,
-      recordDate,
       location,
-      clientStatus,
-      vaccinationStatus,
     } = body;
 
-    // --------------------------------------------------
-    // 3. ONLY FRONTEND REQUIRED FIELDS
-    // --------------------------------------------------
+    // ==================================================
+    // 3. FRONTEND REQUIRED FIELDS
+    // ==================================================
+
     if (
-      !campaign ||
-      houseNumber === undefined ||
       !childName ||
       !fatherName ||
-      !gender ||
       age === undefined ||
+      age === null ||
+      !gender ||
+      houseNumber === undefined ||
+      houseNumber === null ||
       !address ||
-      day === undefined ||
       !location ||
       location.latitude === undefined ||
-      location.longitude === undefined
+      location.latitude === null ||
+      location.longitude === undefined ||
+      location.longitude === null
     ) {
       return NextResponse.json(
         {
@@ -120,22 +145,10 @@ export async function POST(request) {
       );
     }
 
-    // --------------------------------------------------
-    // 4. VALIDATE CAMPAIGN ID
-    // --------------------------------------------------
-    if (!mongoose.Types.ObjectId.isValid(campaign)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid campaign ID",
-        },
-        { status: 400 },
-      );
-    }
+    // ==================================================
+    // 4. GET AUTHENTICATED WORKER
+    // ==================================================
 
-    // --------------------------------------------------
-    // 5. GET AUTHENTICATED WORKER FROM DATABASE
-    // --------------------------------------------------
     const workerUser = await User.findById(authUser._id)
       .select(
         "_id name designation isActive district town unionCouncil ucmo supervisor teamNumber workerRole",
@@ -156,9 +169,9 @@ export async function POST(request) {
       );
     }
 
-    // --------------------------------------------------
-    // 6. GET ALL RELATIONAL DETAILS FROM WORKER
-    // --------------------------------------------------
+    // ==================================================
+    // 5. GET ALL DETAILS FROM WORKER
+    // ==================================================
 
     const userId = workerUser._id;
 
@@ -168,6 +181,10 @@ export async function POST(request) {
     const ucmoId = workerUser.ucmo;
     const supervisorId = workerUser.supervisor;
     const teamNumber = workerUser.teamNumber;
+
+    // --------------------------------------------------
+    // Validate worker assignment
+    // --------------------------------------------------
 
     if (!districtId) {
       return NextResponse.json(
@@ -229,9 +246,119 @@ export async function POST(request) {
       );
     }
 
-    // --------------------------------------------------
-    // 7. VALIDATE TEAM NUMBER
-    // --------------------------------------------------
+    // ==================================================
+    // 6. VALIDATE OBJECT IDS FROM DATABASE
+    // ==================================================
+
+    const objectIdFields = {
+      worker: userId,
+      district: districtId,
+      town: townId,
+      unionCouncil: unionCouncilId,
+      ucmo: ucmoId,
+      supervisor: supervisorId,
+    };
+
+    for (const [field, value] of Object.entries(objectIdFields)) {
+      if (!mongoose.Types.ObjectId.isValid(value)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Invalid ${field} assignment`,
+          },
+          { status: 400 },
+        );
+      }
+    }
+
+    // ==================================================
+    // 7. GET CURRENT ACTIVE CAMPAIGN
+    // ==================================================
+    //
+    // Campaign is NOT received from frontend.
+    // Backend automatically finds current active campaign.
+    // ==================================================
+
+    const today = new Date();
+
+    const campaigns = await Campaign.find({
+      isActive: true,
+    })
+      .sort({ startDate: 1 })
+      .lean();
+
+    const activeCampaign = campaigns.find((campaign) => {
+      if (!campaign.startDate || !campaign.endDate) {
+        return false;
+      }
+
+      const startDate = new Date(campaign.startDate);
+      const endDate = new Date(campaign.endDate);
+
+      if (
+        Number.isNaN(startDate.getTime()) ||
+        Number.isNaN(endDate.getTime())
+      ) {
+        return false;
+      }
+
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+
+      return today >= startDate && today <= endDate;
+    });
+
+    if (!activeCampaign) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "There is no active campaign for today",
+        },
+        { status: 400 },
+      );
+    }
+
+    const campaignId = activeCampaign._id;
+
+    // ==================================================
+    // 8. CALCULATE CAMPAIGN DAY
+    // ==================================================
+
+    const campaignStart = new Date(activeCampaign.startDate);
+    const campaignEnd = new Date(activeCampaign.endDate);
+
+    campaignStart.setHours(0, 0, 0, 0);
+    campaignEnd.setHours(0, 0, 0, 0);
+
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+
+    const day =
+      Math.floor(
+        (currentDate.getTime() - campaignStart.getTime()) /
+          (1000 * 60 * 60 * 24),
+      ) + 1;
+
+    const campaignDays =
+      Math.floor(
+        (campaignEnd.getTime() - campaignStart.getTime()) /
+          (1000 * 60 * 60 * 24),
+      ) + 1;
+
+    if (day < 1 || day > campaignDays) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Today is outside the current campaign period",
+        },
+        { status: 400 },
+      );
+    }
+
+    // ==================================================
+    // 9. GET TEAM LEADER + TEAM MEMBER
+    // ==================================================
+
     const parsedTeamNumber = Number(teamNumber);
 
     if (!Number.isFinite(parsedTeamNumber)) {
@@ -244,15 +371,12 @@ export async function POST(request) {
       );
     }
 
-    // --------------------------------------------------
-    // 8. FIND TEAM LEADER + TEAM MEMBER
-    // --------------------------------------------------
     const teamWorkers = await User.find({
       designation: "worker",
       isActive: true,
       supervisor: supervisorId,
-      teamNumber: parsedTeamNumber,
       unionCouncil: unionCouncilId,
+      teamNumber: parsedTeamNumber,
     })
       .select(
         "_id name designation supervisor teamNumber workerRole unionCouncil",
@@ -287,9 +411,10 @@ export async function POST(request) {
       );
     }
 
-    // --------------------------------------------------
-    // 9. MAKE SURE AUTHENTICATED WORKER IS PART OF TEAM
-    // --------------------------------------------------
+    // ==================================================
+    // 10. MAKE SURE WORKER BELONGS TO THIS TEAM
+    // ==================================================
+
     const isWorkerInTeam = teamWorkers.some(
       (worker) => worker._id.toString() === userId.toString(),
     );
@@ -304,9 +429,10 @@ export async function POST(request) {
       );
     }
 
-    // --------------------------------------------------
-    // 10. GET SUPERVISOR + UCMO
-    // --------------------------------------------------
+    // ==================================================
+    // 11. GET UCMO + SUPERVISOR
+    // ==================================================
+
     const [ucmoUser, supervisorUser] = await Promise.all([
       User.findById(ucmoId)
         .select(
@@ -321,9 +447,10 @@ export async function POST(request) {
         .lean(),
     ]);
 
-    // --------------------------------------------------
-    // 11. VALIDATE UCMO
-    // --------------------------------------------------
+    // ==================================================
+    // 12. VALIDATE UCMO
+    // ==================================================
+
     if (!ucmoUser || ucmoUser.designation !== "ucmo" || !ucmoUser.isActive) {
       return NextResponse.json(
         {
@@ -334,9 +461,10 @@ export async function POST(request) {
       );
     }
 
-    // --------------------------------------------------
-    // 12. VALIDATE SUPERVISOR
-    // --------------------------------------------------
+    // ==================================================
+    // 13. VALIDATE SUPERVISOR
+    // ==================================================
+
     if (
       !supervisorUser ||
       supervisorUser.designation !== "supervisor" ||
@@ -351,84 +479,10 @@ export async function POST(request) {
       );
     }
 
-    // --------------------------------------------------
-    // 13. VALIDATE CAMPAIGN
-    // --------------------------------------------------
-    const campaignDoc = await Campaign.findById(campaign).lean();
+    // ==================================================
+    // 14. VALIDATE LOCATION
+    // ==================================================
 
-    if (!campaignDoc) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Campaign not found",
-        },
-        { status: 404 },
-      );
-    }
-
-    if (!campaignDoc.isActive) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Campaign is not active",
-        },
-        { status: 400 },
-      );
-    }
-
-    // --------------------------------------------------
-    // 14. VALIDATE GENDER
-    // --------------------------------------------------
-    if (!["male", "female"].includes(gender)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Gender must be male or female",
-        },
-        { status: 400 },
-      );
-    }
-
-    // --------------------------------------------------
-    // 15. PARSE NUMERIC VALUES
-    // --------------------------------------------------
-    const parsedAge = Number(age);
-    const parsedHouseNumber = Number(houseNumber);
-    const parsedDay = Number(day);
-
-    if (!Number.isFinite(parsedAge) || parsedAge < 0 || parsedAge > 59) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Age must be between 0 and 59",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!Number.isFinite(parsedHouseNumber)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid house number",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!Number.isFinite(parsedDay)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid day",
-        },
-        { status: 400 },
-      );
-    }
-
-    // --------------------------------------------------
-    // 16. LOCATION
-    // --------------------------------------------------
     const latitude = Number(location.latitude);
     const longitude = Number(location.longitude);
 
@@ -442,14 +496,119 @@ export async function POST(request) {
       );
     }
 
-    // --------------------------------------------------
-    // 17. CHECK DUPLICATE
-    // --------------------------------------------------
+    // ==================================================
+    // 15. VALIDATE GENDER
+    // ==================================================
+
+    if (!["male", "female"].includes(gender)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Gender must be male or female",
+        },
+        { status: 400 },
+      );
+    }
+
+    // ==================================================
+    // 16. PARSE + VALIDATE AGE
+    // ==================================================
+
+    const parsedAge = Number(age);
+
+    if (!Number.isInteger(parsedAge) || parsedAge < 0 || parsedAge > 59) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Age must be between 0 and 59",
+        },
+        { status: 400 },
+      );
+    }
+
+    // ==================================================
+    // 17. PARSE + VALIDATE HOUSE NUMBER
+    // ==================================================
+
+    const parsedHouseNumber = Number(houseNumber);
+
+    if (
+      !Number.isInteger(parsedHouseNumber) ||
+      parsedHouseNumber < 0 ||
+      parsedHouseNumber > 999
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "House number must be between 0 and 999",
+        },
+        { status: 400 },
+      );
+    }
+
+    // ==================================================
+    // 18. VALIDATE TEXT VALUES
+    // ==================================================
+
+    const cleanChildName = String(childName).trim();
+    const cleanFatherName = String(fatherName).trim();
+    const cleanAddress = String(address).trim();
+
+    if (!cleanChildName) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Child name is required",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!cleanFatherName) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Father name is required",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!cleanAddress) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Address is required",
+        },
+        { status: 400 },
+      );
+    }
+
+    // ==================================================
+    // 19. VALIDATE CONTACT NUMBER
+    // ==================================================
+
+    const cleanContactNo = contactNo ? String(contactNo).trim() : null;
+
+    if (cleanContactNo && !/^03\d{9}$/.test(cleanContactNo)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Please enter a valid Pakistani mobile number",
+        },
+        { status: 400 },
+      );
+    }
+
+    // ==================================================
+    // 20. CHECK DUPLICATE
+    // ==================================================
+
     const existingZerodose = await Zerodose.findOne({
-      campaign,
+      campaign: campaignId,
       user: userId,
-      childName,
-      fatherName,
+      childName: cleanChildName,
+      fatherName: cleanFatherName,
       houseNumber: parsedHouseNumber,
     }).lean();
 
@@ -463,58 +622,78 @@ export async function POST(request) {
       );
     }
 
-    // --------------------------------------------------
-    // 18. CREATE ZERO DOSE
-    // --------------------------------------------------
-    const zerodose = await Zerodose.create({
-      // Campaign comes from frontend
-      campaign,
+    // ==================================================
+    // 21. CREATE ZERO DOSE
+    // ==================================================
 
-      // Everything below comes from authenticated worker
+    const zerodose = await Zerodose.create({
+      // -----------------------------------------------
+      // Automatically determined from active campaign
+      // -----------------------------------------------
+      campaign: campaignId,
+
+      // -----------------------------------------------
+      // Automatically determined from authenticated user
+      // -----------------------------------------------
       district: districtId,
       town: townId,
       unionCouncil: unionCouncilId,
       ucmo: ucmoId,
       supervisor: supervisorId,
-
-      // Authenticated worker
       user: userId,
 
-      // Team automatically determined
+      // -----------------------------------------------
+      // Automatically determined from worker's team
+      // -----------------------------------------------
       teamLeader: teamLeaderUser._id,
       teamMember: teamMemberUser._id,
       teamNumber: parsedTeamNumber,
 
-      // Frontend input
+      // -----------------------------------------------
+      // Frontend child information
+      // -----------------------------------------------
       houseNumber: parsedHouseNumber,
-      childName,
-      fatherName,
+      childName: cleanChildName,
+      fatherName: cleanFatherName,
       gender,
       age: parsedAge,
-      address,
-      contactNo: contactNo || null,
-      day: parsedDay,
+      address: cleanAddress,
+      contactNo: cleanContactNo,
 
-      recordDate: recordDate ? new Date(recordDate) : new Date(),
+      // -----------------------------------------------
+      // Automatically calculated campaign day
+      // -----------------------------------------------
+      day,
+
+      // -----------------------------------------------
+      // Automatically created
+      // -----------------------------------------------
+      recordDate: new Date(),
 
       visitDate: null,
       coveredDate: null,
 
+      // -----------------------------------------------
+      // Frontend location
+      // -----------------------------------------------
       location: {
         latitude,
         longitude,
       },
 
+      // -----------------------------------------------
+      // Defaults
+      // -----------------------------------------------
       qrCode: null,
       vaccinator: null,
-
-      clientStatus: clientStatus || null,
-      vaccinationStatus: vaccinationStatus || "recorded",
+      clientStatus: null,
+      vaccinationStatus: "recorded",
     });
 
-    // --------------------------------------------------
-    // 19. POPULATE CREATED RECORD
-    // --------------------------------------------------
+    // ==================================================
+    // 22. POPULATE CREATED RECORD
+    // ==================================================
+
     const populatedZerodose = await Zerodose.findById(zerodose._id)
       .populate("campaign", "name year month startDate endDate")
       .populate("district", "name code")
@@ -537,9 +716,10 @@ export async function POST(request) {
       .populate("vaccinator", "name email contactNumber designation")
       .lean();
 
-    // --------------------------------------------------
-    // 20. SUCCESS
-    // --------------------------------------------------
+    // ==================================================
+    // 23. SUCCESS
+    // ==================================================
+
     return NextResponse.json(
       {
         success: true,

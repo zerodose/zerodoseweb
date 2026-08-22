@@ -229,3 +229,43 @@ export default function Page() {
     </div>
   );
 }
+
+
+
+
+
+
+//  const campaignStart = new Date(campaign.startDate);
+
+//     if (Number.isNaN(campaignStart.getTime())) {
+//       throw new Error("Invalid campaign start date.");
+//     }
+
+//     campaignStart.setHours(0, 0, 0, 0);
+
+//     const campaignEnd = new Date(campaign.endDate);
+
+//     if (Number.isNaN(campaignEnd.getTime())) {
+//       throw new Error("Invalid campaign end date.");
+//     }
+
+//     campaignEnd.setHours(0, 0, 0, 0);
+
+//     const today = new Date();
+//     today.setHours(0, 0, 0, 0);
+
+//     const day =
+//       Math.floor(
+//         (today.getTime() - campaignStart.getTime()) / (1000 * 60 * 60 * 24),
+//       ) + 1;
+
+//     const campaignDays =
+//       Math.floor(
+//         (campaignEnd.getTime() - campaignStart.getTime()) /
+//           (1000 * 60 * 60 * 24),
+//       ) + 1;
+
+//     if (day < 1 || day > campaignDays) {
+//       toast.error("Today is outside the current campaign period.");
+//       return;
+//     }

@@ -2,9 +2,13 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 
 import { connectDB } from "@/lib/db";
-import Zerodose from "@/models/Zerodose";
 import PendingZerodose from "@/models/PendingZerodose";
+import Zerodose from "@/models/Zerodose";
 import User from "@/models/User";
+import Campaign from "@/models/Campaign";
+import District from "@/models/District";
+import Town from "@/models/Town";
+import UnionCouncil from "@/models/UnionCouncil";
 
 export async function POST(request) {
   try {

@@ -867,7 +867,7 @@ export default function ZerodoseDetailPage() {
         </DetailSection>
 
         {/* Location */}
-        <DetailSection
+        {/* <DetailSection
           icon={Navigation}
           title="Location"
           description="GPS location captured when the zerodose was recorded."
@@ -883,11 +883,10 @@ export default function ZerodoseDetailPage() {
             label="Longitude"
             value={zerodose.location?.longitude}
           />
-
-        </DetailSection>
+        </DetailSection> */}
 
         {/* Record Information */}
-        <DetailSection
+        {/* <DetailSection
           icon={Clock3}
           title="Record Information"
           description="Record creation and last modification information."
@@ -905,7 +904,7 @@ export default function ZerodoseDetailPage() {
             label="Updated At"
             value={formatDate(zerodose.updatedAt)}
           />
-        </DetailSection>
+        </DetailSection> */}
 
         {/* Update Approval Information */}
         {zerodose.updateApproved === true && (
@@ -1019,7 +1018,7 @@ export default function ZerodoseDetailPage() {
 
 function DetailSection({ icon: Icon, title, description, children }) {
   return (
-    <section className="border-border bg-background overflow-hidden rounded-2xl border shadow-sm">
+    <section className="border-border bg-primary/10 overflow-hidden rounded-2xl border shadow-sm">
       <div className="border-border flex items-center gap-3 border-b p-4 md:p-5">
         <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
           <Icon className="h-5 w-5" />
@@ -1040,6 +1039,13 @@ function DetailSection({ icon: Icon, title, description, children }) {
 }
 
 function DetailItem({ icon: Icon, label, value }) {
+  const displayValue =
+    typeof value === "number" && value >= 0 && value < 10
+      ? `0${value}`
+      : value !== null && value !== undefined && value !== ""
+        ? value
+        : "-";
+
   return (
     <div>
       <div className="text-text-secondary flex items-center gap-1.5 text-xs">
@@ -1049,7 +1055,7 @@ function DetailItem({ icon: Icon, label, value }) {
       </div>
 
       <p className="text-text mt-1.5 text-sm font-medium break-words capitalize">
-        {value !== null && value !== undefined && value !== "" ? value : "-"}
+        {displayValue}
       </p>
     </div>
   );

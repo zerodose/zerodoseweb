@@ -44,6 +44,535 @@ async function getAuthUser(request) {
   }
 }
 
+export async function POST(request) {
+  try {
+    await connectDB();
+
+    // --------------------------------------------------
+    // 1. AUTHENTICATED USER
+    // --------------------------------------------------
+    const authUser = await getAuthUser(request);
+
+    if (!authUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Unauthorized",
+        },
+        { status: 401 },
+      );
+    }
+
+    // Only worker can create Zerodose
+    if (authUser.designation !== "worker") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Only workers can create Zerodose records",
+        },
+        { status: 403 },
+      );
+    }
+
+    // --------------------------------------------------
+    // 2. FRONTEND INPUT
+    // --------------------------------------------------
+    const body = await request.json();
+
+    const {
+      campaign,
+      houseNumber,
+      childName,
+      fatherName,
+      gender,
+      age,
+      address,
+      contactNo,
+      day,
+      recordDate,
+      location,
+      clientStatus,
+      vaccinationStatus,
+    } = body;
+
+    // --------------------------------------------------
+    // 3. ONLY FRONTEND REQUIRED FIELDS
+    // --------------------------------------------------
+    if (
+      !campaign ||
+      houseNumber === undefined ||
+      !childName ||
+      !fatherName ||
+      !gender ||
+      age === undefined ||
+      !address ||
+      day === undefined ||
+      !location ||
+      location.latitude === undefined ||
+      location.longitude === undefined
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Required fields are missing",
+        },
+        { status: 400 },
+      );
+    }
+
+    // --------------------------------------------------
+    // 4. VALIDATE CAMPAIGN ID
+    // --------------------------------------------------
+    if (!mongoose.Types.ObjectId.isValid(campaign)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid campaign ID",
+        },
+        { status: 400 },
+      );
+    }
+
+    // --------------------------------------------------
+    // 5. GET AUTHENTICATED WORKER FROM DATABASE
+    // --------------------------------------------------
+    const workerUser = await User.findById(authUser._id)
+      .select(
+        "_id name designation isActive district town unionCouncil ucmo supervisor teamNumber workerRole",
+      )
+      .lean();
+
+    if (
+      !workerUser ||
+      workerUser.designation !== "worker" ||
+      !workerUser.isActive
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid or inactive worker",
+        },
+        { status: 400 },
+      );
+    }
+
+    // --------------------------------------------------
+    // 6. GET ALL RELATIONAL DETAILS FROM WORKER
+    // --------------------------------------------------
+
+    const userId = workerUser._id;
+
+    const districtId = workerUser.district;
+    const townId = workerUser.town;
+    const unionCouncilId = workerUser.unionCouncil;
+    const ucmoId = workerUser.ucmo;
+    const supervisorId = workerUser.supervisor;
+    const teamNumber = workerUser.teamNumber;
+
+    if (!districtId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Worker is not assigned to a district",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!townId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Worker is not assigned to a town",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!unionCouncilId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Worker is not assigned to a union council",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!ucmoId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Worker is not assigned to a UCMO",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!supervisorId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Worker is not assigned to a supervisor",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (teamNumber === undefined || teamNumber === null) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Worker is not assigned to a team",
+        },
+        { status: 400 },
+      );
+    }
+
+    // --------------------------------------------------
+    // 7. VALIDATE TEAM NUMBER
+    // --------------------------------------------------
+    const parsedTeamNumber = Number(teamNumber);
+
+    if (!Number.isFinite(parsedTeamNumber)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid worker team number",
+        },
+        { status: 400 },
+      );
+    }
+
+    // --------------------------------------------------
+    // 8. FIND TEAM LEADER + TEAM MEMBER
+    // --------------------------------------------------
+    const teamWorkers = await User.find({
+      designation: "worker",
+      isActive: true,
+      supervisor: supervisorId,
+      teamNumber: parsedTeamNumber,
+      unionCouncil: unionCouncilId,
+    })
+      .select(
+        "_id name designation supervisor teamNumber workerRole unionCouncil",
+      )
+      .lean();
+
+    const teamLeaderUser = teamWorkers.find(
+      (worker) => worker.workerRole === "teamLeader",
+    );
+
+    const teamMemberUser = teamWorkers.find(
+      (worker) => worker.workerRole === "teamMember",
+    );
+
+    if (!teamLeaderUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Team leader not found for this worker's team",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!teamMemberUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Team member not found for this worker's team",
+        },
+        { status: 400 },
+      );
+    }
+
+    // --------------------------------------------------
+    // 9. MAKE SURE AUTHENTICATED WORKER IS PART OF TEAM
+    // --------------------------------------------------
+    const isWorkerInTeam = teamWorkers.some(
+      (worker) => worker._id.toString() === userId.toString(),
+    );
+
+    if (!isWorkerInTeam) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Worker does not belong to the assigned team",
+        },
+        { status: 400 },
+      );
+    }
+
+    // --------------------------------------------------
+    // 10. GET SUPERVISOR + UCMO
+    // --------------------------------------------------
+    const [ucmoUser, supervisorUser] = await Promise.all([
+      User.findById(ucmoId)
+        .select(
+          "_id name email contactNumber designation isActive district town unionCouncil",
+        )
+        .lean(),
+
+      User.findById(supervisorId)
+        .select(
+          "_id name email contactNumber designation supervisorCode isActive district town unionCouncil",
+        )
+        .lean(),
+    ]);
+
+    // --------------------------------------------------
+    // 11. VALIDATE UCMO
+    // --------------------------------------------------
+    if (!ucmoUser || ucmoUser.designation !== "ucmo" || !ucmoUser.isActive) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid or inactive UCMO assigned to worker",
+        },
+        { status: 400 },
+      );
+    }
+
+    // --------------------------------------------------
+    // 12. VALIDATE SUPERVISOR
+    // --------------------------------------------------
+    if (
+      !supervisorUser ||
+      supervisorUser.designation !== "supervisor" ||
+      !supervisorUser.isActive
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid or inactive supervisor assigned to worker",
+        },
+        { status: 400 },
+      );
+    }
+
+    // --------------------------------------------------
+    // 13. VALIDATE CAMPAIGN
+    // --------------------------------------------------
+    const campaignDoc = await Campaign.findById(campaign).lean();
+
+    if (!campaignDoc) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Campaign not found",
+        },
+        { status: 404 },
+      );
+    }
+
+    if (!campaignDoc.isActive) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Campaign is not active",
+        },
+        { status: 400 },
+      );
+    }
+
+    // --------------------------------------------------
+    // 14. VALIDATE GENDER
+    // --------------------------------------------------
+    if (!["male", "female"].includes(gender)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Gender must be male or female",
+        },
+        { status: 400 },
+      );
+    }
+
+    // --------------------------------------------------
+    // 15. PARSE NUMERIC VALUES
+    // --------------------------------------------------
+    const parsedAge = Number(age);
+    const parsedHouseNumber = Number(houseNumber);
+    const parsedDay = Number(day);
+
+    if (!Number.isFinite(parsedAge) || parsedAge < 0 || parsedAge > 59) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Age must be between 0 and 59",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!Number.isFinite(parsedHouseNumber)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid house number",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!Number.isFinite(parsedDay)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid day",
+        },
+        { status: 400 },
+      );
+    }
+
+    // --------------------------------------------------
+    // 16. LOCATION
+    // --------------------------------------------------
+    const latitude = Number(location.latitude);
+    const longitude = Number(location.longitude);
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid location",
+        },
+        { status: 400 },
+      );
+    }
+
+    // --------------------------------------------------
+    // 17. CHECK DUPLICATE
+    // --------------------------------------------------
+    const existingZerodose = await Zerodose.findOne({
+      campaign,
+      user: userId,
+      childName,
+      fatherName,
+      houseNumber: parsedHouseNumber,
+    }).lean();
+
+    if (existingZerodose) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "This Zerodose record already exists",
+        },
+        { status: 409 },
+      );
+    }
+
+    // --------------------------------------------------
+    // 18. CREATE ZERO DOSE
+    // --------------------------------------------------
+    const zerodose = await Zerodose.create({
+      // Campaign comes from frontend
+      campaign,
+
+      // Everything below comes from authenticated worker
+      district: districtId,
+      town: townId,
+      unionCouncil: unionCouncilId,
+      ucmo: ucmoId,
+      supervisor: supervisorId,
+
+      // Authenticated worker
+      user: userId,
+
+      // Team automatically determined
+      teamLeader: teamLeaderUser._id,
+      teamMember: teamMemberUser._id,
+      teamNumber: parsedTeamNumber,
+
+      // Frontend input
+      houseNumber: parsedHouseNumber,
+      childName,
+      fatherName,
+      gender,
+      age: parsedAge,
+      address,
+      contactNo: contactNo || null,
+      day: parsedDay,
+
+      recordDate: recordDate ? new Date(recordDate) : new Date(),
+
+      visitDate: null,
+      coveredDate: null,
+
+      location: {
+        latitude,
+        longitude,
+      },
+
+      qrCode: null,
+      vaccinator: null,
+
+      clientStatus: clientStatus || null,
+      vaccinationStatus: vaccinationStatus || "recorded",
+    });
+
+    // --------------------------------------------------
+    // 19. POPULATE CREATED RECORD
+    // --------------------------------------------------
+    const populatedZerodose = await Zerodose.findById(zerodose._id)
+      .populate("campaign", "name year month startDate endDate")
+      .populate("district", "name code")
+      .populate("town", "name code")
+      .populate("unionCouncil", "name code")
+      .populate("ucmo", "name email contactNumber designation")
+      .populate(
+        "supervisor",
+        "name email contactNumber designation supervisorCode",
+      )
+      .populate("user", "name email contactNumber designation")
+      .populate(
+        "teamLeader",
+        "name email contactNumber designation workerRole teamNumber",
+      )
+      .populate(
+        "teamMember",
+        "name email contactNumber designation workerRole teamNumber",
+      )
+      .populate("vaccinator", "name email contactNumber designation")
+      .lean();
+
+    // --------------------------------------------------
+    // 20. SUCCESS
+    // --------------------------------------------------
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Zerodose created successfully",
+        data: populatedZerodose,
+      },
+      { status: 201 },
+    );
+  } catch (error) {
+    console.error("POST /api/zerodose error:", error);
+
+    if (error instanceof mongoose.Error.ValidationError) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Validation failed",
+          errors: Object.values(error.errors).map((err) => err.message),
+        },
+        { status: 400 },
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to create Zerodose record",
+        error: error.message,
+      },
+      { status: 500 },
+    );
+  }
+}
+
 export async function GET(request) {
   try {
     await connectDB();
@@ -420,422 +949,6 @@ export async function GET(request) {
       {
         success: false,
         message: "Failed to fetch Zerodose records",
-        error: error.message,
-      },
-      { status: 500 },
-    );
-  }
-}
-
-export async function POST(request) {
-  try {
-    await connectDB();
-
-    const authUser = await getAuthUser(request);
-
-    if (!authUser) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Unauthorized",
-        },
-        { status: 401 },
-      );
-    }
-
-    const body = await request.json();
-
-    const {
-      campaign,
-      district,
-      town,
-      unionCouncil,
-      ucmo,
-      supervisor,
-      user,
-      teamLeader,
-      teamMember,
-      teamNumber,
-      houseNumber,
-      childName,
-      fatherName,
-      gender,
-      age,
-      address,
-      contactNo,
-      day,
-      recordDate,
-      location,
-      clientStatus,
-      vaccinationStatus,
-    } = body;
-
-    if (
-      !campaign ||
-      !district ||
-      !town ||
-      !unionCouncil ||
-      !ucmo ||
-      !supervisor ||
-      !user ||
-      !teamLeader ||
-      !teamMember ||
-      teamNumber === undefined ||
-      houseNumber === undefined ||
-      !childName ||
-      !fatherName ||
-      !gender ||
-      age === undefined ||
-      !address ||
-      day === undefined ||
-      !location ||
-      location.latitude === undefined ||
-      location.longitude === undefined
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Required fields are missing",
-        },
-        { status: 400 },
-      );
-    }
-
-    const objectIdFields = {
-      campaign,
-      district,
-      town,
-      unionCouncil,
-      ucmo,
-      supervisor,
-      user,
-      teamLeader,
-      teamMember,
-    };
-
-    for (const [field, value] of Object.entries(objectIdFields)) {
-      if (!mongoose.Types.ObjectId.isValid(value)) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: `Invalid ${field} ID`,
-          },
-          { status: 400 },
-        );
-      }
-    }
-
-    if (!["male", "female"].includes(gender)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Gender must be male or female",
-        },
-        { status: 400 },
-      );
-    }
-
-    const parsedAge = Number(age);
-    const parsedTeamNumber = Number(teamNumber);
-    const parsedHouseNumber = Number(houseNumber);
-    const parsedDay = Number(day);
-
-    if (!Number.isFinite(parsedAge) || parsedAge < 0 || parsedAge > 59) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Age must be between 0 and 59",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!Number.isFinite(parsedTeamNumber)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid team number",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!Number.isFinite(parsedHouseNumber)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid house number",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (!Number.isFinite(parsedDay)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid day",
-        },
-        { status: 400 },
-      );
-    }
-
-    const latitude = Number(location.latitude);
-    const longitude = Number(location.longitude);
-
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid location",
-        },
-        { status: 400 },
-      );
-    }
-
-    const [campaignDoc, users] = await Promise.all([
-      Campaign.findById(campaign).lean(),
-      User.find({
-        _id: {
-          $in: [ucmo, supervisor, user, teamLeader, teamMember],
-        },
-      })
-        .select(
-          "_id designation isActive supervisor teamNumber workerRole unionCouncil",
-        )
-        .lean(),
-    ]);
-
-    if (!campaignDoc) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Campaign not found",
-        },
-        { status: 404 },
-      );
-    }
-
-    if (!campaignDoc.isActive) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Campaign is not active",
-        },
-        { status: 400 },
-      );
-    }
-
-    const userMap = new Map(users.map((item) => [item._id.toString(), item]));
-
-    const ucmoUser = userMap.get(ucmo);
-    const supervisorUser = userMap.get(supervisor);
-    const workerUser = userMap.get(user);
-    const teamLeaderUser = userMap.get(teamLeader);
-    const teamMemberUser = userMap.get(teamMember);
-
-    if (!ucmoUser || ucmoUser.designation !== "ucmo" || !ucmoUser.isActive) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid UCMO",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (
-      !supervisorUser ||
-      supervisorUser.designation !== "supervisor" ||
-      !supervisorUser.isActive
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid supervisor",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (
-      !workerUser ||
-      workerUser.designation !== "worker" ||
-      !workerUser.isActive
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid worker",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (
-      !teamLeaderUser ||
-      teamLeaderUser.designation !== "worker" ||
-      !teamLeaderUser.isActive
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid team leader",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (
-      !teamMemberUser ||
-      teamMemberUser.designation !== "worker" ||
-      !teamMemberUser.isActive
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid team member",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (workerUser.supervisor?.toString() !== supervisor) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Worker does not belong to this supervisor",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (teamLeaderUser.supervisor?.toString() !== supervisor) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Team leader does not belong to this supervisor",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (teamMemberUser.supervisor?.toString() !== supervisor) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Team member does not belong to this supervisor",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (
-      workerUser.unionCouncil?.toString() !== unionCouncil ||
-      supervisorUser.unionCouncil?.toString() !== unionCouncil ||
-      ucmoUser.unionCouncil?.toString() !== unionCouncil
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Users do not belong to the specified union council",
-        },
-        { status: 400 },
-      );
-    }
-
-    const existingZerodose = await Zerodose.findOne({
-      campaign,
-      user,
-      childName,
-      fatherName,
-      houseNumber: parsedHouseNumber,
-    }).lean();
-
-    if (existingZerodose) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "This Zerodose record already exists",
-        },
-        { status: 409 },
-      );
-    }
-
-    const zerodose = await Zerodose.create({
-      campaign,
-      district,
-      town,
-      unionCouncil,
-      ucmo,
-      supervisor,
-      user,
-      teamLeader,
-      teamMember,
-      teamNumber: parsedTeamNumber,
-      houseNumber: parsedHouseNumber,
-      childName,
-      fatherName,
-      gender,
-      age: parsedAge,
-      address,
-      contactNo: contactNo || null,
-      day: parsedDay,
-      recordDate: recordDate ? new Date(recordDate) : new Date(),
-      visitDate: null,
-      coveredDate: null,
-      location: {
-        latitude,
-        longitude,
-      },
-      qrCode: null,
-      vaccinator: null,
-      clientStatus: clientStatus || null,
-      vaccinationStatus: vaccinationStatus || "recorded",
-    });
-
-    const populatedZerodose = await Zerodose.findById(zerodose._id)
-      .populate("campaign", "name year month startDate endDate")
-      .populate("district", "name code")
-      .populate("town", "name code")
-      .populate("unionCouncil", "name code")
-      .populate("ucmo", "name email contactNumber designation")
-      .populate(
-        "supervisor",
-        "name email contactNumber designation supervisorCode",
-      )
-      .populate("user", "name email contactNumber designation")
-      .populate("teamLeader", "name email contactNumber designation")
-      .populate("teamMember", "name email contactNumber designation")
-      .populate("vaccinator", "name email contactNumber designation")
-      .lean();
-
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Zerodose created successfully",
-        data: populatedZerodose,
-      },
-      { status: 201 },
-    );
-  } catch (error) {
-    console.error("POST /api/zerodose error:", error);
-
-    if (error instanceof mongoose.Error.ValidationError) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Validation failed",
-          errors: Object.values(error.errors).map((err) => err.message),
-        },
-        { status: 400 },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Failed to create Zerodose record",
         error: error.message,
       },
       { status: 500 },

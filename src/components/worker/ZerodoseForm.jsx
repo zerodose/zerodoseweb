@@ -233,6 +233,7 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
 
     const payload = {
       workerId: authUser.id,
+      zerodoseId,
       childName: formData.childName.trim(),
       fatherName: formData.fatherName.trim(),
       age: Number(formData.age),

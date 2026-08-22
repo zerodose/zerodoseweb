@@ -180,9 +180,9 @@ function canAccessZerodose(user, zerodose) {
   return false;
 }
 
-async function getZerodose(id) {
-  return populateZerodose(Zerodose.findById(id)).lean();
-}
+// async function getZerodose(id) {
+//   return populateZerodose(Zerodose.findById(id)).lean();
+// }
 
 export async function GET(request, { params }) {
   try {
@@ -208,7 +208,24 @@ export async function GET(request, { params }) {
       );
     }
 
-    const zerodose = await getZerodose(id);
+    const zerodose = await Zerodose.findById(id)
+      .populate("campaign", "name year month startDate endDate isActive")
+      .populate("district", "name code")
+      .populate("town", "name code")
+      .populate("unionCouncil", "name code")
+      .populate("ucmo", "name contactNumber")
+      .populate("supervisor", "name contactNumber supervisorCode")
+      .populate("user", "name contactNumber designation workerRole teamNumber")
+      .populate(
+        "teamLeader",
+        "name contactNumber designation workerRole teamNumber",
+      )
+      .populate(
+        "teamMember",
+        "name contactNumber designation workerRole teamNumber",
+      )
+      .populate("vaccinator", "name contactNumber designation")
+      .lean();
 
     if (!zerodose) {
       return NextResponse.json(
@@ -237,7 +254,7 @@ export async function GET(request, { params }) {
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to fetch Zerodose.",
+        message: error?.message || "Failed to fetch Zerodose.",
       },
       {
         status: 500,

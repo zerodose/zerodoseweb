@@ -7,6 +7,9 @@ import { connectDB } from "@/lib/db";
 import Zerodose from "@/models/Zerodose";
 import User from "@/models/User";
 import Campaign from "@/models/Campaign";
+import District from "@/models/District";
+import Town from "@/models/Town";
+import UnionCouncil from "@/models/UnionCouncil";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 

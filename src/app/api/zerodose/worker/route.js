@@ -87,6 +87,21 @@ export async function POST(request) {
       );
     }
 
+    // ============================================================
+    // LOCK ZERODOSE AFTER COVERED
+    // ============================================================
+
+    if (zerodose.vaccinationStatus === "covered") {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Zerodose is locked. Changes cannot be made after it is covered.",
+        },
+        { status: 400 },
+      );
+    }
+
     if (String(zerodose.user) !== String(workerId)) {
       return NextResponse.json(
         {

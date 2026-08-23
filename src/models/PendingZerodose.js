@@ -6,7 +6,6 @@ const PendingZerodoseSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Zerodose",
       required: true,
-      unique: true,
       index: true,
     },
 
@@ -176,6 +175,16 @@ const PendingZerodoseSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+  },
+);
+
+PendingZerodoseSchema.index(
+  { zerodose: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      status: "pending",
+    },
   },
 );
 

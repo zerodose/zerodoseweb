@@ -28,6 +28,7 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [processingId, setProcessingId] = useState(null);
+  const [processingAction, setProcessingAction] = useState(null);
   const [error, setError] = useState("");
   const [pageReady, setPageReady] = useState(false);
 
@@ -652,6 +653,7 @@ export default function Page() {
          */
 
         setProcessingId(requestId);
+        setProcessingAction(action);
 
         const authUser = getAuthUser();
 
@@ -708,6 +710,7 @@ export default function Page() {
         );
       } finally {
         setProcessingId(null);
+        setProcessingAction(null);
       }
     },
     [getAuthUser, getId, getRequestId, getZerodoseId],
@@ -777,6 +780,7 @@ export default function Page() {
             request={request}
             expanded={expanded}
             processing={processing}
+              processingAction={processingAction}
             changedFields={changedFields}
             workerName={workerName}
             workerContact={workerContact}

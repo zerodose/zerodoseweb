@@ -19,6 +19,7 @@ export default function ZerodoseApprovalCard({
   request,
   expanded = false,
   processing = false,
+  processingAction = null,
   changedFields = [],
   workerName = "Unknown Worker",
   workerContact = "—",
@@ -361,7 +362,7 @@ export default function ZerodoseApprovalCard({
 
             <div className="border-border bg-surface border-t p-4 sm:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                {/* REJECT */}
+                {/* APPROVE */}
 
                 <button
                   type="button"
@@ -369,30 +370,39 @@ export default function ZerodoseApprovalCard({
                   disabled={processing}
                   className="bg-primary text-primary-foreground hover:bg-primary-dark inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {processing ? (
+                  {processing && processingAction === "approve" ? (
                     <RefreshCw size={16} className="animate-spin" />
                   ) : (
                     <CheckCircle2 size={16} />
                   )}
 
-                  <span>{processing ? "Processing..." : "Approve Update"}</span>
+                  <span>
+                    {processing && processingAction === "approve"
+                      ? "Processing..."
+                      : "Approve Update"}
+                  </span>
                 </button>
+
+                {/* REJECT */}
+
                 <button
                   type="button"
                   onClick={onReject}
                   disabled={processing}
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-5 text-sm font-semibold text-red-600 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-red-300 hover:bg-red-100 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {processing ? (
+                  {processing && processingAction === "reject" ? (
                     <RefreshCw size={16} className="animate-spin" />
                   ) : (
                     <XCircle size={16} />
                   )}
 
-                  <span>{processing ? "Processing..." : "Reject Request"}</span>
+                  <span>
+                    {processing && processingAction === "reject"
+                      ? "Processing..."
+                      : "Reject Request"}
+                  </span>
                 </button>
-
-                {/* APPROVE */}
               </div>
             </div>
           </div>
@@ -402,25 +412,25 @@ export default function ZerodoseApprovalCard({
   );
 }
 
-function DetailItem({ icon: Icon, label, value }) {
-  const displayValue =
-    typeof value === "number" && value >= 0 && value < 10
-      ? `0${value}`
-      : value !== null && value !== undefined && value !== ""
-        ? value
-        : "-";
+// function DetailItem({ icon: Icon, label, value }) {
+//   const displayValue =
+//     typeof value === "number" && value >= 0 && value < 10
+//       ? `0${value}`
+//       : value !== null && value !== undefined && value !== ""
+//         ? value
+//         : "-";
 
-  return (
-    <div>
-      <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-        {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
+//   return (
+//     <div>
+//       <div className="text-text-secondary flex items-center gap-1.5 text-xs">
+//         {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
 
-        <span>{label}</span>
-      </div>
+//         <span>{label}</span>
+//       </div>
 
-      <p className="text-text mt-1.5 text-sm font-medium break-words capitalize">
-        {displayValue}
-      </p>
-    </div>
-  );
-}
+//       <p className="text-text mt-1.5 text-sm font-medium break-words capitalize">
+//         {displayValue}
+//       </p>
+//     </div>
+//   );
+// }

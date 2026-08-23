@@ -1121,7 +1121,7 @@ import {
 
 import ClientPageHeader from "@/components/ui/ClientPageHeader";
 import Loader from "@/components/ui/Loader";
-import ZerodoseApprovalCard from "@/components/ui/ZerodoseApprovalCard";
+import SupervisorApprovalCard from "@/components/ucmo/SupervisorApprovalCard";
 
 export default function Page() {
   const router = useRouter();
@@ -1241,9 +1241,6 @@ export default function Page() {
   // ============================================================
 
   const getFieldIcon = useCallback((field) => {
-    // Keep imports outside of callback if you want custom icons.
-    // ZerodoseApprovalCard already has fallback icon handling.
-    // This function is intentionally kept compatible with the card.
 
     const {
       User,
@@ -2130,7 +2127,7 @@ export default function Page() {
                         }ms`,
                       }}
                     >
-                      <ZerodoseApprovalCard
+                      <SupervisorApprovalCard
                         request={request}
                         expanded={expanded}
                         processing={processing}

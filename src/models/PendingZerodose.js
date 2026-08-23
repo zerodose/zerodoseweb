@@ -6,7 +6,6 @@ const PendingZerodoseSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Zerodose",
       required: true,
-      index: true,
     },
 
     requestedBy: {

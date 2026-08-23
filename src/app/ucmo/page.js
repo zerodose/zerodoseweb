@@ -667,7 +667,7 @@ export default function Page() {
               ACTIONS
           ====================================================== */}
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 mb-4">
           <ActionLinkButton
             href="/ucmo/supervisor-management"
             label="Teams Management"

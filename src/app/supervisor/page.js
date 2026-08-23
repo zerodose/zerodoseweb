@@ -13,6 +13,7 @@ import CurrentCampaign from "@/components/supervisor/CurrentCampaign";
 import PreviousCampaigns from "@/components/supervisor/PreviousCampaigns";
 import UCMOActions from "@/components/ucmo/UCMOActions";
 import { getPendingZerodoseCount } from "@/api/zerodoseApprovalApi";
+import { LayoutDashboard } from "lucide-react";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
@@ -392,6 +393,10 @@ export default function Page() {
 
   const totalRecorded = supervisorUCData.length;
 
+  const totalVisited = supervisorUCData.filter(
+    (item) => item.vaccinationStatus === "visited",
+  ).length;
+
   const totalCovered = supervisorUCData.filter(
     (item) => item.vaccinationStatus === "covered" || Boolean(item.coveredDate),
   ).length;
@@ -403,7 +408,7 @@ export default function Page() {
       <div className="mb-4 flex flex-col md:mb-6">
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-text text-2xl font-bold md:text-3xl">
-            Supervisor
+            Supervisor 
           </h1>
           <UCMOActions
             link={"/supervisor/zerodoseApproval"}
@@ -425,9 +430,9 @@ export default function Page() {
       )}
 
       <SupervisorSummaryCards
-        currentUC={currentUC}
         totalTeams={activeTeams.length}
         recordedZerodose={totalRecorded}
+        visitedZerodose={totalVisited}
         coveredZerodose={totalCovered}
       />
 

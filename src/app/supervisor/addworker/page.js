@@ -46,7 +46,7 @@ export default function Page() {
       setSuccess(response.message || "Worker added successfully.");
 
       reset();
-
+      router.back();
       // Route change intentionally removed.
       // Page isi screen par rahega.
     } catch (error) {
@@ -76,7 +76,7 @@ export default function Page() {
           Form
       ===================================================== */}
 
-      <div className="bg-surface mx-auto ">
+      <div className="bg-surface mx-auto">
         <div className="border-border rounded-2xl border p-5 md:p-6">
           <form onSubmit={handleSubmit(onSubmit)}>
             {/* =================================================

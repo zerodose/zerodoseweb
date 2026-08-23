@@ -10,6 +10,7 @@ import {
 import { useState } from "react";
 
 import ZerodoseList from "./ZerodoseList";
+import { formatDate } from "@/lib/formatDate";
 
 export default function SupervisorCard({
   supervisor,  

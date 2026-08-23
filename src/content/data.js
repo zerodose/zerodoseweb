@@ -1,11 +1,9 @@
 import {
   LayoutDashboard,
   Users,
-  MapPin,
   Settings,
   Megaphone,
   Database,
-  Ad,
   MapPinned,
   Building2,
   Syringe,
@@ -15,6 +13,7 @@ import {
   Network,
   UsersRound,
   UserCog,
+  UserPlus,
 } from "lucide-react";
 
 export const adminSidebarData = [
@@ -209,13 +208,13 @@ export const supervisorSidebar = [
   {
     title: "Workers",
     href: "/supervisor/workers",
-    icon: Users,
+    icon: UserPlus,
   },
 
   {
-    title: "Zerodose",
+    title: "Zerodose List",
     href: "/supervisor/zerodose",
-    icon: Database,
+    icon: Syringe,
   },
 ];
 

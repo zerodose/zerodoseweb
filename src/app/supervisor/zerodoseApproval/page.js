@@ -854,9 +854,9 @@ export default function Page() {
               : "translate-y-10 scale-[0.98] opacity-0"
           }`}
         >
-          <div className="bg-primary/10 pointer-events-none absolute -top-20 left-10 h-40 w-72 rounded-full blur-3xl" />
+          {/* <div className="bg-primary/10 pointer-events-none absolute -top-20 left-10 h-40 w-72 rounded-full blur-3xl" /> */}
 
-          <div className="bg-primary/5 pointer-events-none absolute -right-20 -bottom-20 h-40 w-64 rounded-full blur-3xl" />
+          {/* <div className="bg-primary/5 pointer-events-none absolute -right-20 -bottom-20 h-40 w-64 rounded-full blur-3xl" /> */}
 
           <div className="relative">
             <ClientPageHeader

@@ -18,9 +18,6 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [approvalMessage, setApprovalMessage] = useState("");
-  // =====================================================
-  // React Hook Form
-  // =====================================================
 
   const {
     register,

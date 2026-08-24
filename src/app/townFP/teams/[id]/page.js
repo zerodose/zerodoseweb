@@ -1,360 +1,651 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import {
   ArrowLeft,
-  BriefcaseBusiness,
-  Building2,
-  Hash,
+  CalendarDays,
+  ChevronDown,
+  CircleCheck,
+  ClipboardList,
+  Eye,
+  History,
   MapPin,
-  Users,
   UserRound,
-  UsersRound,
 } from "lucide-react";
 
-export default function TeamDetailPage() {
+import Table from "@/components/admin/table/Table";
+
+import exportPDF from "@/utils/export/exportPDF";
+import exportExcel from "@/utils/export/exportExcel";
+import { formatDate } from "@/lib/formatDate";
+
+export default function TeamsDetailPage() {
   const router = useRouter();
   const params = useParams();
 
-  const id = params?.id;
-
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const ucmoId = params?.id;
 
   // ============================================================
-  // Get Team / UCMO Detail
+  // State
+  // ============================================================
+
+  const [users, setUsers] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+
+  const [search, setSearch] = useState("");
+
+  const [campaigns, setCampaigns] = useState([]);
+
+  const [currentCampaign, setCurrentCampaign] = useState(null);
+
+  const [previousCampaigns, setPreviousCampaigns] = useState([]);
+
+  const [selectedCampaign, setSelectedCampaign] = useState(null);
+
+  const [campaignMode, setCampaignMode] = useState("current");
+
+  const [ucmo, setUcmo] = useState(null);
+
+  const [town, setTown] = useState(null);
+
+  // ============================================================
+  // Pagination
+  // ============================================================
+
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
+
+  // ============================================================
+  // Campaign Display
+  // ============================================================
+
+  const formatCampaignName = (campaign) => {
+    if (!campaign) {
+      return "-";
+    }
+
+    const campaignName = campaign?.name || "Campaign";
+
+    const month =
+      campaign?.month !== undefined && campaign?.month !== null
+        ? `Month ${campaign.month}`
+        : "";
+
+    const year =
+      campaign?.year !== undefined && campaign?.year !== null
+        ? String(campaign.year)
+        : "";
+
+    return [campaignName, month, year].filter(Boolean).join(" - ");
+  };
+
+  // ============================================================
+  // Get Current TownFP
   // ============================================================
 
   useEffect(() => {
-    if (!id) {
+    try {
+      const storedUser = localStorage.getItem("authUser");
+
+      if (!storedUser) {
+        router.replace("/auth/login");
+        return;
+      }
+
+      const authUser = JSON.parse(storedUser);
+
+      if (String(authUser?.designation || "").toLowerCase() !== "townfp") {
+        router.replace("/dashboard");
+      }
+    } catch (error) {
+      console.error("Load auth user error:", error);
+
+      router.replace("/auth/login");
+    }
+  }, [router]);
+
+  // ============================================================
+  // Get Zerodose Summary
+  // ============================================================
+
+  const getZerodoseData = async () => {
+    if (!ucmoId) {
       return;
     }
 
-    const getTeamDetail = async () => {
-      try {
-        setLoading(true);
+    try {
+      setLoading(true);
 
-        const response = await fetch(`/api/users/town-team-summary/${id}`, {
+      const params = new URLSearchParams({
+        ucmo: String(ucmoId),
+        page: String(pagination.page),
+        limit: String(pagination.limit),
+        search,
+      });
+
+      if (selectedCampaign?._id) {
+        params.set("campaign", String(selectedCampaign._id));
+      }
+
+      const response = await fetch(
+        `/api/users/town-zerodose-summary?${params.toString()}`,
+        {
           method: "GET",
           credentials: "include",
-        });
+        },
+      );
 
-        const result = await response.json();
+      const result = await response.json();
 
-        if (!response.ok || !result?.success) {
-          throw new Error(result?.message || "Failed to fetch team details.");
-        }
-
-        setData(result?.data || null);
-      } catch (error) {
-        console.error("Get team detail error:", error);
-
-        setData(null);
-      } finally {
-        setLoading(false);
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.message || "Failed to fetch zerodose summary.");
       }
-    };
 
-    getTeamDetail();
-  }, [id]);
+      // ========================================================
+      // UCMO / Town
+      // ========================================================
+
+      setUcmo(result?.ucmo || null);
+
+      setTown(result?.town || null);
+
+      // ========================================================
+      // Campaigns
+      // ========================================================
+
+      setCampaigns(Array.isArray(result?.campaigns) ? result.campaigns : []);
+
+      setCurrentCampaign(result?.currentCampaign || null);
+
+      setPreviousCampaigns(
+        Array.isArray(result?.previousCampaigns)
+          ? result.previousCampaigns
+          : [],
+      );
+
+      // ========================================================
+      // Important:
+      //
+      // Backend automatically decides campaign if no campaign
+      // was supplied.
+      // ========================================================
+
+      const apiSelectedCampaign = result?.selectedCampaign || null;
+
+      if (
+        apiSelectedCampaign &&
+        String(apiSelectedCampaign._id) !== String(selectedCampaign?._id)
+      ) {
+        setSelectedCampaign(apiSelectedCampaign);
+
+        // Determine UI mode
+        if (
+          result?.currentCampaign &&
+          String(result.currentCampaign._id) === String(apiSelectedCampaign._id)
+        ) {
+          setCampaignMode("current");
+        } else {
+          setCampaignMode("previous");
+        }
+      }
+
+      // ========================================================
+      // Format Table Data
+      // ========================================================
+
+      const formattedData = (result?.data || []).map((item) => ({
+        ...item,
+
+        districtName: item?.district?.name || "-",
+
+        townName: item?.town?.name || "-",
+
+        unionCouncilName: item?.unionCouncil?.name || "-",
+
+        unionCouncilCode: item?.unionCouncil?.code || "-",
+
+        ucmoName: item?.ucmo?.name || "-",
+
+        supervisorName: item?.supervisor?.name || "-",
+
+        supervisorCode: item?.supervisor?.supervisorCode || "-",
+
+        recordedCount: Number(item?.recordedCount || 0),
+
+        visitedCount: Number(item?.visitedCount || 0),
+
+        coveredCount: Number(item?.coveredCount || 0),
+      }));
+
+      setUsers(formattedData);
+
+      setPagination((previous) => ({
+        ...previous,
+        ...(result?.pagination || {}),
+      }));
+    } catch (error) {
+      console.error("Get town zerodose summary error:", error);
+
+      setUsers([]);
+
+      setPagination((previous) => ({
+        ...previous,
+        total: 0,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      }));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ============================================================
-  // Loading
+  // Load Data
   // ============================================================
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="text-text-secondary text-sm">
-          Loading team details...
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!ucmoId) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      getZerodoseData();
+    }, 300);
+
+    return () => clearTimeout(timer);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    ucmoId,
+    pagination.page,
+    pagination.limit,
+    search,
+    selectedCampaign?._id,
+  ]);
 
   // ============================================================
-  // Not Found
+  // Search
   // ============================================================
 
-  if (!data) {
-    return (
-      <div className="space-y-6">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="text-text-secondary hover:text-text inline-flex items-center gap-2 text-sm font-medium transition"
-        >
-          <ArrowLeft size={18} />
-          Back
-        </button>
+  const handleSearchChange = (value) => {
+    setSearch(value);
 
-        <div className="border-border bg-background rounded-2xl border p-8 text-center shadow-sm">
-          <p className="text-text-secondary text-sm">
-            Team information not found.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const districtName = data?.district?.name || "-";
-
-  const townName = data?.town?.name || "-";
-
-  const unionCouncilName = data?.unionCouncil?.name || "-";
-
-  const unionCouncilCode = data?.unionCouncil?.code || "-";
-
-  const ucmoName = data?.ucmo?.name || "-";
-
-  const supervisors = Array.isArray(data?.supervisors) ? data.supervisors : [];
+    setPagination((previous) => ({
+      ...previous,
+      page: 1,
+    }));
+  };
 
   // ============================================================
-  // Detail Item
+  // Page Change
   // ============================================================
 
-  const DetailItem = ({ icon: Icon, label, value }) => (
-    <div className="flex items-start gap-3">
-      <div className="bg-primary-light text-primary mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-        <Icon size={17} />
-      </div>
+  const handlePageChange = (page) => {
+    setPagination((previous) => ({
+      ...previous,
+      page,
+    }));
+  };
 
-      <div className="min-w-0">
-        <p className="text-text-secondary text-xs font-medium">{label}</p>
+  // ============================================================
+  // Page Size
+  // ============================================================
 
-        <p className="text-text mt-1 text-sm font-semibold break-words">
-          {value || "-"}
-        </p>
-      </div>
-    </div>
-  );
+  const handlePageSizeChange = (limit) => {
+    setPagination((previous) => ({
+      ...previous,
+      page: 1,
+      limit,
+    }));
+  };
+
+  // ============================================================
+  // Current Campaign Click
+  // ============================================================
+
+  const handleCurrentCampaign = () => {
+    if (!currentCampaign) {
+      return;
+    }
+
+    setCampaignMode("current");
+
+    setSelectedCampaign(currentCampaign);
+
+    setPagination((previous) => ({
+      ...previous,
+      page: 1,
+    }));
+  };
+
+  // ============================================================
+  // Previous Campaign Click
+  // ============================================================
+
+  const handlePreviousCampaign = () => {
+    setCampaignMode("previous");
+
+    const latestPrevious = previousCampaigns?.[0] || null;
+
+    setSelectedCampaign(latestPrevious);
+
+    setPagination((previous) => ({
+      ...previous,
+      page: 1,
+    }));
+  };
+
+  // ============================================================
+  // Previous Campaign Selection
+  // ============================================================
+
+  const handlePreviousCampaignChange = (event) => {
+    const campaignId = event.target.value;
+
+    const campaign =
+      previousCampaigns.find(
+        (item) => String(item._id) === String(campaignId),
+      ) || null;
+
+    setCampaignMode("previous");
+
+    setSelectedCampaign(campaign);
+
+    setPagination((previous) => ({
+      ...previous,
+      page: 1,
+    }));
+  };
+
+  // ============================================================
+  // Active Campaign Label
+  // ============================================================
+
+  const campaignLabel = useMemo(() => {
+    if (!selectedCampaign) {
+      return "No Campaign";
+    }
+
+    return formatCampaignName(selectedCampaign);
+  }, [selectedCampaign]);
 
   // ============================================================
   // Render
   // ============================================================
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* ======================================================
           Header
       ====================================================== */}
 
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="border-border bg-background text-text-secondary hover:border-primary hover:text-primary flex h-10 w-10 items-center justify-center rounded-xl border shadow-sm transition"
-        >
-          <ArrowLeft size={19} />
-        </button>
+      <div className="border-border bg-background rounded-2xl border p-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          {/* Left */}
+          <div className="flex items-start gap-3">
+            <button
+              type="button"
+              onClick={() => router.push("/townfp/teams")}
+              className="border-border bg-surface text-text-secondary hover:border-primary hover:bg-primary-light hover:text-primary mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition"
+            >
+              <ArrowLeft size={19} />
+            </button>
 
-        <div>
-          <h1 className="text-text text-xl font-bold">Team Details</h1>
+            <div>
+              <div className="flex items-center gap-2">
+                <UserRound size={19} className="text-primary" />
 
-          <p className="text-text-secondary mt-1 text-sm">
-            View Union Council, UCMO, supervisor and team information.
-          </p>
-        </div>
-      </div>
-
-      {/* ======================================================
-          Summary Card
-      ====================================================== */}
-
-      <div className="border-border bg-background relative overflow-hidden rounded-2xl border p-5 shadow-sm">
-        <div className="bg-primary-light/50 absolute -top-10 -right-10 h-32 w-32 rounded-full" />
-
-        <div className="relative grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Teams */}
-
-          <div className="border-border bg-surface rounded-xl border p-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary-light text-primary flex h-10 w-10 items-center justify-center rounded-xl">
-                <UsersRound size={19} />
+                <h1 className="text-text text-xl font-bold">
+                  {ucmo?.name || "UCMO"}
+                </h1>
               </div>
 
-              <div>
-                <p className="text-text-secondary text-xs">Total Teams</p>
-
-                <p className="text-text text-xl font-bold">
-                  {Number(data?.teamsCount || 0)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Workers */}
-
-          <div className="border-border bg-surface rounded-xl border p-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary-light text-primary flex h-10 w-10 items-center justify-center rounded-xl">
-                <Users size={19} />
-              </div>
-
-              <div>
-                <p className="text-text-secondary text-xs">Total Workers</p>
-
-                <p className="text-text text-xl font-bold">
-                  {Number(data?.workersCount || 0)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Supervisors */}
-
-          <div className="border-border bg-surface rounded-xl border p-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary-light text-primary flex h-10 w-10 items-center justify-center rounded-xl">
-                <UserRound size={19} />
-              </div>
-
-              <div>
-                <p className="text-text-secondary text-xs">Supervisors</p>
-
-                <p className="text-text text-xl font-bold">
-                  {supervisors.length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* UCMO */}
-
-          <div className="border-border bg-surface rounded-xl border p-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-primary-light text-primary flex h-10 w-10 items-center justify-center rounded-xl">
-                <BriefcaseBusiness size={19} />
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-text-secondary text-xs">UCMO</p>
-
-                <p className="text-text truncate text-sm font-bold">
-                  {ucmoName}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ======================================================
-          Location / Assignment Details
-      ====================================================== */}
-
-      <div className="border-border bg-background rounded-2xl border shadow-sm">
-        <div className="border-border border-b px-5 py-4">
-          <div className="flex items-center gap-2">
-            <MapPin size={19} className="text-primary" />
-
-            <h2 className="text-text text-base font-semibold">
-              Assignment Details
-            </h2>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 p-5 sm:grid-cols-2 lg:grid-cols-3">
-          <DetailItem icon={Building2} label="District" value={districtName} />
-
-          <DetailItem icon={Building2} label="Town" value={townName} />
-
-          <DetailItem
-            icon={MapPin}
-            label="Union Council"
-            value={unionCouncilName}
-          />
-
-          <DetailItem icon={Hash} label="UC Code" value={unionCouncilCode} />
-
-          <DetailItem icon={UserRound} label="UCMO" value={ucmoName} />
-
-          <DetailItem
-            icon={UsersRound}
-            label="Total Teams"
-            value={Number(data?.teamsCount || 0)}
-          />
-        </div>
-      </div>
-
-      {/* ======================================================
-          Supervisors
-      ====================================================== */}
-
-      <div className="border-border bg-background rounded-2xl border shadow-sm">
-        <div className="border-border border-b px-5 py-4">
-          <div className="flex items-center gap-2">
-            <UserRound size={19} className="text-primary" />
-
-            <h2 className="text-text text-base font-semibold">Supervisors</h2>
-          </div>
-
-          <p className="text-text-secondary mt-1 text-sm">
-            Supervisors assigned under this UCMO.
-          </p>
-        </div>
-
-        <div className="p-5">
-          {supervisors.length === 0 ? (
-            <div className="border-border rounded-xl border border-dashed p-6 text-center">
-              <p className="text-text-secondary text-sm">
-                No approved supervisors found.
+              <p className="text-text-secondary mt-1 text-sm">
+                {town?.name ? `Town: ${town.name}` : "UCMO Zerodose Summary"}
               </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {supervisors.map((supervisor) => (
-                <div
-                  key={supervisor?._id}
-                  className="border-border bg-surface rounded-xl border p-4 transition hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="bg-primary-light text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
-                        <UserRound size={18} />
-                      </div>
 
-                      <div className="min-w-0">
-                        <p className="text-text truncate text-sm font-semibold">
-                          {supervisor?.name || "-"}
-                        </p>
+              {selectedCampaign && (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="bg-primary-light text-primary inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold">
+                    <CalendarDays size={14} />
 
-                        <p className="text-text-secondary mt-1 text-xs">
-                          Supervisor
-                        </p>
-                      </div>
-                    </div>
+                    {campaignLabel}
+                  </span>
 
-                    <span className="bg-primary-light text-primary rounded-lg px-2.5 py-1 text-xs font-semibold">
-                      {supervisor?.supervisorCode || "-"}
-                    </span>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="border-border bg-background rounded-lg border p-3">
-                      <p className="text-text-secondary text-xs">Teams</p>
-
-                      <p className="text-text mt-1 text-base font-bold">
-                        {Number(supervisor?.teamsCount || 0)}
-                      </p>
-                    </div>
-
-                    <div className="border-border bg-background rounded-lg border p-3">
-                      <p className="text-text-secondary text-xs">Workers</p>
-
-                      <p className="text-text mt-1 text-base font-bold">
-                        {Number(supervisor?.workersCount || 0)}
-                      </p>
-                    </div>
-                  </div>
+                  <span className="text-text-secondary text-xs">
+                    {formatDate(selectedCampaign.startDate)} -{" "}
+                    {formatDate(selectedCampaign.endDate)}
+                  </span>
                 </div>
-              ))}
+              )}
             </div>
-          )}
+          </div>
+
+          {/* ==================================================
+              Campaign Controls
+          ================================================== */}
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            {/* Current */}
+            <button
+              type="button"
+              onClick={handleCurrentCampaign}
+              disabled={!currentCampaign}
+              className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition ${
+                campaignMode === "current"
+                  ? "border-primary bg-primary text-white shadow-sm"
+                  : "border-border bg-background text-text-secondary hover:border-primary hover:text-primary"
+              } ${!currentCampaign ? "cursor-not-allowed opacity-50" : ""}`}
+            >
+              <CircleCheck size={16} />
+              Current Campaign
+            </button>
+
+            {/* Previous */}
+            <button
+              type="button"
+              onClick={handlePreviousCampaign}
+              disabled={previousCampaigns.length === 0}
+              className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition ${
+                campaignMode === "previous"
+                  ? "border-primary bg-primary text-white shadow-sm"
+                  : "border-border bg-background text-text-secondary hover:border-primary hover:text-primary"
+              } ${
+                previousCampaigns.length === 0
+                  ? "cursor-not-allowed opacity-50"
+                  : ""
+              }`}
+            >
+              <History size={16} />
+              Previous Campaign
+            </button>
+
+            {/* Previous Campaign Dropdown */}
+            <div className="relative">
+              <select
+                value={
+                  campaignMode === "previous" && selectedCampaign?._id
+                    ? String(selectedCampaign._id)
+                    : ""
+                }
+                onChange={handlePreviousCampaignChange}
+                disabled={previousCampaigns.length === 0}
+                className="border-border bg-background text-text focus:border-primary h-10 min-w-[210px] appearance-none rounded-xl border pr-9 pl-3 text-sm font-medium transition outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">Select Previous Campaign</option>
+
+                {previousCampaigns.map((campaign) => (
+                  <option key={campaign._id} value={String(campaign._id)}>
+                    {formatCampaignName(campaign)}
+                  </option>
+                ))}
+              </select>
+
+              <ChevronDown
+                size={16}
+                className="text-text-secondary pointer-events-none absolute top-1/2 right-3 -translate-y-1/2"
+              />
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* ======================================================
+          Campaign Info
+      ====================================================== */}
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="border-border bg-background rounded-2xl border p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary-light text-primary flex h-10 w-10 items-center justify-center rounded-xl">
+              <UserRound size={18} />
+            </div>
+
+            <div>
+              <p className="text-text-secondary text-xs font-medium">UCMO</p>
+
+              <p className="text-text text-sm font-bold">{ucmo?.name || "-"}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-border bg-background rounded-2xl border p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary-light text-primary flex h-10 w-10 items-center justify-center rounded-xl">
+              <MapPin size={18} />
+            </div>
+
+            <div>
+              <p className="text-text-secondary text-xs font-medium">Town</p>
+
+              <p className="text-text text-sm font-bold">{town?.name || "-"}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-border bg-background rounded-2xl border p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary-light text-primary flex h-10 w-10 items-center justify-center rounded-xl">
+              <ClipboardList size={18} />
+            </div>
+
+            <div>
+              <p className="text-text-secondary text-xs font-medium">
+                Selected Campaign
+              </p>
+
+              <p className="text-text text-sm font-bold">{campaignLabel}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ======================================================
+          Supervisor Table
+      ====================================================== */}
+
+      <Table
+        data={users}
+        loading={loading}
+        pageTitle="Supervisor Zerodose"
+        pageDescription={`Supervisor-wise Zerodose summary for ${campaignLabel}.`}
+        pageBreadcrumbs={[
+          {
+            label: "Teams",
+            onClick: () => router.push("/townfp/teams"),
+          },
+          {
+            label: ucmo?.name || "UCMO",
+          },
+        ]}
+
+        // ====================================================
+        // Server Pagination
+        // ====================================================
+
+        serverPagination
+        currentPage={pagination.page}
+        totalItems={pagination.total}
+        pageSize={pagination.limit}
+        totalPages={pagination.totalPages}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+        onSearchChange={handleSearchChange}
+
+        // ====================================================
+        // Hidden Columns
+        // ====================================================
+
+        hiddenColumns={[
+          "_id",
+          "__v",
+          "district",
+          "town",
+          "unionCouncil",
+          "ucmo",
+          "supervisor",
+        ]}
+
+        // ====================================================
+        // Column Titles
+        // ====================================================
+
+        columnTitles={{
+          districtName: "District",
+
+          townName: "Town",
+
+          unionCouncilName: "Union Council",
+
+          unionCouncilCode: "UC Code",
+
+          ucmoName: "UCMO",
+
+          supervisorName: "Supervisor",
+
+          supervisorCode: "Supervisor Code",
+
+          recordedCount: "Recorded",
+
+          visitedCount: "Visited",
+
+          coveredCount: "Covered",
+        }}
+
+        // ====================================================
+        // Columns
+        // ====================================================
+
+        columnOptions={[
+          "districtName",
+          "townName",
+          "unionCouncilName",
+          "unionCouncilCode",
+          "ucmoName",
+          "supervisorName",
+          "supervisorCode",
+          "recordedCount",
+          "visitedCount",
+          "coveredCount",
+        ]}
+
+        // ====================================================
+        // Export
+        // ====================================================
+
+        onExportPDF={exportPDF}
+        onExportExcel={exportExcel}
+      />
     </div>
   );
 }

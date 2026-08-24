@@ -76,3 +76,26 @@ export const getSupervisorUnionCouncilCount = async (
 export const getCampaignTrend = async () => {
   return api.get("/dashboard/campaign-trend");
 };
+
+// =====================================================
+// UCMO Supervisor Count
+// =====================================================
+
+export const getUCMOSupervisorCount = async (
+  ucmoId,
+  townId,
+  metrics = "supervisors",
+) => {
+  const response = await api.get("/dashboard/counts", {
+    params: {
+      type: "town",
+      id: townId,
+      ucmoId,
+      metrics,
+      isActive: true,
+      approvalStatus: "approved",
+    },
+  });
+
+  return response.data;
+};

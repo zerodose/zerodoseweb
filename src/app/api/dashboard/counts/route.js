@@ -13,10 +13,12 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const supervisorId = searchParams.get("supervisorId");
+    const ucmoId = searchParams.get("ucmoId");
     const type = searchParams.get("type");
     const id = searchParams.get("id");
     const metricsParam = searchParams.get("metrics");
     const isActiveParam = searchParams.get("isActive");
+    const approvalStatusParam = searchParams.get("approvalStatus");
 
     // =====================================================
     // Required parameters
@@ -288,11 +290,23 @@ export async function GET(request) {
 
     for (const [metric, designation] of Object.entries(userMetrics)) {
       if (metrics.includes(metric)) {
-        data[metric] = await User.countDocuments({
+        const userFilter = {
           ...userLocationFilter,
           designation,
           ...activeFilter,
-        });
+        };
+
+        // Optional UCMO filter
+        if (ucmoId && designation === "supervisor") {
+          userFilter.ucmo = ucmoId;
+        }
+
+        // Optional approval filter
+        if (approvalStatusParam && designation === "supervisor") {
+          userFilter.approvalStatus = approvalStatusParam;
+        }
+
+        data[metric] = await User.countDocuments(userFilter);
       }
     }
 

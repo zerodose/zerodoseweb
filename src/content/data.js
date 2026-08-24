@@ -143,12 +143,12 @@ export const townfpSidebarData = [
     icon: UserCog,
   },
   {
-    title: "Workers",
-    href: "/townfp/workers",
+    title: "Teams",
+    href: "/townfp/teams",
     icon: Users,
   },
   {
-    title: "Zerodose",
+    title: "Zerodoses",
     href: "/townfp/zerodose",
     icon: Syringe,
   },

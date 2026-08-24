@@ -64,7 +64,7 @@ export default function AdminSignupForm({ mode = "add", userId = null }) {
       label: "Other Staff",
     },
     {
-      value: "townFP",
+      value: "townfp",
       label: "Town Focal Person",
     },
     {
@@ -91,7 +91,7 @@ export default function AdminSignupForm({ mode = "add", userId = null }) {
       label: "Other Staff",
     },
     {
-      value: "townFP",
+      value: "townfp",
       label: "Town Focal Person",
     },
     {

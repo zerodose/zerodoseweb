@@ -48,7 +48,7 @@ export default function UserDesignationChart({ counts = {} }) {
       },
       {
         label: "Town Focal Person",
-        value: Number(counts?.townFP ?? 0),
+        value: Number(counts?.townfp ?? 0),
       },
       {
         label: "District Focal Person",
@@ -64,7 +64,7 @@ export default function UserDesignationChart({ counts = {} }) {
       counts?.supervisors,
       counts?.vaccinators,
       counts?.otherstaff,
-      counts?.townFP,
+      counts?.townfp,
       counts?.districtfp,
       counts?.workers,
     ],

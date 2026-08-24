@@ -1,268 +1,269 @@
-  "use client";
+"use client";
 
-  import { useEffect, useState } from "react";
-  import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-  import Table from "@/components/admin/table/Table";
-  import exportPDF from "@/utils/export/exportPDF";
-  import exportExcel from "@/utils/export/exportExcel";
+import Table from "@/components/admin/table/Table";
+import exportPDF from "@/utils/export/exportPDF";
+import exportExcel from "@/utils/export/exportExcel";
 
-  import { getUsers } from "@/api/userApi";
+import { getUsers } from "@/api/userApi";
 
-  export default function UsersPage() {
-    const router = useRouter();
+export default function UsersPage() {
+  const router = useRouter();
 
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    const [search, setSearch] = useState("");
+  const [search, setSearch] = useState("");
 
-    // ============================================================
-    // Server Pagination
-    // ============================================================
+  // ============================================================
+  // Server Pagination
+  // ============================================================
 
-    const [pagination, setPagination] = useState({
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
+
+  // ============================================================
+  // Get Users
+  // ============================================================
+
+  const getUsersData = async () => {
+    try {
+      setLoading(true);
+
+      const response = await getUsers({
+        page: pagination.page,
+        limit: pagination.limit,
+        search,
+      });
+
+      const formattedUsers = (response.data || []).map((user) => ({
+        ...user,
+
+        districtName: user.district?.name || "-",
+        townName: user.town?.name || "-",
+        unionCouncilName: user.unionCouncil?.name || "-",
+        supervisorName: user.supervisor?.name || "-",
+        isActive: user.isActive === true && user.approvalStatus === "approved",
+      }));
+
+      setUsers(formattedUsers);
+
+      setPagination((previous) => ({
+        ...previous,
+        ...(response.pagination || {}),
+      }));
+    } catch (error) {
+      console.error("Get users error:", error);
+
+      setUsers([]);
+
+      setPagination((previous) => ({
+        ...previous,
+        total: 0,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      }));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ============================================================
+  // Load Data
+  // ============================================================
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      getUsersData();
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [pagination.page, pagination.limit, search]);
+
+  // ============================================================
+  // Search
+  // ============================================================
+
+  const handleSearchChange = (value) => {
+    setSearch(value);
+
+    setPagination((previous) => ({
+      ...previous,
       page: 1,
-      limit: 10,
-      total: 0,
-      totalPages: 1,
-      hasNextPage: false,
-      hasPreviousPage: false,
-    });
+    }));
+  };
 
-    // ============================================================
-    // Get Users
-    // ============================================================
+  // ============================================================
+  // Page Change
+  // ============================================================
 
-    const getUsersData = async () => {
-      try {
-        setLoading(true);
+  const handlePageChange = (page) => {
+    setPagination((previous) => ({
+      ...previous,
+      page,
+    }));
+  };
 
-        const response = await getUsers({
-          page: pagination.page,
-          limit: pagination.limit,
-          search,
-        });
+  // ============================================================
+  // Page Size Change
+  // ============================================================
 
-        const formattedUsers = (response.data || []).map((user) => ({
-          ...user,
+  const handlePageSizeChange = (limit) => {
+    setPagination((previous) => ({
+      ...previous,
+      page: 1,
+      limit,
+    }));
+  };
 
-          districtName: user.district?.name || "-",
-          townName: user.town?.name || "-",
-          unionCouncilName: user.unionCouncil?.name || "-",
-          supervisorName: user.supervisor?.name || "-",
-        }));
+  return (
+    <Table
+      data={users}
+      loading={loading}
+      pageTitle="Users"
+      pageDescription="View and manage all users."
+      pageBreadcrumbs={[
+        {
+          label: "Users",
+        },
+      ]}
 
-        setUsers(formattedUsers);
+      // ========================================================
+      // Server Pagination
+      // ========================================================
 
-        setPagination((previous) => ({
-          ...previous,
-          ...(response.pagination || {}),
-        }));
-      } catch (error) {
-        console.error("Get users error:", error);
+      serverPagination
+      currentPage={pagination.page}
+      totalItems={pagination.total}
+      pageSize={pagination.limit}
+      totalPages={pagination.totalPages}
+      onPageChange={handlePageChange}
+      onPageSizeChange={handlePageSizeChange}
+      onSearchChange={handleSearchChange}
 
-        setUsers([]);
+      // ========================================================
+      // Hidden Columns
+      // ========================================================
 
-        setPagination((previous) => ({
-          ...previous,
-          total: 0,
-          totalPages: 1,
-          hasNextPage: false,
-          hasPreviousPage: false,
-        }));
-      } finally {
-        setLoading(false);
-      }
-    };
+      hiddenColumns={[
+        "_id",
+        "__v",
+        "password",
+        "emailVerified",
+        "supervisor",
+        "workerRole",
+        "createdAt",
+        "updatedAt",
+        // "supervisorCode",
+        // "district",
+        // "town",
+        // "unionCouncil",
+      ]}
 
-    // ============================================================
-    // Load Data
-    // ============================================================
+      // ========================================================
+      // Column Titles
+      // ========================================================
 
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        getUsersData();
-      }, 400);
+      columnTitles={{
+        name: "Name",
+        email: "Email",
+        contactNumber: "Contact",
+        designation: "Designation",
+        teamNumber: "Team Number",
+        supervisorName: "Supervisor",
+        supervisorCode: "Supervisor Code",
+        districtName: "District",
+        townName: "Town",
+        unionCouncilName: "Union Council",
+        isActive: "Active",
+      }}
 
-      return () => clearTimeout(timer);
-    }, [pagination.page, pagination.limit, search]);
+      // ========================================================
+      // Columns
+      // ========================================================
 
-    // ============================================================
-    // Search
-    // ============================================================
+      columnOptions={[
+        "name",
+        "email",
+        "contactNumber",
+        "designation",
+        "teamNumber",
+        "supervisorName",
+        "supervisorCode",
+        "districtName",
+        "townName",
+        "unionCouncilName",
+        "isActive",
+      ]}
 
-    const handleSearchChange = (value) => {
-      setSearch(value);
+      // ========================================================
+      // Filters
+      // ========================================================
 
-      setPagination((previous) => ({
-        ...previous,
-        page: 1,
-      }));
-    };
+      filterOptions={[
+        {
+          key: "designation",
+          label: "Designation",
+          type: "select",
+          column: "designation",
+        },
+        {
+          key: "districtName",
+          label: "District",
+          type: "select",
+          column: "districtName",
+        },
+        {
+          key: "townName",
+          label: "Town",
+          type: "select",
+          column: "townName",
+        },
+        {
+          key: "unionCouncilName",
+          label: "Union Council",
+          type: "select",
+          column: "unionCouncilName",
+        },
+        {
+          key: "isActive",
+          label: "Active",
+          type: "select",
+          column: "isActive",
+        },
+      ]}
 
-    // ============================================================
-    // Page Change
-    // ============================================================
+      // ========================================================
+      // Row
+      // ========================================================
 
-    const handlePageChange = (page) => {
-      setPagination((previous) => ({
-        ...previous,
-        page,
-      }));
-    };
+      onRowClick={(user) => {
+        router.push(`/dashboard/users/${user._id}`);
+      }}
 
-    // ============================================================
-    // Page Size Change
-    // ============================================================
+      // ========================================================
+      // Add
+      // ========================================================
 
-    const handlePageSizeChange = (limit) => {
-      setPagination((previous) => ({
-        ...previous,
-        page: 1,
-        limit,
-      }));
-    };
+      addButton
+      addButtonText="Add User"
+      onAdd={() => router.push("/dashboard/users/addUser")}
 
-    return (
-      <Table
-        data={users}
-        loading={loading}
-        pageTitle="Users"
-        pageDescription="View and manage all users."
-        pageBreadcrumbs={[
-          {
-            label: "Users",
-          },
-        ]}
+      // ========================================================
+      // Export
+      // ========================================================
 
-        // ========================================================
-        // Server Pagination
-        // ========================================================
-
-        serverPagination
-        currentPage={pagination.page}
-        totalItems={pagination.total}
-        pageSize={pagination.limit}
-        totalPages={pagination.totalPages}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-        onSearchChange={handleSearchChange}
-
-        // ========================================================
-        // Hidden Columns
-        // ========================================================
-
-        hiddenColumns={[
-          "_id",
-          "__v",
-          "password",
-          "emailVerified",
-          "supervisor",
-          "workerRole",
-          "createdAt",
-          "updatedAt",
-          // "supervisorCode",
-          // "district",
-          // "town",
-          // "unionCouncil",
-        ]}
-
-        // ========================================================
-        // Column Titles
-        // ========================================================
-
-        columnTitles={{
-          name: "Name",
-          email: "Email",
-          contactNumber: "Contact",
-          designation: "Designation",
-           teamNumber: "Team Number",
-          supervisorName: "Supervisor",
-          supervisorCode: "Supervisor Code",
-          districtName: "District",
-          townName: "Town",
-          unionCouncilName: "Union Council",
-          isActive: "Active",
-        }}
-
-        // ========================================================
-        // Columns
-        // ========================================================
-
-        columnOptions={[
-          "name",
-          "email",
-          "contactNumber",
-          "designation",
-           "teamNumber",
-          "supervisorName",
-          "supervisorCode",
-          "districtName",
-          "townName",
-          "unionCouncilName",
-          "isActive",
-        ]}
-
-        // ========================================================
-        // Filters
-        // ========================================================
-
-        filterOptions={[
-          {
-            key: "designation",
-            label: "Designation",
-            type: "select",
-            column: "designation",
-          },
-          {
-            key: "districtName",
-            label: "District",
-            type: "select",
-            column: "districtName",
-          },
-          {
-            key: "townName",
-            label: "Town",
-            type: "select",
-            column: "townName",
-          },
-          {
-            key: "unionCouncilName",
-            label: "Union Council",
-            type: "select",
-            column: "unionCouncilName",
-          },
-          {
-            key: "isActive",
-            label: "Active",
-            type: "select",
-            column: "isActive",
-          },
-        ]}
-
-        // ========================================================
-        // Row
-        // ========================================================
-
-        onRowClick={(user) => {
-          router.push(`/dashboard/users/${user._id}`);
-        }}
-
-        // ========================================================
-        // Add
-        // ========================================================
-
-        addButton
-        addButtonText="Add User"
-        onAdd={() => router.push("/dashboard/users/addUser")}
-
-        // ========================================================
-        // Export
-        // ========================================================
-
-        onExportPDF={exportPDF}
-        onExportExcel={exportExcel}
-      />
-    );
-  }
+      onExportPDF={exportPDF}
+      onExportExcel={exportExcel}
+    />
+  );
+}

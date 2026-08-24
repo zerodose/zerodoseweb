@@ -33,7 +33,7 @@ export default function SignupForm() {
     { value: "otherstaff", label: "Other Staff" },
     { value: "supervisor", label: "Supervisor" },
     { value: "ucmo", label: "UCMO" },
-    { value: "townFP", label: "Town Focal Person" },
+    { value: "townfp", label: "Town Focal Person" },
     { value: "districtfp", label: "District Focal Person" },
     // { value: "worker", label: "Worker" },
   ];
@@ -43,7 +43,7 @@ export default function SignupForm() {
     { value: "otherstaff", label: "Other Staff" },
     { value: "supervisor", label: "Supervisor" },
     { value: "ucmo", label: "UCMO" },
-    { value: "townFP", label: "Town Focal Person" },
+    { value: "townfp", label: "Town Focal Person" },
     { value: "districtfp", label: "District Focal Person" },
     { value: "admin", label: "Admin" },
     // { value: "worker", label: "Worker" },
@@ -106,7 +106,7 @@ export default function SignupForm() {
     "supervisor",
     "vaccinator",
     "otherstaff",
-    "townFP",
+    "townfp",
     "districtfp",
     "worker",
   ].includes(selectedDesignation);
@@ -116,7 +116,7 @@ export default function SignupForm() {
     "supervisor",
     "vaccinator",
     "otherstaff",
-    "townFP",
+    "townfp",
     "worker",
   ].includes(selectedDesignation);
 

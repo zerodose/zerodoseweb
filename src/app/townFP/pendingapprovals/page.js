@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 
 import Table from "@/components/admin/table/Table";
 import { getPendingUserApprovals } from "@/api/userApprovalsApi";
+import exportPDF from "@/utils/export/exportPDF";
+import exportExcel from "@/utils/export/exportExcel";
 
 export default function PendingApprovalsPage() {
   const router = useRouter();
@@ -262,6 +264,8 @@ export default function PendingApprovalsPage() {
       onRowClick={(user) => {
         router.push(`/townfp/pendingapprovals/${user._id}`);
       }}
+      onExportPDF={exportPDF}
+      onExportExcel={exportExcel}
     />
   );
 }

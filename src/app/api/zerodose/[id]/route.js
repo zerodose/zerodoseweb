@@ -169,11 +169,11 @@ function canAccessZerodose(user, zerodose) {
     return objectIdEquals(user.unionCouncil, zerodose.unionCouncil);
   }
 
-  if (user.designation === "townFP") {
+  if (user.designation === "townfp") {
     return objectIdEquals(user.town, zerodose.town);
   }
 
-  if (user.designation === "districtFP") {
+  if (user.designation === "districtfp") {
     return objectIdEquals(user.district, zerodose.district);
   }
 

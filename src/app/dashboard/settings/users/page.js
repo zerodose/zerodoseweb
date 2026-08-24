@@ -23,7 +23,7 @@ const approvalDesignations = [
     label: "Other Staff",
   },
   {
-    value: "townFP",
+    value: "townfp",
     label: "Town Focal Person",
   },
   {
@@ -43,7 +43,7 @@ export default function UserSettingsPage() {
       supervisor: true,
       vaccinator: true,
       otherstaff: true,
-      townFP: true,
+      townfp: true,
       districtfp: true,
     },
   });

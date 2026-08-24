@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import Table from "@/components/admin/table/Table";
-
+import exportPDF from "@/utils/export/exportPDF";
+import exportExcel from "@/utils/export/exportExcel";
 import { getPendingUserApprovals } from "@/api/userApprovalsApi";
 export default function PendingApprovalsPage() {
   const router = useRouter();
@@ -161,7 +162,7 @@ export default function PendingApprovalsPage() {
         "supervisor",
         "workerRole",
         "town",
-        "unioncouncil",
+        "unionCouncil",
         "createdAt",
         "updatedAt",
         "isActive",
@@ -203,6 +204,8 @@ export default function PendingApprovalsPage() {
       onRowClick={(user) => {
         router.push(`/dashboard/pendingapprovals/${user._id}`);
       }}
+      onExportPDF={exportPDF}
+      onExportExcel={exportExcel}
     />
   );
 }

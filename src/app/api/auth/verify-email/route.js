@@ -151,7 +151,7 @@ export async function POST(request) {
         town: false,
         unionCouncil: false,
       },
-      townFP: {
+      townfp: {
         district: true,
         town: true,
         unionCouncil: false,
@@ -377,7 +377,7 @@ export async function POST(request) {
       "supervisor",
       "vaccinator",
       "otherstaff",
-      "townFP",
+      "townfp",
       "districtfp",
     ];
 

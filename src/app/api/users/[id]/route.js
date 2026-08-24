@@ -174,7 +174,7 @@ export async function PUT(request, { params }) {
       "supervisor",
       "vaccinator",
       "otherstaff",
-      "townFP",
+      "townfp",
       "districtfp",
       "worker",
       "admin",
@@ -198,7 +198,7 @@ export async function PUT(request, { params }) {
     //   town null
     //   unionCouncil null
     //
-    // townFP:
+    // townfp:
     //   district required
     //   town required
     //   unionCouncil null
@@ -219,7 +219,7 @@ export async function PUT(request, { params }) {
       "supervisor",
       "vaccinator",
       "otherstaff",
-      "townFP",
+      "townfp",
       "districtfp",
       "worker",
     ].includes(finalDesignation);
@@ -229,7 +229,7 @@ export async function PUT(request, { params }) {
       "supervisor",
       "vaccinator",
       "otherstaff",
-      "townFP",
+      "townfp",
       "worker",
     ].includes(finalDesignation);
 
@@ -297,7 +297,7 @@ export async function PUT(request, { params }) {
 
     if (!requiresUnionCouncil && finalUnionCouncil !== null) {
       if (designation !== undefined || unionCouncil !== undefined) {
-        // For townFP/districtfp/admin, UC must not be retained.
+        // For townfp/districtfp/admin, UC must not be retained.
         // It will be cleared below.
       }
     }
@@ -329,7 +329,7 @@ export async function PUT(request, { params }) {
     // Town must belong to selected district
     //
     // Required for:
-    // townFP
+    // townfp
     // ucmo
     // supervisor
     // vaccinator
@@ -928,7 +928,7 @@ export async function DELETE(request, { params }) {
 //       "supervisor",
 //       "otherstaff",
 //       "ucmo",
-//       "townFP",
+//       "townfp",
 //       "districtfp",
 //       "admin",
 //     ];

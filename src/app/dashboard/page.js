@@ -28,7 +28,7 @@ export default async function DashboardPage() {
     workers: 0,
     vaccinators: 0,
     otherstaff: 0,
-    townFP: 0,
+    townfp: 0,
     districtfp: 0,
 
     teams: 0,
@@ -69,7 +69,7 @@ export default async function DashboardPage() {
         "workers",
         "vaccinators",
         "otherstaff",
-        "townFP",
+        "townfp",
         "districtfp",
 
         "teams",
@@ -93,7 +93,7 @@ export default async function DashboardPage() {
       workers: data.workers ?? 0,
       vaccinators: data.vaccinators ?? 0,
       otherstaff: data.otherstaff ?? 0,
-      townFP: data.townFP ?? 0,
+      townfp: data.townfp ?? 0,
       districtfp: data.districtfp ?? 0,
 
       teams: data.teams ?? 0,

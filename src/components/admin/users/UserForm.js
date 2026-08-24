@@ -421,7 +421,7 @@ export default function UserForm({ mode = "create", userId = null }) {
                 <option value="supervisor">Supervisor</option>
                 <option value="vaccinator">Vaccinator</option>
                 <option value="otherstaff">Other Staff</option>
-                <option value="townFP">Town Focal Person</option>
+                <option value="townfp">Town Focal Person</option>
                 <option value="districtfp">District Focal Person</option>
               </select>
             </div>

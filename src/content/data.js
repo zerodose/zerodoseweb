@@ -149,7 +149,7 @@ export const townfpSidebarData = [
   },
   {
     title: "Zerodoses",
-    href: "/townfp/zerodose",
+    href: "/townfp/zerodoses",
     icon: Syringe,
   },
   {
@@ -213,7 +213,7 @@ export const supervisorSidebar = [
 
   {
     title: "Zerodose List",
-    href: "/supervisor/zerodose",
+    href: "/supervisor/zerodoses",
     icon: Syringe,
   },
 ];

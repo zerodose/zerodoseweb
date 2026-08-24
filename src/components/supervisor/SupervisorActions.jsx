@@ -16,7 +16,7 @@ export default function SupervisorActions() {
       icon: Users,
     },
     {
-      href: "/supervisor/zerodose",
+      href: "/supervisor/zerodoses",
       label: "Zerodose List",
       icon: Syringe,
     },

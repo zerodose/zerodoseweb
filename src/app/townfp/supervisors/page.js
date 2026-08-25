@@ -7,6 +7,7 @@ import Table from "@/components/admin/table/Table";
 
 import exportPDF from "@/utils/export/exportPDF";
 import exportExcel from "@/utils/export/exportExcel";
+import { getTownSupervisorSummary } from "@/api/dashboardApi";
 
 export default function SupervisorsPage() {
   const router = useRouter();
@@ -86,14 +87,11 @@ export default function SupervisorsPage() {
         search,
       });
 
-      const response = await fetch(
-        `/api/users/town-supervisor-summary?${params.toString()}`,
-        {
-          method: "GET",
-          credentials: "include",
-        },
-      );
-
+      const data = await getTownSupervisorSummary({
+        supervisorId,
+        townId,
+      });
+  
       const result = await response.json();
 
       if (!response.ok || !result?.success) {

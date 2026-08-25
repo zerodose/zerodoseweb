@@ -11,7 +11,7 @@ import CurrentCampaign from "@/components/ucmo/CurrentCampaign";
 import PreviousCampaigns from "@/components/ucmo/PreviousCampaigns";
 import { UsersRound } from "lucide-react";
 import ActionLinkButton from "@/components/admin/ui/ActionLinkButton";
-import { getPendingUserApprovals } from "@/api/userApprovalsApi";
+import { getPendingApprovalCount } from "@/api/userApprovalsApi";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
@@ -159,23 +159,21 @@ export default function Page() {
         // --------------------------------------------------------
 
         if (authUnionCouncilId) {
-          const usersResponse = await getUsers({
-            page: 1,
-            limit: 100,
-            designation: "worker",
-            isActive: true,
-            unionCouncil: authUnionCouncilId,
+          const approvalCountResponse = await getPendingApprovalCount({
+            userId: ucmoId,
+            designation: "ucmo",
           });
 
-          if (!usersResponse?.success) {
+          if (!approvalCountResponse?.success) {
             throw new Error(
-              usersResponse?.message || "Failed to fetch active workers.",
+              approvalCountResponse?.message ||
+                "Failed to fetch pending approval count.",
             );
           }
 
-          setActiveUsers(usersResponse.data || []);
+          setPendingApprovals(approvalCountResponse?.count ?? 0);
         } else {
-          setActiveUsers([]);
+          setPendingApprovals(0);
         }
 
         // --------------------------------------------------------
@@ -188,47 +186,23 @@ export default function Page() {
         // supervisor + vaccinator + otherstaff
         // --------------------------------------------------------
 
-        if (authUnionCouncilId) {
-          const approvalDesignations = [
-            "supervisor",
-            "vaccinator",
-            "otherstaff",
-          ];
+        const approvalCountResponse = await getPendingApprovalCount({
+          userId: ucmoId,
+          designation: "ucmo",
+        });
 
-          const approvalResponses = await Promise.all(
-            approvalDesignations.map((designation) =>
-              getPendingUserApprovals({
-                page: 1,
-                limit: 10,
-                designation,
-                unionCouncil: authUnionCouncilId,
-              }),
-            ),
+        if (!approvalCountResponse?.success) {
+          throw new Error(
+            approvalCountResponse?.message ||
+              "Failed to fetch pending approval count.",
           );
-
-          approvalResponses.forEach((response, index) => {
-            if (!response?.success) {
-              throw new Error(
-                response?.message ||
-                  `Failed to fetch ${approvalDesignations[index]} approvals.`,
-              );
-            }
-          });
-
-          const totalPendingApprovals = approvalResponses.reduce(
-            (total, response) => {
-              return (
-                total +
-                (Array.isArray(response?.data) ? response.data.length : 0)
-              );
-            },
-            0,
-          );
-
-          setPendingApprovals(totalPendingApprovals);
-        } else {
-          setPendingApprovals(0);
         }
+
+        setPendingApprovals(
+          approvalCountResponse?.count ??
+            approvalCountResponse?.data?.count ??
+            0,
+        );
 
         // --------------------------------------------------------
         // ALL ZERODOSE
@@ -667,7 +641,7 @@ export default function Page() {
               ACTIONS
           ====================================================== */}
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 mb-4">
+        <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
           <ActionLinkButton
             href="/ucmo/supervisor-management"
             label="Teams Management"

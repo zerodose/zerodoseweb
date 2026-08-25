@@ -402,7 +402,6 @@ export async function PUT(request, { params }) {
       "contactNo",
       "houseNumber",
       "gender",
-      "location",
     ];
 
     const changedFields = Array.isArray(pendingZerodose.changedFields)
@@ -559,52 +558,6 @@ export async function PUT(request, { params }) {
       }
 
       zerodose.gender = newData.gender;
-    }
-
-    if (changedFields.includes("location")) {
-      const latitude = Number(newData.location?.latitude);
-      const longitude = Number(newData.location?.longitude);
-
-      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Valid latitude and longitude are required.",
-          },
-          {
-            status: 400,
-          },
-        );
-      }
-
-      if (latitude < -90 || latitude > 90) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Invalid latitude.",
-          },
-          {
-            status: 400,
-          },
-        );
-      }
-
-      if (longitude < -180 || longitude > 180) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Invalid longitude.",
-          },
-          {
-            status: 400,
-          },
-        );
-      }
-
-      zerodose.location = {
-        latitude,
-        longitude,
-      };
     }
 
     // Save actual Zerodose FIRST.

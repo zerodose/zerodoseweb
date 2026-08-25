@@ -99,3 +99,33 @@ export const getUCMOSupervisorCount = async (
 
   return response.data;
 };
+
+// =====================================================
+// Town Supervisor Summary
+// =====================================================
+
+export const getTownSupervisorSummary = async (params = {}) => {
+  const response = await api.get(
+    "/users/town-supervisor-summary",
+    {
+      params,
+    },
+  );
+
+  return response.data;
+};
+
+// =====================================================
+// Town Zerodose Summary
+// =====================================================
+
+export const getTownZerodoseSummary = async (params = {}) => {
+  const response = await api.get(
+    "/users/town-zerodose-summary",
+    {
+      params,
+    },
+  );
+
+  return response.data;
+};

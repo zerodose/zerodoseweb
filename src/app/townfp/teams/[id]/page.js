@@ -20,6 +20,7 @@ import Table from "@/components/admin/table/Table";
 import exportPDF from "@/utils/export/exportPDF";
 import exportExcel from "@/utils/export/exportExcel";
 import { formatDate } from "@/lib/formatDate";
+import { getTownZerodoseSummary } from "@/api/dashboardApi";
 
 export default function TeamsDetailPage() {
   const router = useRouter();
@@ -136,13 +137,10 @@ export default function TeamsDetailPage() {
         params.set("campaign", String(selectedCampaign._id));
       }
 
-      const response = await fetch(
-        `/api/users/town-zerodose-summary?${params.toString()}`,
-        {
-          method: "GET",
-          credentials: "include",
-        },
-      );
+  const data = await getTownZerodoseSummary({
+  townId,
+  campaignId,
+});
 
       const result = await response.json();
 

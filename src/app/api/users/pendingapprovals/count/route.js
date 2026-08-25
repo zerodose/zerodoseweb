@@ -87,7 +87,7 @@ export async function GET(request) {
     const filter = {
       designation: { $in: pendingDesignations },
       approvalStatus: "pending",
-      isActive: true,
+      isActive: false,
     };
 
     // ============================================================
@@ -163,7 +163,15 @@ export async function GET(request) {
         );
       }
 
-      filter.unionCouncil = approver.unionCouncil;
+     filter.$or = [
+  {
+    designation: { $in: ["vaccinator", "otherstaff"] },
+  },
+  {
+    designation: "supervisor",
+    ucmo: approver._id,
+  },
+];
     }
 
     // ============================================================

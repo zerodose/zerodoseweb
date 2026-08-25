@@ -136,3 +136,8 @@ export const getUcmoDropdown = async (unionCouncilId) => {
 
   return response.data;
 };
+
+export const transferUser = async (payload) => {
+  const response = await api.patch("/users/transfer", payload);
+  return response.data;
+};

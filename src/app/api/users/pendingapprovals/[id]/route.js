@@ -50,7 +50,7 @@ export async function GET(request, { params }) {
     const user = await User.findOne({
       _id: id,
       approvalStatus: "pending",
-      isActive: true,
+      isActive: false,
     })
       .select("-password -emailVerificationCode -emailVerificationExpires")
       .populate("district", "_id name code")
@@ -200,7 +200,7 @@ export async function PUT(request, { params }) {
     const user = await User.findOne({
       _id: id,
       approvalStatus: "pending",
-      isActive: true,
+      isActive: false,
     });
 
     if (!user) {
@@ -300,49 +300,62 @@ export async function PUT(request, { params }) {
     }
 
     // ------------------------------------------------------------
-    // UCMO → approves Supervisor/Vaccinator from same UC
+    // UCMO → approves Supervisor/Vaccinator/OtherStaff
+    //
+    // Supervisor:
+    // Only the specifically assigned UCMO can approve.
+    //
+    // Vaccinator:
+    // Any UCMO can approve.
+    //
+    // OtherStaff:
+    // Any UCMO can approve.
     // ------------------------------------------------------------
 
-    if (
-      user.designation === "supervisor" ||
-      user.designation === "vaccinator"
-    ) {
-      if (
-        !approver.unionCouncil ||
-        !user.unionCouncil ||
-        String(approver.unionCouncil) !== String(user.unionCouncil)
-      ) {
+    if (user.designation === "supervisor") {
+      if (!user.ucmo || String(user.ucmo) !== String(approver._id)) {
         return NextResponse.json(
           {
             success: false,
-            message: "You can only approve users from your union council.",
+            message: "You can only approve supervisors assigned to your UCMO.",
           },
-          {
-            status: 403,
-          },
+          { status: 403 },
         );
       }
     }
 
     // ============================================================
-    // Update Approval
+    // Handle Approval
     // ============================================================
-
-    user.approvalStatus = approvalStatus;
-    user.approvedBy = approver._id;
-    user.approvedAt = new Date();
-
-    // ============================================================
-    // Active Status
-    // ============================================================
-
-    if (approvalStatus === "approved") {
-      user.isActive = true;
-    }
 
     if (approvalStatus === "rejected") {
-      user.isActive = false;
+      // Permanently delete rejected user from database
+      await user.deleteOne();
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: `${user.designation} rejected and deleted successfully.`,
+          data: {
+            id: user._id,
+            designation: user.designation,
+            approvalStatus: "rejected",
+          },
+        },
+        {
+          status: 200,
+        },
+      );
     }
+
+    // ============================================================
+    // Approve User
+    // ============================================================
+
+    user.approvalStatus = "approved";
+    user.approvedBy = approver._id;
+    user.approvedAt = new Date();
+    user.isActive = true;
 
     await user.save();
 
@@ -353,10 +366,7 @@ export async function PUT(request, { params }) {
     return NextResponse.json(
       {
         success: true,
-        message:
-          approvalStatus === "approved"
-            ? `${user.designation} approved successfully.`
-            : `${user.designation} rejected successfully.`,
+        message: `${user.designation} approved successfully.`,
         data: {
           id: user._id,
           designation: user.designation,

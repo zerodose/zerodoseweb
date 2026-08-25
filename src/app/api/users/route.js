@@ -119,18 +119,18 @@ export async function GET(request) {
     }
 
     if (ucmo) {
-  if (!mongoose.Types.ObjectId.isValid(ucmo)) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Invalid UCMO ID",
-      },
-      { status: 400 },
-    );
-  }
+      if (!mongoose.Types.ObjectId.isValid(ucmo)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid UCMO ID",
+          },
+          { status: 400 },
+        );
+      }
 
-  filter.ucmo = ucmo;
-}
+      filter.ucmo = ucmo;
+    }
 
     if (supervisor) {
       if (!mongoose.Types.ObjectId.isValid(supervisor)) {
@@ -541,7 +541,7 @@ export async function POST(request) {
         supervisor,
         teamNumber: null,
         password: hashedPassword,
-        isActive: typeof isActive === "boolean" ? isActive : true,
+        isActive: false,
       });
 
       const createdUser = await User.findById(user._id)
@@ -608,7 +608,7 @@ export async function POST(request) {
       ucmo: currentUcmo?._id || null,
       teamNumber: null,
       password: hashedPassword,
-      isActive: typeof isActive === "boolean" ? isActive : true,
+      isActive: false,
       emailVerificationCode: hashedVerificationCode,
       emailVerificationExpires: verificationExpires,
       createdAt: Date.now(),

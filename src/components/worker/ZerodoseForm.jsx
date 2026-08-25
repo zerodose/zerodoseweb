@@ -229,8 +229,6 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
       return;
     }
 
-    const location = await getCurrentLocation();
-
     const payload = {
       workerId: authUser.id,
       zerodoseId,
@@ -241,7 +239,6 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
       houseNumber: Number(formData.houseNumber),
       address: formData.address.trim(),
       contactNo: formData.contactNo.trim() || null,
-      location,
     };
 
     await submitZerodoseUpdate(zerodoseId, payload);

@@ -126,12 +126,12 @@ export default function TownFPSidebar({
     <>
       {/* Mobile Overlay */}
 
-      {mobileOpen && (
+{mobileOpen && (
         <button
           type="button"
           aria-label="Close menu"
           onClick={() => setMobileOpen(false)}
-          className="fixed inset-0 z-[999] cursor-default bg-black/40 backdrop-blur-[2px] md:hidden"
+          className="fixed inset-0 z-40 cursor-default bg-black/40 backdrop-blur-[2px] md:hidden"
         />
       )}
 

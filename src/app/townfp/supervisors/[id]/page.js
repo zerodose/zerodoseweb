@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 
 import TopHeader from "@/components/admin/ui/TopHeader";
+import { getTownSupervisorSummary } from "@/api/dashboardApi";
 
 export default function SupervisorSummaryViewPage() {
   const router = useRouter();
@@ -39,13 +40,10 @@ export default function SupervisorSummaryViewPage() {
       try {
         setLoading(true);
 
-        const response = await fetch(
-          `/api/users/town-supervisor-summary/${params.id}`,
-          {
-            method: "GET",
-            credentials: "include",
-          },
-        );
+        const data = await getTownSupervisorSummary({
+          supervisorId,
+          townId,
+        });
 
         const result = await response.json();
 

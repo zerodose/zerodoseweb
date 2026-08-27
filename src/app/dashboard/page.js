@@ -11,6 +11,14 @@ import UserDesignationChart from "@/components/admin/dashboard/charts/UserDesign
 import CoverageChart from "@/components/admin/dashboard/charts/CoverageChart";
 import { getCampaignTrend, getGlobalCount } from "@/api/dashboardApi";
 import DashboardStats from "@/components/admin/dashboard/DashboardStats";
+import {
+  Activity,
+  BriefcaseBusiness,
+  Building2,
+  ClipboardList,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 
 export default async function DashboardPage() {
   // ============================================================
@@ -118,14 +126,44 @@ export default async function DashboardPage() {
       ================================================= */}
 
       <DashboardStats
-        stats={{
-          campaigns: counts.campaigns,
-          districts: counts.districts,
-          supervisors: counts.supervisors,
-          teams: counts.teams,
-          zerodose: counts.zerodose,
-          covered: counts.covered,
-        }}
+        items={[
+          {
+            key: "campaigns",
+            title: "Total Campaigns",
+            value: counts.campaigns,
+            icon: BriefcaseBusiness,
+          },
+          {
+            key: "districts",
+            title: "Total Districts",
+            value: counts.districts,
+            icon: Building2,
+          },
+          {
+            key: "supervisors",
+            title: "Total Supervisors",
+            value: counts.supervisors,
+            icon: ShieldCheck,
+          },
+          {
+            key: "teams",
+            title: "Total Teams",
+            value: counts.teams,
+            icon: Users,
+          },
+          {
+            key: "zerodose",
+            title: "Total Zerodose",
+            value: counts.zerodose,
+            icon: ClipboardList,
+          },
+          {
+            key: "covered",
+            title: "Total Covered",
+            value: counts.covered,
+            icon: Activity,
+          },
+        ]}
       />
 
       {/* =================================================

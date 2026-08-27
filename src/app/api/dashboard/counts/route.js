@@ -44,6 +44,7 @@ export async function GET(request) {
       .filter(Boolean);
 
     const allowedMetrics = [
+      "districts",
       "towns",
       "unionCouncils",
 
@@ -213,7 +214,8 @@ export async function GET(request) {
     }
 
     if (supervisorId) {
-      zerodoseLocationFilter.supervisorId = supervisorId;
+      // zerodoseLocationFilter.supervisorId = supervisorId;
+      zerodoseLocationFilter.supervisor = supervisorId;
     }
 
     // =====================================================
@@ -404,21 +406,21 @@ export async function GET(request) {
     if (metrics.includes("recorded")) {
       data.recorded = await Zerodose.countDocuments({
         ...zerodoseLocationFilter,
-        status: "recorded",
+        vaccinationStatus: "recorded",
       });
     }
 
     if (metrics.includes("visited")) {
       data.visited = await Zerodose.countDocuments({
         ...zerodoseLocationFilter,
-        status: "visited",
+        vaccinationStatus: "visited",
       });
     }
 
     if (metrics.includes("covered")) {
       data.covered = await Zerodose.countDocuments({
         ...zerodoseLocationFilter,
-        status: "covered",
+        vaccinationStatus: "covered",
       });
     }
 

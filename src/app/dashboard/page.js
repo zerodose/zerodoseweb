@@ -1,3 +1,4 @@
+
 import ActivityChart from "@/components/admin/dashboard/charts/ActivityChart";
 import CampaignChart from "@/components/admin/dashboard/charts/CampaignChart";
 import CampaignComparisonChart from "@/components/admin/dashboard/charts/CampaignComparisonChart";
@@ -11,14 +12,6 @@ import UserDesignationChart from "@/components/admin/dashboard/charts/UserDesign
 import CoverageChart from "@/components/admin/dashboard/charts/CoverageChart";
 import { getCampaignTrend, getGlobalCount } from "@/api/dashboardApi";
 import DashboardStats from "@/components/admin/dashboard/DashboardStats";
-import {
-  Activity,
-  BriefcaseBusiness,
-  Building2,
-  ClipboardList,
-  ShieldCheck,
-  Users,
-} from "lucide-react";
 
 export default async function DashboardPage() {
   // ============================================================

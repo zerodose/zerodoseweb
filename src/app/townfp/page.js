@@ -14,18 +14,7 @@ import ZerodoseTrendChart from "@/components/admin/dashboard/charts/ZerodoseTren
 import UserDesignationChart from "@/components/admin/dashboard/charts/UserDesignationChart";
 import CoverageChart from "@/components/admin/dashboard/charts/CoverageChart";
 
-import {
-  Building2,
-  Map,
-  UsersRound,
-  ShieldCheck,
-  Users,
-  Syringe,
-  ClipboardList,
-  Droplet,
-  DropletOff,
-  Droplets,
-} from "lucide-react";
+
 
 import DashboardStats from "@/components/admin/dashboard/DashboardStats";
 

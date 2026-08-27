@@ -346,15 +346,6 @@ import ZerodoseTrendChart from "@/components/admin/dashboard/charts/ZerodoseTren
 import UserDesignationChart from "@/components/admin/dashboard/charts/UserDesignationChart";
 import CoverageChart from "@/components/admin/dashboard/charts/CoverageChart";
 
-import {
-  BriefcaseBusiness,
-  ClipboardList,
-  Map,
-  UsersRound,
-  ShieldCheck,
-  Users,
-} from "lucide-react";
-
 import DashboardStats from "@/components/admin/dashboard/DashboardStats";
 
 import {

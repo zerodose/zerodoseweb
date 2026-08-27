@@ -571,7 +571,7 @@ export default function CampaignChart({ counts = {}, trendData = [] }) {
           Header
       ====================================================== */}
 
-      <div className="mb-3 flex h-[82px] shrink-0 items-start justify-between gap-4">
+      <div className="mb-3 flex h-[115px] shrink-0 items-start justify-between gap-3 sm:h-[82px] sm:gap-4">
         {/* ==================================================
             Title
         ================================================== */}
@@ -701,9 +701,9 @@ export default function CampaignChart({ counts = {}, trendData = [] }) {
           Legend
       ====================================================== */}
 
-      <div className="mb-2 flex h-5 shrink-0 items-center gap-4">
+      <div className="mb-3 flex min-h-2 shrink-0 flex-wrap items-center justify-end gap-x-4 gap-y-1 sm:mb-2 sm:justify-start sm:gap-4">
         {Object.entries(LINE_CONFIG).map(([key, item]) => (
-          <div key={key} className="flex h-5 items-center gap-1.5">
+          <div key={key} className="flex h-2 items-center gap-1.5">
             <span
               className="h-2.5 w-2.5 shrink-0 rounded-full"
               style={{

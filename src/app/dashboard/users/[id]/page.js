@@ -118,9 +118,7 @@ export default function UserViewPage() {
           actions={
             !loading && user && isAdmin ? (
               <ActionButtons
-                onEdit={() =>
-                  router.push(`/dashboard/users/${user._id}/update`)
-                }
+                showEdit={false}
                 onDelete={() => setDeleteModalOpen(true)}
               />
             ) : null

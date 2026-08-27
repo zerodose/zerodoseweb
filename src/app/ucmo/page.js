@@ -154,38 +154,6 @@ export default function Page() {
 
         setSupervisors(supervisorsResponse.data || []);
 
-        // --------------------------------------------------------
-        // ACTIVE USERS / TEAMS
-        // --------------------------------------------------------
-
-        if (authUnionCouncilId) {
-          const approvalCountResponse = await getPendingApprovalCount({
-            userId: ucmoId,
-            designation: "ucmo",
-          });
-
-          if (!approvalCountResponse?.success) {
-            throw new Error(
-              approvalCountResponse?.message ||
-                "Failed to fetch pending approval count.",
-            );
-          }
-
-          setPendingApprovals(approvalCountResponse?.count ?? 0);
-        } else {
-          setPendingApprovals(0);
-        }
-
-        // --------------------------------------------------------
-        // PENDING SUPERVISOR APPROVALS
-        // --------------------------------------------------------
-
-        // --------------------------------------------------------
-        // PENDING APPROVALS
-        // UCMO APPROVES:
-        // supervisor + vaccinator + otherstaff
-        // --------------------------------------------------------
-
         const approvalCountResponse = await getPendingApprovalCount({
           userId: ucmoId,
           designation: "ucmo",

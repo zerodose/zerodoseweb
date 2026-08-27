@@ -782,13 +782,13 @@ export default function StatusChart({ counts = {}, trendData = [] }) {
           Chart Content
       ====================================================== */}
 
-      <div className="flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden">
-        <div className="flex w-full items-center justify-center gap-8">
+      <div className="flex  min-h-0 w-full flex-1 items-center justify-center overflow-hidden">
+        <div className="flex w-full items-center justify-center gap-2 md:gap-8">
           {/* ==================================================
               Pie Chart
           ================================================== */}
 
-          <div className="relative h-52 w-52 shrink-0">
+          <div className="relative h-48 w-48 md:w-64 md:h-64 shrink-0">
             <svg viewBox="0 0 200 200" className="h-full w-full">
               {/* ==================================================
                   Empty State
@@ -911,7 +911,7 @@ export default function StatusChart({ counts = {}, trendData = [] }) {
               Legend
           ================================================== */}
 
-          <div className="w-full max-w-[180px] space-y-3">
+          <div className="w-full max-w-[240px] space-y-3">
             {finalStatusData.map((item) => {
               const percentage = getPercentage(item.value);
 

@@ -78,7 +78,7 @@ export default function Table({
   // ============================================================
   // States
   // ============================================================
- 
+
   const [search, setSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortConfig, setSortConfig] = useState({
@@ -111,6 +111,29 @@ export default function Table({
   const columnRef = useRef(null);
 
   const downloadRef = useRef(null);
+
+  const formatText = (value) => {
+    if (value === null || value === undefined) return "-";
+
+    return String(value)
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
+  const formatDesignation = (value) => {
+    if (!value) return "-";
+
+    const designationMap = {
+      townfp: "Town FP",
+      districtfp: "District FP",
+      ucmo: "UCMO",
+      otherstaff: "Other Staff",
+      supervisor: "Supervisor",
+      vaccinator: "Vaccinator",
+    };
+
+    return designationMap[String(value).toLowerCase()] || formatText(value);
+  };
 
   // ============================================================
   // Outside Click
@@ -232,7 +255,7 @@ export default function Table({
   // Format Value
   // ============================================================
 
-  const formatValue = (value) => {
+  const formatValue = (value, column = "") => {
     if (value === null || value === undefined) {
       return "-";
     }
@@ -255,7 +278,18 @@ export default function Table({
       return JSON.stringify(value);
     }
 
-    return String(value);
+    // Email ko original form mein rakhein
+    if (column.toLowerCase() === "email") {
+      return String(value);
+    }
+
+    // Designation ki special formatting
+    if (column.toLowerCase() === "designation") {
+      return formatDesignation(value);
+    }
+
+    // Baqi text Capitalize
+    return formatText(value);
   };
   // ============================================================
   // Date Parser
@@ -292,7 +326,7 @@ export default function Table({
 
     return data.filter((row) =>
       columns.some((column) => {
-        const value = formatValue(row[column]).toLowerCase();
+        const value = formatValue(row[column], column).toLowerCase();
 
         return value.includes(query);
       }),
@@ -319,7 +353,7 @@ export default function Table({
         }
 
         result = result.filter((row) => {
-          const rowValue = formatValue(row[filter.column]);
+          const rowValue = formatValue(row[filter.column], filter.column);
 
           return value.includes(rowValue);
         });
@@ -597,7 +631,7 @@ export default function Table({
 
   const getUniqueFilterValues = (filter) => {
     const values = data
-      .map((row) => formatValue(row[filter.column]))
+      .map((row) => formatValue(row[filter.column], filter.column))
       .filter((value) => value !== "-" && value.trim() !== "");
 
     return [...new Set(values)].sort((a, b) =>
@@ -1249,7 +1283,7 @@ export default function Table({
                         <div className="truncate">
                           {dateColumns.includes(column)
                             ? formatDate(row[column])
-                            : formatValue(row[column])}
+                            : formatValue(row[column], column)}
                         </div>
                       </td>
                     ))}

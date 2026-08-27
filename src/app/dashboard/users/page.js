@@ -254,9 +254,9 @@ export default function UsersPage() {
       // Add
       // ========================================================
 
-      addButton
-      addButtonText="Add User"
-      onAdd={() => router.push("/dashboard/users/addUser")}
+      // addButton
+      // addButtonText="Add User"
+      // onAdd={() => router.push("/dashboard/users/addUser")}
 
       // ========================================================
       // Export

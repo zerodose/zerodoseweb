@@ -1,173 +1,117 @@
-  // // import axios from "axios";
+//   import axios from "axios";
 
-  // // const API_URLS = [
-  // //   "http://192.168.100.12:3000",
-  // //   "https://zerodoseweb.vercel.app",
-  // //   "http://10.137.120.208:3000",
-  // //   "http://10.244.166.208:3000",
-  // //   "http://10.73.147.208:3000",
-  // //   "http://192.168.1.14:3000",
-  // //   "http://localhost:3000",
-  // // ];
+// const API_URLS = [
+//   "http://192.168.100.12:3000",
+//   "https://zerodoseweb.vercel.app",
+//   "http://10.137.120.208:3000",
+//   "http://10.244.166.208:3000",
+//   "http://10.73.147.208:3000",
+//   "http://192.168.1.14:3000",
+//   "http://localhost:3000",
+// ];
 
-  // // let activeBaseURL = null;
+// let activeBaseURL = null;
+// let detectionPromise = null;
 
-  // // // ============================================================
-  // // // Detect API URL
-  // // // ============================================================
+// // ============================================================
+// // Detect API URL
+// // ============================================================
 
-  // // export const detectApiURL = async () => {
-  // //   if (activeBaseURL) {
-  // //     return activeBaseURL;
-  // //   }
+// export const detectApiURL = async () => {
+//   // Already detected
+//   if (activeBaseURL) {
+//     return activeBaseURL;
+//   }
 
-  // //   for (const url of API_URLS) {
-  // //     try {
-  // //       const response = await axios.get(`${url}/api/health`, {
-  // //         timeout: 2000,
-  // //       });
+//   // Detection already running
+//   if (detectionPromise) {
+//     return detectionPromise;
+//   }
 
-  // //       if (response.status >= 200 && response.status < 300) {
-  // //         activeBaseURL = `${url}/api`;
+//   detectionPromise = (async () => {
+//     for (const url of API_URLS) {
+//       try {
+//         const response = await axios.get(`${url}/api/health`, {
+//           timeout: 2000,
+//         });
 
-  // //         // console.log("Active API:", activeBaseURL);
+//         if (response.status >= 200 && response.status < 300) {
+//           activeBaseURL = `${url}/api`;
 
-  // //         return activeBaseURL;
-  // //       }
-  // //     } catch {
-  // //       console.log("API unavailable:", url);
-  // //     }
-  // //   }
+//           console.log("Active API:", activeBaseURL);
 
-  // //   throw new Error(
-  // //     "Unable to connect to the server. Please check your internet connection and try again.",
-  // //   );
-  // // };
+//           return activeBaseURL;
+//         }
+//       } catch {
+//         console.log("API unavailable:", url);
+//       }
+//     }
 
-  // // // ============================================================
-  // // // Axios
-  // // // ============================================================
+//     throw new Error(
+//       "Unable to connect to the server. Please check your internet connection and try again.",
+//     );
+//   })();
 
-  // // export const api = axios.create({
-  // //   // baseURL: "/api",
-  // //   headers: {
-  // //     "Content-Type": "application/json",
-  // //   },
-  // //   withCredentials: true,
-  // // });
+//   try {
+//     return await detectionPromise;
+//   } finally {
+//     detectionPromise = null;
+//   }
+// };
 
-  // // // ============================================================
-  // // // Request Interceptor
-  // // // ============================================================
+// // ============================================================
+// // Axios
+// // ============================================================
 
-  // // api.interceptors.request.use(
-  // //   async (config) => {
-  // //     config.baseURL = await detectApiURL();
+// export const api = axios.create({
+//   headers: {
+//     "Content-Type": "application/json",
+//   },
+//   withCredentials: true,
+// });
 
-  // //     if (typeof window !== "undefined") {
-  // //       const authUser = localStorage.getItem("authUser");
+// // ============================================================
+// // Request Interceptor
+// // ============================================================
 
-  // //       if (authUser) {
-  // //         try {
-  // //           const user = JSON.parse(authUser);
+// api.interceptors.request.use(
+//   async (config) => {
+//     config.baseURL = await detectApiURL();
 
-  // //           if (user?.id) {
-  // //             config.headers = config.headers || {};
-  // //             config.headers["x-user-id"] = user.id;
-  // //           }
-  // //         } catch (error) {
-  // //           console.error("Invalid authUser data:", error);
-  // //         }
-  // //       }
-  // //     }
+//     return config;
+//   },
+//   (error) => Promise.reject(error),
+// );
 
-  // //     return config;
-  // //   },
-  // //   (error) => Promise.reject(error),
-  // // );
+import axios from "axios";
 
-  // import axios from "axios";
+// =====================================================
+// API URLs
+// =====================================================
 
-  // const API_URLS = [
-  //   "http://192.168.100.12:3000",
-  //   "https://zerodoseweb.vercel.app",
-  //   "http://10.137.120.208:3000",
-  //   "http://10.244.166.208:3000",
-  //   "http://10.73.147.208:3000",
-  //   "http://10.73.147.208:3000",
-  //   "http://192.168.1.14:3000",
-  //   "http://localhost:3000",
-  // ];
+const API_URLS = (process.env.NEXT_PUBLIC_API_URLS || "")
+  .split(",")
+  .map((url) => url.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
 
-  // let activeBaseURL = null;
-
-  // export const detectApiURL = async () => {
-  //   if (activeBaseURL) {
-  //     return activeBaseURL;
-  //   }
-
-  //   for (const url of API_URLS) {
-  //     try {
-  //       const response = await axios.get(`${url}/api/health`, {
-  //         timeout: 2000,
-  //       });
-
-  //       if (response.status >= 200 && response.status < 300) {
-  //         activeBaseURL = `${url}/api`;
-  //         return activeBaseURL;
-  //       }
-  //     } catch {
-  //       console.log("API unavailable:", url);
-  //     }
-  //   }
-
-  //   throw new Error(
-  //     "Unable to connect to the server. Please check your internet connection and try again.",
-  //   );
-  // };
-
-  // export const api = axios.create({
-  //   headers: {
-  //     "Content-Type": "application/json",
-  //   },
-  //   withCredentials: true,
-  // });
-
-  // api.interceptors.request.use(
-  //   async (config) => {
-  //     config.baseURL = await detectApiURL();
-
-  //     return config;
-  //   },
-  //   (error) => Promise.reject(error),
-  // );
-
-  import axios from "axios";
-
-const API_URLS = [
-  "http://192.168.100.12:3000",
-  "https://zerodoseweb.vercel.app",
-  "http://10.137.120.208:3000",
-  "http://10.244.166.208:3000",
-  "http://10.73.147.208:3000",
-  "http://192.168.1.14:3000",
-  "http://localhost:3000",
-];
+// =====================================================
+// Active API
+// =====================================================
 
 let activeBaseURL = null;
 let detectionPromise = null;
 
-// ============================================================
-// Detect API URL
-// ============================================================
+// =====================================================
+// Detect Available API
+// =====================================================
 
 export const detectApiURL = async () => {
-  // Already detected
+  // Already connected
   if (activeBaseURL) {
     return activeBaseURL;
   }
 
-  // Detection already running
+  // Prevent multiple simultaneous detection requests
   if (detectionPromise) {
     return detectionPromise;
   }
@@ -175,24 +119,26 @@ export const detectApiURL = async () => {
   detectionPromise = (async () => {
     for (const url of API_URLS) {
       try {
+        console.log("🔄 Checking API:", url);
+
         const response = await axios.get(`${url}/api/health`, {
-          timeout: 2000,
+          timeout: 3000,
         });
 
         if (response.status >= 200 && response.status < 300) {
           activeBaseURL = `${url}/api`;
 
-          console.log("Active API:", activeBaseURL);
+          console.log("✅ Active API:", activeBaseURL);
 
           return activeBaseURL;
         }
-      } catch {
-        console.log("API unavailable:", url);
+      } catch (error) {
+        console.log("❌ API unavailable:", url);
       }
     }
 
     throw new Error(
-      "Unable to connect to the server. Please check your internet connection and try again.",
+      "Unable to connect to any Zerodose server. Please check your network or server.",
     );
   })();
 
@@ -203,9 +149,9 @@ export const detectApiURL = async () => {
   }
 };
 
-// ============================================================
-// Axios
-// ============================================================
+// =====================================================
+// Axios Instance
+// =====================================================
 
 export const api = axios.create({
   headers: {
@@ -214,15 +160,52 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-// ============================================================
+// =====================================================
 // Request Interceptor
-// ============================================================
+// =====================================================
 
 api.interceptors.request.use(
   async (config) => {
-    config.baseURL = await detectApiURL();
+    /*
+     * =================================================
+     * Browser
+     * =================================================
+     */
+
+    if (typeof window !== "undefined") {
+      config.baseURL = await detectApiURL();
+
+      const authUser = localStorage.getItem("authUser");
+
+      if (authUser) {
+        try {
+          const user = JSON.parse(authUser);
+
+          if (user?.id) {
+            config.headers = config.headers || {};
+            config.headers["x-user-id"] = user.id;
+          }
+        } catch (error) {
+          console.error("Invalid authUser:", error);
+        }
+      }
+
+      return config;
+    }
+
+    /*
+     * =================================================
+     * Server / Next.js Server Components
+     * =================================================
+     */
+
+    const serverURL =
+      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+    config.baseURL = `${serverURL.replace(/\/+$/, "")}/api`;
 
     return config;
   },
+
   (error) => Promise.reject(error),
 );

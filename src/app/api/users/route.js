@@ -231,6 +231,7 @@ export async function POST(request) {
       district,
       town,
       unionCouncil,
+      ucmo,
       designation,
       supervisorCode,
       supervisor,
@@ -345,7 +346,7 @@ export async function POST(request) {
     const normalizedUnionCouncil = requirements.unionCouncil
       ? unionCouncil
       : null;
-
+    const normalizedUcmo = ucmo || null;
     if (
       normalizedDistrict &&
       !mongoose.Types.ObjectId.isValid(normalizedDistrict)
@@ -565,7 +566,28 @@ export async function POST(request) {
     let currentUcmo = null;
 
     if (["supervisor", "vaccinator", "otherstaff"].includes(designation)) {
+      if (!normalizedUcmo) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Please select a UCMO.",
+          },
+          { status: 400 },
+        );
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(normalizedUcmo)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid UCMO ID.",
+          },
+          { status: 400 },
+        );
+      }
+
       currentUcmo = await User.findOne({
+        _id: normalizedUcmo,
         designation: "ucmo",
         isActive: true,
         approvalStatus: "approved",
@@ -579,7 +601,7 @@ export async function POST(request) {
           {
             success: false,
             message:
-              "Active approved UCMO not found in the selected Union Council.",
+              "Selected UCMO is not active, approved, or does not belong to the selected Union Council.",
           },
           { status: 400 },
         );

@@ -51,6 +51,7 @@ export default function UsersPage() {
         townName: user.town?.name || "-",
         unionCouncilName: user.unionCouncil?.name || "-",
         supervisorName: user.supervisor?.name || "-",
+        ucmo: user.ucmo?.name || "-",
         isActive: user.isActive === true && user.approvalStatus === "approved",
       }));
 
@@ -182,6 +183,7 @@ export default function UsersPage() {
         supervisorName: "Supervisor",
         supervisorCode: "Supervisor Code",
         districtName: "District",
+        ucmo: "UCMO",
         townName: "Town",
         unionCouncilName: "Union Council",
         isActive: "Active",
@@ -199,6 +201,7 @@ export default function UsersPage() {
         "teamNumber",
         "supervisorName",
         "supervisorCode",
+        "ucmo",
         "districtName",
         "townName",
         "unionCouncilName",

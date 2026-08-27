@@ -481,25 +481,25 @@ export default function HomePage() {
       label: "Campaigns",
       value: animatedCounts.campaigns,
       icon: BarChart3,
-      description: "Managed campaigns",
+      // description: "Managed campaigns",
     },
     {
       label: "Supervisors",
       value: animatedCounts.supervisors,
       icon: ShieldCheck,
-      description: "Active supervisors",
+      // description: "Active supervisors",
     },
     {
       label: "Teams",
       value: animatedCounts.teams,
       icon: UsersRound,
-      description: "Field teams",
+      // description: "Field teams",
     },
     {
       label: "Zerodose",
       value: animatedCounts.zerodose,
       icon: Database,
-      description: "Records managed",
+      // description: "Records managed",
     },
   ];
 
@@ -689,7 +689,7 @@ export default function HomePage() {
 
                   {/* Stats */}
 
-                  <div className="grid grid-cols-2 gap-3 p-4 sm:gap-4 sm:p-5">
+                  {/* <div className="grid grid-cols-2 gap-3 p-4 sm:gap-4 sm:p-5">
                     {stats.map((stat) => {
                       const Icon = stat.icon;
 
@@ -719,6 +719,50 @@ export default function HomePage() {
                           <p className="text-text-secondary mt-3 text-[11px] sm:text-xs">
                             {stat.description}
                           </p>
+                        </div>
+                      );
+                    })}
+                  </div> */}
+
+                  <div className="grid grid-cols-2 gap-3 p-4 sm:gap-4 sm:p-5">
+                    {stats.map((stat) => {
+                      const Icon = stat.icon;
+
+                      return (
+                        <div
+                          key={stat.label}
+                          className="group bg-surface border-border/60 relative overflow-hidden rounded-xl border p-4 shadow-sm transition-all duration-300 sm:p-5"
+                        >
+                          {/* Decorative background */}
+                          <div className="bg-primary/5 pointer-events-none absolute -top-8 -right-8 h-24 w-24 md:h-28 md:w-28 rounded-full" />
+
+                          {/* Top row */}
+                          <div className="relative flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-text-secondary text-xs font-medium sm:text-sm">
+                                {stat.label}
+                              </p>
+
+                              <p className="text-text mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+                                {loading
+                                  ? loadingDots
+                                  : stat.value.toLocaleString()}
+                              </p>
+                            </div>
+
+                            {/* Icon */}
+                            <div className="bg-primary-light text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm sm:h-11 sm:w-11">
+                              <Icon className="h-5 w-5" />
+                            </div>
+                          </div>
+
+                          {/* Description */}
+                          <p className="text-text-secondary relative mt-3 text-[11px] leading-relaxed sm:text-xs">
+                            {stat.description}
+                          </p>
+
+                          {/* Bottom accent */}
+                          <div className="bg-primary absolute bottom-0 left-0 h-0.5 w-full origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100" />
                         </div>
                       );
                     })}

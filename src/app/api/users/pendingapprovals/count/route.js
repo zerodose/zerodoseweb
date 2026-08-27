@@ -1,3 +1,209 @@
+// import { NextResponse } from "next/server";
+
+// import { connectDB } from "@/lib/db";
+// import User from "@/models/User";
+
+// export async function GET(request) {
+//   try {
+//     await connectDB();
+
+//     const { searchParams } = new URL(request.url);
+
+//     const userId = searchParams.get("userId");
+//     const designation = searchParams.get("designation");
+
+//     if (!userId || !designation) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           message: "User ID and designation are required.",
+//         },
+//         {
+//           status: 400,
+//         },
+//       );
+//     }
+
+//     // ============================================================
+//     // Approval hierarchy
+//     // ============================================================
+
+//     const approvalMap = {
+//       admin: ["districtfp"],
+//       districtfp: ["townfp"],
+//       townfp: ["ucmo"],
+//       ucmo: ["supervisor", "vaccinator", "otherstaff"],
+//     };
+
+//     const pendingDesignations = approvalMap[designation];
+
+//     // This designation is not an approver
+//     if (!pendingDesignations) {
+//       return NextResponse.json(
+//         {
+//           success: true,
+//           count: 0,
+//         },
+//         {
+//           status: 200,
+//         },
+//       );
+//     }
+
+//     // ============================================================
+//     // Get current approver
+//     // ============================================================
+
+//     const approver = await User.findById(userId).lean();
+
+//     if (!approver) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           message: "Approver not found.",
+//         },
+//         {
+//           status: 404,
+//         },
+//       );
+//     }
+
+//     if (approver.designation !== designation) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           message: "Invalid designation for this user.",
+//         },
+//         {
+//           status: 403,
+//         },
+//       );
+//     }
+
+//     // ============================================================
+//     // Base pending request filter
+//     // ============================================================
+
+//     const filter = {
+//       designation: { $in: pendingDesignations },
+//       approvalStatus: "pending",
+//       isActive: false,
+//     };
+
+//     // ============================================================
+//     // Scope-wise filtering
+//     // ============================================================
+
+//     // Admin
+//     // ------------------------------------------------------------
+//     // Admin sees all pending districtfp requests.
+//     //
+//     // No additional scope filter required.
+//     //
+
+//     if (designation === "admin") {
+//       // Nothing extra
+//     }
+
+//     // districtfp
+//     // ------------------------------------------------------------
+//     // districtfp sees only TownFP requests from its district.
+//     //
+//     else if (designation === "districtfp") {
+//       if (!approver.district) {
+//         return NextResponse.json(
+//           {
+//             success: true,
+//             count: 0,
+//           },
+//           {
+//             status: 200,
+//           },
+//         );
+//       }
+
+//       filter.district = approver.district;
+//     }
+
+//     // TownFP
+//     // ------------------------------------------------------------
+//     // TownFP sees only UCMO requests from its town.
+//     //
+//     else if (designation === "townfp") {
+//       if (!approver.town) {
+//         return NextResponse.json(
+//           {
+//             success: true,
+//             count: 0,
+//           },
+//           {
+//             status: 200,
+//           },
+//         );
+//       }
+
+//       filter.town = approver.town;
+//     }
+
+//     // UCMO
+//     // ------------------------------------------------------------
+//     // UCMO sees Supervisor + Vaccinator requests
+//     // from its Union Council.
+//     //
+//     else if (designation === "ucmo") {
+//       if (!approver.unionCouncil) {
+//         return NextResponse.json(
+//           {
+//             success: true,
+//             count: 0,
+//           },
+//           {
+//             status: 200,
+//           },
+//         );
+//       }
+
+//      filter.$or = [
+//   {
+//     designation: { $in: ["vaccinator", "otherstaff"] },
+//   },
+//   {
+//     designation: "supervisor",
+//     ucmo: approver._id,
+//   },
+// ];
+//     }
+
+//     // ============================================================
+//     // Count pending approvals
+//     // ============================================================
+
+//     const count = await User.countDocuments(filter);
+
+//     return NextResponse.json(
+//       {
+//         success: true,
+//         count,
+//       },
+//       {
+//         status: 200,
+//       },
+//     );
+//   } catch (error) {
+//     console.error("Pending approval count error:", error);
+
+//     return NextResponse.json(
+//       {
+//         success: false,
+//         message: error?.message || "Failed to fetch pending approval count.",
+//       },
+//       {
+//         status: 500,
+//       },
+//     );
+//   }
+// }
+
 import { NextResponse } from "next/server";
 
 import { connectDB } from "@/lib/db";
@@ -18,9 +224,7 @@ export async function GET(request) {
           success: false,
           message: "User ID and designation are required.",
         },
-        {
-          status: 400,
-        },
+        { status: 400 },
       );
     }
 
@@ -37,24 +241,24 @@ export async function GET(request) {
 
     const pendingDesignations = approvalMap[designation];
 
-    // This designation is not an approver
+    // Not an approver
     if (!pendingDesignations) {
       return NextResponse.json(
         {
           success: true,
           count: 0,
         },
-        {
-          status: 200,
-        },
+        { status: 200 },
       );
     }
 
     // ============================================================
-    // Get current approver
+    // Get approver
     // ============================================================
 
-    const approver = await User.findById(userId).lean();
+    const approver = await User.findById(userId)
+      .select("designation district town unionCouncil")
+      .lean();
 
     if (!approver) {
       return NextResponse.json(
@@ -62,9 +266,7 @@ export async function GET(request) {
           success: false,
           message: "Approver not found.",
         },
-        {
-          status: 404,
-        },
+        { status: 404 },
       );
     }
 
@@ -74,14 +276,12 @@ export async function GET(request) {
           success: false,
           message: "Invalid designation for this user.",
         },
-        {
-          status: 403,
-        },
+        { status: 403 },
       );
     }
 
     // ============================================================
-    // Base pending request filter
+    // Base filter
     // ============================================================
 
     const filter = {
@@ -91,24 +291,18 @@ export async function GET(request) {
     };
 
     // ============================================================
-    // Scope-wise filtering
+    // Admin
+    // Admin sees all pending District FP requests
     // ============================================================
 
-    // Admin
-    // ------------------------------------------------------------
-    // Admin sees all pending districtfp requests.
-    //
-    // No additional scope filter required.
-    //
-
     if (designation === "admin") {
-      // Nothing extra
+      // No additional filter
     }
 
-    // districtfp
-    // ------------------------------------------------------------
-    // districtfp sees only TownFP requests from its district.
-    //
+    // ============================================================
+    // District FP
+    // Sees Town FP requests from own district
+    // ============================================================
     else if (designation === "districtfp") {
       if (!approver.district) {
         return NextResponse.json(
@@ -116,19 +310,17 @@ export async function GET(request) {
             success: true,
             count: 0,
           },
-          {
-            status: 200,
-          },
+          { status: 200 },
         );
       }
 
       filter.district = approver.district;
     }
 
-    // TownFP
-    // ------------------------------------------------------------
-    // TownFP sees only UCMO requests from its town.
-    //
+    // ============================================================
+    // Town FP
+    // Sees UCMO requests from own town
+    // ============================================================
     else if (designation === "townfp") {
       if (!approver.town) {
         return NextResponse.json(
@@ -136,20 +328,18 @@ export async function GET(request) {
             success: true,
             count: 0,
           },
-          {
-            status: 200,
-          },
+          { status: 200 },
         );
       }
 
       filter.town = approver.town;
     }
 
+    // ============================================================
     // UCMO
-    // ------------------------------------------------------------
-    // UCMO sees Supervisor + Vaccinator requests
-    // from its Union Council.
-    //
+    // Sees pending Supervisor, Vaccinator and Other Staff
+    // from own Union Council
+    // ============================================================
     else if (designation === "ucmo") {
       if (!approver.unionCouncil) {
         return NextResponse.json(
@@ -157,25 +347,15 @@ export async function GET(request) {
             success: true,
             count: 0,
           },
-          {
-            status: 200,
-          },
+          { status: 200 },
         );
       }
 
-     filter.$or = [
-  {
-    designation: { $in: ["vaccinator", "otherstaff"] },
-  },
-  {
-    designation: "supervisor",
-    ucmo: approver._id,
-  },
-];
+      filter.unionCouncil = approver.unionCouncil;
     }
 
     // ============================================================
-    // Count pending approvals
+    // Count
     // ============================================================
 
     const count = await User.countDocuments(filter);
@@ -185,9 +365,7 @@ export async function GET(request) {
         success: true,
         count,
       },
-      {
-        status: 200,
-      },
+      { status: 200 },
     );
   } catch (error) {
     console.error("Pending approval count error:", error);
@@ -197,9 +375,7 @@ export async function GET(request) {
         success: false,
         message: error?.message || "Failed to fetch pending approval count.",
       },
-      {
-        status: 500,
-      },
+      { status: 500 },
     );
   }
 }

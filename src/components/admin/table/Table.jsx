@@ -797,7 +797,7 @@ export default function Table({
               Add
           ================================================= */}
 
-          {addButton && (
+          {/* {addButton && (
             <button
               type="button"
               onClick={onAdd}
@@ -807,7 +807,22 @@ export default function Table({
 
               <span className="min-w-0 truncate">{addButtonText}</span>
             </button>
-          )}
+          )} */}
+          <div className="min-w-0">
+            {addButton ? (
+              <button
+                type="button"
+                onClick={onAdd}
+                className="bg-primary text-primary-foreground hover:bg-primary-dark flex h-10 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition lg:w-auto"
+              >
+                <Plus size={16} />
+
+                <span className="min-w-0 truncate">{addButtonText}</span>
+              </button>
+            ) : (
+              <div className="h-10 w-full lg:hidden" />
+            )}
+          </div>
 
           {/* =================================================
               Columns
@@ -919,7 +934,7 @@ export default function Table({
               Filter
           ================================================= */}
 
-          {filterOptions.length > 0 && (
+          {/* {filterOptions.length > 0 && (
             <div ref={filterRef} className="relative">
               <button
                 type="button"
@@ -991,10 +1006,6 @@ export default function Table({
                             />
                           </button>
 
-                          {/* =================================
-                                  Select Options
-                              ================================= */}
-
                           {isActive && filter.type === "select" && (
                             <div className="bg-surface mt-1 max-h-52 space-y-2 overflow-y-auto rounded-lg p-3">
                               {getUniqueFilterValues(filter).map((option) => {
@@ -1021,10 +1032,6 @@ export default function Table({
                               })}
                             </div>
                           )}
-
-                          {/* =================================
-                                  Date Range
-                              ================================= */}
 
                           {isActive && filter.type === "dateRange" && (
                             <div className="bg-surface mt-1 space-y-3 rounded-lg p-3">
@@ -1074,7 +1081,166 @@ export default function Table({
                 </div>
               )}
             </div>
-          )}
+          )} */}
+
+          {/* =================================================
+    Filter
+================================================= */}
+
+          <div ref={filterRef} className="relative min-w-0">
+            {filterOptions.length > 0 ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilterOpen((prev) => !prev);
+
+                    setShowColumnMenu(false);
+
+                    setDownloadOpen(false);
+                  }}
+                  className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition lg:w-auto lg:min-w-28"
+                >
+                  <SlidersHorizontal size={16} />
+
+                  <span>Filter</span>
+
+                  {activeFilterCount > 0 && (
+                    <span className="bg-primary flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] text-white">
+                      {activeFilterCount}
+                    </span>
+                  )}
+
+                  <ChevronDown
+                    size={15}
+                    className={`transition-transform ${
+                      filterOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {filterOpen && (
+                  <div className="border-border bg-background absolute top-12 left-0 z-50 w-72 rounded-xl border p-2 shadow-xl">
+                    <div className="flex items-center justify-between px-2 py-2">
+                      <p className="text-text text-sm font-semibold">
+                        Filter Data
+                      </p>
+
+                      {activeFilterCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={clearFilters}
+                          className="text-primary text-xs font-medium hover:underline"
+                        >
+                          Clear All
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="max-h-[420px] space-y-2 overflow-y-auto">
+                      {filterOptions.map((filter) => {
+                        const isActive = activeFilter === filter.key;
+
+                        return (
+                          <div key={filter.key}>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setActiveFilter(isActive ? null : filter.key)
+                              }
+                              className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-between rounded-lg border px-3 text-sm font-medium transition"
+                            >
+                              <span className="truncate">{filter.label}</span>
+
+                              <ChevronDown
+                                size={15}
+                                className={`shrink-0 transition-transform ${
+                                  isActive ? "rotate-180" : ""
+                                }`}
+                              />
+                            </button>
+
+                            {/* Select Options */}
+                            {isActive && filter.type === "select" && (
+                              <div className="bg-surface mt-1 max-h-52 space-y-2 overflow-y-auto rounded-lg p-3">
+                                {getUniqueFilterValues(filter).map((option) => {
+                                  const selected =
+                                    filterValues[filter.key]?.includes(option);
+
+                                  return (
+                                    <label
+                                      key={option}
+                                      className="text-text flex cursor-pointer items-center gap-2 text-sm"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={Boolean(selected)}
+                                        onChange={() =>
+                                          toggleFilterValue(filter.key, option)
+                                        }
+                                        className="accent-primary h-4 w-4"
+                                      />
+
+                                      <span className="truncate">{option}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {/* Date Range */}
+                            {isActive && filter.type === "dateRange" && (
+                              <div className="bg-surface mt-1 space-y-3 rounded-lg p-3">
+                                <div>
+                                  <label className="text-text-secondary mb-1 block text-xs">
+                                    Start Date
+                                  </label>
+
+                                  <input
+                                    type="date"
+                                    value={filterValues[filter.key]?.from || ""}
+                                    onChange={(event) =>
+                                      setDateRange(
+                                        filter.key,
+                                        "from",
+                                        event.target.value,
+                                      )
+                                    }
+                                    className="border-border bg-background text-text h-10 w-full rounded-lg border px-3 text-sm outline-none"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="text-text-secondary mb-1 block text-xs">
+                                    End Date
+                                  </label>
+
+                                  <input
+                                    type="date"
+                                    value={filterValues[filter.key]?.to || ""}
+                                    onChange={(event) =>
+                                      setDateRange(
+                                        filter.key,
+                                        "to",
+                                        event.target.value,
+                                      )
+                                    }
+                                    className="border-border bg-background text-text h-10 w-full rounded-lg border px-3 text-sm outline-none"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="h-10 w-full lg:hidden" />
+            )}
+          </div>
 
           {/* =================================================
               Download

@@ -269,6 +269,23 @@ export default function UCMOsPage() {
         "unionCouncilName",
       ]}
 
+      filterOptions={[
+        
+        {
+          key: "town",
+          label: "Towns",
+          type: "select",
+          column: "townName",
+        },
+        {
+          key: "unioncouncil",
+          label: "Union Councils",
+          type: "select",
+          column: "unionCouncilName",
+        },
+       
+      ]}
+
       // ========================================================
       // Row
       // ========================================================

@@ -151,7 +151,7 @@
 //             "covered",
 //           ].join(","),
 //         );
-        
+
 //         const data = response?.data || {};
 
 //         if (!cancelled) {
@@ -201,7 +201,7 @@
 
 //       <DashboardStats
 //         items={[
-         
+
 //           {
 //             key: "towns",
 //             title: "Total Towns",
@@ -348,10 +348,7 @@ import CoverageChart from "@/components/admin/dashboard/charts/CoverageChart";
 
 import DashboardStats from "@/components/admin/dashboard/DashboardStats";
 
-import {
-  getCampaignTrend,
-  getDistrictCount,
-} from "@/api/dashboardApi";
+import { getCampaignTrend, getDistrictCount } from "@/api/dashboardApi";
 
 export default function DistrictFPDashboard() {
   // ============================================================
@@ -403,9 +400,7 @@ export default function DistrictFPDashboard() {
         authUser?.district?._id ||
         authUser?.district?.id ||
         authUser?.districtId ||
-        (typeof authUser?.district === "string"
-          ? authUser.district
-          : null);
+        (typeof authUser?.district === "string" ? authUser.district : null);
 
       if (!id) {
         console.warn("District ID not found for District FP.");
@@ -443,10 +438,7 @@ export default function DistrictFPDashboard() {
           setCampaignTrend(response?.data?.data || []);
         }
       } catch (error) {
-        console.error(
-          "Failed to fetch District FP campaign trend:",
-          error,
-        );
+        console.error("Failed to fetch District FP campaign trend:", error);
 
         if (!cancelled) {
           setCampaignTrend([]);
@@ -504,10 +496,7 @@ export default function DistrictFPDashboard() {
           });
         }
       } catch (error) {
-        console.error(
-          "Failed to fetch District FP dashboard counts:",
-          error,
-        );
+        console.error("Failed to fetch District FP dashboard counts:", error);
       }
     };
 
@@ -534,43 +523,43 @@ export default function DistrictFPDashboard() {
           //   key: "campaigns",
           //   title: "Total Campaigns",
           //   value: counts.campaigns,
-          //   icon: BriefcaseBusiness,
+          //   icon: "BriefcaseBusiness",
           // },
           {
             key: "towns",
             title: "Total Towns",
             value: counts.towns,
-            icon: Map,
+            icon: "Map",
           },
           {
             key: "unionCouncils",
             title: "Total Union Councils",
             value: counts.unionCouncils,
-            icon: Map,
+            icon: "Map",
           },
           {
             key: "ucmos",
             title: "Total UCMOs",
             value: counts.ucmos,
-            icon: UsersRound,
+            icon: "UsersRound",
           },
           {
             key: "supervisors",
             title: "Total Supervisors",
             value: counts.supervisors,
-            icon: ShieldCheck,
+            icon: "ShieldCheck",
           },
           {
             key: "teams",
             title: "Total Teams",
             value: counts.teams,
-            icon: Users,
+            icon: "Users",
           },
           {
             key: "zerodose",
             title: "Total Zerodose",
             value: counts.zerodose,
-            icon: ClipboardList,
+            icon: "ClipboardList",
           },
         ]}
       />
@@ -583,28 +572,19 @@ export default function DistrictFPDashboard() {
         {/* Campaign */}
 
         <ChartAnimation delay={100}>
-          <CampaignChart
-            counts={counts}
-            trendData={campaignTrend}
-          />
+          <CampaignChart counts={counts} trendData={campaignTrend} />
         </ChartAnimation>
 
         {/* Status */}
 
         <ChartAnimation delay={400}>
-          <StatusChart
-            counts={counts}
-            trendData={campaignTrend}
-          />
+          <StatusChart counts={counts} trendData={campaignTrend} />
         </ChartAnimation>
 
         {/* Recorded vs Covered */}
 
         <ChartAnimation delay={700}>
-          <RecordedCoveredChart
-            counts={counts}
-            trendData={campaignTrend}
-          />
+          <RecordedCoveredChart counts={counts} trendData={campaignTrend} />
         </ChartAnimation>
 
         {/* District / Town */}
@@ -640,10 +620,7 @@ export default function DistrictFPDashboard() {
         {/* Zerodose Trend */}
 
         <ChartAnimation delay={1150}>
-          <ZerodoseTrendChart
-            counts={counts}
-            trendData={campaignTrend}
-          />
+          <ZerodoseTrendChart counts={counts} trendData={campaignTrend} />
         </ChartAnimation>
 
         {/* Coverage */}

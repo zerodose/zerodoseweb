@@ -1,4 +1,3 @@
-
 import ActivityChart from "@/components/admin/dashboard/charts/ActivityChart";
 import CampaignChart from "@/components/admin/dashboard/charts/CampaignChart";
 import CampaignComparisonChart from "@/components/admin/dashboard/charts/CampaignComparisonChart";
@@ -124,37 +123,37 @@ export default async function DashboardPage() {
             key: "campaigns",
             title: "Total Campaigns",
             value: counts.campaigns,
-            icon: BriefcaseBusiness,
+            icon: "BriefcaseBusiness",
           },
           {
             key: "districts",
             title: "Total Districts",
             value: counts.districts,
-            icon: Building2,
+            icon: "Building2",
           },
           {
             key: "supervisors",
             title: "Total Supervisors",
             value: counts.supervisors,
-            icon: ShieldCheck,
+            icon: "ShieldCheck",
           },
           {
             key: "teams",
             title: "Total Teams",
             value: counts.teams,
-            icon: Users,
+            icon: "Users",
           },
           {
             key: "zerodose",
             title: "Total Zerodose",
             value: counts.zerodose,
-            icon: ClipboardList,
+            icon: "ClipboardList",
           },
           {
             key: "covered",
             title: "Total Covered",
             value: counts.covered,
-            icon: Activity,
+            icon: "Activity",
           },
         ]}
       />

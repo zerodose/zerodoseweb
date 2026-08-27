@@ -14,8 +14,6 @@ import ZerodoseTrendChart from "@/components/admin/dashboard/charts/ZerodoseTren
 import UserDesignationChart from "@/components/admin/dashboard/charts/UserDesignationChart";
 import CoverageChart from "@/components/admin/dashboard/charts/CoverageChart";
 
-
-
 import DashboardStats from "@/components/admin/dashboard/DashboardStats";
 
 import { getCampaignTrend, getTownCount } from "@/api/dashboardApi";
@@ -196,43 +194,43 @@ export default function TownFPDashboard() {
             key: "unionCouncils",
             title: "Total Union Councils",
             value: counts.unionCouncils,
-            icon: Map,
+            icon: "Map",
           },
           {
             key: "ucmos",
             title: "Total UCMOs",
             value: counts.ucmos,
-            icon: UsersRound,
+            icon: "UsersRound",
           },
           {
             key: "supervisors",
             title: "Total Supervisors",
             value: counts.supervisors,
-            icon: ShieldCheck,
+            icon: "ShieldCheck",
           },
           {
             key: "teams",
             title: "Total Teams",
             value: counts.teams,
-            icon: Users,
+            icon: "Users",
           },
           // {
           //   key: "vaccinators",
           //   title: "Total Vaccinators",
           //   value: counts.vaccinators,
-          //   icon: Syringe,
+          //   icon: "Syringe",
           // },
           {
-            key: "zerodose recorded",
+            key: "recorded",
             title: "Total Recorded",
             value: counts.recorded,
-            icon: DropletOff,
+            icon: "DropletOff",
           },
           {
-            key: "zerodose covered",
+            key: "covered",
             title: "Total Covered",
             value: counts.covered,
-            icon: Droplets,
+            icon: "Droplets",
           },
         ]}
       />

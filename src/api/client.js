@@ -89,10 +89,20 @@ import axios from "axios";
 // API URLs
 // =====================================================
 
-const API_URLS = (process.env.NEXT_PUBLIC_API_URLS || "")
-  .split(",")
-  .map((url) => url.trim().replace(/\/+$/, ""))
-  .filter(Boolean);
+// const API_URLS = (process.env.NEXT_PUBLIC_API_URLS || "")
+//   .split(",")
+//   .map((url) => url.trim().replace(/\/+$/, ""))
+//   .filter(Boolean);
+
+const API_URLS = [
+  "http://192.168.100.12:3000",
+  "https://zerodoseweb.vercel.app",
+  "http://10.137.120.208:3000",
+  "http://10.244.166.208:3000",
+  "http://10.73.147.208:3000",
+  "http://192.168.1.14:3000",
+  "http://localhost:3000",
+];
 
 // =====================================================
 // Active API

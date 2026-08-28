@@ -16,17 +16,19 @@ export default function UCMOActions({ link, name,  pendingApprovals = 0, loading
         {name}
       </span>
 
-      {pendingApprovals > 0 ? (
-        <span className="bg-primary flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[11px] font-bold text-white">
-          {pendingApprovals}
-        </span>
-      ) : loading ? (
-        <RefreshCw size={16} className="text-primary animate-spin" />
-      ) : (
-        <span className="bg-surface border-border text-text-secondary rounded-full border px-2 py-0.5 text-[10px] font-medium">
-          None
-        </span>
-      )}
+      <div className="flex w-10 shrink-0 items-center justify-center">
+  {pendingApprovals > 0 ? (
+    <span className="bg-primary flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[11px] font-bold text-white">
+      {pendingApprovals}
+    </span>
+  ) : loading ? (
+    <RefreshCw size={16} className="text-primary animate-spin" />
+  ) : (
+    <span className="bg-surface border-border text-text-secondary rounded-full border px-1.5 py-0.5 text-[10px] font-medium leading-none">
+      None
+    </span>
+  )}
+</div>
 
       <ChevronRight
         size={16}

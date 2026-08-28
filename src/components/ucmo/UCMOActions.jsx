@@ -8,7 +8,7 @@ export default function UCMOActions({ link, name,  pendingApprovals = 0, loading
   return (
     <Link
       href={link}
-      className="border-border bg-primary/20 hover:border-primary/40 hover:bg-primary-light group inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 shadow-sm transition-all"
+      className="max-w-[250] md:w-fit  border-border bg-primary/20 hover:border-primary/40 hover:bg-primary-light group inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 shadow-sm transition-all"
     >
       <Clock3 size={16} className="text-primary" />
 

@@ -11,9 +11,10 @@ import SupervisorActions from "@/components/supervisor/SupervisorActions";
 import CampaignTabs from "@/components/supervisor/CampaignTabs";
 import CurrentCampaign from "@/components/supervisor/CurrentCampaign";
 import PreviousCampaigns from "@/components/supervisor/PreviousCampaigns";
-import UCMOActions from "@/components/ucmo/UCMOActions";
+import UCMOActions from "@/components/ucmo/PendingApprovalButton";
 import { getPendingZerodoseCount } from "@/api/zerodoseApprovalApi";
 import { LayoutDashboard } from "lucide-react";
+import PendingApprovalButton from "@/components/ucmo/PendingApprovalButton";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
@@ -408,9 +409,9 @@ export default function Page() {
       <div className="mb-4 flex flex-col md:mb-6">
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-text text-2xl font-bold md:text-3xl">
-            Supervisor 
+            Supervisor
           </h1>
-          <UCMOActions
+          <PendingApprovalButton
             link={"/supervisor/zerodoseApproval"}
             name={"Zerodose Approval"}
             pendingApprovals={pendingApprovals}

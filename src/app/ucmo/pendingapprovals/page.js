@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
@@ -155,7 +154,6 @@ export default function Page() {
       }));
 
       setApprovals(allApprovals);
-
     } catch (error) {
       console.error("Approval fetch error:", error);
 
@@ -377,58 +375,57 @@ export default function Page() {
   }
 
   return (
-    <div className="min-h-full">
-      <div className="mx-auto w-full max-w-7xl">
+    <div className="min-h-full min-w-0 overflow-x-hidden">
+      <div className="mx-auto w-full max-w-7xl min-w-0">
         {/* ============================================================
             HEADER
         ============================================================ */}
-
-        {/* <header
-          className={`border-border relative mb-4 flex transform items-center justify-between overflow-hidden border-b pb-5 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-            pageReady
-              ? "translate-y-0 scale-100 opacity-100"
-              : "translate-y-10 scale-[0.98] opacity-0"
-          }`}
-        > */}
         <header
-  className={`border-border relative mb-4 flex w-full min-w-0 transform items-center justify-between gap-3 border-b pb-5 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-    pageReady
-      ? "translate-y-0 scale-100 opacity-100"
-      : "translate-y-10 scale-[0.98] opacity-0"
-  }`}
->
-          {/* Header glow */}
-          <div className="bg-primary/10 pointer-events-none absolute -top-20 left-10 h-40 w-72 rounded-full blur-3xl" />
+          className={`border-border bg-background relative mb-5 w-full min-w-0 overflow-hidden rounded-2xl border shadow-[0_3px_12px_rgba(0,0,0,0.05)] transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            pageReady ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+          }`}
+        >
+          {/* Decorative Background */}
+          <div className="bg-primary/5 pointer-events-none absolute -top-16 left-16 h-32 w-56 rounded-full blur-3xl" />
 
-          <div className="bg-primary/5 pointer-events-none absolute -right-20 -bottom-20 h-40 w-64 rounded-full blur-3xl" />
+          <div className="bg-primary/5 pointer-events-none absolute -right-16 -bottom-16 h-32 w-56 rounded-full blur-3xl" />
 
-          <div className="relative">
-            <ClientPageHeader
-              title="User Approvals"
-              description="Review and manage pending user registration requests."
-              onBack={() => router.back()}
-            />
+          {/* Header Content */}
+          <div className="relative flex min-w-0 items-center justify-between gap-3 px-3.5 py-3.5 sm:px-5 sm:py-4">
+            {/* Left */}
+            <div className="min-w-0 flex-1">
+              <ClientPageHeader
+                title="User Approvals"
+                description="Review and manage pending user registration requests."
+                onBack={() => router.back()}
+              />
+            </div>
+
+            {/* Refresh */}
+            <button
+              type="button"
+              onClick={() => fetchApprovals(true)}
+              disabled={refreshing}
+              className="border-border bg-surface text-primary hover:border-primary hover:bg-primary-light relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:gap-2 sm:px-3.5"
+            >
+              <RefreshCw
+                size={16}
+                strokeWidth={2}
+                className={refreshing ? "animate-spin" : ""}
+              />
+
+              <span className="hidden text-sm font-semibold sm:inline">
+                {refreshing ? "Refreshing..." : "Refresh"}
+              </span>
+            </button>
           </div>
 
-          {/* Refresh */}
-          <button
-            type="button"
-            onClick={() => fetchApprovals(true)}
-            disabled={refreshing}
-            className="border-border bg-surface text-primary hover:border-primary hover:bg-primary-light relative inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
-
-            <span className="hidden sm:inline">
-              {refreshing ? "Refreshing..." : "Refresh"}
-            </span>
-          </button>
+          {/* Bottom Accent */}
+          <div className="bg-primary absolute right-0 bottom-0 left-0 h-0.5 opacity-60" />
         </header>
-
         {/* ============================================================
             ERROR
         ============================================================ */}
-
         {error && (
           <div
             className={`mb-6 transform overflow-hidden rounded-2xl border border-red-200 bg-red-50 shadow-sm transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] dark:border-red-900/50 dark:bg-red-950/30 ${
@@ -465,11 +462,9 @@ export default function Page() {
             </div>
           </div>
         )}
-
         {/* ============================================================
             EMPTY STATE
         ============================================================ */}
-
         {approvals.length === 0 && !error && (
           <div
             className={`border-border bg-surface relative transform overflow-hidden rounded-2xl border px-5 py-16 text-center shadow-sm transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
@@ -515,11 +510,9 @@ export default function Page() {
             </div>
           </div>
         )}
-
         {/* ============================================================
             SUPERVISOR APPROVALS
         ============================================================ */}
-
         {renderApprovalSection({
           title: "Supervisor Approvals",
           description:
@@ -528,11 +521,9 @@ export default function Page() {
           users: supervisorApprovals,
           delay: 120,
         })}
-
         {/* ============================================================
             VACCINATOR APPROVALS
         ============================================================ */}
-
         {renderApprovalSection({
           title: "Vaccinator Approvals",
           description:
@@ -541,11 +532,9 @@ export default function Page() {
           users: vaccinatorApprovals,
           delay: 220,
         })}
-
         {/* ============================================================
             OTHER STAFF APPROVALS
         ============================================================ */}
-
         {renderApprovalSection({
           title: "Other Staff Approvals",
           description:

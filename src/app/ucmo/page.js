@@ -5,13 +5,14 @@ import { getCampaigns } from "@/api/campaignApi";
 import { getZerodoses } from "@/api/zerodoseApi";
 import { getUsers } from "@/api/userApi";
 import UCMOSummaryCards from "@/components/ucmo/UCMOSummaryCards";
-import UCMOActions from "@/components/ucmo/UCMOActions";
+import PendingApprovalButton from "@/components/ucmo/PendingApprovalButton";
 import CampaignTabs from "@/components/ucmo/CampaignTabs";
 import CurrentCampaign from "@/components/ucmo/CurrentCampaign";
 import PreviousCampaigns from "@/components/ucmo/PreviousCampaigns";
 import { UsersRound } from "lucide-react";
 import ActionLinkButton from "@/components/admin/ui/ActionLinkButton";
 import { getPendingApprovalCount } from "@/api/userApprovalsApi";
+import UCMOActions from "@/components/ucmo/UCMOAction";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
@@ -567,11 +568,10 @@ export default function Page() {
         {/* ======================================================
               HEADER
           ====================================================== */}
-
         <div className="mb-4 flex flex-col md:mb-6">
           <div className="mb-4 flex items-center justify-between">
             <h1 className="text-text text-2xl font-bold md:text-3xl">UCMO</h1>
-            <UCMOActions
+            <PendingApprovalButton
               link={"/ucmo/pendingapprovals"}
               name={"Supervisor Approvals"}
               pendingApprovals={pendingApprovals}
@@ -583,56 +583,34 @@ export default function Page() {
             Manage supervisors and campaign-wise Zerodose records
           </p>
         </div>
-
         {/* ======================================================
               ERROR
           ====================================================== */}
-
         {error && (
           <div className="mb-5 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
             <span>{error}</span>
           </div>
         )}
-
         {/* ======================================================
               SUMMARY
           ====================================================== */}
-
         <UCMOSummaryCards
           totalSupervisors={supervisors.length}
           recordedZerodose={currentRecordedZerodoseCount}
           coveredZerodose={currentCoveredZerodoseCount}
           activeTeams={activeTeamsCount}
         />
-
         {/* ======================================================
               ACTIONS
           ====================================================== */}
-
-        <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-          <ActionLinkButton
-            href="/ucmo/supervisor-management"
-            label="Teams Management"
-            icon={UsersRound}
-          />
-
-          <ActionLinkButton
-            href="/ucmo/supervisorDetail"
-            label="Supervisor Details"
-            icon={UsersRound}
-          />
-        </div>
-
+        <UCMOActions />
         {/* ======================================================
               TABS
           ====================================================== */}
-
         <CampaignTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-
         {/* ======================================================
               CURRENT CAMPAIGN
           ====================================================== */}
-
         {activeTab === "current" && (
           <CurrentCampaign
             campaign={currentCampaign}
@@ -640,11 +618,9 @@ export default function Page() {
             loading={loading}
           />
         )}
-
         {/* ======================================================
               PREVIOUS CAMPAIGNS
           ====================================================== */}
-
         {activeTab === "previous" && (
           <PreviousCampaigns
             campaigns={previousCampaignsWithSupervisors}

@@ -8,16 +8,19 @@ export default function SupervisorActions() {
     {
       href: "/supervisor/addworker",
       label: "Add Workers",
+      description: "Add new workers to your team",
       icon: UserPlus,
     },
     {
       href: "/supervisor/workers",
       label: "Workers",
+      description: "Manage your assigned workers",
       icon: Users,
     },
     {
       href: "/supervisor/zerodoses",
       label: "Zerodose List",
+      description: "View and manage zerodose records",
       icon: Syringe,
     },
   ];
@@ -29,6 +32,7 @@ export default function SupervisorActions() {
           key={action.href}
           href={action.href}
           label={action.label}
+          description={action.description}
           icon={action.icon}
         />
       ))}

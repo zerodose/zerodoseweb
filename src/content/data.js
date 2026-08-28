@@ -182,7 +182,7 @@ export const ucmoSidebar = [
 
   {
     title: "Supervisors",
-    href: "/ucmo/supervisors",
+    href: "/ucmo/supervisorDetail",
     icon: Users,
   },
 

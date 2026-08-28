@@ -345,7 +345,7 @@ export default function PreviousCampaigns({
           FILTER CARD
       ====================================================== */}
 
-      <div className="border-border relative mb-6 overflow-hidden rounded-2xl border bg-white shadow-sm">
+      <div className="border-border relative mb-6 overflow-hidden rounded-2xl border shadow-sm">
         <div className="from-primary via-primary-dark to-primary h-1 w-full bg-gradient-to-r" />
 
         <div className="p-4 md:p-5">

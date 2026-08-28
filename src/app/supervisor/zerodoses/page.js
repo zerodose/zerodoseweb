@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { getCampaigns } from "@/api/campaignApi";
 import { getZerodoses } from "@/api/zerodoseApi";
 import { getUsers } from "@/api/userApi";
-import { Users, CircleCheck, SyringeIcon, Syringe, LucideSyringe } from "lucide-react";
+import {  LucideSyringe } from "lucide-react";
 import ZerodoseTabs from "@/components/supervisor/zerodose/ZerodoseTabs";
 import CurrentCampaign from "@/components/supervisor/zerodose/CurrentCampaign";
 import PreviousCampaigns from "@/components/supervisor/zerodose/PreviousCampaigns";

@@ -7,17 +7,10 @@ import Link from "next/link";
 export default function PendingApprovalButton({ link, name,  pendingApprovals = 0, loading = false }) {
   return (
     <Link
-<<<<<<< HEAD:src/components/ucmo/PendingApprovalButton.jsx
       href={link}
       className="border-border bg-primary/20 hover:border-primary/40 hover:bg-primary-light group inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 shadow-sm transition-all"
     >
       {/* <Clock3 size={16} className="text-primary" /> */}
-=======
-  href={link}
-  className="w-fit max-w-[250px] border-border bg-primary/20 hover:border-primary/40 hover:bg-primary-light group inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 shadow-sm transition-all"
->
-      <Clock3 size={16} className="text-primary" />
->>>>>>> 3b366d66da0bbf950b3b19514ef10fe8dd933630:src/components/ucmo/UCMOActions.jsx
 
  <span className="text-text text-sm font-semibold whitespace-nowrap">
   {name}

@@ -106,12 +106,7 @@ export default function SupervisorSummaryCards({
     return () => {
       cancelAnimationFrame(animationFrame);
     };
-  }, [
-    totalTeams,
-    recordedZerodose,
-    visitedZerodose,
-    coveredZerodose,
-  ]);
+  }, [totalTeams, recordedZerodose, visitedZerodose, coveredZerodose]);
 
   // ============================================================
   // Render
@@ -127,17 +122,15 @@ export default function SupervisorSummaryCards({
         return (
           <div
             key={card.key}
-            className={`group border-border bg-background relative overflow-hidden rounded-2xl border px-4 py-3.5 shadow-[0_3px_12px_rgba(0,0,0,0.06)] transition-all duration-700 ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] md:px-5 md:py-4 ${
-              animated
-                ? "translate-y-0 opacity-100"
-                : "translate-y-3 opacity-0"
+            className={`group border-border bg-background relative overflow-hidden rounded-2xl border px-4 py-3.5 shadow-[0_3px_12px_rgba(0,0,0,0.06)] transition-all duration-700 ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] md:px-5 md:py-4 dark:bg-slate-900 ${
+              animated ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
             }`}
             style={{
               transitionDelay: `${index * 100}ms`,
             }}
           >
             {/* Decorative Background */}
-            <div className="bg-primary/5 absolute -top-10 -right-10 h-24 w-24 rounded-full transition-transform duration-300 group-hover:scale-125" />
+            <div className="bg-primary/5 dark:bg-primary/10 absolute -top-10 -right-10 h-24 w-24 rounded-full transition-transform duration-300 group-hover:scale-125" />
 
             {/* Top Row */}
             <div className="relative flex items-start justify-between">

@@ -136,7 +136,7 @@ export async function PUT(request, { params }) {
 
     const body = await request.json();
 
-    const { approvalStatus, approverId } = body;
+    const { approvalStatus, approverId, supervisorCode } = body;
 
     // ============================================================
     // Validate Approval Status
@@ -312,6 +312,25 @@ export async function PUT(request, { params }) {
     // Any UCMO can approve.
     // ------------------------------------------------------------
 
+    if (approvalStatus === "approved" && user.designation === "supervisor") {
+      if (
+        supervisorCode === null ||
+        supervisorCode === undefined ||
+        supervisorCode === "" ||
+        Number.isNaN(Number(supervisorCode))
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Supervisor Code is required.",
+          },
+          { status: 400 },
+        );
+      }
+
+      user.supervisorCode = Number(supervisorCode);
+    }
+
     if (user.designation === "supervisor") {
       if (!user.ucmo || String(user.ucmo) !== String(approver._id)) {
         return NextResponse.json(
@@ -370,6 +389,7 @@ export async function PUT(request, { params }) {
         data: {
           id: user._id,
           designation: user.designation,
+          supervisorCode: user.supervisorCode || null,
           approvalStatus: user.approvalStatus,
           approvedBy: user.approvedBy,
           approvedAt: user.approvedAt,
@@ -382,6 +402,42 @@ export async function PUT(request, { params }) {
     );
   } catch (error) {
     console.error("Pending user approval PUT error:", error);
+
+    // ============================================================
+    // Duplicate Supervisor Code
+    // ============================================================
+
+    if (error?.code === 11000) {
+      if (
+        error?.keyPattern?.unionCouncil &&
+        error?.keyPattern?.supervisorCode
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "This Supervisor Code is already assigned in this Union Council. Please enter a different Supervisor Code.",
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Duplicate value already exists.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    // ============================================================
+    // Other Errors
+    // ============================================================
 
     return NextResponse.json(
       {

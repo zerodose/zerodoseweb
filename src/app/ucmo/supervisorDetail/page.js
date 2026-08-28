@@ -8,7 +8,6 @@ import exportPDF from "@/utils/export/exportPDF";
 import exportExcel from "@/utils/export/exportExcel";
 
 import { getUsers, updateUser } from "@/api/userApi";
-import { ArrowLeft } from "lucide-react";
 import ClientPageHeader from "@/components/ui/ClientPageHeader";
 
 export default function SupervisorDetailPage() {

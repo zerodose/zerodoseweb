@@ -18,6 +18,12 @@ export default function UCMOSummaryCards({
       icon: Users,
     },
     {
+      key: "activeTeams",
+      label: "Active Teams",
+      value: activeTeams,
+      icon: UsersRound,
+    },
+    {
       key: "recordedZerodose",
       label: "Recorded Zerodose",
       value: recordedZerodose,
@@ -28,12 +34,6 @@ export default function UCMOSummaryCards({
       label: "Covered Zerodose",
       value: coveredZerodose,
       icon: CheckCircle,
-    },
-    {
-      key: "activeTeams",
-      label: "Active Teams",
-      value: activeTeams,
-      icon: UsersRound,
     },
   ];
 

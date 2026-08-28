@@ -3,16 +3,16 @@ import mongoose from "mongoose";
 
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
-
 import District from "@/models/District";
 import Town from "@/models/Town";
 import UnionCouncil from "@/models/UnionCouncil";
+import Zerodose from "@/models/Zerodose";
 
 // ============================================================
 // PATCH - Transfer Supervisor / Vaccinator / OtherStaff
 // ============================================================
 
-export async function PATCH(request) {
+export async function PUT(request) {
   try {
     await connectDB();
 
@@ -94,6 +94,56 @@ export async function PATCH(request) {
         },
         { status: 404 },
       );
+    }
+
+    // ============================================================
+    // Prevent Supervisor Transfer If Active Teams Exist
+    // ============================================================
+
+    if (user.designation === "supervisor") {
+      const activeWorkers = await User.find({
+        supervisor: user._id,
+        designation: "worker",
+        isActive: true,
+      })
+        .select("_id name teamNumber workerRole")
+        .lean();
+
+      if (activeWorkers.length > 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "This supervisor cannot be transferred because active teams are assigned to this supervisor. Transfer all active teams to another supervisor first.",
+            data: {
+              activeWorkers: activeWorkers.length,
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      // ============================================================
+      // Prevent Supervisor Transfer If Zerodose Records Exist
+      // ============================================================
+
+      const zerodoseCount = await Zerodose.countDocuments({
+        supervisor: user._id,
+      });
+
+      if (zerodoseCount > 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            message:
+              "This supervisor cannot be transferred because Zerodose records are already associated with this supervisor.",
+            data: {
+              zerodoseCount,
+            },
+          },
+          { status: 400 },
+        );
+      }
     }
 
     // ============================================================
@@ -264,7 +314,7 @@ export async function PATCH(request) {
       },
     );
   } catch (error) {
-    console.error("Transfer user error:", error);
+    // console.error("Transfer user error:", error);
 
     return NextResponse.json(
       {

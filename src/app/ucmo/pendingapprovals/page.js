@@ -188,7 +188,7 @@ export default function Page() {
   // APPROVE / REJECT
   // ============================================================
 
-  const handleApproval = async (user, status) => {
+  const handleApproval = async (user, status, supervisorCode) => {
     const userId = getId(user);
 
     if (!userId) {
@@ -207,7 +207,12 @@ export default function Page() {
         return;
       }
 
-      const response = await updateUserApproval(userId, status, approverId);
+      const response = await updateUserApproval(
+        userId,
+        status,
+        approverId,
+        user?.approvalDesignation === "supervisor" ? supervisorCode : null,
+      );
 
       if (!response?.success) {
         throw new Error(response?.message || "Failed to update approval.");
@@ -355,7 +360,9 @@ export default function Page() {
                   expanded={!!expandedApprovals[userId]}
                   processing={processingId === userId}
                   onToggle={() => toggleApproval(userId)}
-                  onApprove={() => handleApproval(user, "approved")}
+                  onApprove={(supervisorCode) =>
+                    handleApproval(user, "approved", supervisorCode)
+                  }
                   onReject={() => handleApproval(user, "rejected")}
                 />
               </div>

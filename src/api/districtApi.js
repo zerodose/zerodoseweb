@@ -37,7 +37,7 @@ export const createDistrict = async (data) => {
 // ============================================================
 
 export const updateDistrict = async (id, data) => {
-  const response = await api.patch(`/districts/${id}`, data);
+  const response = await api.put(`/districts/${id}`, data);
 
   return response.data;
 };

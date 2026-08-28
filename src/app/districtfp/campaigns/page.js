@@ -274,7 +274,7 @@ export default function districtfpCampaignsPage() {
           },
         ]}
         onRowClick={(campaign) => {
-          router.push(`/district-fp/campaigns/${campaign._id}`);
+          router.push(`/districtfp/campaigns/${campaign._id}`);
         }}
         onExportPDF={exportPDF}
         onExportExcel={exportExcel}

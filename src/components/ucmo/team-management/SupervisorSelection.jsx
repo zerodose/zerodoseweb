@@ -145,7 +145,7 @@ export default function SupervisorSelection({
         </div>
       </div>
 
-      <div className="relative z-[100] grid grid-cols-1 gap-4 overflow-visible md:grid-cols-2">
+      <div className="relative z-50 grid grid-cols-1 gap-4 overflow-visible md:grid-cols-2">
         <Select
           name="fromSupervisor"
           label="From Supervisor"

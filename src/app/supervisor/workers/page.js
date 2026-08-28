@@ -814,11 +814,11 @@ export default function SupervisorWorkersPage() {
 
                           <td className="px-5 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="bg-primary-light text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold dark:bg-primary/10">
+                              {/* <div className="bg-primary-light text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold dark:bg-primary/10">
                                 {getName(leader).charAt(0).toUpperCase()}
-                              </div>
+                              </div> */}
 
-                              <span className="text-text text-sm font-semibold">
+                              <span className="text-text text-sm font-semibold capitalize">
                                 {getName(leader)}
                               </span>
                             </div>
@@ -828,7 +828,7 @@ export default function SupervisorWorkersPage() {
                             {getContact(leader)}
                           </td>
 
-                          <td className="text-text-secondary px-5 py-4 text-sm">
+                          <td className="text-text-secondary px-5 py-4 text-sm capitalize">
                             {leader.designation || "worker"}
                           </td>
 
@@ -867,11 +867,11 @@ export default function SupervisorWorkersPage() {
 
                           <td className="px-5 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                              {/* <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                                 {getName(member).charAt(0).toUpperCase()}
-                              </div>
+                              </div> */}
 
-                              <span className="text-text text-sm font-semibold">
+                              <span className="text-text text-sm font-semibold capitalize">
                                 {getName(member)}
                               </span>
                             </div>
@@ -881,7 +881,7 @@ export default function SupervisorWorkersPage() {
                             {getContact(member)}
                           </td>
 
-                          <td className="text-text-secondary px-5 py-4 text-sm">
+                          <td className="text-text-secondary px-5 py-4 text-sm capitalize">
                             {member.designation || "worker"}
                           </td>
 

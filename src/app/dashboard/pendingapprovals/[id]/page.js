@@ -228,17 +228,6 @@ export default function PendingApprovalViewPage() {
         <div className="border-border flex flex-col gap-3 border-t p-6 sm:flex-row sm:justify-end">
           <button
             type="button"
-            onClick={() => handleApproval("rejected")}
-            disabled={updating}
-            className="flex items-center justify-center gap-2 rounded-lg border border-red-200 px-5 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <X size={18} />
-
-            {updating ? "Processing..." : "Reject"}
-          </button>
-
-          <button
-            type="button"
             onClick={() => handleApproval("approved")}
             disabled={updating}
             className="bg-primary text-primary-foreground hover:bg-primary-dark flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
@@ -246,6 +235,16 @@ export default function PendingApprovalViewPage() {
             <Check size={18} />
 
             {updating ? "Processing..." : "Approve"}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleApproval("rejected")}
+            disabled={updating}
+            className="flex items-center justify-center gap-2 rounded-lg border border-red-200 px-5 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <X size={18} />
+
+            {updating ? "Processing..." : "Reject"}
           </button>
         </div>
       </div>

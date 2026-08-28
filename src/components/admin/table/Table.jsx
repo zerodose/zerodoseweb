@@ -745,351 +745,157 @@ export default function Table({
           Toolbar
       ====================================================== */}
 
-      <div className="border-border flex flex-col gap-3 border-b p-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="border-border flex flex-col gap-3 border-b p-4 md:flex-row md:items-end md:justify-between">
         <PageHeader
           title={pageTitle}
           description={pageDescription}
           breadcrumbs={pageBreadcrumbs}
-          // icon={pageHeaderIcon}
         />
-        {/* ==================================================
-            Search
-        ================================================== */}
 
-        {searchable ? (
-          <SearchInput
-            value={search}
-            placeholder={searchPlaceholder}
-            onChange={(value) => {
-              setSearch(value);
-            }}
-            onSearch={(value) => {
-              setSearch(value);
+        {/* Search + Actions */}
+        <div className="flex w-full min-w-0 flex-col gap-3 md:flex-1 md:flex-row md:items-end md:justify-end">
+          {/* Search */}
+          <div className="w-full min-w-0 md:max-w-xs">
+            {searchable ? (
+              <SearchInput
+                value={search}
+                placeholder={searchPlaceholder}
+                onChange={(value) => {
+                  setSearch(value);
+                }}
+                onSearch={(value) => {
+                  setSearch(value);
 
-              if (serverPagination) {
-                onSearchChange?.(value);
-                return;
-              }
+                  if (serverPagination) {
+                    onSearchChange?.(value);
+                    return;
+                  }
 
-              setPage(1);
-            }}
-          />
-        ) : (
-          <div />
-        )}
+                  setPage(1);
+                }}
+              />
+            ) : (
+              <div />
+            )}
+          </div>
 
-        {/* ==================================================
-            Actions
-        ================================================== */}
-
-        <div className="grid grid-cols-2 gap-2 lg:flex lg:items-center">
-          {/* =================================================
-              Selected
-          ================================================= */}
-
-          {selectedRows.length > 0 && (
-            <div className="bg-primary-light text-primary hidden h-10 min-w-28 items-center justify-center rounded-lg px-3 text-xs font-medium md:flex">
-              {selectedRows.length} selected
-            </div>
-          )}
-
-          {/* =================================================
-              Add
-          ================================================= */}
-
-          {/* {addButton && (
-            <button
-              type="button"
-              onClick={onAdd}
-              className="bg-primary text-primary-foreground hover:bg-primary-dark flex h-10 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition lg:w-auto"
-            >
-              <Plus size={16} />
-
-              <span className="min-w-0 truncate">{addButtonText}</span>
-            </button>
-          )} */}
-          <div className="min-w-0">
-            {addButton ? (
+          {/* Actions */}
+          <div className="grid w-full grid-cols-2 gap-3 md:flex md:w-auto md:flex-nowrap md:items-center">
+            {/* Add */}
+            {addButton && (
               <button
                 type="button"
                 onClick={onAdd}
-                className="bg-primary text-primary-foreground hover:bg-primary-dark flex h-10 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition lg:w-auto"
+                className="bg-primary text-primary-foreground hover:bg-primary-dark flex h-10 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition md:w-auto"
               >
                 <Plus size={16} />
 
                 <span className="min-w-0 truncate">{addButtonText}</span>
               </button>
-            ) : (
-              <div className="h-10 w-full lg:hidden" />
             )}
-          </div>
 
-          {/* =================================================
-              Columns
-          ================================================= */}
-
-          <div ref={columnRef} className="relative">
-            <button
-              type="button"
-              onClick={() => {
-                setShowColumnMenu((prev) => !prev);
-
-                setFilterOpen(false);
-                setActiveFilter(null);
-
-                setDownloadOpen(false);
-              }}
-              className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition lg:w-auto"
-            >
-              <Columns3 size={16} />
-
-              <span>Columns</span>
-
-              <ChevronDown
-                size={15}
-                className={`transition-transform ${
-                  showColumnMenu ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-
-            {showColumnMenu && (
-              <div className="border-border bg-background absolute top-12 right-0 z-50 w-72 rounded-xl border p-2 shadow-xl">
-                {/* Header */}
-
-                <div className="flex items-center justify-between px-2 py-2">
-                  <p className="text-text text-sm font-semibold">
-                    Show Columns
-                  </p>
-
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={showAllColumns}
-                      className="text-primary text-xs font-medium hover:underline"
-                    >
-                      All
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={resetColumns}
-                      className="text-text-secondary hover:text-text text-xs font-medium hover:underline"
-                    >
-                      Reset
-                    </button>
-                  </div>
-                </div>
-
-                {/* Columns */}
-
-                <div className="max-h-72 space-y-1 overflow-y-auto">
-                  {(columnOptions.length > 0 ? columnOptions : columns)
-                    .filter((column) => columns.includes(column))
-                    .map((column) => {
-                      const checked = visibleColumns.includes(column);
-
-                      return (
-                        <label
-                          key={column}
-                          className="hover:bg-surface flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => toggleColumn(column)}
-                            className="accent-primary h-4 w-4 cursor-pointer"
-                          />
-
-                          <span className="text-text">
-                            {getColumnTitle(column)}
-                          </span>
-                        </label>
-                      );
-                    })}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* =================================================
-              Extra Actions
-          ================================================= */}
-
-          {actions.map((action, index) => (
-            <button
-              key={action.id || index}
-              type="button"
-              onClick={action.onClick}
-              disabled={action.disabled}
-              className="text-text hover:bg-surface border-border flex h-10 min-w-28 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {action.icon}
-
-              <span>{action.label}</span>
-            </button>
-          ))}
-
-          {/* =================================================
-              Filter
-          ================================================= */}
-
-          {/* {filterOptions.length > 0 && (
-            <div ref={filterRef} className="relative">
+            {/* Columns */}
+            <div ref={columnRef} className="relative">
               <button
                 type="button"
                 onClick={() => {
-                  setFilterOpen((prev) => !prev);
-
-                  setShowColumnMenu(false);
-
+                  setShowColumnMenu((prev) => !prev);
+                  setFilterOpen(false);
+                  setActiveFilter(null);
                   setDownloadOpen(false);
                 }}
-                className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition lg:w-auto lg:min-w-28"
+                className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition md:w-auto"
               >
-                <SlidersHorizontal size={16} />
+                <Columns3 size={16} />
 
-                <span>Filter</span>
-
-                {activeFilterCount > 0 && (
-                  <span className="bg-primary flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] text-white">
-                    {activeFilterCount}
-                  </span>
-                )}
+                <span>Columns</span>
 
                 <ChevronDown
                   size={15}
                   className={`transition-transform ${
-                    filterOpen ? "rotate-180" : ""
+                    showColumnMenu ? "rotate-180" : ""
                   }`}
                 />
               </button>
 
-              {filterOpen && (
-                <div className="border-border bg-background absolute top-12 left-0 z-50 w-72 rounded-xl border p-2 shadow-xl">
+              {showColumnMenu && (
+                <div className={`border-border bg-background absolute top-12 ${addButton ? "right-0" : "left-0" } z-50 w-72 rounded-xl border p-2 shadow-xl`}>
+                  {/* Header */}
+
                   <div className="flex items-center justify-between px-2 py-2">
                     <p className="text-text text-sm font-semibold">
-                      Filter Data
+                      Show Columns
                     </p>
 
-                    {activeFilterCount > 0 && (
+                    <div className="flex items-center gap-3">
                       <button
                         type="button"
-                        onClick={clearFilters}
+                        onClick={showAllColumns}
                         className="text-primary text-xs font-medium hover:underline"
                       >
-                        Clear All
+                        All
                       </button>
-                    )}
+
+                      <button
+                        type="button"
+                        onClick={resetColumns}
+                        className="text-text-secondary hover:text-text text-xs font-medium hover:underline"
+                      >
+                        Reset
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="max-h-[420px] space-y-2 overflow-y-auto">
-                    {filterOptions.map((filter) => {
-                      const isActive = activeFilter === filter.key;
+                  {/* Columns */}
 
-                      return (
-                        <div key={filter.key}>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setActiveFilter(isActive ? null : filter.key)
-                            }
-                            className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-between rounded-lg border px-3 text-sm font-medium transition"
+                  <div className="max-h-72 space-y-1 overflow-y-auto">
+                    {(columnOptions.length > 0 ? columnOptions : columns)
+                      .filter((column) => columns.includes(column))
+                      .map((column) => {
+                        const checked = visibleColumns.includes(column);
+
+                        return (
+                          <label
+                            key={column}
+                            className="hover:bg-surface flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
                           >
-                            <span className="truncate">{filter.label}</span>
-
-                            <ChevronDown
-                              size={15}
-                              className={`shrink-0 transition-transform ${
-                                isActive ? "rotate-180" : ""
-                              }`}
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleColumn(column)}
+                              className="accent-primary h-4 w-4 cursor-pointer"
                             />
-                          </button>
 
-                          {isActive && filter.type === "select" && (
-                            <div className="bg-surface mt-1 max-h-52 space-y-2 overflow-y-auto rounded-lg p-3">
-                              {getUniqueFilterValues(filter).map((option) => {
-                                const selected =
-                                  filterValues[filter.key]?.includes(option);
-
-                                return (
-                                  <label
-                                    key={option}
-                                    className="text-text flex cursor-pointer items-center gap-2 text-sm"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={Boolean(selected)}
-                                      onChange={() =>
-                                        toggleFilterValue(filter.key, option)
-                                      }
-                                      className="accent-primary h-4 w-4"
-                                    />
-
-                                    <span className="truncate">{option}</span>
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          )}
-
-                          {isActive && filter.type === "dateRange" && (
-                            <div className="bg-surface mt-1 space-y-3 rounded-lg p-3">
-                              <div>
-                                <label className="text-text-secondary mb-1 block text-xs">
-                                  Start Date
-                                </label>
-
-                                <input
-                                  type="date"
-                                  value={filterValues[filter.key]?.from || ""}
-                                  onChange={(event) =>
-                                    setDateRange(
-                                      filter.key,
-                                      "from",
-                                      event.target.value,
-                                    )
-                                  }
-                                  className="border-border bg-background text-text h-10 w-full rounded-lg border px-3 text-sm outline-none"
-                                />
-                              </div>
-
-                              <div>
-                                <label className="text-text-secondary mb-1 block text-xs">
-                                  End Date
-                                </label>
-
-                                <input
-                                  type="date"
-                                  value={filterValues[filter.key]?.to || ""}
-                                  onChange={(event) =>
-                                    setDateRange(
-                                      filter.key,
-                                      "to",
-                                      event.target.value,
-                                    )
-                                  }
-                                  className="border-border bg-background text-text h-10 w-full rounded-lg border px-3 text-sm outline-none"
-                                />
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                            <span className="text-text">
+                              {getColumnTitle(column)}
+                            </span>
+                          </label>
+                        );
+                      })}
                   </div>
                 </div>
               )}
             </div>
-          )} */}
 
-          {/* =================================================
-    Filter
-================================================= */}
+            {/* =================================================
+              Extra Actions
+          ================================================= */}
 
-          <div ref={filterRef} className="relative min-w-0">
-            {filterOptions.length > 0 ? (
-              <>
+            {/* {actions.map((action, index) => (
+              <button
+                key={action.id || index}
+                type="button"
+                onClick={action.onClick}
+                disabled={action.disabled}
+                className="text-text hover:bg-surface border-border flex h-10 min-w-28 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {action.icon}
+
+                <span>{action.label}</span>
+              </button>
+            ))} */}
+
+              <div ref={filterRef} className="relative">
                 <button
                   type="button"
                   onClick={() => {
@@ -1120,7 +926,7 @@ export default function Table({
                 </button>
 
                 {filterOpen && (
-                  <div className="border-border bg-background absolute top-12 left-0 z-50 w-72 rounded-xl border p-2 shadow-xl">
+                  <div className={`border-border bg-background absolute top-12 ${addButton ? "left-0" : "right-0" } z-50 w-[min(18rem,calc(100vw-2rem))] rounded-xl border p-2 shadow-xl`}>
                     <div className="flex items-center justify-between px-2 py-2">
                       <p className="text-text text-sm font-semibold">
                         Filter Data
@@ -1236,109 +1042,106 @@ export default function Table({
                     </div>
                   </div>
                 )}
-              </>
-            ) : (
-              <div className="h-10 w-full lg:hidden" />
-            )}
-          </div>
+              </div>
 
-          {/* =================================================
+            {/* =================================================
               Download
           ================================================= */}
 
-          {exportButton && (
-            <div ref={downloadRef} className="relative">
-              <button
-                type="button"
-                onClick={() => {
-                  setDownloadOpen((prev) => !prev);
+            {exportButton && (
+              <div ref={downloadRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDownloadOpen((prev) => !prev);
 
-                  setFilterOpen(false);
-                  setActiveFilter(null);
+                    setFilterOpen(false);
+                    setActiveFilter(null);
 
-                  setShowColumnMenu(false);
-                }}
-                className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition lg:w-auto lg:min-w-28"
-              >
-                <Download size={16} />
+                    setShowColumnMenu(false);
+                  }}
+                  className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition md:w-auto md:min-w-28"
+                >
+                  <Download size={16} />
 
-                <span>Download</span>
+                  <span>Download</span>
 
-                <ChevronDown
-                  size={15}
-                  className={`transition-transform ${
-                    downloadOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
+                  <ChevronDown
+                    size={15}
+                    className={`transition-transform ${
+                      downloadOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
 
-              {downloadOpen && (
-                <div className="border-border bg-background absolute top-12 right-0 z-50 w-52 rounded-xl border p-2 shadow-xl">
-                  <div className="text-text-secondary border-border mb-2 border-b px-3 pb-2 text-xs">
-                    {selectedRows.length > 0
-                      ? `${selectedRows.length} selected records`
-                      : `${sortedData.length} filtered records`}
+                {downloadOpen && (
+                  <div className={`border-border bg-background absolute top-12 ${addButton ? "right-0" : "left-0" } z-50 w-[min(13rem,calc(100vw-2rem))] rounded-xl border p-2 shadow-xl`}>
+                    <div className="text-text-secondary border-border mb-2 border-b px-3 pb-2 text-xs">
+                      {selectedRows.length > 0
+                        ? `${selectedRows.length} selected records`
+                        : `${sortedData.length} filtered records`}
+                    </div>
+
+                    {/* PDF */}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDownloadOpen(false);
+
+                        onExportPDF?.({
+                          data: dataToDownload,
+
+                          // Only visible columns
+                          columns: visibleColumns,
+
+                          columnTitles,
+
+                          filters: exportFilters,
+                        });
+                      }}
+                      className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
+                    >
+                      <FileText size={17} className="text-red-500" />
+
+                      <span>Download PDF</span>
+                    </button>
+
+                    {/* Excel */}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDownloadOpen(false);
+
+                        onExportExcel?.({
+                          data: dataToDownload,
+
+                          // Only visible columns
+                          columns: visibleColumns,
+
+                          columnTitles,
+
+                          filters: exportFilters,
+                        });
+                      }}
+                      className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
+                    >
+                      <FileSpreadsheet size={17} className="text-green-600" />
+
+                      <span>Download Excel</span>
+                    </button>
                   </div>
+                )}
+              </div>
+            )}
 
-                  {/* PDF */}
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDownloadOpen(false);
-
-                      onExportPDF?.({
-                        data: dataToDownload,
-
-                        // Only visible columns
-                        columns: visibleColumns,
-
-                        columnTitles,
-
-                        filters: exportFilters,
-                      });
-                    }}
-                    className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
-                  >
-                    <FileText size={17} className="text-red-500" />
-
-                    <span>Download PDF</span>
-                  </button>
-
-                  {/* Excel */}
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDownloadOpen(false);
-
-                      onExportExcel?.({
-                        data: dataToDownload,
-
-                        // Only visible columns
-                        columns: visibleColumns,
-
-                        columnTitles,
-
-                        filters: exportFilters,
-                      });
-                    }}
-                    className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
-                  >
-                    <FileSpreadsheet size={17} className="text-green-600" />
-
-                    <span>Download Excel</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {selectedRows.length > 0 && (
-            <div className="bg-primary-light text-primary col-span-2 flex h-10 w-full items-center justify-center rounded-lg px-3 text-xs font-medium md:hidden lg:col-span-1 lg:w-auto lg:min-w-28">
-              {selectedRows.length} selected
-            </div>
-          )}
+            {selectedRows.length > 0 && (
+              <div className="bg-primary-light text-primary col-span-2 flex h-10 w-full items-center justify-center rounded-lg px-3 text-xs font-medium md:hidden lg:col-span-1 lg:w-auto lg:min-w-28">
+                {selectedRows.length} selected
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

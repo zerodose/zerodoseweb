@@ -6,7 +6,7 @@ import ActionLinkButton from "../admin/ui/ActionLinkButton";
 export default function UCMOActions() {
   const actions = [
     {
-      href: "/ucmo/supervisor-management",
+      href: "/ucmo/team-management",
       label: "Teams Management",
       description: "Manage supervisor teams and workers",
       icon: UsersRound,
@@ -15,6 +15,12 @@ export default function UCMOActions() {
       href: "/ucmo/supervisorDetail",
       label: "Supervisor Details",
       description: "View your supervisor details",
+      icon: UsersRound,
+    },
+    {
+      href: "/ucmo/staff-management",
+      label: "Staff Transfer",
+      description: "Transfer supervisors",
       icon: UsersRound,
     },
   ];

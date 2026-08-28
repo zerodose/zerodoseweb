@@ -220,45 +220,85 @@ export default function Page() {
     return "-";
   }, [workers]);
 
+  // const activeTeams = useMemo(() => {
+  //   const teamMap = new Map();
+
+  //   workers.forEach((worker) => {
+  //     if (
+  //       worker.teamNumber === null ||
+  //       worker.teamNumber === undefined ||
+  //       worker.teamNumber === ""
+  //     ) {
+  //       return;
+  //     }
+
+  //     const teamNumber = worker.teamNumber;
+
+  //     if (!teamMap.has(teamNumber)) {
+  //       teamMap.set(teamNumber, {
+  //         teamNumber,
+  //         teamLeader: null,
+  //         teamMember: null,
+  //       });
+  //     }
+
+  //     const team = teamMap.get(teamNumber);
+
+  //     if (worker.workerRole === "teamLeader") {
+  //       team.teamLeader = worker;
+  //     }
+
+  //     if (worker.workerRole === "teamMember") {
+  //       team.teamMember = worker;
+  //     }
+  //   });
+
+  //   return Array.from(teamMap.values()).sort(
+  //     (a, b) => Number(a.teamNumber) - Number(b.teamNumber),
+  //   );
+  // }, [workers]);
+
   const activeTeams = useMemo(() => {
-    const teamMap = new Map();
+  const teamMap = new Map();
 
-    workers.forEach((worker) => {
-      if (
-        worker.teamNumber === null ||
-        worker.teamNumber === undefined ||
-        worker.teamNumber === ""
-      ) {
-        return;
-      }
+  workers.forEach((worker) => {
+    if (
+      worker.teamNumber === null ||
+      worker.teamNumber === undefined ||
+      worker.teamNumber === ""
+    ) {
+      return;
+    }
 
-      const teamNumber = worker.teamNumber;
+    const teamNumber = worker.teamNumber;
 
-      if (!teamMap.has(teamNumber)) {
-        teamMap.set(teamNumber, {
-          teamNumber,
-          teamLeader: null,
-          teamMember: null,
-        });
-      }
+    if (!teamMap.has(teamNumber)) {
+      teamMap.set(teamNumber, {
+        teamNumber,
+        teamLeader: null,
+        teamMember: null,
+      });
+    }
 
-      const team = teamMap.get(teamNumber);
+    const team = teamMap.get(teamNumber);
 
-      if (worker.workerRole === "teamLeader") {
-        team.teamLeader = worker;
-      }
+    if (worker.workerRole === "teamLeader") {
+      team.teamLeader = worker;
+    }
 
-      if (worker.workerRole === "teamMember") {
-        team.teamMember = worker;
-      }
-    });
+    if (worker.workerRole === "teamMember") {
+      team.teamMember = worker;
+    }
+  });
 
-    return Array.from(teamMap.values()).sort(
+  return Array.from(teamMap.values())
+    .filter((team) => team.teamLeader && team.teamMember)
+    .sort(
       (a, b) => Number(a.teamNumber) - Number(b.teamNumber),
     );
-  }, [workers]);
+}, [workers]);
 
-  const normalizedCampaigns = useMemo(() => {
+const normalizedCampaigns = useMemo(() => {
     return campaigns.map((campaign) => ({
       ...campaign,
       campaignStatus: getCampaignStatus(campaign),

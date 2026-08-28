@@ -353,7 +353,7 @@ export default function WorkerTransfer({
           <button
             type="button"
             onClick={onMoveRight}
-            disabled={!selectedWorkers.length}
+            disabled={!selectedWorkers.length }
             className="border-border bg-background text-text hover:bg-surface flex h-10 w-10 items-center justify-center rounded-lg border transition disabled:cursor-not-allowed disabled:opacity-40"
             title="Move selected workers"
           >
@@ -374,7 +374,7 @@ export default function WorkerTransfer({
         {/* TO */}
         <div className="border-border overflow-hidden rounded-xl border">
           <div className="border-border bg-surface border-b px-4 py-3">
-            <p className="text-text text-sm font-semibold">
+            <p className="text-text text-sm font-semibold capitalize">
               {toSupervisorName || "To Supervisor"}
             </p>
 

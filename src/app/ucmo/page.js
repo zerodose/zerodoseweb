@@ -13,6 +13,7 @@ import { UsersRound } from "lucide-react";
 import ActionLinkButton from "@/components/admin/ui/ActionLinkButton";
 import { getPendingApprovalCount } from "@/api/userApprovalsApi";
 import UCMOActions from "@/components/ucmo/UCMOAction";
+import { getUCMOSummary } from "@/api/dashboardApi";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
@@ -30,6 +31,13 @@ export default function Page() {
   // ============================================================
   // GET ID
   // ============================================================
+
+  const [summary, setSummary] = useState({
+    totalSupervisors: 0,
+    activeTeams: 0,
+    recordedZerodose: 0,
+    coveredZerodose: 0,
+  });
 
   const getId = (value) => {
     if (!value) {
@@ -109,6 +117,23 @@ export default function Page() {
         }
 
         const ucmoId = String(storedAuthUser.id);
+
+        const summaryResponse = await getUCMOSummary(ucmoId);
+
+        if (!summaryResponse?.success) {
+          throw new Error(
+            summaryResponse?.message || "Failed to fetch UCMO summary.",
+          );
+        }
+
+        setSummary(
+          summaryResponse.data || {
+            totalSupervisors: 0,
+            activeTeams: 0,
+            recordedZerodose: 0,
+            coveredZerodose: 0,
+          },
+        );
 
         // --------------------------------------------------------
         // AUTH UNION COUNCIL
@@ -594,11 +619,17 @@ export default function Page() {
         {/* ======================================================
               SUMMARY
           ====================================================== */}
-        <UCMOSummaryCards
+        {/* <UCMOSummaryCards
           totalSupervisors={supervisors.length}
+          activeTeams={activeTeamsCount}
           recordedZerodose={currentRecordedZerodoseCount}
           coveredZerodose={currentCoveredZerodoseCount}
-          activeTeams={activeTeamsCount}
+        /> */}
+        <UCMOSummaryCards
+          totalSupervisors={summary.totalSupervisors}
+          activeTeams={summary.activeTeams}
+          recordedZerodose={summary.recordedZerodose}
+          coveredZerodose={summary.coveredZerodose}
         />
         {/* ======================================================
               ACTIONS

@@ -110,7 +110,7 @@ export default function DistrictFPHeader({ onMenuClick }) {
         {/* Page Title */}
 
         <h1
-          onClick={() => router.push("/district-fp")}
+          onClick={() => router.push("/districtfp")}
           className="text-text cursor-pointer truncate text-base font-semibold sm:text-lg"
         >
           Zerodose District Dashboard
@@ -208,7 +208,7 @@ export default function DistrictFPHeader({ onMenuClick }) {
 
               <button
                 type="button"
-                onClick={() => goTo("/district-fp/profile")}
+                onClick={() => goTo("/districtfp/profile")}
                 className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
               >
                 <User size={17} />
@@ -220,7 +220,7 @@ export default function DistrictFPHeader({ onMenuClick }) {
 
               <button
                 type="button"
-                onClick={() => goTo("/district-fp/settings")}
+                onClick={() => goTo("/districtfp/settings")}
                 className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
               >
                 <Settings size={17} />

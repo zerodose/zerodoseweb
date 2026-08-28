@@ -1,3 +1,4 @@
+
 // "use client";
 
 // import { useEffect, useState } from "react";
@@ -13,19 +14,14 @@
 // import ZerodoseTrendChart from "@/components/admin/dashboard/charts/ZerodoseTrendChart";
 // import UserDesignationChart from "@/components/admin/dashboard/charts/UserDesignationChart";
 // import CoverageChart from "@/components/admin/dashboard/charts/CoverageChart";
-// import {
-//   BriefcaseBusiness,
-//   Building2,
-//   Map,
-//   UsersRound,
-//   ShieldCheck,
-//   Users,
-//   Syringe,
-// } from "lucide-react";
 
 // import DashboardStats from "@/components/admin/dashboard/DashboardStats";
 
-// import { getCampaignTrend, getDistrictCount } from "@/api/dashboardApi";
+// import {
+//   getCampaignTrend,
+//   getDistrictCount,
+//   getDistrictSummary,
+// } from "@/api/dashboardApi";
 
 // export default function DistrictFPDashboard() {
 //   // ============================================================
@@ -73,10 +69,6 @@
 
 //       const authUser = JSON.parse(storedUser);
 
-//       /*
-//        * District can be stored in different formats depending
-//        * on how authUser is saved.
-//        */
 //       const id =
 //         authUser?.district?._id ||
 //         authUser?.district?.id ||
@@ -134,7 +126,6 @@
 //         const response = await getDistrictCount(
 //           districtId,
 //           [
-//             "districts",
 //             "towns",
 //             "unionCouncils",
 //             "ucmos",
@@ -201,42 +192,47 @@
 
 //       <DashboardStats
 //         items={[
-
+//           // {
+//           //   key: "campaigns",
+//           //   title: "Total Campaigns",
+//           //   value: counts.campaigns,
+//           //   icon: "BriefcaseBusiness",
+//           // },
 //           {
 //             key: "towns",
 //             title: "Total Towns",
 //             value: counts.towns,
-//             icon: Building2,
+//             icon: "Map",
 //           },
 //           {
 //             key: "unionCouncils",
 //             title: "Total Union Councils",
 //             value: counts.unionCouncils,
-//             icon: Map,
+//             icon: "Map",
 //           },
 //           {
 //             key: "ucmos",
 //             title: "Total UCMOs",
 //             value: counts.ucmos,
-//             icon: UsersRound,
+//             icon: "UsersRound",
 //           },
 //           {
 //             key: "supervisors",
 //             title: "Total Supervisors",
 //             value: counts.supervisors,
-//             icon: ShieldCheck,
+//             icon: "ShieldCheck",
 //           },
 //           {
 //             key: "teams",
 //             title: "Total Teams",
 //             value: counts.teams,
-//             icon: Users,
+//             icon: "Users",
 //           },
-//            {
-//             key: "vaccinators",
-//             title: "Total Vaccinators",
-//             value: counts.vaccinators,
-//             icon: Syringe,
+//           {
+//             key: "zerodose",
+//             title: "Total Zerodose",
+//             value: counts.zerodose,
+//             icon: "ClipboardList",
 //           },
 //         ]}
 //       />
@@ -246,81 +242,61 @@
 //       ======================================================== */}
 
 //       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-//         {/* ======================================================
-//             Campaign
-//         ====================================================== */}
+//         {/* Campaign */}
 
 //         <ChartAnimation delay={100}>
 //           <CampaignChart counts={counts} trendData={campaignTrend} />
 //         </ChartAnimation>
 
-//         {/* ======================================================
-//             Status
-//         ====================================================== */}
+//         {/* Status */}
 
 //         <ChartAnimation delay={400}>
 //           <StatusChart counts={counts} trendData={campaignTrend} />
 //         </ChartAnimation>
 
-//         {/* ======================================================
-//             Recorded vs Covered
-//         ====================================================== */}
+//         {/* Recorded vs Covered */}
 
 //         <ChartAnimation delay={700}>
 //           <RecordedCoveredChart counts={counts} trendData={campaignTrend} />
 //         </ChartAnimation>
 
-//         {/* ======================================================
-//             District / Town
-//         ====================================================== */}
+//         {/* District / Town */}
 
 //         <ChartAnimation delay={250}>
 //           <DistrictChart counts={counts} />
 //         </ChartAnimation>
 
-//         {/* ======================================================
-//             User Designation
-//         ====================================================== */}
+//         {/* User Designation */}
 
 //         <ChartAnimation delay={1300}>
 //           <UserDesignationChart counts={counts} />
 //         </ChartAnimation>
 
-//         {/* ======================================================
-//             Team
-//         ====================================================== */}
+//         {/* Team */}
 
 //         <ChartAnimation delay={550}>
 //           <TeamChart counts={counts} />
 //         </ChartAnimation>
 
-//         {/* ======================================================
-//             Campaign Comparison
-//         ====================================================== */}
+//         {/* Campaign Comparison */}
 
 //         <ChartAnimation delay={850}>
 //           <CampaignComparisonChart counts={counts} />
 //         </ChartAnimation>
 
-//         {/* ======================================================
-//             Activity
-//         ====================================================== */}
+//         {/* Activity */}
 
 //         <ChartAnimation delay={1000}>
 //           <ActivityChart counts={counts} />
 //         </ChartAnimation>
 
-//         {/* ======================================================
-//             Zerodose Trend
-//         ====================================================== */}
+//         {/* Zerodose Trend */}
 
 //         <ChartAnimation delay={1150}>
 //           <ZerodoseTrendChart counts={counts} trendData={campaignTrend} />
 //         </ChartAnimation>
 
-//         {/* ======================================================
-//             Coverage
-//         ====================================================== */}
+//         {/* Coverage */}
 
 //         <ChartAnimation delay={1450}>
 //           <CoverageChart counts={counts} />
@@ -348,7 +324,11 @@ import CoverageChart from "@/components/admin/dashboard/charts/CoverageChart";
 
 import DashboardStats from "@/components/admin/dashboard/DashboardStats";
 
-import { getCampaignTrend, getDistrictCount } from "@/api/dashboardApi";
+import {
+  getCampaignTrend,
+  getDistrictCount,
+  getDistrictSummary,
+} from "@/api/dashboardApi";
 
 export default function DistrictFPDashboard() {
   // ============================================================
@@ -400,7 +380,9 @@ export default function DistrictFPDashboard() {
         authUser?.district?._id ||
         authUser?.district?.id ||
         authUser?.districtId ||
-        (typeof authUser?.district === "string" ? authUser.district : null);
+        (typeof authUser?.district === "string"
+          ? authUser.district
+          : null);
 
       if (!id) {
         console.warn("District ID not found for District FP.");
@@ -438,7 +420,10 @@ export default function DistrictFPDashboard() {
           setCampaignTrend(response?.data?.data || []);
         }
       } catch (error) {
-        console.error("Failed to fetch District FP campaign trend:", error);
+        console.error(
+          "Failed to fetch District FP campaign trend:",
+          error,
+        );
 
         if (!cancelled) {
           setCampaignTrend([]);
@@ -447,6 +432,10 @@ export default function DistrictFPDashboard() {
 
       // ========================================================
       // District Scoped Counts
+      //
+      // General dashboard counts remain unchanged.
+      // UCMO, Supervisor and Team counts are later replaced
+      // with the dedicated District Summary values.
       // ========================================================
 
       try {
@@ -496,7 +485,42 @@ export default function DistrictFPDashboard() {
           });
         }
       } catch (error) {
-        console.error("Failed to fetch District FP dashboard counts:", error);
+        console.error(
+          "Failed to fetch District FP dashboard counts:",
+          error,
+        );
+      }
+
+      // ========================================================
+      // District Summary
+      //
+      // This specifically provides:
+      // 1. Active + approved UCMOs
+      // 2. Active + approved Supervisors
+      // 3. Active Teams
+      //
+      // These values replace the corresponding generic counts.
+      // ========================================================
+
+      try {
+        const response = await getDistrictSummary(districtId);
+
+        const data = response?.data || {};
+
+        if (!cancelled) {
+          setCounts((previous) => ({
+            ...previous,
+
+            ucmos: data.totalUCMOs ?? 0,
+            supervisors: data.totalSupervisors ?? 0,
+            teams: data.activeTeams ?? 0,
+          }));
+        }
+      } catch (error) {
+        console.error(
+          "Failed to fetch District FP summary:",
+          error,
+        );
       }
     };
 
@@ -572,19 +596,28 @@ export default function DistrictFPDashboard() {
         {/* Campaign */}
 
         <ChartAnimation delay={100}>
-          <CampaignChart counts={counts} trendData={campaignTrend} />
+          <CampaignChart
+            counts={counts}
+            trendData={campaignTrend}
+          />
         </ChartAnimation>
 
         {/* Status */}
 
         <ChartAnimation delay={400}>
-          <StatusChart counts={counts} trendData={campaignTrend} />
+          <StatusChart
+            counts={counts}
+            trendData={campaignTrend}
+          />
         </ChartAnimation>
 
         {/* Recorded vs Covered */}
 
         <ChartAnimation delay={700}>
-          <RecordedCoveredChart counts={counts} trendData={campaignTrend} />
+          <RecordedCoveredChart
+            counts={counts}
+            trendData={campaignTrend}
+          />
         </ChartAnimation>
 
         {/* District / Town */}
@@ -620,7 +653,10 @@ export default function DistrictFPDashboard() {
         {/* Zerodose Trend */}
 
         <ChartAnimation delay={1150}>
-          <ZerodoseTrendChart counts={counts} trendData={campaignTrend} />
+          <ZerodoseTrendChart
+            counts={counts}
+            trendData={campaignTrend}
+          />
         </ChartAnimation>
 
         {/* Coverage */}

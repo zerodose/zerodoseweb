@@ -4,10 +4,10 @@
 
 // import { getUsers, transferWorkers } from "@/api/userApi";
 // import { toast } from "sonner";
-// import WorkerTransfer from "@/components/ucmo/supervisor-management/WorkerTransfer";
+// import WorkerTransfer from "@/components/ucmo/team-management/WorkerTransfer";
 // import { useRouter } from "next/navigation";
 // import ClientPageHeader from "@/components/ui/ClientPageHeader";
-// import SupervisorSelection from "@/components/ucmo/supervisor-management/SupervisorSelection";
+// import SupervisorSelection from "@/components/ucmo/team-management/SupervisorSelection";
 
 // export default function SupervisorManagementPage() {
 //   const [users, setUsers] = useState([]);
@@ -290,9 +290,9 @@ import { useRouter } from "next/navigation";
 import { getUsers, transferWorkers } from "@/api/userApi";
 import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
-import WorkerTransfer from "@/components/ucmo/supervisor-management/WorkerTransfer";
+import WorkerTransfer from "@/components/ucmo/team-management/WorkerTransfer";
 import ClientPageHeader from "@/components/ui/ClientPageHeader";
-import SupervisorSelection from "@/components/ucmo/supervisor-management/SupervisorSelection";
+import SupervisorSelection from "@/components/ucmo/team-management/SupervisorSelection";
 
 export default function SupervisorManagementPage() {
   const [supervisors, setSupervisors] = useState([]);
@@ -408,8 +408,7 @@ export default function SupervisorManagementPage() {
       console.error("Failed to fetch supervisors:", error);
 
       toast.error(
-        error?.response?.data?.message ||
-          "Failed to load supervisors.",
+        error?.response?.data?.message || "Failed to load supervisors.",
       );
 
       setSupervisors([]);
@@ -444,17 +443,11 @@ export default function SupervisorManagementPage() {
 
       setFromSupervisorWorkers(data);
     } catch (error) {
-      console.error(
-        "Failed to fetch workers for supervisor:",
-        error,
-      );
+      console.error("Failed to fetch workers for supervisor:", error);
 
       setFromSupervisorWorkers([]);
 
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to load workers.",
-      );
+      toast.error(error?.response?.data?.message || "Failed to load workers.");
     }
   };
 
@@ -482,8 +475,7 @@ export default function SupervisorManagementPage() {
 
   const getSupervisorName = (id) => {
     const supervisor = supervisors.find(
-      (item) =>
-        String(item._id || item.id) === String(id),
+      (item) => String(item._id || item.id) === String(id),
     );
 
     return supervisor?.name || "Supervisor";
@@ -626,10 +618,8 @@ export default function SupervisorManagementPage() {
 
       return {
         workerId,
-        teamNumber:
-          details.teamNumber ?? worker.teamNumber,
-        workerRole:
-          details.workerRole ?? worker.workerRole,
+        teamNumber: details.teamNumber ?? worker.teamNumber,
+        workerRole: details.workerRole ?? worker.workerRole,
       };
     });
 
@@ -645,10 +635,7 @@ export default function SupervisorManagementPage() {
       const response = await transferWorkers(payload);
 
       if (response?.success) {
-        toast.success(
-          response.message ||
-            "Workers transferred successfully.",
-        );
+        toast.success(response.message || "Workers transferred successfully.");
 
         setSelectedWorkers([]);
         setTransferredWorkers([]);
@@ -661,16 +648,12 @@ export default function SupervisorManagementPage() {
         return;
       }
 
-      toast.error(
-        response?.message ||
-          "Failed to transfer workers.",
-      );
+      toast.error(response?.message || "Failed to transfer workers.");
     } catch (error) {
-      console.error("Worker transfer error:", error);
+      // console.error("Worker transfer error:", error);
 
       toast.error(
-        error?.response?.data?.message ||
-          "Failed to transfer workers.",
+        error?.response?.data?.message || "Failed to transfer workers.",
       );
     } finally {
       setTransferring(false);
@@ -732,10 +715,7 @@ export default function SupervisorManagementPage() {
           disabled={refreshing}
           className="border-border bg-surface text-primary hover:border-primary hover:bg-primary-light relative inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <RefreshCw
-            size={16}
-            className={refreshing ? "animate-spin" : ""}
-          />
+          <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
 
           <span className="hidden sm:inline">
             {refreshing ? "Refreshing..." : "Refresh"}
@@ -748,7 +728,7 @@ export default function SupervisorManagementPage() {
     ============================================================ */}
 
       <div
-        className={`relative z-[100] transition-[opacity,translate,scale] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`relative z-30 transition-[opacity,translate,scale] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           pageReady
             ? "translate-y-0 scale-100 opacity-100"
             : "translate-y-10 scale-[0.98] opacity-0"
@@ -781,15 +761,14 @@ export default function SupervisorManagementPage() {
         }}
       >
         <WorkerTransfer
+       
           fromSupervisorName={
             fromSupervisor
               ? getSupervisorName(fromSupervisor)
               : "From Supervisor"
           }
           toSupervisorName={
-            toSupervisor
-              ? getSupervisorName(toSupervisor)
-              : "To Supervisor"
+            toSupervisor ? getSupervisorName(toSupervisor) : "To Supervisor"
           }
           fromWorkers={fromSupervisorWorkers}
           toWorkers={transferredWorkerObjects}
@@ -800,9 +779,7 @@ export default function SupervisorManagementPage() {
           onMoveRight={moveToRight}
           onMoveLeft={moveToLeft}
           transferDetails={transferDetails}
-          onTransferDetailChange={
-            handleTransferDetailChange
-          }
+          onTransferDetailChange={handleTransferDetailChange}
         />
       </div>
 
@@ -823,16 +800,10 @@ export default function SupervisorManagementPage() {
         <button
           type="button"
           onClick={handleTransfer}
-          disabled={
-            !transferredWorkers.length ||
-            loading ||
-            transferring
-          }
+          disabled={!transferredWorkers.length || loading || transferring}
           className="bg-primary hover:bg-primary-dark rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {transferring
-            ? "Transferring..."
-            : "Transfer Selected Workers"}
+          {transferring ? "Transferring..." : "Transfer Selected Workers"}
         </button>
       </div>
 

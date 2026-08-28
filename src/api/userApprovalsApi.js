@@ -42,10 +42,16 @@ export async function getPendingApprovalUser(id) {
 // Update User Approval
 // ============================================================
 
-export async function updateUserApproval(id, approvalStatus, approverId) {
+export async function updateUserApproval(
+  id,
+  approvalStatus,
+  approverId,
+  supervisorCode = null,
+) {
   const response = await api.put(`/users/pendingapprovals/${id}`, {
     approvalStatus,
     approverId,
+    supervisorCode,
   });
 
   return response.data;

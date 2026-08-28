@@ -113,7 +113,7 @@ export default function WorkerList({
   return (
     <div className="border-border overflow-hidden rounded-xl border">
       <div className="border-border bg-surface border-b px-4 py-3">
-        <p className="text-text text-sm font-semibold">{title}</p>
+        <p className="text-text text-sm font-semibold capitalize">{title}</p>
 
         <p className="text-text-secondary mt-0.5 text-xs">
           {workers.length} worker
@@ -158,23 +158,65 @@ export default function WorkerList({
               const isSelected = selectedWorkers.includes(workerId);
 
               return (
+                // <label
+                //   key={workerId}
+                //   className="border-border hover:bg-surface flex cursor-pointer items-center gap-3 border-b px-4 py-3 last:border-b-0"
+                // >
+                //   {/* Checkbox */}
+                //   <input
+                //     type="checkbox"
+                //     checked={isSelected}
+                //     onChange={() => onToggle?.(workerId)}
+                //     className="border-border text-primary focus:ring-primary h-4 w-4 shrink-0 rounded"
+                //   />
+
+                //   {/* Worker Information */}
+                //   <div className="flex min-w-0 flex-1 items-center gap-4">
+                //     {/* Team */}
+                //     <div className="min-w-16">
+                //       <p className="text-text-secondary text-[11px]">Team</p>
+
+                //       <p className="text-text text-sm font-semibold">
+                //         {getTeamNumber(worker)}
+                //       </p>
+                //     </div>
+
+                //     {/* Role */}
+                //     <div className="min-w-28">
+                //       <p className="text-text-secondary text-[11px]">Role</p>
+
+                //       <p className="text-text text-sm font-medium">
+                //         {renderRoleLabel(getWorkerRole(worker))}
+                //       </p>
+                //     </div>
+
+                //     {/* Name */}
+                //     <div className="min-w-0 flex-1">
+                //       <p className="text-text-secondary text-[11px]">Name</p>
+
+                //       <p className="text-text truncate text-sm font-semibold capitalize">
+                //         {getWorkerName(worker)}
+                //       </p>
+                //     </div>
+                //   </div>
+                // </label>
                 <label
                   key={workerId}
-                  className="border-border hover:bg-surface flex cursor-pointer items-center gap-3 border-b px-4 py-3 last:border-b-0"
+                  className="border-border hover:bg-surface flex cursor-pointer items-center gap-2 border-b px-3 py-2.5 last:border-b-0"
                 >
                   {/* Checkbox */}
                   <input
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => onToggle?.(workerId)}
-                    className="border-border text-primary focus:ring-primary h-4 w-4 shrink-0 rounded"
+                    className="accent-primary h-4 w-4 shrink-0 cursor-pointer"
                   />
 
                   {/* Worker Information */}
-                  <div className="flex min-w-0 flex-1 items-center gap-4">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
                     {/* Team */}
-                    <div className="min-w-16">
-                      <p className="text-text-secondary text-[11px]">Team</p>
+                    <div className="w-12 shrink-0">
+                      <p className="text-text-secondary text-[10px]">Team</p>
 
                       <p className="text-text text-sm font-semibold">
                         {getTeamNumber(worker)}
@@ -182,17 +224,17 @@ export default function WorkerList({
                     </div>
 
                     {/* Role */}
-                    <div className="min-w-28">
-                      <p className="text-text-secondary text-[11px]">Role</p>
+                    <div className="w-24 shrink-0">
+                      <p className="text-text-secondary text-[10px]">Role</p>
 
-                      <p className="text-text text-sm font-medium">
+                      <p className="text-text truncate text-sm font-medium">
                         {renderRoleLabel(getWorkerRole(worker))}
                       </p>
                     </div>
 
                     {/* Name */}
                     <div className="min-w-0 flex-1">
-                      <p className="text-text-secondary text-[11px]">Name</p>
+                      <p className="text-text-secondary text-[10px]">Name</p>
 
                       <p className="text-text truncate text-sm font-semibold capitalize">
                         {getWorkerName(worker)}

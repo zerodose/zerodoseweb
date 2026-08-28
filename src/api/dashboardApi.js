@@ -190,34 +190,16 @@ export const getCount = async (
 // District Count
 // =====================================================
 
-export const getDistrictCount = async (
-  districtId,
-  metrics,
-  isActive,
-) => {
-  return getCount(
-    "district",
-    districtId,
-    metrics,
-    isActive,
-  );
+export const getDistrictCount = async (districtId, metrics, isActive) => {
+  return getCount("district", districtId, metrics, isActive);
 };
 
 // =====================================================
 // Town Count
 // =====================================================
 
-export const getTownCount = async (
-  townId,
-  metrics,
-  isActive,
-) => {
-  return getCount(
-    "town",
-    townId,
-    metrics,
-    isActive,
-  );
+export const getTownCount = async (townId, metrics, isActive) => {
+  return getCount("town", townId, metrics, isActive);
 };
 
 // =====================================================
@@ -229,12 +211,7 @@ export const getUnionCouncilCount = async (
   metrics,
   isActive,
 ) => {
-  return getCount(
-    "unionCouncil",
-    unionCouncilId,
-    metrics,
-    isActive,
-  );
+  return getCount("unionCouncil", unionCouncilId, metrics, isActive);
 };
 
 // =====================================================
@@ -246,15 +223,9 @@ export const getSupervisorUnionCouncilCount = async (
   unionCouncilId,
   metrics,
 ) => {
-  return getCount(
-    "unionCouncil",
-    unionCouncilId,
-    metrics,
-    undefined,
-    {
-      supervisorId,
-    },
-  );
+  return getCount("unionCouncil", unionCouncilId, metrics, undefined, {
+    supervisorId,
+  });
 };
 
 // =====================================================
@@ -297,12 +268,9 @@ export const getUCMOSupervisorCount = async (
 // =====================================================
 
 export const getTownSupervisorSummary = async (params = {}) => {
-  const response = await api.get(
-    "/users/town-supervisor-summary",
-    {
-      params,
-    },
-  );
+  const response = await api.get("/users/town-supervisor-summary", {
+    params,
+  });
 
   return response.data;
 };
@@ -312,12 +280,35 @@ export const getTownSupervisorSummary = async (params = {}) => {
 // =====================================================
 
 export const getTownZerodoseSummary = async (params = {}) => {
-  const response = await api.get(
-    "/users/town-zerodose-summary",
-    {
-      params,
-    },
-  );
+  const response = await api.get("/users/town-zerodose-summary", {
+    params,
+  });
 
+  return response.data;
+};
+
+// =====================================================
+// // UCMO Summary //
+//  =====================================================
+
+export const getUCMOSummary = async (ucmoId) => {
+  const response = await api.get("/dashboard/ucmo-summary", {
+    params: { ucmoId },
+  });
+  return response.data;
+};
+
+export const getTownSummary = async (townId) => {
+  const response = await api.get("/dashboard/town-summary", {
+    params: { townId },
+  });
+
+  return response.data;
+};
+
+export const getDistrictSummary = async (districtId) => {
+  const response = await api.get("/dashboard/district-summary", {
+    params: { districtId },
+  });
   return response.data;
 };

@@ -14,6 +14,11 @@ import {
   UsersRound,
   UserCog,
   UserPlus,
+  Clipboard,
+  ShieldAlert,
+  Move3D,
+  Move,
+  Send,
 } from "lucide-react";
 
 export const adminSidebarData = [
@@ -166,21 +171,6 @@ export const ucmoSidebar = [
   },
 
   {
-    title: "Campaigns",
-    icon: Megaphone,
-    children: [
-      {
-        title: "Current Campaign",
-        href: "/ucmo/campaign",
-      },
-      {
-        title: "Previous Campaigns",
-        href: "/ucmo/campaigns/previous",
-      },
-    ],
-  },
-
-  {
     title: "Supervisors",
     href: "/ucmo/supervisorDetail",
     icon: Users,
@@ -190,6 +180,21 @@ export const ucmoSidebar = [
     title: "Zerodose",
     href: "/ucmo/zerodose",
     icon: Database,
+  },
+  {
+    title: "Team Management",
+    href: "/ucmo/team-management",
+    icon: Send,
+  },
+  {
+    title: "Staff Management",
+    href: "/ucmo/staff-management",
+    icon: Move,
+  },
+  {
+    title: "Pending Approvals",
+    href: "/ucmo/pendingapprovals",
+    icon: ShieldAlert,
   },
 ];
 

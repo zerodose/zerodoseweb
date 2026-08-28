@@ -19,8 +19,8 @@ export default function Sidebar({ items = [], mobileOpen, setMobileOpen }) {
     items.forEach((item) => {
       if (!item.children?.length) return;
 
-      const activeChild = item.children.some((child) =>
-        pathname.startsWith(child.href),
+      const activeChild = item.children.some(
+        (child) => pathname === child.href,
       );
 
       if (activeChild) {
@@ -70,11 +70,8 @@ export default function Sidebar({ items = [], mobileOpen, setMobileOpen }) {
   const isActive = (href) => {
     if (!href) return false;
 
-    if (href === "/dashboard") {
-      return pathname === "/dashboard";
-    }
-
-    return pathname.startsWith(href);
+    // Sirf exact current pathname active hoga
+    return pathname === href;
   };
 
   return (

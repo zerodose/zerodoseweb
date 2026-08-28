@@ -71,7 +71,7 @@ export async function GET(request, { params }) {
 // Update district
 // ============================================================
 
-export async function PATCH(request, { params }) {
+export async function PUT(request, { params }) {
   try {
     await connectDB();
 

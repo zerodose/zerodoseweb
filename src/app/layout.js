@@ -27,7 +27,7 @@ export default function RootLayout({ children }) {
     >
       <body className="flex min-h-full flex-col">
         <AuthGuard>{children}</AuthGuard>
-        <Toaster position="top-right" richColors closeButton duration={2000} />
+        <Toaster position="top-right" richColors closeButton duration={3000} />
       </body>
     </html>
   );

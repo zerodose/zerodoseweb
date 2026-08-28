@@ -177,7 +177,7 @@ export async function PUT(request) {
       isActive: true,
       supervisor: fromSupervisorId,
     })
-      .select("_id name teamNumber workerRole supervisor")
+      .select("_id name teamNumber workerRole supervisor unionCouncil")
       .lean();
 
     // ============================================================
@@ -204,6 +204,49 @@ export async function PUT(request) {
       );
     }
 
+    // ============================================================
+    // Check Duplicate Team + Worker Role
+    // ============================================================
+
+    for (const worker of workers) {
+      const selectedWorker = existingWorkers.find(
+        (item) => String(item._id) === String(worker.workerId),
+      );
+
+      if (!selectedWorker) {
+        continue;
+      }
+
+      const duplicateWorker = await User.findOne({
+        _id: { $nin: uniqueWorkerIds },
+        unionCouncil: selectedWorker.unionCouncil,
+        teamNumber: Number(worker.teamNumber),
+        workerRole: worker.workerRole,
+        designation: "worker",
+        isActive: true,
+      })
+        .select("_id name teamNumber workerRole supervisor")
+        .lean();
+
+      if (duplicateWorker) {
+        const roleLabel = {
+          teamLeader: "Team Leader",
+          teamMember: "Team Member",
+        };
+
+        const formattedRole =
+          roleLabel[String(worker.workerRole)] ||
+          String(worker.workerRole || "Worker Role");
+
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Team ${worker.teamNumber} already has a ${formattedRole} assigned.`,
+          },
+          { status: 409 },
+        );
+      }
+    }
     // ============================================================
     // Transfer Workers
     //
@@ -288,7 +331,64 @@ export async function PUT(request) {
       { status: 200 },
     );
   } catch (error) {
-    console.error("Worker transfer error:", error);
+    // ============================================================
+    // DUPLICATE TEAM + WORKER ROLE
+    // ============================================================
+
+    if (error?.code === 11000) {
+      const duplicateMessage = error?.message || error?.errmsg || "";
+
+      const teamMatch = duplicateMessage.match(
+        /teamNumber:\s*(?:ObjectId\()?([0-9]+)\)?/,
+      );
+
+      const roleMatch = duplicateMessage.match(
+        /workerRole:\s*["']?([^,"'}\s]+)["']?/,
+      );
+
+      const teamNumber = teamMatch?.[1] || null;
+      const workerRole = roleMatch?.[1] || null;
+
+      const roleLabel = {
+        teamLeader: "Team Leader",
+        teamMember: "Team Member",
+      };
+
+      const formattedRole = roleLabel[String(workerRole)] || "Worker Role";
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: teamNumber
+            ? `Team ${teamNumber} already has a ${formattedRole} assigned.`
+            : `This team already has a ${formattedRole} assigned.`,
+        },
+        { status: 409 },
+      );
+    }
+
+    // ============================================================
+    // MONGOOSE VALIDATION ERROR
+    // ============================================================
+
+    if (error?.name === "ValidationError") {
+      const messages = Object.values(error.errors || {}).map(
+        (item) => item.message,
+      );
+
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            messages.length > 0 ? messages.join(", ") : "Validation failed.",
+        },
+        { status: 400 },
+      );
+    }
+
+    // ============================================================
+    // OTHER ERRORS
+    // ============================================================
 
     return NextResponse.json(
       {

@@ -32,34 +32,6 @@ export default function PreviousCampaigns({
     return value.toString();
   };
 
-  // ============================================================
-  // UNIQUE CAMPAIGNS
-  // ============================================================
-
-  // const uniqueCampaigns = useMemo(() => {
-  //   const map = new Map();
-
-  //   campaigns.forEach((item) => {
-  //     const campaign = item?.campaign;
-
-  //     if (!campaign) {
-  //       return;
-  //     }
-
-  //     const campaignId = getId(campaign);
-
-  //     if (!campaignId) {
-  //       return;
-  //     }
-
-  //     if (!map.has(campaignId)) {
-  //       map.set(campaignId, campaign);
-  //     }
-  //   });
-
-  //   return Array.from(map.values());
-  // }, [campaigns]);
-
   const uniqueCampaigns = useMemo(() => {
     const map = new Map();
 
@@ -419,7 +391,7 @@ export default function PreviousCampaigns({
           FILTER CARD
       ====================================================== */}
 
-      <div className="border-border relative mb-6 overflow-hidden rounded-2xl border bg-white shadow-sm">
+      <div className=" relative mb-6 overflow-hidden rounded-2xl border-border border shadow-sm">
         {/* Top accent */}
         <div className="from-primary via-primary-dark to-primary h-1 w-full bg-gradient-to-r" />
 
@@ -594,7 +566,7 @@ export default function PreviousCampaigns({
               </p>
             </div>
 
-            <span className="bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-semibold">
+            <span className="bg-primary/10  text-primary rounded-full px-3 py-1 text-xs font-semibold">
               {teamData.length} Teams
             </span>
           </div>
@@ -608,7 +580,7 @@ export default function PreviousCampaigns({
       ====================================================== */}
 
       {selectedCampaign && selectedRawData.length === 0 && (
-        <div className="border-border bg-surface rounded-xl border p-6 text-center">
+        <div className="border-border bg-surface rounded-2xl border p-6 text-center">
           <p className="text-text font-medium">No Zerodose records found.</p>
 
           <p className="text-text-secondary mt-1 text-sm">

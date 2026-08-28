@@ -15,7 +15,7 @@ export default function CampaignHeader({
   const isCurrent = label === "CURRENT CAMPAIGN";
 
   return (
-    <div className="bg-primary mb-5 overflow-hidden rounded-2xl p-5 md:p-6">
+    <div className="bg-primary dark:bg-transparent rounded-2xl border-border border shadow-sm mb-5 overflow-hidden p-5 md:p-6">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         {/* Campaign Information */}
         <div>

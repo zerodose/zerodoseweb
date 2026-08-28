@@ -323,7 +323,7 @@ export default function Page() {
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-primary hover:bg-primary/90 flex h-11 items-center justify-center gap-2 rounded-lg px-6 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-60"
+                className="bg-primary hover:bg-primary/90 flex h-11 items-center justify-center gap-2 rounded-lg px-6 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-800 dark:hover:bg-slate-700"
               >
                 <UserPlus size={17} />
 

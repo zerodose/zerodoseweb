@@ -143,7 +143,7 @@
 
 export default function ZerodoseTable({ data = [], onTeamClick }) {
   return (
-    <div className="border-border overflow-hidden rounded-xl border bg-white md:rounded-2xl">
+    <div className="mb-4 overflow-hidden rounded-xl border-border border shadow-sm md:rounded-2xl">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[900px] border-collapse">
           {/* ======================================================
@@ -151,7 +151,7 @@ export default function ZerodoseTable({ data = [], onTeamClick }) {
           ====================================================== */}
 
           <thead>
-            <tr className="border-border border-b bg-white">
+            <tr className="border-border border-b dark:bg-slate-900">
               <th className="text-text-secondary border-border border-r px-4 py-3 text-left text-xs font-semibold">
                 Team No.
               </th>

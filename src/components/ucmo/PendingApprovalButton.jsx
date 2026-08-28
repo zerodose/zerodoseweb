@@ -7,26 +7,35 @@ import Link from "next/link";
 export default function PendingApprovalButton({ link, name,  pendingApprovals = 0, loading = false }) {
   return (
     <Link
+<<<<<<< HEAD:src/components/ucmo/PendingApprovalButton.jsx
       href={link}
       className="border-border bg-primary/20 hover:border-primary/40 hover:bg-primary-light group inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 shadow-sm transition-all"
     >
       {/* <Clock3 size={16} className="text-primary" /> */}
+=======
+  href={link}
+  className="w-fit max-w-[250px] border-border bg-primary/20 hover:border-primary/40 hover:bg-primary-light group inline-flex items-center gap-2 rounded-xl border px-3.5 py-2.5 shadow-sm transition-all"
+>
+      <Clock3 size={16} className="text-primary" />
+>>>>>>> 3b366d66da0bbf950b3b19514ef10fe8dd933630:src/components/ucmo/UCMOActions.jsx
 
-      <span className="text-text text-sm font-semibold">
-        {name}
-      </span>
+ <span className="text-text text-sm font-semibold whitespace-nowrap">
+  {name}
+</span>
 
-      {pendingApprovals > 0 ? (
-        <span className="bg-primary flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[11px] font-bold text-white">
-          {pendingApprovals}
-        </span>
-      ) : loading ? (
-        <RefreshCw size={16} className="text-primary animate-spin" />
-      ) : (
-        <span className="bg-surface border-border text-text-secondary rounded-full border px-2 py-0.5 text-[10px] font-medium">
-          None
-        </span>
-      )}
+<div className="flex shrink-0 items-center justify-center">
+  {pendingApprovals > 0 ? (
+    <span className="bg-primary flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[11px] font-bold text-white">
+      {pendingApprovals}
+    </span>
+  ) : loading ? (
+    <RefreshCw size={16} className="text-primary animate-spin" />
+  ) : (
+    <span className="bg-surface border-border text-text-secondary rounded-full border px-1.5 py-0.5 text-[10px] font-medium leading-none whitespace-nowrap">
+      None
+    </span>
+  )}
+</div>
 
       <ChevronRight
         size={16}

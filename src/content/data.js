@@ -211,8 +211,8 @@ export const supervisorSidebar = [
     icon: Users,
   },
   {
-    title: "Workers",
-    href: "/supervisor/workers",
+    title: "Teams",
+    href: "/supervisor/teams",
     icon: UserPlus,
   },
 
@@ -220,6 +220,11 @@ export const supervisorSidebar = [
     title: "Zerodose List",
     href: "/supervisor/zerodoses",
     icon: Syringe,
+  },
+   {
+    title: "Pending Approvals",
+    href: "/supervisor/pendingapprovals",
+    icon: ShieldAlert,
   },
 ];
 

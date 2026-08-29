@@ -15,6 +15,7 @@ import UCMOActions from "@/components/ucmo/PendingApprovalButton";
 import { getPendingZerodoseCount } from "@/api/zerodoseApprovalApi";
 import { LayoutDashboard } from "lucide-react";
 import PendingApprovalButton from "@/components/ucmo/PendingApprovalButton";
+import ZerodoseTabs from "@/components/supervisor/zerodose/ZerodoseTabs";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
@@ -259,46 +260,44 @@ export default function Page() {
   // }, [workers]);
 
   const activeTeams = useMemo(() => {
-  const teamMap = new Map();
+    const teamMap = new Map();
 
-  workers.forEach((worker) => {
-    if (
-      worker.teamNumber === null ||
-      worker.teamNumber === undefined ||
-      worker.teamNumber === ""
-    ) {
-      return;
-    }
+    workers.forEach((worker) => {
+      if (
+        worker.teamNumber === null ||
+        worker.teamNumber === undefined ||
+        worker.teamNumber === ""
+      ) {
+        return;
+      }
 
-    const teamNumber = worker.teamNumber;
+      const teamNumber = worker.teamNumber;
 
-    if (!teamMap.has(teamNumber)) {
-      teamMap.set(teamNumber, {
-        teamNumber,
-        teamLeader: null,
-        teamMember: null,
-      });
-    }
+      if (!teamMap.has(teamNumber)) {
+        teamMap.set(teamNumber, {
+          teamNumber,
+          teamLeader: null,
+          teamMember: null,
+        });
+      }
 
-    const team = teamMap.get(teamNumber);
+      const team = teamMap.get(teamNumber);
 
-    if (worker.workerRole === "teamLeader") {
-      team.teamLeader = worker;
-    }
+      if (worker.workerRole === "teamLeader") {
+        team.teamLeader = worker;
+      }
 
-    if (worker.workerRole === "teamMember") {
-      team.teamMember = worker;
-    }
-  });
+      if (worker.workerRole === "teamMember") {
+        team.teamMember = worker;
+      }
+    });
 
-  return Array.from(teamMap.values())
-    .filter((team) => team.teamLeader && team.teamMember)
-    .sort(
-      (a, b) => Number(a.teamNumber) - Number(b.teamNumber),
-    );
-}, [workers]);
+    return Array.from(teamMap.values())
+      .filter((team) => team.teamLeader && team.teamMember)
+      .sort((a, b) => Number(a.teamNumber) - Number(b.teamNumber));
+  }, [workers]);
 
-const normalizedCampaigns = useMemo(() => {
+  const normalizedCampaigns = useMemo(() => {
     return campaigns.map((campaign) => ({
       ...campaign,
       campaignStatus: getCampaignStatus(campaign),
@@ -480,7 +479,7 @@ const normalizedCampaigns = useMemo(() => {
       <SupervisorActions />
 
       <CampaignTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-
+      
       {activeTab === "current" && (
         <CurrentCampaign
           campaign={currentCampaign}

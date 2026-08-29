@@ -659,6 +659,21 @@ export async function GET(request) {
       );
     }
 
+    if (designation === "supervisor") {
+      const count = await User.countDocuments({
+        ...baseFilter,
+        designation: "worker",
+        supervisor: approver._id,
+      });
+
+      return NextResponse.json(
+        {
+          success: true,
+          count,
+        },
+        { status: 200 },
+      );
+    }
     // ============================================================
     // FALLBACK
     // ============================================================
@@ -676,8 +691,7 @@ export async function GET(request) {
     return NextResponse.json(
       {
         success: false,
-        message:
-          error?.message || "Failed to fetch pending approval count.",
+        message: error?.message || "Failed to fetch pending approval count.",
       },
       { status: 500 },
     );

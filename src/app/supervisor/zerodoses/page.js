@@ -5,12 +5,12 @@ import { useEffect, useMemo, useState } from "react";
 import { getCampaigns } from "@/api/campaignApi";
 import { getZerodoses } from "@/api/zerodoseApi";
 import { getUsers } from "@/api/userApi";
-import {  LucideSyringe } from "lucide-react";
+import { LucideSyringe } from "lucide-react";
 import ZerodoseTabs from "@/components/supervisor/zerodose/ZerodoseTabs";
 import CurrentCampaign from "@/components/supervisor/zerodose/CurrentCampaign";
 import PreviousCampaigns from "@/components/supervisor/zerodose/PreviousCampaigns";
 import ZerodosePageSkeleton from "@/components/supervisor/zerodose/ZerodosePageSkeleton";
-import ClientPageHeader from "@/components/ui/ClientPageHeader";
+import ApprovalPageHeader from "@/components/ui/ApprovalPageHeader";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
@@ -344,28 +344,21 @@ export default function Page() {
 
   return (
     <div className="min-h-full">
-      {/* ======================================================
-          PAGE HEADER
-      ====================================================== */}
-
-      <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <ClientPageHeader
-          title="Zerodose"
-          description="View campaign-wise Zerodose records and team details"
-          onBack={() => window.history.back()}
-        />
-
-        {/* CURRENT ZERODOSE COUNT */}
-        <div className="border-primary/20 bg-primary-light text-primary flex w-fit items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-sm">
-          <LucideSyringe size={18} />
-
-          <span>
-            {currentData.length}{" "}
-            {currentData.length === 1 ? "Zerodose" : "Zerodoses"}
-          </span>
-        </div>
-      </div>
-
+      <ApprovalPageHeader
+        title="Zerodose"
+        description="View campaign-wise Zerodose records and team details"
+        onBack={() => window.history.back()}
+        rightContent={
+          <div className="border-primary/20 bg-primary-light text-primary dark:bg-primary/10 dark:border-primary/30 flex w-fit items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-sm">
+            
+            <LucideSyringe size={18} />
+            <span>
+              {currentData.length}{" "}
+              {currentData.length === 1 ? "ZD" : "ZD"}
+            </span>
+          </div>
+        }
+      />
       {/* ======================================================
           ERROR
       ====================================================== */}

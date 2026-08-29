@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, UserPlus, Syringe } from "lucide-react";
+import { Users, UserPlus, Syringe, ShieldAlert } from "lucide-react";
 import ActionLinkButton from "../admin/ui/ActionLinkButton";
 
 export default function SupervisorActions() {
@@ -12,9 +12,9 @@ export default function SupervisorActions() {
       icon: UserPlus,
     },
     {
-      href: "/supervisor/workers",
-      label: "Workers",
-      description: "Manage your assigned workers",
+      href: "/supervisor/teams",
+      label: "Teams",
+      description: "Manage your assigned teams",
       icon: Users,
     },
     {
@@ -22,6 +22,12 @@ export default function SupervisorActions() {
       label: "Zerodose List",
       description: "View and manage zerodose records",
       icon: Syringe,
+    },
+    {
+      href: "/supervisor/pendingapprovals",
+      label: "Pending Approvals",
+      description: "View and manage pending approvals",
+      icon: ShieldAlert,
     },
   ];
 

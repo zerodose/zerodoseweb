@@ -543,7 +543,7 @@ export default function PreviousCampaigns({
           SELECTED CAMPAIGN
       ====================================================== */}
 
-      {selectedCampaign && (
+         {selectedCampaign && selectedRawData.length > 0 &&  (
         <>
           <CampaignHeader
             campaign={selectedCampaign}

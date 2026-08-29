@@ -280,6 +280,19 @@ export async function GET(request) {
       }
 
       // ==========================================================
+      // SUPERVISOR
+      // ==========================================================
+
+      case "supervisor": {
+        // Supervisor can only approve workers assigned to this supervisor.
+
+        filter.designation = "worker";
+        filter.supervisor = approver._id;
+
+        break;
+      }
+
+      // ==========================================================
       // NOT AUTHORIZED
       // ==========================================================
 
@@ -391,12 +404,13 @@ export async function GET(request) {
     const [users, total] = await Promise.all([
       User.find(filter)
         .select(
-          "_id name email contactNumber district town unionCouncil ucmo supervisorCode designation approvalStatus approvedBy approvedAt isActive createdAt",
+          "_id name email contactNumber district town unionCouncil ucmo supervisor supervisorCode designation approvalStatus approvedBy approvedAt isActive createdAt",
         )
         .populate("district", "_id name code")
         .populate("town", "_id name code")
         .populate("unionCouncil", "_id name code")
         .populate("ucmo", "_id name email designation")
+        .populate("supervisor", "_id name email designation")
         .populate("approvedBy", "_id name designation")
         .sort({
           createdAt: -1,

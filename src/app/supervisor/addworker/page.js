@@ -7,6 +7,7 @@ import { UserPlus, Users, Phone, Hash, ShieldCheck } from "lucide-react";
 import { createWorker } from "@/api/supervisorApi";
 import Select from "@/components/ui/Select";
 import ClientPageHeader from "@/components/ui/ClientPageHeader";
+import ApprovalPageHeader from "@/components/ui/ApprovalPageHeader";
 
 export default function Page() {
   const router = useRouter();
@@ -65,13 +66,11 @@ export default function Page() {
       {/* =====================================================
           Header
       ===================================================== */}
-      <div className="mb-7 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <ClientPageHeader
-          title={"Add Worker"}
-          description={"Add a worker to your team."}
-          onBack={() => router.back()}
-        />
-      </div>
+      <ApprovalPageHeader
+        title="Add Worker"
+        description="Add a worker to your team."
+        onBack={() => router.back()}
+      />
       {/* =====================================================
           Form
       ===================================================== */}

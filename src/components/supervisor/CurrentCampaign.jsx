@@ -17,9 +17,9 @@ export default function CurrentCampaign({
   // Only show skeleton while API is loading
   // ------------------------------------------------------------
 
-  if (loading) {
-    return <SupervisorZerodoseTableSkeleton />;
-  }
+  // if (loading) {
+  //   return <SupervisorZerodoseTableSkeleton />;
+  // }
 
   // ------------------------------------------------------------
   // No campaign available

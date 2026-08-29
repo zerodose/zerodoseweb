@@ -15,6 +15,7 @@ const APPROVAL_HIERARCHY = {
   supervisor: ["ucmo"],
   vaccinator: ["ucmo"],
   otherstaff: ["ucmo"],
+  worker: ["supervisor"],
 };
 
 // ============================================================
@@ -339,6 +340,30 @@ export async function PUT(request, { params }) {
             message: "You can only approve supervisors assigned to your UCMO.",
           },
           { status: 403 },
+        );
+      }
+    }
+
+    // ------------------------------------------------------------
+    // Supervisor → approves Worker
+    //
+    // Only the Supervisor assigned to the Worker can approve.
+    // ------------------------------------------------------------
+
+    if (user.designation === "worker") {
+      if (
+        !approver._id ||
+        !user.supervisor ||
+        String(user.supervisor) !== String(approver._id)
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "You can only approve workers assigned to you.",
+          },
+          {
+            status: 403,
+          },
         );
       }
     }

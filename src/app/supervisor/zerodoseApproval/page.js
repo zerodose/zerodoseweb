@@ -15,6 +15,7 @@ import {
 import ClientPageHeader from "@/components/ui/ClientPageHeader";
 import Loader from "@/components/ui/Loader";
 import ZerodoseApprovalCard from "@/components/supervisor/ZerodoseApprovalCard";
+import ApprovalPageHeader from "@/components/ui/ApprovalPageHeader";
 
 export default function Page() {
   const router = useRouter();
@@ -780,7 +781,7 @@ export default function Page() {
             request={request}
             expanded={expanded}
             processing={processing}
-              processingAction={processingAction}
+            processingAction={processingAction}
             changedFields={changedFields}
             workerName={workerName}
             workerContact={workerContact}
@@ -847,40 +848,13 @@ export default function Page() {
             HEADER
         ====================================================== */}
 
-        <header
-          className={`border-border relative mb-5 flex transform items-center justify-between overflow-hidden border-b pb-5 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-            pageReady
-              ? "translate-y-0 scale-100 opacity-100"
-              : "translate-y-10 scale-[0.98] opacity-0"
-          }`}
-        >
-          {/* <div className="bg-primary/10 pointer-events-none absolute -top-20 left-10 h-40 w-72 rounded-full blur-3xl" /> */}
-
-          {/* <div className="bg-primary/5 pointer-events-none absolute -right-20 -bottom-20 h-40 w-64 rounded-full blur-3xl" /> */}
-
-          <div className="relative">
-            <ClientPageHeader
-              title="Zerodose Approvals"
-              description="Review and manage pending worker Zerodose update requests."
-              onBack={() => router.back()}
-            />
-          </div>
-
-          {/* REFRESH */}
-
-          <button
-            type="button"
-            onClick={() => fetchRequests(true)}
-            disabled={refreshing}
-            className="border-border bg-surface text-primary hover:border-primary hover:bg-primary-light relative inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
-
-            <span className="hidden sm:inline">
-              {refreshing ? "Refreshing..." : "Refresh"}
-            </span>
-          </button>
-        </header>
+        <ApprovalPageHeader
+          title="Zerodose Approvals"
+          description="Review and manage pending worker Zerodose update requests."
+          onBack={() => router.back()}
+          onRefresh={() => fetchRequests(true)}
+          refreshing={refreshing}
+        />
 
         {/* ======================================================
             ERROR

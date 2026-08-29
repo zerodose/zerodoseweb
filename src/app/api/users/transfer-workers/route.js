@@ -4,6 +4,12 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 
+ import District from "@/models/District";
+ import Town from "@/models/Town";
+ import UnionCouncil from "@/models/UnionCouncil";
+ import Zerodose from "@/models/Zerodose";
+
+
 export async function PUT(request) {
   try {
     await connectDB();

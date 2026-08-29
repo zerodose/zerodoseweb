@@ -141,3 +141,21 @@ export const transferUser = async (payload) => {
   const response = await api.put("/users/transfer", payload);
   return response.data;
 };
+
+export async function getStaffByScope({
+  scope,
+  designation,
+  scopeId,
+  search = "",
+}) {
+  const response = await api.get("/users/staff-scope", {
+    params: {
+      scope,
+      designation,
+      scopeId,
+      search,
+    },
+  });
+
+  return response.data;
+}

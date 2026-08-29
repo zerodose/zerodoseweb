@@ -218,7 +218,7 @@ export const supervisorSidebar = [
 
   {
     title: "Zerodose List",
-    href: "/supervisor/zerodoses",
+    href: "/supervisor/zerodose",
     icon: Syringe,
   },
    {

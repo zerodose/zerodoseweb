@@ -9,6 +9,7 @@ import exportExcel from "@/utils/export/exportExcel";
 
 import { getUsers, updateUser } from "@/api/userApi";
 import ClientPageHeader from "@/components/ui/ClientPageHeader";
+import ApprovalPageHeader from "@/components/ui/ApprovalPageHeader";
 
 export default function SupervisorDetailPage() {
   const router = useRouter();
@@ -171,11 +172,11 @@ export default function SupervisorDetailPage() {
 
   return (
     <div className="space-y-5">
-     
-      <ClientPageHeader
+      <ApprovalPageHeader
         title="Supervisor Details"
         description="Review and manage details."
         onBack={() => router.back()}
+        onRefresh={() => fetchApprovals(true)}
       />
       {/* ========================================================
           Tabs

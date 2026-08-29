@@ -17,6 +17,7 @@ import {
 
 import ClientPageHeader from "@/components/ui/ClientPageHeader";
 import Select from "@/components/ui/Select";
+import ApprovalPageHeader from "@/components/ui/ApprovalPageHeader";
 
 export default function StaffManagementPage() {
   const router = useRouter();
@@ -833,42 +834,15 @@ export default function StaffManagementPage() {
 
   return (
     <div className="m-auto max-w-7xl space-y-6">
-      {/* ========================================================
-HEADER
-======================================================== */}
 
-      <header
-        className={`border-border relative mb-4 flex items-center justify-between overflow-hidden border-b pb-5 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          pageReady
-            ? "translate-y-0 scale-100 opacity-100"
-            : "translate-y-10 scale-[0.98] opacity-0"
-        }`}
-      >
-        <div className="bg-primary/10 pointer-events-none absolute -top-20 left-10 h-40 w-72 rounded-full blur-3xl" />
-
-        <div className="bg-primary/5 pointer-events-none absolute -right-20 -bottom-20 h-40 w-64 rounded-full blur-3xl" />
-
-        <div className="relative">
-          <ClientPageHeader
-            title="Staff Management"
-            description="Transfer supervisors, vaccinators, other staff and workers to another UCMO or location."
-            onBack={() => router.back()}
-          />
-        </div>
-
-        <button
-          type="button"
-          onClick={handleRefresh}
-          disabled={refreshing || !selectedDesignation}
-          className="border-border bg-surface text-primary hover:border-primary hover:bg-primary-light relative inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
-
-          <span className="hidden sm:inline">
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </span>
-        </button>
-      </header>
+        <ApprovalPageHeader
+                title="Staff Management"
+                  description="Transfer supervisors, vaccinators, other staff and workers to another UCMO or location."
+                onBack={() => router.back()}
+                onRefresh={() => fetchApprovals(true)}
+                refreshing={refreshing}
+                pageReady={pageReady}
+              />
 
       {/* ========================================================
       DESIGNATION

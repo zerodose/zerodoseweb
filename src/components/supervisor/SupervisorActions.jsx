@@ -18,7 +18,7 @@ export default function SupervisorActions() {
       icon: Users,
     },
     {
-      href: "/supervisor/zerodoses",
+      href: "/supervisor/zerodose",
       label: "Zerodose List",
       description: "View and manage zerodose records",
       icon: Syringe,

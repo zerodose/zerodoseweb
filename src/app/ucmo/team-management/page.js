@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -9,6 +8,7 @@ import { toast } from "sonner";
 import WorkerTransfer from "@/components/ucmo/team-management/WorkerTransfer";
 import ClientPageHeader from "@/components/ui/ClientPageHeader";
 import SupervisorSelection from "@/components/ucmo/team-management/SupervisorSelection";
+import ApprovalPageHeader from "@/components/ui/ApprovalPageHeader";
 
 export default function SupervisorManagementPage() {
   const [supervisors, setSupervisors] = useState([]);
@@ -403,41 +403,12 @@ export default function SupervisorManagementPage() {
       {/* ============================================================
         HEADER
     ============================================================ */}
-
-      <header
-        className={`border-border relative mb-4 flex items-center justify-between overflow-hidden border-b pb-5 transition-[opacity,translate,scale] transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          pageReady
-            ? "translate-y-0 scale-100 opacity-100"
-            : "translate-y-10 scale-[0.98] opacity-0"
-        }`}
-      >
-        {/* Header glow */}
-        <div className="bg-primary/10 pointer-events-none absolute -top-20 left-10 h-40 w-72 rounded-full blur-3xl" />
-
-        <div className="bg-primary/5 pointer-events-none absolute -right-20 -bottom-20 h-40 w-64 rounded-full blur-3xl" />
-
-        <div className="relative">
-          <ClientPageHeader
-            title="Supervisor Management"
-            description="Transfer individual workers between supervisors."
-            onBack={() => router.back()}
-          />
-        </div>
-
-        {/* Refresh */}
-        <button
-          type="button"
-          onClick={handleRefresh}
-          disabled={refreshing}
-          className="border-border bg-surface text-primary hover:border-primary hover:bg-primary-light relative inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
-
-          <span className="hidden sm:inline">
-            {refreshing ? "Refreshing..." : "Refresh"}
-          </span>
-        </button>
-      </header>
+      <ApprovalPageHeader
+        title="Teams Management"
+        description="Transfer individual workers between supervisors."
+        onBack={() => router.back()}
+        onRefresh={() => fetchApprovals(true)}
+      />
 
       {/* ============================================================
         SUPERVISOR SELECTION
@@ -477,7 +448,6 @@ export default function SupervisorManagementPage() {
         }}
       >
         <WorkerTransfer
-       
           fromSupervisorName={
             fromSupervisor
               ? getSupervisorName(fromSupervisor)

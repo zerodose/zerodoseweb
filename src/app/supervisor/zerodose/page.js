@@ -7,10 +7,10 @@ import { getZerodoses } from "@/api/zerodoseApi";
 import { getUsers } from "@/api/userApi";
 import { LucideSyringe } from "lucide-react";
 import ZerodoseTabs from "@/components/supervisor/zerodose/ZerodoseTabs";
-import CurrentCampaign from "@/components/supervisor/zerodose/CurrentCampaign";
-import PreviousCampaigns from "@/components/supervisor/zerodose/PreviousCampaigns";
 import ZerodosePageSkeleton from "@/components/supervisor/zerodose/ZerodosePageSkeleton";
 import ApprovalPageHeader from "@/components/ui/ApprovalPageHeader";
+import CurrentCampaignZerodose from "@/components/supervisor/zerodose/CurrentCampaignZerodose";
+import PreviousCampaignsZerodose from "@/components/supervisor/zerodose/PreviousCampaignsZerodose";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
@@ -380,7 +380,7 @@ export default function Page() {
       ====================================================== */}
 
       {activeTab === "current" && (
-        <CurrentCampaign
+        <CurrentCampaignZerodose
           campaign={currentCampaign}
           data={currentData}
           unionCouncilName={supervisorUnionCouncilName}
@@ -392,7 +392,7 @@ export default function Page() {
       ====================================================== */}
 
       {activeTab === "previous" && (
-        <PreviousCampaigns
+        <PreviousCampaignsZerodose
           campaigns={previousCampaigns}
           data={previousData}
           unionCouncilName={supervisorUnionCouncilName}

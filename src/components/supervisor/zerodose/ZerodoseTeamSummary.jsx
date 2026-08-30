@@ -171,66 +171,6 @@ export default function ZerodoseTeamSummary({
       </div>
 
       {/* ======================================================
-          TOTAL SUMMARY
-      ====================================================== */}
-
-      <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
-        <div className="border-border bg-background rounded-xl border p-3">
-          <div className="flex items-center gap-2">
-            <div className="bg-primary/10 text-primary flex h-8 w-8 items-center justify-center rounded-lg">
-              <Syringe size={16} />
-            </div>
-
-            <div className="min-w-0">
-              <p className="text-text-secondary truncate text-[10px] sm:text-xs">
-                Recorded
-              </p>
-
-              <p className="text-text text-base font-bold sm:text-lg">
-                {totals.recorded}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-border bg-background rounded-xl border p-3">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-              <Eye size={16} />
-            </div>
-
-            <div className="min-w-0">
-              <p className="text-text-secondary truncate text-[10px] sm:text-xs">
-                Visited
-              </p>
-
-              <p className="text-text text-base font-bold sm:text-lg">
-                {totals.visited}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-border bg-background rounded-xl border p-3">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-50 text-green-600">
-              <CheckCircle2 size={16} />
-            </div>
-
-            <div className="min-w-0">
-              <p className="text-text-secondary truncate text-[10px] sm:text-xs">
-                Covered
-              </p>
-
-              <p className="text-text text-base font-bold sm:text-lg">
-                {totals.covered}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ======================================================
           NO DATA
       ====================================================== */}
 
@@ -259,17 +199,18 @@ export default function ZerodoseTeamSummary({
           return (
             <div
               key={team.teamNumber}
-              className="border-border overflow-hidden rounded-2xl border bg-white shadow-sm"
+              className="border-border overflow-hidden rounded-2xl border bg-white shadow-sm transition-shadow duration-200 hover:shadow-md dark:bg-slate-900"
             >
               {/* ==================================================
-                  TEAM HEADER
-              ================================================== */}
+            TEAM HEADER
+        ================================================== */}
 
               <button
                 type="button"
                 onClick={() => toggleTeam(team.teamNumber)}
-                className="hover:bg-surface flex w-full items-center justify-between gap-3 p-4 text-left transition"
+                className="hover:bg-surface flex w-full items-center justify-between gap-4 p-4 text-left transition-colors duration-200"
               >
+                {/* Team Information */}
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="bg-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white">
                     {team.teamNumber}
@@ -280,15 +221,15 @@ export default function ZerodoseTeamSummary({
                       Team {team.teamNumber}
                     </p>
 
-                    <div className="mt-0.5 flex max-w-full flex-wrap gap-x-3 gap-y-0.5 text-xs">
-                      <span className="text-text-secondary">
+                    <div className="mt-1 flex min-w-0 flex-wrap gap-x-4 gap-y-1 text-xs">
+                      <span className="text-text-secondary whitespace-nowrap">
                         Leader:{" "}
                         <span className="text-text font-medium">
                           {getWorkerName(team.teamLeader)}
                         </span>
                       </span>
 
-                      <span className="text-text-secondary">
+                      <span className="text-text-secondary whitespace-nowrap">
                         Member:{" "}
                         <span className="text-text font-medium">
                           {getWorkerName(team.teamMember)}
@@ -298,63 +239,93 @@ export default function ZerodoseTeamSummary({
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-2">
-                  <div className="hidden items-center gap-2 sm:flex">
-                    <span className="bg-primary/10 text-primary rounded-full px-2.5 py-1 text-[11px] font-semibold">
+                {/* Desktop Stats + Arrow */}
+                <div className="flex shrink-0 items-center gap-3">
+                  <div className="hidden items-center gap-1.5 sm:flex">
+                    <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-1.5 text-[11px] font-semibold">
                       {team.recorded} Recorded
                     </span>
 
-                    <span className="rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-600">
+                    <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-1.5 text-[11px] font-semibold">
+                      {team.visited} Visited
+                    </span>
+
+                    <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-1.5 text-[11px] font-semibold">
                       {team.covered} Covered
                     </span>
                   </div>
 
-                  <ChevronDown
-                    size={19}
-                    className={`text-text-secondary transition-transform ${
-                      isOpen ? "rotate-180" : ""
-                    }`}
-                  />
+                  <div className="bg-surface flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
+                    <ChevronDown
+                      size={18}
+                      className={`text-text-secondary transition-transform duration-300 ease-in-out ${
+                        isOpen ? "rotate-180" : "rotate-0"
+                      }`}
+                    />
+                  </div>
                 </div>
               </button>
 
               {/* ==================================================
-                  MOBILE STATS
-              ================================================== */}
+            MOBILE STATS
+        ================================================== */}
 
-              <div className="border-border border-t px-4 py-2.5 sm:hidden">
-                <div className="flex flex-wrap gap-2">
-                  <span className="bg-primary/10 text-primary rounded-full px-2.5 py-1 text-[11px] font-semibold">
-                    {team.recorded} Recorded
-                  </span>
+              <div className="border-border border-t px-4 py-3 sm:hidden">
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="bg-primary/5 rounded-lg px-2.5 py-2">
+                    <p className="text-primary text-[10px] font-medium">
+                      Recorded
+                    </p>
 
-                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-600">
-                    {team.visited} Visited
-                  </span>
+                    <p className="text-text mt-0.5 text-sm font-bold">
+                      {team.recorded}
+                    </p>
+                  </div>
 
-                  <span className="rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-600">
-                    {team.covered} Covered
-                  </span>
+                  <div className="bg-primary/5 rounded-lg px-2.5 py-2">
+                    <p className="text-primary text-[10px] font-medium">
+                      Visited
+                    </p>
+
+                    <p className="text-text mt-0.5 text-sm font-bold">
+                      {team.visited}
+                    </p>
+                  </div>
+                  
+                  <div className="bg-primary/5 rounded-lg px-2.5 py-2">
+                    <p className="text-primary text-[10px] font-medium">
+                      Covered
+                    </p>
+
+                    <p className="text-text mt-0.5 text-sm font-bold">
+                      {team.covered}
+                    </p>
+                  </div>
                 </div>
               </div>
 
               {/* ==================================================
-                  DETAILS
-              ================================================== */}
+            ANIMATED DETAILS
+        ================================================== */}
 
-              {isOpen && (
-                <div className="border-border border-t p-3 sm:p-4">
-                  <div className="mb-3 flex items-center gap-2">
-                    <Users size={17} className="text-primary" />
-
-                    <h4 className="text-text text-sm font-semibold">
-                      Team {team.teamNumber} Zerodose Details
-                    </h4>
+              <div
+                className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
+                  isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                }`}
+              >
+                <div className="min-h-0 overflow-hidden">
+                  <div
+                    className={`border-border border-t p-3 transition-all duration-300 ease-in-out sm:p-4 ${
+                      isOpen
+                        ? "translate-y-0 opacity-100"
+                        : "-translate-y-2 opacity-0"
+                    }`}
+                  >
+                    
+                    <ZerodoseDetailsTable data={team.records} />
                   </div>
-
-                  <ZerodoseDetailsTable data={team.records} />
                 </div>
-              )}
+              </div>
             </div>
           );
         })}

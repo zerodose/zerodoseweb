@@ -156,6 +156,9 @@ export default function ZerodoseDetailsTable({ data = [] }) {
                 <th className="text-text-secondary px-4 py-3 text-left text-xs font-semibold">
                   Address
                 </th>
+                <th className="text-text-secondary px-4 py-3 text-left text-xs font-semibold">
+                  Location
+                </th>
               </tr>
             </thead>
 
@@ -189,7 +192,15 @@ export default function ZerodoseDetailsTable({ data = [] }) {
                     </td>
 
                     <td className="px-4 py-3">
-                      <StatusBadge status={status} />
+                      <div className="flex items-center gap-2">
+                        <StatusBadge status={status} />
+
+                        {item?.houseNumber && (
+                          <span className="text-text-secondary text-xs font-medium">
+                            House No. {item.houseNumber}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     <td className="text-text px-4 py-3 text-sm">
@@ -207,6 +218,14 @@ export default function ZerodoseDetailsTable({ data = [] }) {
                     <td className="text-text-secondary max-w-[220px] px-4 py-3 text-sm">
                       <span className="block truncate">
                         {item?.address || "-"}
+                      </span>
+                    </td>
+                    <td className="text-text-secondary max-w-[220px] px-4 py-3 text-sm">
+                      <span className="block truncate">
+                        {item?.location?.latitude != null &&
+                        item?.location?.longitude != null
+                          ? `${item.location.latitude}, ${item.location.longitude}`
+                          : "-"}
                       </span>
                     </td>
                   </tr>
@@ -239,13 +258,17 @@ export default function ZerodoseDetailsTable({ data = [] }) {
               className="border-border rounded-xl border bg-white p-4"
             >
               {/* Header */}
-
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="bg-primary/10 text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-                    <Syringe size={17} />
+                  <div className="bg-primary/10 text-primary flex  shrink-0 items-center justify-center rounded-lg">
+                    {/* <Syringe size={17} /> */}
+                    {item?.houseNumber && (
+                      <span className="border-border bg-surface text-text h-9 inline-flex items-center rounded-lg border px-2.5 py-1 text-[11px] font-semibold">
+                        <span className="mr-1">H -</span>
+                        {item.houseNumber}
+                      </span>
+                    )}
                   </div>
-
                   <div className="min-w-0">
                     <p className="text-text truncate text-sm font-semibold">
                       {item?.childName || "-"}
@@ -259,9 +282,7 @@ export default function ZerodoseDetailsTable({ data = [] }) {
 
                 <StatusBadge status={status} />
               </div>
-
               {/* Details */}
-
               <div className="grid grid-cols-2 gap-3">
                 <Detail label="Father" value={item?.fatherName} />
 
@@ -284,19 +305,38 @@ export default function ZerodoseDetailsTable({ data = [] }) {
                   value={formatDate(item?.coveredDate)}
                 />
               </div>
+              {/* Address + Location */}
+              <div className="border-border mt-3 grid grid-cols-2 gap-4 border-t pt-3">
+                {/* Address */}
+                <div className="min-w-0">
+                  <p className="text-text-secondary text-[11px]">Address</p>
 
-              {/* Address */}
+                  <p className="text-text mt-0.5 text-xs">
+                    {item?.address || "-"}
+                  </p>
+                </div>
 
-              <div className="border-border mt-3 border-t pt-3">
-                <div className="flex items-start gap-2">
-                  <MapPin size={15} className="text-primary mt-0.5 shrink-0" />
+                {/* Zerodose Location */}
+                <div className="min-w-0">
+                  <p className="text-text-secondary text-[11px]">Location</p>
 
-                  <div className="min-w-0">
-                    <p className="text-text-secondary text-[11px]">Address</p>
+                  <div className="mt-0.5 flex items-center gap-1.5">
+                    <span className="text-text text-xs">Zerodose Location</span>
 
-                    <p className="text-text mt-0.5 text-xs">
-                      {item?.address || "-"}
-                    </p>
+                    {item?.location?.latitude != null &&
+                      item?.location?.longitude != null && (
+                        <a
+                          href={`https://www.google.com/maps?q=${item.location.latitude},${item.location.longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="Open Zerodose location in Google Maps"
+                        >
+                          <MapPin
+                            size={15}
+                            className="text-primary hover:text-primary-dark transition-colors"
+                          />
+                        </a>
+                      )}
                   </div>
                 </div>
               </div>
@@ -341,7 +381,7 @@ function StatusBadge({ status }) {
 
   if (normalizedStatus === "covered") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-600">
+      <span className="inline-flex items-center gap-1 rounded-lg bg-green-50 px-2.5 py-1 text-[11px] font-semibold text-green-600">
         <CheckCircle2 size={12} />
         Covered
       </span>
@@ -350,7 +390,7 @@ function StatusBadge({ status }) {
 
   if (normalizedStatus === "visited") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-600">
+      <span className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-600">
         <Eye size={12} />
         Visited
       </span>
@@ -358,7 +398,7 @@ function StatusBadge({ status }) {
   }
 
   return (
-    <span className="bg-primary/10 text-primary inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold">
+    <span className="bg-primary/10 text-primary inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold">
       <FileText size={12} />
       Recorded
     </span>

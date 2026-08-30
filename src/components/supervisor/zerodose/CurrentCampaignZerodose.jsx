@@ -5,7 +5,7 @@ import { CalendarDays, Layers3 } from "lucide-react";
 import CampaignHeader from "@/components/supervisor/CampaignHeader";
 import ZerodoseTeamSummary from "./ZerodoseTeamSummary";
 
-export default function CurrentCampaign({
+export default function CurrentCampaignZerodose({
   campaign,
   data = [],
   unionCouncilName = "-",
@@ -32,6 +32,7 @@ export default function CurrentCampaign({
 
   return (
     <section>
+
       {/* ======================================================
           CAMPAIGN HEADER
       ====================================================== */}
@@ -60,26 +61,6 @@ export default function CurrentCampaign({
           ).length
         }
       />
-
-      {/* ======================================================
-          UC
-      ====================================================== */}
-
-      <div className="border-border bg-surface mb-5 flex items-center gap-3 rounded-xl border px-4 py-3">
-        <div className="bg-primary/10 text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-          <Layers3 size={18} />
-        </div>
-
-        <div className="min-w-0">
-          <p className="text-text-secondary text-xs">
-            Union Council
-          </p>
-
-          <p className="text-text truncate text-sm font-semibold">
-            {unionCouncilName}
-          </p>
-        </div>
-      </div>
 
       {/* ======================================================
           TEAM SUMMARY + DETAILS

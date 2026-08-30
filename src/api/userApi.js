@@ -159,3 +159,17 @@ export async function getStaffByScope({
 
   return response.data;
 }
+
+  export const getActiveSupervisorTeamCount = async (supervisorId) => {
+  const response = await api.get("/users", {
+    params: {
+      supervisor: supervisorId,
+      isActive: true,
+      designation: "worker",
+      countOnly: true,
+      teamCount: true,
+    },
+  });
+
+  return response.data;
+};

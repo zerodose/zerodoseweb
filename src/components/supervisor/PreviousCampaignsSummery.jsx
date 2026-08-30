@@ -5,12 +5,10 @@ import { CalendarDays, ChevronDown, Filter, Layers3 } from "lucide-react";
 
 import CampaignHeader from "./CampaignHeader";
 import ZerodoseTable from "./ZerodoseTable";
-import SupervisorZerodoseTableSkeleton from "./SupervisorZerodoseTableSkeleton";
 
-export default function PreviousCampaigns({
+export default function PreviousCampaignsSummery({
   campaigns = [],
   data = [],
-  loading = false,
 }) {
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");

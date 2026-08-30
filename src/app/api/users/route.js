@@ -46,6 +46,7 @@ export async function GET(request) {
     const ucmo = searchParams.get("ucmo")?.trim() || "";
     const supervisor = searchParams.get("supervisor")?.trim() || "";
     const isActiveParam = searchParams.get("isActive");
+    const countOnly = searchParams.get("countOnly") === "true";
 
     const filter = {};
 
@@ -154,6 +155,24 @@ export async function GET(request) {
       filter.isActive = false;
     }
 
+  if (countOnly && searchParams.get("teamCount") === "true") {
+  const teams = await User.distinct("teamNumber", filter);
+
+  const totalTeams = teams.filter(
+    (teamNumber) =>
+      teamNumber !== null &&
+      teamNumber !== undefined &&
+      String(teamNumber).trim() !== "",
+  ).length;
+
+  return NextResponse.json(
+    {
+      success: true,
+      count: totalTeams,
+    },
+    { status: 200 },
+  );
+}
     const skip = (page - 1) * limit;
 
     const [users, total] = await Promise.all([

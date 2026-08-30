@@ -11,7 +11,7 @@ import {
 import CampaignHeader from "@/components/supervisor/CampaignHeader";
 import ZerodoseTeamSummary from "./ZerodoseTeamSummary";
 
-export default function PreviousCampaigns({
+export default function PreviousCampaignsZerodose({
   campaigns = [],
   data = [],
   unionCouncilName = "-",

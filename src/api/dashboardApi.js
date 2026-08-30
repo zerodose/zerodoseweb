@@ -312,3 +312,9 @@ export const getDistrictSummary = async (districtId) => {
   });
   return response.data;
 };
+
+export const getSupervisorTeamSummary = async () => {
+  const response = await api.get("/zerodose");
+
+  return response.data;
+};

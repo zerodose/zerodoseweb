@@ -8,7 +8,7 @@ import { getUsers } from "@/api/userApi";
 import { LucideSyringe } from "lucide-react";
 
 import ZerodoseTabs from "@/components/supervisor/zerodose/ZerodoseTabs";
-import CurrentCampaign from "@/components/supervisor/zerodose/CurrentCampaign";
+import CurrentCampaign from "@/components/supervisor/zerodose/CurrentCampaignZerodose";
 import PreviousCampaigns from "@/components/supervisor/zerodose/PreviousCampaigns";
 import ZerodosePageSkeleton from "@/components/supervisor/zerodose/ZerodosePageSkeleton";
 import ApprovalPageHeader from "@/components/ui/ApprovalPageHeader";
@@ -53,11 +53,7 @@ export default function Page() {
     const startDate = new Date(campaign.startDate);
     const endDate = new Date(campaign.endDate);
 
-    const today = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-    );
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     const start = new Date(
       startDate.getFullYear(),
@@ -110,8 +106,7 @@ export default function Page() {
 
         if (!campaignsResponse?.success) {
           throw new Error(
-            campaignsResponse?.message ||
-              "Failed to fetch campaigns.",
+            campaignsResponse?.message || "Failed to fetch campaigns.",
           );
         }
 
@@ -131,8 +126,7 @@ export default function Page() {
 
         if (!supervisorsResponse?.success) {
           throw new Error(
-            supervisorsResponse?.message ||
-              "Failed to fetch UCMO supervisors.",
+            supervisorsResponse?.message || "Failed to fetch UCMO supervisors.",
           );
         }
 
@@ -161,8 +155,7 @@ export default function Page() {
 
           if (!zerodoseResponse?.success) {
             throw new Error(
-              zerodoseResponse?.message ||
-                "Failed to fetch Zerodose records.",
+              zerodoseResponse?.message || "Failed to fetch Zerodose records.",
             );
           }
 
@@ -170,8 +163,7 @@ export default function Page() {
 
           allZerodoses = [...allZerodoses, ...pageData];
 
-          totalPages =
-            zerodoseResponse.pagination?.totalPages || 1;
+          totalPages = zerodoseResponse.pagination?.totalPages || 1;
 
           page += 1;
         } while (page <= totalPages);
@@ -180,9 +172,7 @@ export default function Page() {
       } catch (error) {
         console.error("UCMO Zerodose fetch error:", error);
 
-        setError(
-          error?.message || "Failed to load Zerodose data.",
-        );
+        setError(error?.message || "Failed to load Zerodose data.");
       } finally {
         setLoading(false);
       }
@@ -232,9 +222,7 @@ export default function Page() {
 
   const previousCampaigns = useMemo(() => {
     return normalizedCampaigns
-      .filter(
-        (campaign) => campaign.campaignStatus === "previous",
-      )
+      .filter((campaign) => campaign.campaignStatus === "previous")
       .sort((a, b) => {
         const dateA = new Date(a?.startDate || 0).getTime();
         const dateB = new Date(b?.startDate || 0).getTime();
@@ -260,14 +248,11 @@ export default function Page() {
 
     return ucmoZerodoses.filter((item) => {
       const itemCampaignId = getId(
-        item?.campaign ||
-          item?.campaignId ||
-          item?.campaign?._id,
+        item?.campaign || item?.campaignId || item?.campaign?._id,
       );
 
       return (
-        itemCampaignId &&
-        String(itemCampaignId) === String(currentCampaignId)
+        itemCampaignId && String(itemCampaignId) === String(currentCampaignId)
       );
     });
   }, [ucmoZerodoses, currentCampaign]);
@@ -282,22 +267,15 @@ export default function Page() {
     }
 
     const previousIds = new Set(
-      previousCampaigns
-        .map((campaign) => getId(campaign))
-        .filter(Boolean),
+      previousCampaigns.map((campaign) => getId(campaign)).filter(Boolean),
     );
 
     return ucmoZerodoses.filter((item) => {
       const itemCampaignId = getId(
-        item?.campaign ||
-          item?.campaignId ||
-          item?.campaign?._id,
+        item?.campaign || item?.campaignId || item?.campaign?._id,
       );
 
-      return (
-        itemCampaignId &&
-        previousIds.has(String(itemCampaignId))
-      );
+      return itemCampaignId && previousIds.has(String(itemCampaignId));
     });
   }, [ucmoZerodoses, previousCampaigns]);
 
@@ -324,8 +302,7 @@ export default function Page() {
             <LucideSyringe size={18} />
 
             <span>
-              {currentData.length}{" "}
-              {currentData.length === 1 ? "ZD" : "ZD"}
+              {currentData.length} {currentData.length === 1 ? "ZD" : "ZD"}
             </span>
           </div>
         }
@@ -345,20 +322,14 @@ export default function Page() {
           TABS
       ====================================================== */}
 
-      <ZerodoseTabs
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
+      <ZerodoseTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* ======================================================
           CURRENT
       ====================================================== */}
 
       {activeTab === "current" && (
-        <CurrentCampaign
-          campaign={currentCampaign}
-          data={currentData}
-        />
+        <CurrentCampaign campaign={currentCampaign} data={currentData} />
       )}
 
       {/* ======================================================
@@ -366,10 +337,7 @@ export default function Page() {
       ====================================================== */}
 
       {activeTab === "previous" && (
-        <PreviousCampaigns
-          campaigns={previousCampaigns}
-          data={previousData}
-        />
+        <PreviousCampaigns campaigns={previousCampaigns} data={previousData} />
       )}
     </div>
   );

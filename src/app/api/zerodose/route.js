@@ -51,6 +51,389 @@ async function getAuthUser(request) {
   }
 }
 
+export async function GET(request) {
+  try {
+    await connectDB();
+
+    const { searchParams } = new URL(request.url);
+
+    const page = Math.max(Number(searchParams.get("page")) || 1, 1);
+    const limit = Math.min(
+      Math.max(Number(searchParams.get("limit")) || 10, 1),
+      100,
+    );
+
+    const search = searchParams.get("search")?.trim() || "";
+
+    const campaign = searchParams.get("campaign");
+    const district = searchParams.get("district");
+    const town = searchParams.get("town");
+    const unionCouncil = searchParams.get("unionCouncil");
+    const ucmo = searchParams.get("ucmo");
+    const supervisor = searchParams.get("supervisor");
+    const user = searchParams.get("user");
+    const teamLeader = searchParams.get("teamLeader");
+    const teamMember = searchParams.get("teamMember");
+    const vaccinator = searchParams.get("vaccinator");
+    const teamNumber = searchParams.get("teamNumber");
+
+    const vaccinationStatus = searchParams.get("vaccinationStatus");
+    const clientStatus = searchParams.get("clientStatus");
+    const gender = searchParams.get("gender");
+
+    const recordDateFrom = searchParams.get("recordDateFrom");
+    const recordDateTo = searchParams.get("recordDateTo");
+
+    const visitDateFrom = searchParams.get("visitDateFrom");
+    const visitDateTo = searchParams.get("visitDateTo");
+
+    const coveredDateFrom = searchParams.get("coveredDateFrom");
+    const coveredDateTo = searchParams.get("coveredDateTo");
+
+    const sortBy = searchParams.get("sortBy") || "createdAt";
+    const sortOrder = searchParams.get("sortOrder") === "asc" ? 1 : -1;
+
+    const filter = {};
+
+    if (campaign) {
+      if (!mongoose.Types.ObjectId.isValid(campaign)) {
+        return NextResponse.json(
+          { success: false, message: "Invalid campaign ID" },
+          { status: 400 },
+        );
+      }
+
+      filter.campaign = campaign;
+    }
+
+    if (district) {
+      if (!mongoose.Types.ObjectId.isValid(district)) {
+        return NextResponse.json(
+          { success: false, message: "Invalid district ID" },
+          { status: 400 },
+        );
+      }
+
+      filter.district = district;
+    }
+
+    if (town) {
+      if (!mongoose.Types.ObjectId.isValid(town)) {
+        return NextResponse.json(
+          { success: false, message: "Invalid town ID" },
+          { status: 400 },
+        );
+      }
+
+      filter.town = town;
+    }
+
+    if (unionCouncil) {
+      if (!mongoose.Types.ObjectId.isValid(unionCouncil)) {
+        return NextResponse.json(
+          { success: false, message: "Invalid union council ID" },
+          { status: 400 },
+        );
+      }
+
+      filter.unionCouncil = unionCouncil;
+    }
+
+    if (ucmo) {
+      if (!mongoose.Types.ObjectId.isValid(ucmo)) {
+        return NextResponse.json(
+          { success: false, message: "Invalid UCMO ID" },
+          { status: 400 },
+        );
+      }
+
+      filter.ucmo = ucmo;
+    }
+
+    if (supervisor) {
+      if (!mongoose.Types.ObjectId.isValid(supervisor)) {
+        return NextResponse.json(
+          { success: false, message: "Invalid supervisor ID" },
+          { status: 400 },
+        );
+      }
+
+      filter.supervisor = supervisor;
+    }
+
+    if (user) {
+      if (!mongoose.Types.ObjectId.isValid(user)) {
+        return NextResponse.json(
+          { success: false, message: "Invalid user ID" },
+          { status: 400 },
+        );
+      }
+
+      filter.user = user;
+    }
+
+    if (teamLeader) {
+      if (!mongoose.Types.ObjectId.isValid(teamLeader)) {
+        return NextResponse.json(
+          { success: false, message: "Invalid team leader ID" },
+          { status: 400 },
+        );
+      }
+
+      filter.teamLeader = teamLeader;
+    }
+
+    if (teamMember) {
+      if (!mongoose.Types.ObjectId.isValid(teamMember)) {
+        return NextResponse.json(
+          { success: false, message: "Invalid team member ID" },
+          { status: 400 },
+        );
+      }
+
+      filter.teamMember = teamMember;
+    }
+
+    if (vaccinator) {
+      if (!mongoose.Types.ObjectId.isValid(vaccinator)) {
+        return NextResponse.json(
+          { success: false, message: "Invalid vaccinator ID" },
+          { status: 400 },
+        );
+      }
+
+      filter.vaccinator = vaccinator;
+    }
+
+    if (teamNumber) {
+      const parsedTeamNumber = Number(teamNumber);
+
+      if (!Number.isFinite(parsedTeamNumber)) {
+        return NextResponse.json(
+          { success: false, message: "Invalid team number" },
+          { status: 400 },
+        );
+      }
+
+      filter.teamNumber = parsedTeamNumber;
+    }
+
+    if (vaccinationStatus) {
+      if (!["recorded", "visited", "covered"].includes(vaccinationStatus)) {
+        return NextResponse.json(
+          { success: false, message: "Invalid vaccination status" },
+          { status: 400 },
+        );
+      }
+
+      filter.vaccinationStatus = vaccinationStatus;
+    }
+
+    if (clientStatus) {
+      if (
+        !["available", "refusal", "sick", "not_available", "deceased"].includes(
+          clientStatus,
+        )
+      ) {
+        return NextResponse.json(
+          { success: false, message: "Invalid client status" },
+          { status: 400 },
+        );
+      }
+
+      filter.clientStatus = clientStatus;
+    }
+
+    if (gender) {
+      if (!["male", "female"].includes(gender)) {
+        return NextResponse.json(
+          { success: false, message: "Invalid gender" },
+          { status: 400 },
+        );
+      }
+
+      filter.gender = gender;
+    }
+
+    if (recordDateFrom || recordDateTo) {
+      filter.recordDate = {};
+
+      if (recordDateFrom) {
+        const date = new Date(recordDateFrom);
+
+        if (Number.isNaN(date.getTime())) {
+          return NextResponse.json(
+            { success: false, message: "Invalid recordDateFrom" },
+            { status: 400 },
+          );
+        }
+
+        filter.recordDate.$gte = date;
+      }
+
+      if (recordDateTo) {
+        const date = new Date(recordDateTo);
+
+        if (Number.isNaN(date.getTime())) {
+          return NextResponse.json(
+            { success: false, message: "Invalid recordDateTo" },
+            { status: 400 },
+          );
+        }
+
+        filter.recordDate.$lte = date;
+      }
+    }
+
+    if (visitDateFrom || visitDateTo) {
+      filter.visitDate = {};
+
+      if (visitDateFrom) {
+        const date = new Date(visitDateFrom);
+
+        if (Number.isNaN(date.getTime())) {
+          return NextResponse.json(
+            { success: false, message: "Invalid visitDateFrom" },
+            { status: 400 },
+          );
+        }
+
+        filter.visitDate.$gte = date;
+      }
+
+      if (visitDateTo) {
+        const date = new Date(visitDateTo);
+
+        if (Number.isNaN(date.getTime())) {
+          return NextResponse.json(
+            { success: false, message: "Invalid visitDateTo" },
+            { status: 400 },
+          );
+        }
+
+        filter.visitDate.$lte = date;
+      }
+    }
+
+    if (coveredDateFrom || coveredDateTo) {
+      filter.coveredDate = {};
+
+      if (coveredDateFrom) {
+        const date = new Date(coveredDateFrom);
+
+        if (Number.isNaN(date.getTime())) {
+          return NextResponse.json(
+            { success: false, message: "Invalid coveredDateFrom" },
+            { status: 400 },
+          );
+        }
+
+        filter.coveredDate.$gte = date;
+      }
+
+      if (coveredDateTo) {
+        const date = new Date(coveredDateTo);
+
+        if (Number.isNaN(date.getTime())) {
+          return NextResponse.json(
+            { success: false, message: "Invalid coveredDateTo" },
+            { status: 400 },
+          );
+        }
+
+        filter.coveredDate.$lte = date;
+      }
+    }
+
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+
+      const matchingUsers = await User.find({
+        $or: [
+          { name: searchRegex },
+          { email: searchRegex },
+          { contactNumber: searchRegex },
+          { supervisorCode: searchRegex },
+        ],
+      })
+        .select("_id")
+        .lean();
+
+      const userIds = matchingUsers.map((item) => item._id);
+
+      const searchConditions = [
+        { childName: searchRegex },
+        { fatherName: searchRegex },
+        { address: searchRegex },
+        { contactNo: searchRegex },
+        { qrCode: searchRegex },
+      ];
+
+      if (userIds.length > 0) {
+        searchConditions.push(
+          { user: { $in: userIds } },
+          { ucmo: { $in: userIds } },
+          { supervisor: { $in: userIds } },
+          { teamLeader: { $in: userIds } },
+          { teamMember: { $in: userIds } },
+          { vaccinator: { $in: userIds } },
+        );
+      }
+
+      filter.$or = searchConditions;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [zerodoses, total] = await Promise.all([
+      Zerodose.find(filter)
+        .populate("campaign", "name year month startDate endDate")
+        .populate("district", "name code")
+        .populate("town", "name code")
+        .populate("unionCouncil", "name code")
+        .populate("ucmo", "name email contactNumber designation")
+        .populate(
+          "supervisor",
+          "name email contactNumber designation supervisorCode",
+        )
+        .populate("user", "name email contactNumber designation")
+        .populate("teamLeader", "name email contactNumber designation")
+        .populate("teamMember", "name email contactNumber designation")
+        .populate("vaccinator", "name email contactNumber designation")
+        .sort({ [sortBy]: sortOrder })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+
+      Zerodose.countDocuments(filter),
+    ]);
+
+    return NextResponse.json({
+      success: true,
+      data: zerodoses,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page < Math.ceil(total / limit),
+        hasPreviousPage: page > 1,
+      },
+    });
+  } catch (error) {
+    console.error("GET /api/zerodose error:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to fetch Zerodose records",
+        error: error.message,
+      },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(request) {
   try {
     await connectDB();
@@ -719,389 +1102,6 @@ export async function POST(request) {
         success: false,
         message: error?.message || "Failed to create Zerodose record",
         errorName: error?.name || "UnknownError",
-      },
-      { status: 500 },
-    );
-  }
-}
-
-export async function GET(request) {
-  try {
-    await connectDB();
-
-    const { searchParams } = new URL(request.url);
-
-    const page = Math.max(Number(searchParams.get("page")) || 1, 1);
-    const limit = Math.min(
-      Math.max(Number(searchParams.get("limit")) || 10, 1),
-      100,
-    );
-
-    const search = searchParams.get("search")?.trim() || "";
-
-    const campaign = searchParams.get("campaign");
-    const district = searchParams.get("district");
-    const town = searchParams.get("town");
-    const unionCouncil = searchParams.get("unionCouncil");
-    const ucmo = searchParams.get("ucmo");
-    const supervisor = searchParams.get("supervisor");
-    const user = searchParams.get("user");
-    const teamLeader = searchParams.get("teamLeader");
-    const teamMember = searchParams.get("teamMember");
-    const vaccinator = searchParams.get("vaccinator");
-    const teamNumber = searchParams.get("teamNumber");
-
-    const vaccinationStatus = searchParams.get("vaccinationStatus");
-    const clientStatus = searchParams.get("clientStatus");
-    const gender = searchParams.get("gender");
-
-    const recordDateFrom = searchParams.get("recordDateFrom");
-    const recordDateTo = searchParams.get("recordDateTo");
-
-    const visitDateFrom = searchParams.get("visitDateFrom");
-    const visitDateTo = searchParams.get("visitDateTo");
-
-    const coveredDateFrom = searchParams.get("coveredDateFrom");
-    const coveredDateTo = searchParams.get("coveredDateTo");
-
-    const sortBy = searchParams.get("sortBy") || "createdAt";
-    const sortOrder = searchParams.get("sortOrder") === "asc" ? 1 : -1;
-
-    const filter = {};
-
-    if (campaign) {
-      if (!mongoose.Types.ObjectId.isValid(campaign)) {
-        return NextResponse.json(
-          { success: false, message: "Invalid campaign ID" },
-          { status: 400 },
-        );
-      }
-
-      filter.campaign = campaign;
-    }
-
-    if (district) {
-      if (!mongoose.Types.ObjectId.isValid(district)) {
-        return NextResponse.json(
-          { success: false, message: "Invalid district ID" },
-          { status: 400 },
-        );
-      }
-
-      filter.district = district;
-    }
-
-    if (town) {
-      if (!mongoose.Types.ObjectId.isValid(town)) {
-        return NextResponse.json(
-          { success: false, message: "Invalid town ID" },
-          { status: 400 },
-        );
-      }
-
-      filter.town = town;
-    }
-
-    if (unionCouncil) {
-      if (!mongoose.Types.ObjectId.isValid(unionCouncil)) {
-        return NextResponse.json(
-          { success: false, message: "Invalid union council ID" },
-          { status: 400 },
-        );
-      }
-
-      filter.unionCouncil = unionCouncil;
-    }
-
-    if (ucmo) {
-      if (!mongoose.Types.ObjectId.isValid(ucmo)) {
-        return NextResponse.json(
-          { success: false, message: "Invalid UCMO ID" },
-          { status: 400 },
-        );
-      }
-
-      filter.ucmo = ucmo;
-    }
-
-    if (supervisor) {
-      if (!mongoose.Types.ObjectId.isValid(supervisor)) {
-        return NextResponse.json(
-          { success: false, message: "Invalid supervisor ID" },
-          { status: 400 },
-        );
-      }
-
-      filter.supervisor = supervisor;
-    }
-
-    if (user) {
-      if (!mongoose.Types.ObjectId.isValid(user)) {
-        return NextResponse.json(
-          { success: false, message: "Invalid user ID" },
-          { status: 400 },
-        );
-      }
-
-      filter.user = user;
-    }
-
-    if (teamLeader) {
-      if (!mongoose.Types.ObjectId.isValid(teamLeader)) {
-        return NextResponse.json(
-          { success: false, message: "Invalid team leader ID" },
-          { status: 400 },
-        );
-      }
-
-      filter.teamLeader = teamLeader;
-    }
-
-    if (teamMember) {
-      if (!mongoose.Types.ObjectId.isValid(teamMember)) {
-        return NextResponse.json(
-          { success: false, message: "Invalid team member ID" },
-          { status: 400 },
-        );
-      }
-
-      filter.teamMember = teamMember;
-    }
-
-    if (vaccinator) {
-      if (!mongoose.Types.ObjectId.isValid(vaccinator)) {
-        return NextResponse.json(
-          { success: false, message: "Invalid vaccinator ID" },
-          { status: 400 },
-        );
-      }
-
-      filter.vaccinator = vaccinator;
-    }
-
-    if (teamNumber) {
-      const parsedTeamNumber = Number(teamNumber);
-
-      if (!Number.isFinite(parsedTeamNumber)) {
-        return NextResponse.json(
-          { success: false, message: "Invalid team number" },
-          { status: 400 },
-        );
-      }
-
-      filter.teamNumber = parsedTeamNumber;
-    }
-
-    if (vaccinationStatus) {
-      if (!["recorded", "visited", "covered"].includes(vaccinationStatus)) {
-        return NextResponse.json(
-          { success: false, message: "Invalid vaccination status" },
-          { status: 400 },
-        );
-      }
-
-      filter.vaccinationStatus = vaccinationStatus;
-    }
-
-    if (clientStatus) {
-      if (
-        !["available", "refusal", "sick", "not_available", "deceased"].includes(
-          clientStatus,
-        )
-      ) {
-        return NextResponse.json(
-          { success: false, message: "Invalid client status" },
-          { status: 400 },
-        );
-      }
-
-      filter.clientStatus = clientStatus;
-    }
-
-    if (gender) {
-      if (!["male", "female"].includes(gender)) {
-        return NextResponse.json(
-          { success: false, message: "Invalid gender" },
-          { status: 400 },
-        );
-      }
-
-      filter.gender = gender;
-    }
-
-    if (recordDateFrom || recordDateTo) {
-      filter.recordDate = {};
-
-      if (recordDateFrom) {
-        const date = new Date(recordDateFrom);
-
-        if (Number.isNaN(date.getTime())) {
-          return NextResponse.json(
-            { success: false, message: "Invalid recordDateFrom" },
-            { status: 400 },
-          );
-        }
-
-        filter.recordDate.$gte = date;
-      }
-
-      if (recordDateTo) {
-        const date = new Date(recordDateTo);
-
-        if (Number.isNaN(date.getTime())) {
-          return NextResponse.json(
-            { success: false, message: "Invalid recordDateTo" },
-            { status: 400 },
-          );
-        }
-
-        filter.recordDate.$lte = date;
-      }
-    }
-
-    if (visitDateFrom || visitDateTo) {
-      filter.visitDate = {};
-
-      if (visitDateFrom) {
-        const date = new Date(visitDateFrom);
-
-        if (Number.isNaN(date.getTime())) {
-          return NextResponse.json(
-            { success: false, message: "Invalid visitDateFrom" },
-            { status: 400 },
-          );
-        }
-
-        filter.visitDate.$gte = date;
-      }
-
-      if (visitDateTo) {
-        const date = new Date(visitDateTo);
-
-        if (Number.isNaN(date.getTime())) {
-          return NextResponse.json(
-            { success: false, message: "Invalid visitDateTo" },
-            { status: 400 },
-          );
-        }
-
-        filter.visitDate.$lte = date;
-      }
-    }
-
-    if (coveredDateFrom || coveredDateTo) {
-      filter.coveredDate = {};
-
-      if (coveredDateFrom) {
-        const date = new Date(coveredDateFrom);
-
-        if (Number.isNaN(date.getTime())) {
-          return NextResponse.json(
-            { success: false, message: "Invalid coveredDateFrom" },
-            { status: 400 },
-          );
-        }
-
-        filter.coveredDate.$gte = date;
-      }
-
-      if (coveredDateTo) {
-        const date = new Date(coveredDateTo);
-
-        if (Number.isNaN(date.getTime())) {
-          return NextResponse.json(
-            { success: false, message: "Invalid coveredDateTo" },
-            { status: 400 },
-          );
-        }
-
-        filter.coveredDate.$lte = date;
-      }
-    }
-
-    if (search) {
-      const searchRegex = new RegExp(search, "i");
-
-      const matchingUsers = await User.find({
-        $or: [
-          { name: searchRegex },
-          { email: searchRegex },
-          { contactNumber: searchRegex },
-          { supervisorCode: searchRegex },
-        ],
-      })
-        .select("_id")
-        .lean();
-
-      const userIds = matchingUsers.map((item) => item._id);
-
-      const searchConditions = [
-        { childName: searchRegex },
-        { fatherName: searchRegex },
-        { address: searchRegex },
-        { contactNo: searchRegex },
-        { qrCode: searchRegex },
-      ];
-
-      if (userIds.length > 0) {
-        searchConditions.push(
-          { user: { $in: userIds } },
-          { ucmo: { $in: userIds } },
-          { supervisor: { $in: userIds } },
-          { teamLeader: { $in: userIds } },
-          { teamMember: { $in: userIds } },
-          { vaccinator: { $in: userIds } },
-        );
-      }
-
-      filter.$or = searchConditions;
-    }
-
-    const skip = (page - 1) * limit;
-
-    const [zerodoses, total] = await Promise.all([
-      Zerodose.find(filter)
-        .populate("campaign", "name year month startDate endDate")
-        .populate("district", "name code")
-        .populate("town", "name code")
-        .populate("unionCouncil", "name code")
-        .populate("ucmo", "name email contactNumber designation")
-        .populate(
-          "supervisor",
-          "name email contactNumber designation supervisorCode",
-        )
-        .populate("user", "name email contactNumber designation")
-        .populate("teamLeader", "name email contactNumber designation")
-        .populate("teamMember", "name email contactNumber designation")
-        .populate("vaccinator", "name email contactNumber designation")
-        .sort({ [sortBy]: sortOrder })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-
-      Zerodose.countDocuments(filter),
-    ]);
-
-    return NextResponse.json({
-      success: true,
-      data: zerodoses,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasNextPage: page < Math.ceil(total / limit),
-        hasPreviousPage: page > 1,
-      },
-    });
-  } catch (error) {
-    console.error("GET /api/zerodose error:", error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Failed to fetch Zerodose records",
-        error: error.message,
       },
       { status: 500 },
     );

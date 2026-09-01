@@ -1,4 +1,3 @@
-
 "use client";
 
 import { formatDate } from "@/lib/formatDate";
@@ -26,7 +25,6 @@ export default function ZerodoseCampaignSection({
   onRefresh,
 
   getStatus,
-  
 }) {
   const router = useRouter();
 
@@ -264,7 +262,7 @@ export default function ZerodoseCampaignSection({
             onClick={() => onTabChange("current")}
             className={`group relative flex min-h-[72px] min-w-0 items-center overflow-hidden rounded-xl px-3 py-3 text-left transition md:min-h-[82px] md:px-4 ${
               activeTab === "current"
-                ? "bg-primary text-white shadow-sm"
+                ? "bg-primary dark:bg-background text-white shadow-sm"
                 : "bg-background text-text-secondary border-border hover:border-primary hover:text-primary border"
             }`}
           >
@@ -299,7 +297,7 @@ export default function ZerodoseCampaignSection({
             onClick={() => onTabChange("previous")}
             className={`group relative flex min-h-[72px] min-w-0 items-center overflow-hidden rounded-xl px-3 py-3 text-left transition md:min-h-[82px] md:px-4 ${
               activeTab === "previous"
-                ? "bg-primary text-white shadow-sm"
+                ? "bg-primary dark:bg-background text-white shadow-sm"
                 : "bg-background text-text-secondary border-border hover:border-primary hover:text-primary border"
             }`}
           >
@@ -334,7 +332,7 @@ export default function ZerodoseCampaignSection({
           Section Header
       ========================================================= */}
 
-      <div className="border-border flex flex-col border-b bg-white p-4 md:p-5">
+      <div className="border-border bg-background flex flex-col border-b p-4 md:p-5">
         {/* Heading + Refresh */}
         <div className="flex w-full items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2">
@@ -347,7 +345,7 @@ export default function ZerodoseCampaignSection({
             type="button"
             onClick={onRefresh}
             disabled={loading}
-            className="border-border bg-primary hover:bg-primary-dark flex w-fit shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-50"
+            className="border-border bg-primary dark:bg-background hover:bg-primary-dark flex w-fit shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
@@ -365,7 +363,7 @@ export default function ZerodoseCampaignSection({
       ========================================================= */}
 
       <div className="border-border border-b p-3 md:p-4">
-        <div className="border-border grid grid-cols-3 gap-1.5 rounded-2xl border bg-white p-1.5">
+        <div className="border-border bg-background grid grid-cols-3 gap-1.5 rounded-2xl border p-1.5">
           {statusTabs.map((tab) => {
             const Icon =
               tab.key === "recorded"
@@ -385,10 +383,10 @@ export default function ZerodoseCampaignSection({
                 className={`flex min-w-0 items-center justify-center gap-2 rounded-xl px-2 py-2.5 text-sm font-semibold transition-all ${
                   statusTab === tab.key
                     ? "bg-primary text-white shadow-sm"
-                    : "text-text-secondary hover:bg-background hover:text-primary"
+                    : "text-text-secondary hover:bg-background hover:text-primary dark:hover:bg-slate-800"
                 } ${
                   isDisabled
-                    ? "hover:text-text-secondary cursor-not-allowed opacity-50 hover:bg-transparent"
+                    ? "hover:text-text-secondary cursor-not-allowed opacity-50 hover:bg-transparent dark:hover:bg-transparent"
                     : ""
                 }`}
               >
@@ -504,7 +502,7 @@ export default function ZerodoseCampaignSection({
                       <span>Father</span>
                     </div>
 
-                    <p className="text-text mt-1 truncate text-sm font-medium  capitalize">
+                    <p className="text-text mt-1 truncate text-sm font-medium capitalize">
                       {item.fatherName || "-"}
                     </p>
                   </div>

@@ -55,6 +55,18 @@ export async function GET(request) {
   try {
     await connectDB();
 
+    const authUser = await getAuthUser(request);
+
+    if (!authUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Unauthorized",
+        },
+        { status: 401 },
+      );
+    }
+
     const { searchParams } = new URL(request.url);
 
     const page = Math.max(Number(searchParams.get("page")) || 1, 1);
@@ -94,6 +106,19 @@ export async function GET(request) {
     const sortOrder = searchParams.get("sortOrder") === "asc" ? 1 : -1;
 
     const filter = {};
+
+    if (authUser.designation === "worker") {
+      if (
+        !authUser.supervisor ||
+        authUser.teamNumber === undefined ||
+        authUser.teamNumber === null
+      ) {
+        filter._id = { $in: [] };
+      } else {
+        filter.supervisor = authUser.supervisor;
+        filter.teamNumber = authUser.teamNumber;
+      }
+    }
 
     if (campaign) {
       if (!mongoose.Types.ObjectId.isValid(campaign)) {

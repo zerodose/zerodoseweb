@@ -172,7 +172,12 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
 
     const contactNo = formData.contactNo.trim();
 
-    if (contactNo && !/^03\d{9}$/.test(contactNo)) {
+    if (!contactNo) {
+      toast.error("Contact number is required.");
+      return false;
+    }
+
+    if (!/^03\d{9}$/.test(contactNo)) {
       toast.error("Please enter a valid Pakistani mobile number.");
       return false;
     }
@@ -195,7 +200,7 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
       gender: formData.gender,
       houseNumber: Number(formData.houseNumber),
       address: formData.address.trim(),
-      contactNo: formData.contactNo.trim() || null,
+      contactNo: formData.contactNo.trim(),
       location,
     };
 
@@ -338,7 +343,7 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
       )}
 
       <div className="my-6">
-        <div className="bg-primary relative overflow-hidden rounded-2xl p-5 shadow-sm md:p-6">
+        <div className="bg-primary dark:bg-surface relative overflow-hidden rounded-2xl p-5 shadow-sm md:p-6">
           <div className="relative z-10">
             <button
               type="button"
@@ -545,6 +550,7 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
                   placeholder="03XXXXXXXXX"
                   inputMode="numeric"
                   maxLength={11}
+                  required
                   disabled={loading}
                   className={`border-border bg-input-background text-text placeholder:text-input-placeholder focus:border-primary focus:ring-primary-light h-11 w-full rounded-lg border pr-3 pl-10 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${
                     formData.contactNo && !/^03\d{9}$/.test(formData.contactNo)
@@ -593,7 +599,7 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="bg-primary hover:bg-primary-dark flex h-11 items-center justify-center gap-2 rounded-lg px-6 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-60"
+            className="bg-primary dark:bg-surface hover:bg-primary-dark flex h-11 items-center justify-center gap-2 rounded-lg px-6 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading
               ? isEdit

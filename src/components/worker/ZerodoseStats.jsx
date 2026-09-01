@@ -98,22 +98,19 @@ export default function ZerodoseStats({
       label: "Recorded",
       value: recorded,
       icon: Clock3,
-      iconClass:
-        "bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400",
+       iconClass: "bg-primary/10 text-primary",
     },
     {
       label: "Visited",
       value: visited,
       icon: MapPin,
-      iconClass:
-        "bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
+      iconClass: "bg-primary/10 text-primary",
     },
     {
       label: "Covered",
       value: covered,
       icon: CheckCircle2,
-      iconClass:
-        "bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400",
+      iconClass: "bg-primary/10 text-primary",
     },
   ];
 

@@ -9,11 +9,11 @@ import PendingApprovalButton from "@/components/ucmo/PendingApprovalButton";
 import CampaignTabs from "@/components/ucmo/CampaignTabs";
 import CurrentCampaign from "@/components/ucmo/CurrentCampaign";
 import PreviousCampaigns from "@/components/ucmo/PreviousCampaigns";
-import { UsersRound } from "lucide-react";
-import ActionLinkButton from "@/components/admin/ui/ActionLinkButton";
 import { getPendingApprovalCount } from "@/api/userApprovalsApi";
 import UCMOActions from "@/components/ucmo/UCMOAction";
 import { getUCMOSummary } from "@/api/dashboardApi";
+import CurrentCampaignSummery from "@/components/supervisor/CurrentCampaignSummery";
+import PreviousCampaignsSummery from "@/components/supervisor/PreviousCampaignsSummery";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
@@ -635,13 +635,7 @@ export default function Page() {
               ACTIONS
           ====================================================== */}
         <UCMOActions />
-        {/* ======================================================
-              TABS
-          ====================================================== */}
-        <CampaignTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-        {/* ======================================================
-              CURRENT CAMPAIGN
-          ====================================================== */}
+        {/* <CampaignTabs activeTab={activeTab} setActiveTab={setActiveTab} />
         {activeTab === "current" && (
           <CurrentCampaign
             campaign={currentCampaign}
@@ -649,12 +643,29 @@ export default function Page() {
             loading={loading}
           />
         )}
-        {/* ======================================================
-              PREVIOUS CAMPAIGNS
-          ====================================================== */}
         {activeTab === "previous" && (
           <PreviousCampaigns
             campaigns={previousCampaignsWithSupervisors}
+            loading={loading}
+          />
+        )} */}
+
+        <CampaignTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+
+        {activeTab === "current" && (
+          <CurrentCampaignSummery
+            campaign={currentCampaign}
+            data={currentData}
+            activeTeams={activeTeams}
+            activeSupervisor={activeSupervisor}
+            loading={loading}
+          />
+        )}
+
+        {activeTab === "previous" && (
+          <PreviousCampaignsSummery
+            campaigns={previousCampaigns}
+            data={previousData}
             loading={loading}
           />
         )}

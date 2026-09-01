@@ -250,7 +250,7 @@ export default function LoginForm() {
         throw new Error("User information was not returned.");
       }
 
-      console.log("LOGIN USER FROM API:", user);
+      // console.log("LOGIN USER FROM API:", user);
 
       // =================================================
       // Designation
@@ -263,11 +263,11 @@ export default function LoginForm() {
       // =================================================
 
       if (designation === "worker") {
-        console.log("LOCATION: user is worker");
+        // console.log("LOCATION: user is worker");
 
         await requestLocationPermission();
 
-        console.log("LOCATION: permission check completed");
+        // console.log("LOCATION: permission check completed");
       }
 
       // =================================================

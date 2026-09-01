@@ -10,7 +10,10 @@ import {
   Mail,
   Shield,
   CalendarDays,
+  LockKeyhole,
 } from "lucide-react";
+
+import { changePassword } from "@/api/userApi";
 import LogoutButton from "./LogoutButton";
 import { logoutUser } from "@/api/authApi";
 
@@ -47,6 +50,13 @@ export default function PageHeaderWithDesignation({
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+
   // ============================================================
   // Normalized Values
   // ============================================================
@@ -67,6 +77,33 @@ export default function PageHeaderWithDesignation({
     normalizedDesignation === "ucmo" ||
     normalizedDesignation === "townfp" ||
     normalizedDesignation === "districtfp";
+
+  const loadUserProfile = async () => {
+    try {
+      setLoadingProfile(true);
+
+      const response = await fetch("/api/auth/me", {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to load profile.");
+      }
+
+      setUser(result.data.user);
+
+      return result.data.user;
+    } catch (error) {
+      console.error("Profile fetch error:", error);
+      throw error;
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
 
   // ============================================================
   // Profile
@@ -268,6 +305,71 @@ export default function PageHeaderWithDesignation({
     return null;
   }
 
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+
+    setPasswordError("");
+    setPasswordSuccess("");
+
+    if (!user?._id) {
+      setPasswordError("Unable to identify your account.");
+      return;
+    }
+
+    if (!newPassword) {
+      setPasswordError("Password is required.");
+      return;
+    }
+
+    if (!confirmPassword) {
+      setPasswordError("Confirm password is required.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setPasswordError("Password must be at least 6 characters.");
+      return;
+    }
+
+    try {
+      setChangingPassword(true);
+
+      const response = await changePassword(user._id, {
+        password: newPassword,
+        confirmPassword,
+      });
+
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to change password.");
+      }
+
+      setPasswordSuccess(response?.message || "Password changed successfully.");
+
+      setNewPassword("");
+      setConfirmPassword("");
+
+      setTimeout(() => {
+        setChangePasswordOpen(false);
+        setPasswordSuccess("");
+      }, 1200);
+    } catch (error) {
+      console.error("Change password error:", error);
+
+      setPasswordError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to change password.",
+      );
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   return (
     <>
       {/* ========================================================
@@ -397,6 +499,57 @@ export default function PageHeaderWithDesignation({
                     <User size={18} className="text-text-secondary" />
 
                     <span>Profile</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setOpen(false);
+                      setPasswordError("");
+                      setPasswordSuccess("");
+                      setNewPassword("");
+                      setConfirmPassword("");
+
+                      try {
+                        setLoadingProfile(true);
+
+                        const response = await fetch("/api/auth/me", {
+                          method: "GET",
+                          credentials: "include",
+                          cache: "no-store",
+                        });
+
+                        const result = await response.json();
+
+                        if (!response.ok || !result.success) {
+                          throw new Error(
+                            result.message ||
+                              "Failed to load account information.",
+                          );
+                        }
+
+                        setUser(result.data.user);
+                        setChangePasswordOpen(true);
+                      } catch (error) {
+                        console.error(
+                          "Change password profile fetch error:",
+                          error,
+                        );
+
+                        setPasswordError(
+                          error?.message ||
+                            "Unable to load your account information.",
+                        );
+
+                        setChangePasswordOpen(true);
+                      } finally {
+                        setLoadingProfile(false);
+                      }
+                    }}
+                    className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
+                  >
+                    <LockKeyhole size={18} className="text-text-secondary" />
+
+                    <span>Change Password</span>
                   </button>
 
                   <LogoutButton
@@ -576,6 +729,166 @@ export default function PageHeaderWithDesignation({
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {changePasswordOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          {/* Overlay */}
+
+          <button
+            type="button"
+            aria-label="Close change password"
+            onClick={() => {
+              if (changingPassword) return;
+
+              setChangePasswordOpen(false);
+              setPasswordError("");
+              setPasswordSuccess("");
+              setNewPassword("");
+              setConfirmPassword("");
+            }}
+            className="absolute inset-0 cursor-default bg-black/50 backdrop-blur-sm"
+          />
+
+          {/* Modal */}
+
+          <div className="bg-background border-border relative z-10 w-full max-w-md overflow-hidden rounded-2xl border shadow-2xl">
+            {/* Header */}
+
+            <div className="border-border flex items-center justify-between border-b px-5 py-4 md:px-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+                  <LockKeyhole size={19} />
+                </div>
+
+                <div>
+                  <h2 className="text-text text-lg font-semibold">
+                    Change Password
+                  </h2>
+
+                  <p className="text-text-secondary mt-0.5 text-xs">
+                    Update your account password
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (changingPassword) return;
+
+                  setChangePasswordOpen(false);
+                  setPasswordError("");
+                  setPasswordSuccess("");
+                  setNewPassword("");
+                  setConfirmPassword("");
+                }}
+                disabled={changingPassword}
+                aria-label="Close change password"
+                className="text-text-secondary hover:bg-surface hover:text-text flex h-9 w-9 items-center justify-center rounded-lg transition disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <X size={19} />
+              </button>
+            </div>
+
+            {/* Content */}
+
+            <form onSubmit={handleChangePassword} className="p-5 md:p-6">
+              {/* Error */}
+
+              {passwordError && (
+                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3.5 py-3 text-sm text-red-600 dark:border-red-900/40 dark:bg-red-900/10 dark:text-red-400">
+                  {passwordError}
+                </div>
+              )}
+
+              {/* Success */}
+
+              {passwordSuccess && (
+                <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-3.5 py-3 text-sm text-green-600 dark:border-green-900/40 dark:bg-green-900/10 dark:text-green-400">
+                  {passwordSuccess}
+                </div>
+              )}
+
+              {/* New Password */}
+
+              <div className="mb-4">
+                <label
+                  htmlFor="new-password"
+                  className="text-text mb-1.5 block text-sm font-medium"
+                >
+                  New Password
+                </label>
+
+                <input
+                  id="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                  autoComplete="new-password"
+                  disabled={changingPassword}
+                  className="border-border bg-surface text-text placeholder:text-text-secondary focus:border-primary focus:ring-primary/20 w-full rounded-xl border px-3.5 py-2.5 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+                />
+              </div>
+
+              {/* Confirm Password */}
+
+              <div className="mb-6">
+                <label
+                  htmlFor="confirm-password"
+                  className="text-text mb-1.5 block text-sm font-medium"
+                >
+                  Confirm Password
+                </label>
+
+                <input
+                  id="confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  autoComplete="new-password"
+                  disabled={changingPassword}
+                  className="border-border bg-surface text-text placeholder:text-text-secondary focus:border-primary focus:ring-primary/20 w-full rounded-xl border px-3.5 py-2.5 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+                />
+              </div>
+
+              {/* Actions */}
+
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (changingPassword) return;
+
+                    setChangePasswordOpen(false);
+                    setPasswordError("");
+                    setPasswordSuccess("");
+                    setNewPassword("");
+                    setConfirmPassword("");
+                  }}
+                  disabled={changingPassword}
+                  className="border-border bg-background text-text hover:bg-surface rounded-xl border px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={changingPassword}
+                  className="bg-primary hover:bg-primary-dark flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {changingPassword && (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                  )}
+
+                  {changingPassword ? "Changing..." : "Change Password"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

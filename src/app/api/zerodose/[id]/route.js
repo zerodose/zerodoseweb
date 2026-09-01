@@ -186,9 +186,13 @@ function canAccessZerodose(user, zerodose) {
 
 export async function GET(request, { params }) {
   try {
+  console.log("SINGLE ZERODOSE ROUTE HIT");
+
     await connectDB();
 
     const auth = await getAuthenticatedUser(request);
+
+    console.log("AUTH RESULT:", auth.error ? "AUTH ERROR" : auth.user?._id);
 
     if (auth.error) {
       return auth.error;

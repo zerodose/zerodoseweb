@@ -517,7 +517,7 @@ export default function Page() {
   const [activeTeamCount, setActiveTeamCount] = useState(0);
   const [campaigns, setCampaigns] = useState([]);
   const [teamSummary, setTeamSummary] = useState([]);
-
+  const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -573,7 +573,7 @@ export default function Page() {
         const storedAuthUser = JSON.parse(
           localStorage.getItem("authUser") || "{}",
         );
-
+        setAuthUser(storedAuthUser);
         const supervisorId = storedAuthUser?.id;
 
         const [teamCountResponse, campaignsResponse, summaryResponse] =
@@ -932,6 +932,7 @@ export default function Page() {
           data={currentData}
           activeTeams={activeTeams}
           loading={loading}
+          authUser={authUser}
         />
       )}
 

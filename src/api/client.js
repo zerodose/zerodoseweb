@@ -233,7 +233,7 @@ import axios from "axios";
 
 const API_URLS = [
   // Production
-  // "https://zerodoseweb.vercel.app",
+  "https://zerodoseweb.vercel.app",
 
   // Local Network
   // "http://192.168.100.12:3000",

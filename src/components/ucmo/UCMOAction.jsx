@@ -1,6 +1,6 @@
 "use client";
 
-import { UsersRound } from "lucide-react";
+import { Syringe, UsersRound } from "lucide-react";
 import ActionLinkButton from "../admin/ui/ActionLinkButton";
 
 export default function UCMOActions() {
@@ -22,6 +22,12 @@ export default function UCMOActions() {
       label: "Staff Transfer",
       description: "Transfer supervisors",
       icon: UsersRound,
+    },
+        {
+      href: "/ucmo/zerodose",
+      label: "Zerodose List",
+      description: "View and manage zerodose records",
+      icon: Syringe,
     },
   ];
 

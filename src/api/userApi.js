@@ -160,6 +160,23 @@ export async function getStaffByScope({
   return response.data;
 }
 
+
+  export const getActiveUCMOSupervisorCount = async (ucmoId) => {
+  const response = await api.get("/users", {
+    params: {
+      supervisor: ucmoId,
+      isActive: true,
+      designation: "supervisor",
+      countOnly: true,
+      teamCount: true,
+    },
+  });
+
+  return response.data;
+};
+
+
+
   export const getActiveSupervisorTeamCount = async (supervisorId) => {
   const response = await api.get("/users", {
     params: {
@@ -173,3 +190,4 @@ export async function getStaffByScope({
 
   return response.data;
 };
+

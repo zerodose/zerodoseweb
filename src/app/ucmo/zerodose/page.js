@@ -9,9 +9,10 @@ import { LucideSyringe } from "lucide-react";
 
 import ZerodoseTabs from "@/components/supervisor/zerodose/ZerodoseTabs";
 import CurrentCampaign from "@/components/supervisor/zerodose/CurrentCampaignZerodose";
-import PreviousCampaigns from "@/components/supervisor/zerodose/PreviousCampaigns";
+// import PreviousCampaigns from "@/components/supervisor/zerodose/PreviousCampaigns";
 import ZerodosePageSkeleton from "@/components/supervisor/zerodose/ZerodosePageSkeleton";
 import ApprovalPageHeader from "@/components/ui/ApprovalPageHeader";
+import PreviousCampaignsZerodose from "@/components/supervisor/zerodose/PreviousCampaignsZerodose";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
@@ -337,8 +338,9 @@ export default function Page() {
       ====================================================== */}
 
       {activeTab === "previous" && (
-        <PreviousCampaigns campaigns={previousCampaigns} data={previousData} />
-      )}
+        // <PreviousCampaigns campaigns={previousCampaigns} data={previousData} />
+          <PreviousCampaignsZerodose campaigns={previousCampaigns} data={previousData} />
+)}
     </div>
   );
 }

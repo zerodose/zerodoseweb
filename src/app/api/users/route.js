@@ -26,7 +26,7 @@ export async function GET(request) {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-
+    console.log("Search Params:", searchParams.toString());
     const page = Math.max(
       Number.parseInt(searchParams.get("page") || "1", 10),
       1,

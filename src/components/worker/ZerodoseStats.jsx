@@ -92,25 +92,21 @@ export default function ZerodoseStats({
       label: "Total Zerodose",
       value: total,
       icon: Syringe,
-      iconClass: "bg-primary/10 text-primary",
     },
     {
       label: "Recorded",
       value: recorded,
       icon: Clock3,
-       iconClass: "bg-primary/10 text-primary",
     },
     {
       label: "Visited",
       value: visited,
       icon: MapPin,
-      iconClass: "bg-primary/10 text-primary",
     },
     {
       label: "Covered",
       value: covered,
       icon: CheckCircle2,
-      iconClass: "bg-primary/10 text-primary",
     },
   ];
 
@@ -126,7 +122,9 @@ export default function ZerodoseStats({
           >
             {/* Icon */}
             <div
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9 md:h-10 md:w-10 ${card.iconClass}`}
+              className={
+                "bg-primary/10 text-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9 md:h-10 md:w-10"
+              }
             >
               <Icon className="h-4 w-4 sm:h-4.5 sm:w-4.5 md:h-5 md:w-5" />
             </div>

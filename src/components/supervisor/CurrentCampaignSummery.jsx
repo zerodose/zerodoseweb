@@ -1,16 +1,21 @@
-
 // "use client";
 
 // import { useMemo } from "react";
 
 // import CampaignHeader from "./CampaignHeader";
+// import SupervisorsTable from "../ucmo/SupervisorsTable";
 // import ZerodoseTable from "./ZerodoseTable";
 
-// export default function CurrentCampaign({
+// export default function CurrentCampaignSummery({
 //   campaign,
 //   data = [],
 //   activeTeams = [],
+//   authUser,
+//   totalSupervisors,
 // }) {
+//   // ============================================================
+//   // NO CURRENT CAMPAIGN
+//   // ============================================================
 
 //   if (!campaign) {
 //     return (
@@ -26,15 +31,11 @@
 //     );
 //   }
 
-//   // ============================================================
-//   // TEAM-WISE DATA
-//   // ============================================================
-
 //   const teamData = useMemo(() => {
 //     const teamsMap = new Map();
 
 //     // ----------------------------------------------------------
-//     // Add active teams
+//     // Add all active teams first
 //     // ----------------------------------------------------------
 
 //     activeTeams.forEach((activeTeam) => {
@@ -48,6 +49,7 @@
 //         teamNumber,
 //         teamLeader: activeTeam.teamLeader || null,
 //         teamMember: activeTeam.teamMember || null,
+//         unionCouncil: activeTeam.unionCouncil || null,
 //         recorded: 0,
 //         visited: 0,
 //         covered: 0,
@@ -55,7 +57,7 @@
 //     });
 
 //     // ----------------------------------------------------------
-//     // Add current campaign Zerodose
+//     // Merge already-aggregated campaign data
 //     // ----------------------------------------------------------
 
 //     data.forEach((item) => {
@@ -68,8 +70,9 @@
 //       if (!teamsMap.has(teamNumber)) {
 //         teamsMap.set(teamNumber, {
 //           teamNumber,
-//           teamLeader: null,
-//           teamMember: null,
+//           teamLeader: item.teamLeader || null,
+//           teamMember: item.teamMember || null,
+//           unionCouncil: item.unionCouncil || null,
 //           recorded: 0,
 //           visited: 0,
 //           covered: 0,
@@ -78,31 +81,28 @@
 
 //       const team = teamsMap.get(teamNumber);
 
-//       // Every Zerodose record = recorded
-//       team.recorded += 1;
-
-//       // Visit based on visitDate
-//       if (item.visitDate) {
-//         team.visited += 1;
-//       }
-
-//       // Covered based on coveredDate/status
-//       if (item.coveredDate || item.vaccinationStatus === "covered") {
-//         team.covered += 1;
-//       }
-
 //       // --------------------------------------------------------
-//       // Worker information if populated in Zerodose
+//       // USE EXISTING COUNTS
 //       // --------------------------------------------------------
 
-//       const worker = item.user;
+//       team.recorded = Number(item.recorded || 0);
+//       team.visited = Number(item.visited || 0);
+//       team.covered = Number(item.covered || 0);
 
-//       if (worker?.workerRole === "teamLeader") {
-//         team.teamLeader = worker;
+//       // --------------------------------------------------------
+//       // Use API team information if available
+//       // --------------------------------------------------------
+
+//       if (item.teamLeader) {
+//         team.teamLeader = item.teamLeader;
 //       }
 
-//       if (worker?.workerRole === "teamMember") {
-//         team.teamMember = worker;
+//       if (item.teamMember) {
+//         team.teamMember = item.teamMember;
+//       }
+
+//       if (item.unionCouncil) {
+//         team.unionCouncil = item.unionCouncil;
 //       }
 //     });
 
@@ -115,21 +115,35 @@
 //   // SUMMARY
 //   // ============================================================
 
-//   const totalTeams = teamData.length;
+//   const totalTeams = activeTeams.length || teamData.length;
 
 //   const totalRecorded = teamData.reduce(
-//     (total, team) => total + team.recorded,
+//     (total, team) => total + Number(team.recorded || 0),
+//     0,
+//   );
+
+//   const totalCovered = teamData.reduce(
+//     (total, team) => total + Number(team.covered || 0),
 //     0,
 //   );
 
 //   return (
 //     <section>
+//       {/* ========================================================
+//           Campaign Header
+//       ======================================================== */}
+
 //       <CampaignHeader
 //         campaign={campaign}
 //         label="CURRENT CAMPAIGN"
 //         teams={totalTeams}
 //         recorded={totalRecorded}
+//         covered={totalCovered}
 //       />
+
+//       {/* ========================================================
+//           Section Heading
+//       ======================================================== */}
 
 //       <div className="mb-3 flex items-center justify-between">
 //         <div>
@@ -142,10 +156,27 @@
 //           </p>
 //         </div>
 
-//         <span className="text-text-secondary text-xs">{totalTeams} Teams</span>
+//         {authUser?.designation === "supervisor" ? (
+//           <span className="text-text-secondary text-xs">
+//             {totalTeams} Teams
+//           </span>
+//         ) : (
+//           <span className="text-text-secondary text-xs">
+//             {totalSupervisors || 0} Supervisors
+//           </span>
+//         )}
 //       </div>
 
-//       <ZerodoseTable data={teamData} />
+//       {/* ========================================================
+//           Table
+//       ======================================================== */}
+
+//       {authUser?.designation === "supervisor" ? (
+//           <ZerodoseTable data={teamData} />
+//         ) : (
+//          <SupervisorsTable data={teamData} />
+//         )}
+
 //     </section>
 //   );
 // }
@@ -155,46 +186,18 @@
 import { useMemo } from "react";
 
 import CampaignHeader from "./CampaignHeader";
+import SupervisorsTable from "../ucmo/SupervisorsTable";
 import ZerodoseTable from "./ZerodoseTable";
 
 export default function CurrentCampaignSummery({
   campaign,
   data = [],
   activeTeams = [],
+  authUser,
+  totalSupervisors,
 }) {
   // ============================================================
-  // NO CURRENT CAMPAIGN
-  // ============================================================
-
-  if (!campaign) {
-    return (
-      <section>
-        <div className="bg-surface border-border rounded-xl border p-6 text-center md:rounded-2xl">
-          <p className="text-text font-medium">Current campaign not found.</p>
-
-          <p className="text-text-secondary mt-1 text-sm">
-            No active campaign data is available for this supervisor.
-          </p>
-        </div>
-      </section>
-    );
-  }
-
-  // ============================================================
-  // TEAM-WISE DATA
-  //
-  // `data` already contains the aggregated Zerodose counts:
-  //
-  // {
-  //   teamNumber: 1,
-  //   teamLeader: {...},
-  //   teamMember: {...},
-  //   recorded: 6,
-  //   visited: 2,
-  //   covered: 1
-  // }
-  //
-  // So DO NOT increment counts again.
+  // TEAM DATA
   // ============================================================
 
   const teamData = useMemo(() => {
@@ -223,7 +226,7 @@ export default function CurrentCampaignSummery({
     });
 
     // ----------------------------------------------------------
-    // Merge already-aggregated campaign data
+    // Merge campaign data
     // ----------------------------------------------------------
 
     data.forEach((item) => {
@@ -247,17 +250,9 @@ export default function CurrentCampaignSummery({
 
       const team = teamsMap.get(teamNumber);
 
-      // --------------------------------------------------------
-      // USE EXISTING COUNTS
-      // --------------------------------------------------------
-
       team.recorded = Number(item.recorded || 0);
       team.visited = Number(item.visited || 0);
       team.covered = Number(item.covered || 0);
-
-      // --------------------------------------------------------
-      // Use API team information if available
-      // --------------------------------------------------------
 
       if (item.teamLeader) {
         team.teamLeader = item.teamLeader;
@@ -293,6 +288,28 @@ export default function CurrentCampaignSummery({
     0,
   );
 
+  // ============================================================
+  // NO CURRENT CAMPAIGN
+  // ============================================================
+
+  if (!campaign) {
+    return (
+      <section>
+        <div className="bg-surface border-border rounded-xl border p-6 text-center md:rounded-2xl">
+          <p className="text-text font-medium">Current campaign not found.</p>
+
+          <p className="text-text-secondary mt-1 text-sm">
+            No active campaign data is available for this supervisor.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  // ============================================================
+  // RENDER
+  // ============================================================
+
   return (
     <section>
       {/* ========================================================
@@ -322,16 +339,26 @@ export default function CurrentCampaignSummery({
           </p>
         </div>
 
-        <span className="text-text-secondary text-xs">
-          {totalTeams} Teams
-        </span>
+        {authUser?.designation === "supervisor" ? (
+          <span className="text-text-secondary text-xs">
+            {totalTeams} Teams
+          </span>
+        ) : (
+          <span className="text-text-secondary text-xs">
+            {totalSupervisors || 0} Supervisors
+          </span>
+        )}
       </div>
 
       {/* ========================================================
           Table
       ======================================================== */}
 
-      <ZerodoseTable data={teamData} />
+      {authUser?.designation === "supervisor" ? (
+        <ZerodoseTable data={teamData} />
+      ) : (
+        <SupervisorsTable data={teamData} />
+      )}
     </section>
   );
 }

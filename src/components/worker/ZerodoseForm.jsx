@@ -350,7 +350,7 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
                 type="button"
                 onClick={() => router.back()}
                 disabled={loading}
-                className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                 title="Go back"
               >
                 <ArrowLeft size={18} />

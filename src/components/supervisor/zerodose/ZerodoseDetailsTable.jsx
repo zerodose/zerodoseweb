@@ -315,7 +315,7 @@ export default function ZerodoseDetailsTable({ data = [] }) {
                     </div>
 
                     <p className="text-text-secondary mt-1 text-xs">
-                      Record #{index + 1}
+                      Record-{index + 1}
                     </p>
                   </div>
                 </div>

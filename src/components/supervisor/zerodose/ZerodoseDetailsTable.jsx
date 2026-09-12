@@ -7,10 +7,8 @@ import {
   FileText,
   MapPin,
   Search,
-  Syringe,
 } from "lucide-react";
 import { formatDate } from "@/lib/formatDate";
-import { getCampaignDay } from "@/lib/getCampaignDay";
 
 export default function ZerodoseDetailsTable({ data = [] }) {
   const [search, setSearch] = useState("");
@@ -47,6 +45,65 @@ export default function ZerodoseDetailsTable({ data = [] }) {
     return "recorded";
   };
 
+  const getCampaignDay = (item, status = "recorded") => {
+    const startDate = item?.campaign?.startDate;
+    const endDate = item?.campaign?.endDate;
+
+    if (!startDate) return "-";
+
+    const normalizedStatus = String(status || "recorded").toLowerCase();
+
+    const date =
+      normalizedStatus === "covered"
+        ? item?.coveredDate
+        : normalizedStatus === "visited"
+          ? item?.visitDate
+          : item?.recordDate;
+
+    if (!date) return "-";
+
+    const getDateOnly = (value) => {
+      const parsed = new Date(value);
+
+      if (Number.isNaN(parsed.getTime())) {
+        return null;
+      }
+
+      return new Date(
+        parsed.getFullYear(),
+        parsed.getMonth(),
+        parsed.getDate(),
+      );
+    };
+
+    const start = getDateOnly(startDate);
+    const current = getDateOnly(date);
+    const end = endDate ? getDateOnly(endDate) : null;
+
+    if (!start || !current) return "-";
+
+    const difference = Math.floor(
+      (current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    const campaignDay = difference + 1;
+
+    if (campaignDay < 1) {
+      return "-";
+    }
+
+    if (end) {
+      const totalCampaignDays =
+        Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) +
+        1;
+
+      if (totalCampaignDays > 0) {
+        return Math.min(campaignDay, totalCampaignDays);
+      }
+    }
+
+    return campaignDay;
+  };
   const filteredData = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -293,15 +350,7 @@ export default function ZerodoseDetailsTable({ data = [] }) {
                   <p className="text-text-secondary text-xs">Campaign Day</p>
 
                   <p className="text-text mt-1 text-sm font-semibold">
-                    Day{" "}
-                    {getCampaignDay({
-                      campaignStartDate: item?.campaign?.startDate,
-                      campaignEndDate: item?.campaign?.endDate,
-                      recordDate: item?.recordDate,
-                      visitDate: item?.visitDate,
-                      coveredDate: item?.coveredDate,
-                      status,
-                    })}
+                    Day {getCampaignDay(item, status)}
                   </p>
                 </div>
 

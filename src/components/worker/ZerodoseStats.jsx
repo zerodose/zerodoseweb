@@ -1,76 +1,177 @@
+
 // "use client";
 
 // import { Syringe, CheckCircle2, Clock3, MapPin } from "lucide-react";
+// import { useEffect, useState } from "react";
 
 // export default function ZerodoseStats({
-//   total,
-//   recorded,
-//   visited,
-//   covered,
-//   loading,
+//   total = 0,
+//   recorded = 0,
+//   visited = 0,
+//   covered = 0,
+//   loading = false,
 // }) {
 //   const cards = [
 //     {
+//       key: "total",
 //       label: "Total Zerodose",
 //       value: total,
 //       icon: Syringe,
 //     },
 //     {
+//       key: "recorded",
 //       label: "Recorded",
 //       value: recorded,
 //       icon: Clock3,
 //     },
 //     {
+//       key: "visited",
 //       label: "Visited",
 //       value: visited,
 //       icon: MapPin,
 //     },
 //     {
+//       key: "covered",
 //       label: "Covered",
 //       value: covered,
 //       icon: CheckCircle2,
 //     },
 //   ];
 
+//   // ============================================================
+//   // CARD ANIMATION
+//   // ============================================================
+
+//   const [animated, setAnimated] = useState(false);
+
+//   const [displayValues, setDisplayValues] = useState({
+//     total: 0,
+//     recorded: 0,
+//     visited: 0,
+//     covered: 0,
+//   });
+
+//   // ============================================================
+//   // CARD FADE / SLIDE ANIMATION
+//   // ============================================================
+
+//   useEffect(() => {
+//     const timer = setTimeout(() => {
+//       setAnimated(true);
+//     }, 100);
+
+//     return () => clearTimeout(timer);
+//   }, []);
+
+//   // ============================================================
+//   // NUMBER ANIMATION
+//   // ============================================================
+
+//   useEffect(() => {
+//     const duration = 700;
+//     const startTime = performance.now();
+
+//     const targets = {
+//       total: Number(total ?? 0),
+//       recorded: Number(recorded ?? 0),
+//       visited: Number(visited ?? 0),
+//       covered: Number(covered ?? 0),
+//     };
+
+//     let animationFrame;
+
+//     const animateNumbers = (currentTime) => {
+//       const elapsed = currentTime - startTime;
+//       const progress = Math.min(elapsed / duration, 1);
+
+//       const nextValues = {};
+
+//       Object.keys(targets).forEach((key) => {
+//         const target = targets[key];
+
+//         if (progress < 1) {
+//           const randomMax = Math.max(Math.floor(target * 1.2), 100);
+
+//           nextValues[key] = Math.floor(Math.random() * randomMax);
+//         } else {
+//           nextValues[key] = target;
+//         }
+//       });
+
+//       setDisplayValues(nextValues);
+
+//       if (progress < 1) {
+//         animationFrame = requestAnimationFrame(animateNumbers);
+//       } else {
+//         setDisplayValues(targets);
+//       }
+//     };
+
+//     animationFrame = requestAnimationFrame(animateNumbers);
+
+//     return () => {
+//       cancelAnimationFrame(animationFrame);
+//     };
+//   }, [total, recorded, visited, covered]);
+
+//   // ============================================================
+//   // RENDER
+//   // ============================================================
+
 //   return (
-//     <section className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-//       {cards.map((card) => {
+//     <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+//       {cards.map((card, index) => {
 //         const Icon = card.icon;
+
+//         const value = Number(displayValues[card.key] ?? 0);
 
 //         return (
 //           <div
-//             key={card.label}
-//             className="bg-surface border-border flex items-center gap-2.5 rounded-xl border p-3 shadow-sm sm:gap-3 sm:p-4 md:rounded-2xl md:p-5"
+//             key={card.key}
+//             className={`group border-border bg-background relative overflow-hidden rounded-2xl border px-4 py-3.5 shadow-[0_3px_12px_rgba(0,0,0,0.06)] transition-all duration-700 ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] md:px-5 md:py-4 dark:bg-slate-900 ${
+//               animated ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
+//             }`}
+//             style={{
+//               transitionDelay: `${index * 100}ms`,
+//             }}
 //           >
-//             {/* Icon */}
-//             <div
-//               className={
-//                 "bg-primary/10 text-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9 md:h-10 md:w-10"
-//               }
-//             >
-//               <Icon className="h-4 w-4 sm:h-4.5 sm:w-4.5 md:h-5 md:w-5" />
+//             {/* Decorative Background */}
+//             <div className="bg-primary/5 dark:bg-primary/10 absolute -top-10 -right-10 h-24 w-24 rounded-full transition-transform duration-300 group-hover:scale-125" />
+
+//             {/* Top Row */}
+//             <div className="relative flex items-start justify-between">
+//               {/* Icon */}
+//               <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-[0_3px_10px_rgba(64,165,254,0.18)] transition-all duration-200 group-hover:shadow-[0_5px_14px_rgba(64,165,254,0.25)]">
+//                 <Icon size={20} strokeWidth={2} />
+//               </div>
+
+//               {/* Animated Number */}
+//               <p className="text-text text-right text-2xl leading-none font-bold tracking-tight tabular-nums md:text-3xl">
+//                 {value.toLocaleString()}
+//               </p>
 //             </div>
 
-//             {/* Title */}
-//             <p className="text-text-secondary min-w-0 flex-1 truncate text-xs font-medium sm:text-sm">
-//               {card.label}
-//             </p>
+//             {/* Label */}
+//             <div className="relative mt-3">
+//               <p className="text-text-secondary text-xs font-medium md:text-sm">
+//                 {card.label}
+//               </p>
+//             </div>
 
-//             {/* Count */}
-//             <p className="text-text shrink-0 text-lg font-bold sm:text-xl md:text-2xl">
-//               {loading ? "..." : card.value}
-//             </p>
+//             {/* Bottom Accent */}
+//             <div className="bg-primary absolute right-0 bottom-0 left-0 h-0.5 opacity-60" />
 //           </div>
 //         );
 //       })}
-//     </section>
+//     </div>
 //   );
 // }
+
 
 "use client";
 
 import { Syringe, CheckCircle2, Clock3, MapPin } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function ZerodoseStats({
   total = 0,
@@ -107,21 +208,10 @@ export default function ZerodoseStats({
   ];
 
   // ============================================================
-  // CARD ANIMATION
+  // CARD ENTRY ANIMATION
   // ============================================================
 
   const [animated, setAnimated] = useState(false);
-
-  const [displayValues, setDisplayValues] = useState({
-    total: 0,
-    recorded: 0,
-    visited: 0,
-    covered: 0,
-  });
-
-  // ============================================================
-  // CARD FADE / SLIDE ANIMATION
-  // ============================================================
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -132,58 +222,188 @@ export default function ZerodoseStats({
   }, []);
 
   // ============================================================
-  // NUMBER ANIMATION
+  // DISPLAY VALUES
+  // ============================================================
+
+  const [displayValues, setDisplayValues] = useState({
+    total: 0,
+    recorded: 0,
+    visited: 0,
+    covered: 0,
+  });
+
+  // Keep the latest API values available without restarting
+  // the number animation whenever props change.
+  const targetsRef = useRef({
+    total: 0,
+    recorded: 0,
+    visited: 0,
+    covered: 0,
+  });
+
+  // Keep the latest displayed numbers available.
+  const displayValuesRef = useRef({
+    total: 0,
+    recorded: 0,
+    visited: 0,
+    covered: 0,
+  });
+
+  // ============================================================
+  // UPDATE LATEST TARGETS
   // ============================================================
 
   useEffect(() => {
-    const duration = 700;
-    const startTime = performance.now();
-
-    const targets = {
+    targetsRef.current = {
       total: Number(total ?? 0),
       recorded: Number(recorded ?? 0),
       visited: Number(visited ?? 0),
       covered: Number(covered ?? 0),
     };
+  }, [total, recorded, visited, covered]);
 
-    let animationFrame;
+  // ============================================================
+  // NUMBER LOADING ANIMATION
+  //
+  // IMPORTANT:
+  // This effect depends ONLY on `loading`.
+  //
+  // Therefore:
+  //
+  // API loading
+  //     ↓
+  // continuous numbers
+  //     ↓
+  // API response
+  //     ↓
+  // final animation
+  //     ↓
+  // actual DB values
+  //
+  // Changing total/recorded/visited/covered will NOT restart
+  // the animation.
+  // ============================================================
 
-    const animateNumbers = (currentTime) => {
+  useEffect(() => {
+    let stopped = false;
+    let intervalId = null;
+    let animationFrame = null;
+
+    // ==========================================================
+    // LOADING
+    // ==========================================================
+
+    if (loading) {
+      const generateLoadingNumbers = () => {
+        if (stopped) {
+          return;
+        }
+
+        const nextValues = {
+          total: Math.floor(Math.random() * 101),
+          recorded: Math.floor(Math.random() * 101),
+          visited: Math.floor(Math.random() * 101),
+          covered: Math.floor(Math.random() * 101),
+        };
+
+        displayValuesRef.current = nextValues;
+
+        setDisplayValues(nextValues);
+      };
+
+      // Immediately show numbers.
+      generateLoadingNumbers();
+
+      // Keep changing while API is loading.
+      intervalId = setInterval(generateLoadingNumbers, 100);
+
+      return () => {
+        stopped = true;
+
+        if (intervalId) {
+          clearInterval(intervalId);
+        }
+      };
+    }
+
+    // ==========================================================
+    // API LOADING COMPLETE
+    // ==========================================================
+
+    const targets = {
+      ...targetsRef.current,
+    };
+
+    const startValues = {
+      ...displayValuesRef.current,
+    };
+
+    const duration = 500;
+    const startTime = performance.now();
+
+    const animateToFinalValues = (currentTime) => {
+      if (stopped) {
+        return;
+      }
+
       const elapsed = currentTime - startTime;
+
       const progress = Math.min(elapsed / duration, 1);
 
-      const nextValues = {};
+      // Smooth ease-out.
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
 
-      Object.keys(targets).forEach((key) => {
-        const target = targets[key];
+      const nextValues = {
+        total: Math.round(
+          startValues.total +
+            (targets.total - startValues.total) * easedProgress,
+        ),
 
-        if (progress < 1) {
-          const randomMax = Math.max(Math.floor(target * 1.2), 100);
+        recorded: Math.round(
+          startValues.recorded +
+            (targets.recorded - startValues.recorded) * easedProgress,
+        ),
 
-          nextValues[key] = Math.floor(Math.random() * randomMax);
-        } else {
-          nextValues[key] = target;
-        }
-      });
+        visited: Math.round(
+          startValues.visited +
+            (targets.visited - startValues.visited) * easedProgress,
+        ),
+
+        covered: Math.round(
+          startValues.covered +
+            (targets.covered - startValues.covered) * easedProgress,
+        ),
+      };
+
+      displayValuesRef.current = nextValues;
 
       setDisplayValues(nextValues);
 
       if (progress < 1) {
-        animationFrame = requestAnimationFrame(animateNumbers);
+        animationFrame = requestAnimationFrame(animateToFinalValues);
       } else {
+        displayValuesRef.current = targets;
         setDisplayValues(targets);
       }
     };
 
-    animationFrame = requestAnimationFrame(animateNumbers);
+    animationFrame = requestAnimationFrame(animateToFinalValues);
 
     return () => {
-      cancelAnimationFrame(animationFrame);
+      stopped = true;
+
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
     };
-  }, [total, recorded, visited, covered]);
+  }, [loading]);
 
   // ============================================================
-  // RENDER
+  // UI
   // ============================================================
 
   return (
@@ -197,36 +417,32 @@ export default function ZerodoseStats({
           <div
             key={card.key}
             className={`group border-border bg-background relative overflow-hidden rounded-2xl border px-4 py-3.5 shadow-[0_3px_12px_rgba(0,0,0,0.06)] transition-all duration-700 ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] md:px-5 md:py-4 dark:bg-slate-900 ${
-              animated ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
+              animated
+                ? "translate-y-0 opacity-100"
+                : "translate-y-3 opacity-0"
             }`}
             style={{
               transitionDelay: `${index * 100}ms`,
             }}
           >
-            {/* Decorative Background */}
             <div className="bg-primary/5 dark:bg-primary/10 absolute -top-10 -right-10 h-24 w-24 rounded-full transition-transform duration-300 group-hover:scale-125" />
 
-            {/* Top Row */}
             <div className="relative flex items-start justify-between">
-              {/* Icon */}
               <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-[0_3px_10px_rgba(64,165,254,0.18)] transition-all duration-200 group-hover:shadow-[0_5px_14px_rgba(64,165,254,0.25)]">
                 <Icon size={20} strokeWidth={2} />
               </div>
 
-              {/* Animated Number */}
               <p className="text-text text-right text-2xl leading-none font-bold tracking-tight tabular-nums md:text-3xl">
                 {value.toLocaleString()}
               </p>
             </div>
 
-            {/* Label */}
             <div className="relative mt-3">
               <p className="text-text-secondary text-xs font-medium md:text-sm">
                 {card.label}
               </p>
             </div>
 
-            {/* Bottom Accent */}
             <div className="bg-primary absolute right-0 bottom-0 left-0 h-0.5 opacity-60" />
           </div>
         );

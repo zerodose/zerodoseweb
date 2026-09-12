@@ -16,13 +16,10 @@ import { useMemo, useState } from "react";
 export default function ZerodoseCampaignSection({
   activeTab,
   onTabChange,
-
   currentZerodoses = [],
   previousZerodoses = [],
-
   loading = false,
   onRefresh,
-
   getStatus,
 }) {
   const router = useRouter();
@@ -479,7 +476,7 @@ export default function ZerodoseCampaignSection({
                       </div>
 
                       <p className="text-text-secondary mt-1 text-xs">
-                        Record #{index + 1}
+                        Record-{index + 1}
                       </p>
                     </div>
                   </div>

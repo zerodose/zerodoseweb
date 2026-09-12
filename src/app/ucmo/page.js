@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { getCampaigns } from "@/api/campaignApi";
 import { getZerodoses } from "@/api/zerodoseApi";
@@ -33,6 +33,8 @@ export default function Page() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const hasFetchedRef = useRef(false);
 
   // ============================================================
   // SUMMARY
@@ -75,11 +77,7 @@ export default function Page() {
     const startDate = new Date(campaign.startDate);
     const endDate = new Date(campaign.endDate);
 
-    const today = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-    );
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     const start = new Date(
       startDate.getFullYear(),
@@ -109,6 +107,12 @@ export default function Page() {
   // ============================================================
 
   useEffect(() => {
+    if (hasFetchedRef.current) {
+      return;
+    }
+
+    hasFetchedRef.current = true;
+
     const fetchUCMOData = async () => {
       try {
         setLoading(true);
@@ -190,8 +194,7 @@ export default function Page() {
 
         if (!supervisorsResponse?.success) {
           throw new Error(
-            supervisorsResponse?.message ||
-              "Failed to fetch UCMO supervisors.",
+            supervisorsResponse?.message || "Failed to fetch UCMO supervisors.",
           );
         }
 
@@ -216,8 +219,7 @@ export default function Page() {
 
           if (!activeUsersResponse?.success) {
             throw new Error(
-              activeUsersResponse?.message ||
-                "Failed to fetch active workers.",
+              activeUsersResponse?.message || "Failed to fetch active workers.",
             );
           }
 
@@ -267,8 +269,7 @@ export default function Page() {
 
           if (!zerodoseResponse?.success) {
             throw new Error(
-              zerodoseResponse?.message ||
-                "Failed to fetch Zerodose records.",
+              zerodoseResponse?.message || "Failed to fetch Zerodose records.",
             );
           }
 
@@ -404,8 +405,7 @@ export default function Page() {
         );
 
         return (
-          itemCampaignId &&
-          String(itemCampaignId) === String(currentCampaignId)
+          itemCampaignId && String(itemCampaignId) === String(currentCampaignId)
         );
       })
       .map((item) => ({
@@ -437,8 +437,7 @@ export default function Page() {
         );
 
         return (
-          itemCampaignId &&
-          previousCampaignIds.has(String(itemCampaignId))
+          itemCampaignId && previousCampaignIds.has(String(itemCampaignId))
         );
       })
       .map((item) => {
@@ -448,8 +447,7 @@ export default function Page() {
 
         const campaign =
           previousCampaigns.find(
-            (campaign) =>
-              String(getId(campaign)) === String(itemCampaignId),
+            (campaign) => String(getId(campaign)) === String(itemCampaignId),
           ) || item.campaign;
 
         return {
@@ -482,8 +480,7 @@ export default function Page() {
         );
 
         return (
-          itemCampaignId &&
-          upcomingCampaignIds.has(String(itemCampaignId))
+          itemCampaignId && upcomingCampaignIds.has(String(itemCampaignId))
         );
       })
       .map((item) => {
@@ -493,8 +490,7 @@ export default function Page() {
 
         const campaign =
           upcomingCampaigns.find(
-            (campaign) =>
-              String(getId(campaign)) === String(itemCampaignId),
+            (campaign) => String(getId(campaign)) === String(itemCampaignId),
           ) || item.campaign;
 
         return {
@@ -596,9 +592,8 @@ export default function Page() {
   // ============================================================
 
   const currentRecordedZerodoseCount = useMemo(() => {
-    return currentData.filter(
-      (item) => item.vaccinationStatus === "recorded",
-    ).length;
+    return currentData.filter((item) => item.vaccinationStatus === "recorded")
+      .length;
   }, [currentData]);
 
   // ============================================================
@@ -606,9 +601,8 @@ export default function Page() {
   // ============================================================
 
   const currentCoveredZerodoseCount = useMemo(() => {
-    return currentData.filter(
-      (item) => item.vaccinationStatus === "covered",
-    ).length;
+    return currentData.filter((item) => item.vaccinationStatus === "covered")
+      .length;
   }, [currentData]);
 
   // ============================================================
@@ -695,9 +689,7 @@ export default function Page() {
       const teamNumbers = new Set();
 
       activeUsers.forEach((user) => {
-        const userSupervisorId = getId(
-          user.supervisor || user.supervisorId,
-        );
+        const userSupervisorId = getId(user.supervisor || user.supervisorId);
 
         const userTeamNumber = user.teamNumber;
 
@@ -766,15 +758,9 @@ export default function Page() {
       return {
         ...supervisor,
 
-        supervisorCode:
-          supervisor.supervisorCode ||
-          supervisor.code ||
-          "-",
+        supervisorCode: supervisor.supervisorCode || supervisor.code || "-",
 
-        supervisorName:
-          supervisor.supervisorName ||
-          supervisor.name ||
-          "-",
+        supervisorName: supervisor.supervisorName || supervisor.name || "-",
 
         totalTeams: teamNumbers.size,
 
@@ -783,12 +769,7 @@ export default function Page() {
         covered,
       };
     });
-  }, [
-    currentCampaign,
-    currentSupervisors,
-    currentData,
-    activeUsers,
-  ]);
+  }, [currentCampaign, currentSupervisors, currentData, activeUsers]);
 
   // ============================================================
   // RENDER
@@ -803,9 +784,7 @@ export default function Page() {
 
         <div className="mb-4 flex flex-col md:mb-6">
           <div className="mb-4 flex items-center justify-between">
-            <h1 className="text-text text-2xl font-bold md:text-3xl">
-              UCMO
-            </h1>
+            <h1 className="text-text text-2xl font-bold md:text-3xl">UCMO</h1>
 
             <PendingApprovalButton
               link={"/ucmo/pendingapprovals"}
@@ -851,10 +830,7 @@ export default function Page() {
               CAMPAIGN TABS
           ====================================================== */}
 
-        <CampaignTabs
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-        />
+        <CampaignTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
         {/* ======================================================
               CURRENT CAMPAIGN

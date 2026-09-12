@@ -156,3 +156,19 @@ export const rejectZerodoseUpdate = async (
 
   return response.data;
 };
+
+export const vaccinatorVisit = async (zerodoseId, clientStatus) => {
+  const response = await api.patch(`/zerodose/vaccinator/${zerodoseId}/visit`, {
+    clientStatus,
+  });
+
+  return response.data;
+};
+
+export const vaccinatorCover = async (zerodoseId, qrCode) => {
+  const response = await api.patch(`/zerodose/vaccinator/${zerodoseId}/cover`, {
+    qrCode,
+  });
+
+  return response.data;
+};

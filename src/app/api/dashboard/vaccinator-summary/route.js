@@ -8,19 +8,12 @@ import Zerodose from "@/models/Zerodose";
 import Campaign from "@/models/Campaign";
 
 // ============================================================
-// GET UCMO / VACCINATOR / OTHER STAFF SUMMARY
+// GET UCMO SUMMARY
 //
-// Backend automatically identifies authenticated user
+// Backend automatically identifies authenticated UCMO
 // from auth_token.
 //
-// Authorization/scope is NEVER received from frontend.
-//
-// Scope:
-// - UCMO       -> own Union Council
-// - Vaccinator -> own Union Council
-// - Other Staff -> own Union Council
-//
-// No ucmoId / unionCouncilId is accepted from frontend.
+// No ucmoId is accepted from frontend.
 // ============================================================
 
 export async function GET(request) {
@@ -28,7 +21,7 @@ export async function GET(request) {
     await connectDB();
 
     // ==========================================================
-    // AUTHENTICATION
+    // AUTHENTICATED USER
     // ==========================================================
 
     const token = request.cookies.get("auth_token")?.value;
@@ -61,10 +54,6 @@ export async function GET(request) {
       );
     }
 
-    // ==========================================================
-    // AUTHENTICATED USER ID
-    // ==========================================================
-
     const userId =
       decoded?.userId || decoded?.id || decoded?._id || decoded?.sub;
 
@@ -77,10 +66,6 @@ export async function GET(request) {
         { status: 401 },
       );
     }
-
-    // ==========================================================
-    // LOAD AUTHENTICATED USER
-    // ==========================================================
 
     const authUser = await User.findOne({
       _id: new mongoose.Types.ObjectId(userId),
@@ -100,38 +85,24 @@ export async function GET(request) {
     }
 
     // ==========================================================
-    // DESIGNATION
+    // ONLY UCMO CAN ACCESS THIS SUMMARY
     // ==========================================================
 
-    const designation = String(authUser.designation || "")
-      .trim()
-      .toLowerCase();
+    const designation = String(authUser.designation || "").toLowerCase();
 
-    // ==========================================================
-    // ALLOWED DESIGNATIONS
-    // ==========================================================
-
-    if (
-      designation !== "ucmo" &&
-      designation !== "vaccinator" &&
-      designation !== "otherstaff"
-    ) {
+    if (designation !== "vaccinator" && designation !== "ucmo") {
       return NextResponse.json(
         {
           success: false,
           message:
-            "Only UCMO, Vaccinator, and Other Staff users can access this summary.",
+            "Only UCMO, Vaccinators, and Other Staff users can access this summary.",
         },
         { status: 403 },
       );
     }
 
     // ==========================================================
-    // AUTHENTICATED USER'S UNION COUNCIL
-    //
-    // This is the IMPORTANT authorization scope.
-    //
-    // We NEVER trust unionCouncilId from frontend.
+    // AUTHENTICATED UCMO'S UNION COUNCIL
     // ==========================================================
 
     const unionCouncilId = authUser.unionCouncil?._id || authUser.unionCouncil;
@@ -141,7 +112,7 @@ export async function GET(request) {
         {
           success: false,
           message:
-            "Authenticated user is not assigned to a valid Union Council.",
+            "Authenticated UCMO is not assigned to a valid Union Council.",
         },
         { status: 400 },
       );
@@ -153,26 +124,13 @@ export async function GET(request) {
     // ACTIVE APPROVED SUPERVISORS
     //
     // IMPORTANT:
-    //
-    // Previously:
-    //     ucmo: authUser._id
-    //
-    // That is WRONG for Vaccinator.
-    //
-    // Correct scope:
-    //     supervisor.unionCouncil === authenticatedUser.unionCouncil
-    //
-    // Therefore UCMO, Vaccinator and Other Staff all see
-    // supervisors belonging to their own UC.
+    // Supervisors are restricted to this authenticated UCMO.
     // ==========================================================
 
     const supervisors = await User.find({
       designation: "supervisor",
-
-      unionCouncil: unionCouncilObjectId,
-
+      unionCouncil: authUser.unionCouncil._id || authUser.unionCouncil,
       isActive: true,
-
       approvalStatus: "approved",
     })
       .select("_id name supervisorCode code")
@@ -187,31 +145,28 @@ export async function GET(request) {
     // ACTIVE TEAMS
     //
     // A team is counted only when:
-    //
     // 1. teamNumber exists
     // 2. teamLeader exists
     // 3. teamMember exists
-    // 4. worker is active
-    // 5. worker belongs to one of our supervisors
+    // 4. users are active
+    //
+    // Team identity:
+    // supervisor + teamNumber
     // ==========================================================
 
     let activeTeams = 0;
 
-    if (supervisorIds.length > 0) {
+    if (supervisorIds.length) {
       const activeWorkers = await User.find({
         designation: "worker",
-
         supervisor: {
           $in: supervisorIds,
         },
-
         isActive: true,
-
         teamNumber: {
           $exists: true,
           $nin: [null, ""],
         },
-
         workerRole: {
           $in: ["teamLeader", "teamMember"],
         },
@@ -222,10 +177,6 @@ export async function GET(request) {
       const teamMap = new Map();
 
       activeWorkers.forEach((worker) => {
-        if (!worker.supervisor) {
-          return;
-        }
-
         const supervisorId = String(worker.supervisor);
 
         const teamNumber = String(worker.teamNumber).trim();
@@ -271,7 +222,6 @@ export async function GET(request) {
       startDate: {
         $lte: now,
       },
-
       endDate: {
         $gte: now,
       },
@@ -284,21 +234,18 @@ export async function GET(request) {
 
     // ==========================================================
     // DEFAULT SUPERVISOR SUMMARY
+    //
+    // Even if there is no current campaign, supervisors
+    // are still returned with zero counts.
     // ==========================================================
 
     const supervisorSummary = supervisors.map((supervisor) => ({
       supervisorId: supervisor._id,
-
       supervisorName: supervisor.name || "-",
-
       supervisorCode: supervisor.supervisorCode || supervisor.code || "-",
-
       totalTeams: 0,
-
       recorded: 0,
-
       visited: 0,
-
       covered: 0,
     }));
 
@@ -306,21 +253,17 @@ export async function GET(request) {
     // SUPERVISOR TEAM COUNTS
     // ==========================================================
 
-    if (supervisorIds.length > 0) {
+    if (supervisorIds.length) {
       const activeWorkers = await User.find({
         designation: "worker",
-
         supervisor: {
           $in: supervisorIds,
         },
-
         isActive: true,
-
         teamNumber: {
           $exists: true,
           $nin: [null, ""],
         },
-
         workerRole: {
           $in: ["teamLeader", "teamMember"],
         },
@@ -331,10 +274,6 @@ export async function GET(request) {
       const supervisorTeamMap = new Map();
 
       activeWorkers.forEach((worker) => {
-        if (!worker.supervisor) {
-          return;
-        }
-
         const supervisorId = String(worker.supervisor);
 
         const teamNumber = String(worker.teamNumber).trim();
@@ -348,9 +287,7 @@ export async function GET(request) {
         if (!supervisorTeamMap.has(teamKey)) {
           supervisorTeamMap.set(teamKey, {
             supervisorId,
-
             teamLeader: false,
-
             teamMember: false,
           });
         }
@@ -382,14 +319,19 @@ export async function GET(request) {
     }
 
     // ==========================================================
-    // CURRENT CAMPAIGN ZERODOSE COUNTS
+    // CURRENT CAMPAIGN SUPERVISOR-WISE ZERODOSE COUNTS
+    //
+    // IMPORTANT:
+    // Only COUNT is returned.
+    //
+    // No Zerodose records are returned to frontend.
     // ==========================================================
 
-    if (currentCampaign && supervisorIds.length > 0) {
+    if (currentCampaign && supervisorIds.length) {
       const zerodoseCounts = await Zerodose.aggregate([
-        // ----------------------------------------------------
-        // CURRENT CAMPAIGN + OWN UC + OWN SUPERVISORS
-        // ----------------------------------------------------
+        // ------------------------------------------------------
+        // CURRENT CAMPAIGN
+        // ------------------------------------------------------
 
         {
           $match: {
@@ -407,18 +349,16 @@ export async function GET(request) {
           },
         },
 
-        // ----------------------------------------------------
+        // ------------------------------------------------------
         // GROUP BY SUPERVISOR + STATUS
-        // ----------------------------------------------------
+        // ------------------------------------------------------
 
         {
           $group: {
             _id: {
               supervisor: "$supervisor",
-
               status: "$vaccinationStatus",
             },
-
             count: {
               $sum: 1,
             },
@@ -427,7 +367,7 @@ export async function GET(request) {
       ]);
 
       // --------------------------------------------------------
-      // ASSIGN COUNTS
+      // PUT COUNTS INTO CORRECT SUPERVISOR
       // --------------------------------------------------------
 
       zerodoseCounts.forEach((item) => {
@@ -466,17 +406,17 @@ export async function GET(request) {
     // ==========================================================
 
     const recordedZerodose = supervisorSummary.reduce(
-      (total, supervisor) => total + Number(supervisor.recorded || 0),
+      (total, supervisor) => total + supervisor.recorded,
       0,
     );
 
     const visitedZerodose = supervisorSummary.reduce(
-      (total, supervisor) => total + Number(supervisor.visited || 0),
+      (total, supervisor) => total + supervisor.visited,
       0,
     );
 
     const coveredZerodose = supervisorSummary.reduce(
-      (total, supervisor) => total + Number(supervisor.covered || 0),
+      (total, supervisor) => total + supervisor.covered,
       0,
     );
 
@@ -489,23 +429,17 @@ export async function GET(request) {
 
       data: {
         totalSupervisors,
-
         activeTeams,
 
         recordedZerodose,
-
         visitedZerodose,
-
         coveredZerodose,
 
         currentCampaign: currentCampaign
           ? {
               _id: currentCampaign._id,
-
               name: currentCampaign.name,
-
               startDate: currentCampaign.startDate,
-
               endDate: currentCampaign.endDate,
             }
           : null,
@@ -514,17 +448,14 @@ export async function GET(request) {
       },
     });
   } catch (error) {
-    console.error("UCMO/Vaccinator supervisor summary error:", error);
+    console.error("UCMO supervisor summary error:", error);
 
     return NextResponse.json(
       {
         success: false,
-
-        message: error?.message || "Failed to fetch supervisor summary.",
+        message: error?.message || "Failed to fetch UCMO summary.",
       },
-      {
-        status: 500,
-      },
+      { status: 500 },
     );
   }
 }

@@ -1,3 +1,5 @@
+
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -157,16 +159,20 @@ export default function ZerodoseDetailPage() {
                 <Syringe className="h-7 w-7" />
               </div>
 
-              <div className="flex flex-col flex-wrap items-center gap-2">
-                <h2 className="text-text text-xl font-semibold break-words capitalize">
-                  {zerodose.childName || "-"}
-                </h2>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-text text-xl font-semibold break-words capitalize">
+                    {zerodose.childName || "-"}
+                  </h2>
 
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${status.className}`}
-                >
-                  {status.label}
-                </span>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${status.className}`}
+                  >
+                    {status.label}
+                  </span>
+                </div>
+
+                
               </div>
             </div>
 
@@ -292,6 +298,11 @@ export default function ZerodoseDetailPage() {
             value={formatDate(zerodose.visitDate)}
           />
 
+          <DetailItem
+            icon={CheckCircle2}
+            label="Covered Date"
+            value={formatDate(zerodose.coveredDate)}
+          />
 
           <DetailItem
             icon={Syringe}
@@ -305,12 +316,6 @@ export default function ZerodoseDetailPage() {
             value={formatClientStatus(zerodose.clientStatus)}
           />
 
-          <DetailItem
-            icon={CheckCircle2}
-            label="Covered Date"
-            value={formatDate(zerodose.coveredDate)}
-          />
-          
           <DetailItem
             icon={QrCode}
             label="QR Code"

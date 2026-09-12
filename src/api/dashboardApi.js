@@ -313,8 +313,20 @@ export const getDistrictSummary = async (districtId) => {
   return response.data;
 };
 
+// export const getSupervisorTeamSummary = async () => {
+//   const response = await api.get("/zerodose");
+
+//   return response.data;
+// };
+
 export const getSupervisorTeamSummary = async () => {
-  const response = await api.get("/zerodose");
+  const response = await api.get("/dashboard/supervisor-summary");
+
+  return response.data;
+};
+
+export const getVaccinatorSummary = async () => {
+  const response = await api.get("/dashboard/vaccinator-summary");
 
   return response.data;
 };

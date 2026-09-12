@@ -12,9 +12,23 @@
 //   activeTeams = [],
 //   authUser,
 //   totalSupervisors,
+//   currentSupervisors = [],
 // }) {
 //   // ============================================================
 //   // TEAM DATA
+//   // ============================================================
+//   //
+//   // This data is used ONLY when logged-in user is a supervisor.
+//   //
+//   // Supervisor:
+//   // Current campaign
+//   //      ↓
+//   // Own Zerodose records
+//   //      ↓
+//   // Team-wise aggregation
+//   //      ↓
+//   // ZerodoseTable
+//   //
 //   // ============================================================
 
 //   const teamData = useMemo(() => {
@@ -25,7 +39,7 @@
 //     // ----------------------------------------------------------
 
 //     activeTeams.forEach((activeTeam) => {
-//       const teamNumber = Number(activeTeam.teamNumber);
+//       const teamNumber = Number(activeTeam?.teamNumber);
 
 //       if (!Number.isInteger(teamNumber)) {
 //         return;
@@ -33,9 +47,9 @@
 
 //       teamsMap.set(teamNumber, {
 //         teamNumber,
-//         teamLeader: activeTeam.teamLeader || null,
-//         teamMember: activeTeam.teamMember || null,
-//         unionCouncil: activeTeam.unionCouncil || null,
+//         teamLeader: activeTeam?.teamLeader || null,
+//         teamMember: activeTeam?.teamMember || null,
+//         unionCouncil: activeTeam?.unionCouncil || null,
 //         recorded: 0,
 //         visited: 0,
 //         covered: 0,
@@ -47,7 +61,7 @@
 //     // ----------------------------------------------------------
 
 //     data.forEach((item) => {
-//       const teamNumber = Number(item.teamNumber);
+//       const teamNumber = Number(item?.teamNumber);
 
 //       if (!Number.isInteger(teamNumber)) {
 //         return;
@@ -56,9 +70,9 @@
 //       if (!teamsMap.has(teamNumber)) {
 //         teamsMap.set(teamNumber, {
 //           teamNumber,
-//           teamLeader: item.teamLeader || null,
-//           teamMember: item.teamMember || null,
-//           unionCouncil: item.unionCouncil || null,
+//           teamLeader: item?.teamLeader || null,
+//           teamMember: item?.teamMember || null,
+//           unionCouncil: item?.unionCouncil || null,
 //           recorded: 0,
 //           visited: 0,
 //           covered: 0,
@@ -67,41 +81,133 @@
 
 //       const team = teamsMap.get(teamNumber);
 
-//       team.recorded = Number(item.recorded || 0);
-//       team.visited = Number(item.visited || 0);
-//       team.covered = Number(item.covered || 0);
+//       // --------------------------------------------------------
+//       // IMPORTANT
+//       //
+//       // If data is already aggregated, use its values.
+//       // Otherwise count individual Zerodose records.
+//       // --------------------------------------------------------
 
-//       if (item.teamLeader) {
+//       if (
+//         item?.recorded !== undefined ||
+//         item?.visited !== undefined ||
+//         item?.covered !== undefined
+//       ) {
+//         team.recorded += Number(item?.recorded || 0);
+//         team.visited += Number(item?.visited || 0);
+//         team.covered += Number(item?.covered || 0);
+//       } else {
+//         const status = String(item?.vaccinationStatus || "").toLowerCase();
+
+//         if (status === "recorded") {
+//           team.recorded += 1;
+//         }
+
+//         if (status === "visited") {
+//           team.visited += 1;
+//         }
+
+//         if (status === "covered") {
+//           team.covered += 1;
+//         }
+//       }
+
+//       if (item?.teamLeader) {
 //         team.teamLeader = item.teamLeader;
 //       }
 
-//       if (item.teamMember) {
+//       if (item?.teamMember) {
 //         team.teamMember = item.teamMember;
 //       }
 
-//       if (item.unionCouncil) {
+//       if (item?.unionCouncil) {
 //         team.unionCouncil = item.unionCouncil;
 //       }
 //     });
 
 //     return Array.from(teamsMap.values()).sort(
-//       (a, b) => a.teamNumber - b.teamNumber,
+//       (a, b) => Number(a.teamNumber) - Number(b.teamNumber),
 //     );
 //   }, [activeTeams, data]);
 
 //   // ============================================================
-//   // SUMMARY
+//   // SUPERVISOR SUMMARY
+//   // ============================================================
+//   //
+//   // This is used ONLY for UCMO.
+//   //
+//   // UCMO:
+//   // Current campaign
+//   //      ↓
+//   // Supervisors
+//   //      ↓
+//   // Each supervisor's own Zerodose records
+//   //      ↓
+//   // Supervisor-wise totals
+//   //      ↓
+//   // SupervisorsTable
+//   //
+//   // ============================================================
+
+//   const supervisorSummary = useMemo(() => {
+//     if (!Array.isArray(currentSupervisors)) {
+//       return [];
+//     }
+
+//     return currentSupervisors
+//       .filter((supervisor) => Number(supervisor?.recorded || 0) > 0)
+//       .sort((a, b) => {
+//         const codeA = String(a?.supervisorCode || a?.code || "");
+
+//         const codeB = String(b?.supervisorCode || b?.code || "");
+
+//         // Extract numeric part from supervisor code
+//         const numberA = Number(codeA.match(/\d+/)?.[0] || 0);
+
+//         const numberB = Number(codeB.match(/\d+/)?.[0] || 0);
+
+//         return numberA - numberB;
+//       });
+//   }, [currentSupervisors]);
+
+//   // ============================================================
+//   // SUPERVISOR TOTALS
+//   // ============================================================
+
+//   const supervisorRecorded = useMemo(() => {
+//     return supervisorSummary.reduce(
+//       (total, supervisor) => total + Number(supervisor?.recorded || 0),
+//       0,
+//     );
+//   }, [supervisorSummary]);
+
+//   const supervisorCovered = useMemo(() => {
+//     return supervisorSummary.reduce(
+//       (total, supervisor) => total + Number(supervisor?.covered || 0),
+//       0,
+//     );
+//   }, [supervisorSummary]);
+
+//   const supervisorVisited = useMemo(() => {
+//     return supervisorSummary.reduce(
+//       (total, supervisor) => total + Number(supervisor?.visited || 0),
+//       0,
+//     );
+//   }, [supervisorSummary]);
+
+//   // ============================================================
+//   // TEAM TOTALS
 //   // ============================================================
 
 //   const totalTeams = activeTeams.length || teamData.length;
 
 //   const totalRecorded = teamData.reduce(
-//     (total, team) => total + Number(team.recorded || 0),
+//     (total, team) => total + Number(team?.recorded || 0),
 //     0,
 //   );
 
 //   const totalCovered = teamData.reduce(
-//     (total, team) => total + Number(team.covered || 0),
+//     (total, team) => total + Number(team?.covered || 0),
 //     0,
 //   );
 
@@ -124,6 +230,12 @@
 //   }
 
 //   // ============================================================
+//   // IS SUPERVISOR?
+//   // ============================================================
+
+//   const isSupervisor = authUser?.designation === "supervisor";
+
+//   // ============================================================
 //   // RENDER
 //   // ============================================================
 
@@ -136,9 +248,9 @@
 //       <CampaignHeader
 //         campaign={campaign}
 //         label="CURRENT CAMPAIGN"
-//         teams={totalTeams}
-//         recorded={totalRecorded}
-//         covered={totalCovered}
+//         teams={isSupervisor ? totalTeams : supervisorSummary.length}
+//         recorded={isSupervisor ? totalRecorded : supervisorRecorded}
+//         covered={isSupervisor ? totalCovered : supervisorCovered}
 //       />
 
 //       {/* ========================================================
@@ -152,29 +264,31 @@
 //           </h3>
 
 //           <p className="text-text-secondary mt-1 text-xs">
-//             Team-wise Zerodose record for current campaign
+//             {isSupervisor
+//               ? "Team-wise Zerodose record for current campaign"
+//               : "Supervisor-wise Zerodose record for current campaign"}
 //           </p>
 //         </div>
 
-//         {authUser?.designation === "supervisor" ? (
+//         {isSupervisor ? (
 //           <span className="text-text-secondary text-xs">
 //             {totalTeams} Teams
 //           </span>
 //         ) : (
 //           <span className="text-text-secondary text-xs">
-//             {totalSupervisors || 0} Supervisors
+//             {totalSupervisors || supervisorSummary.length || 0} Supervisors
 //           </span>
 //         )}
 //       </div>
 
 //       {/* ========================================================
-//           Table
+//           TABLE
 //       ======================================================== */}
 
-//       {authUser?.designation === "supervisor" ? (
+//       {isSupervisor ? (
 //         <ZerodoseTable data={teamData} />
 //       ) : (
-//         <SupervisorsTable data={teamData} />
+//         <SupervisorsTable data={supervisorSummary} />
 //       )}
 //     </section>
 //   );
@@ -195,29 +309,24 @@ export default function CurrentCampaignSummery({
   authUser,
   totalSupervisors,
   currentSupervisors = [],
+  mode = null,
 }) {
   // ============================================================
-  // TEAM DATA
+  // DETERMINE VIEW
   // ============================================================
-  //
-  // This data is used ONLY when logged-in user is a supervisor.
-  //
-  // Supervisor:
-  // Current campaign
-  //      ↓
-  // Own Zerodose records
-  //      ↓
-  // Team-wise aggregation
-  //      ↓
-  // ZerodoseTable
-  //
+
+  const isSupervisor =
+    mode === "supervisor" || authUser?.designation === "supervisor";
+
+  // ============================================================
+  // TEAM DATA
   // ============================================================
 
   const teamData = useMemo(() => {
     const teamsMap = new Map();
 
     // ----------------------------------------------------------
-    // Add all active teams first
+    // Add active teams
     // ----------------------------------------------------------
 
     activeTeams.forEach((activeTeam) => {
@@ -229,17 +338,23 @@ export default function CurrentCampaignSummery({
 
       teamsMap.set(teamNumber, {
         teamNumber,
+
         teamLeader: activeTeam?.teamLeader || null,
+
         teamMember: activeTeam?.teamMember || null,
+
         unionCouncil: activeTeam?.unionCouncil || null,
+
         recorded: 0,
+
         visited: 0,
+
         covered: 0,
       });
     });
 
     // ----------------------------------------------------------
-    // Merge campaign data
+    // Merge current campaign team data
     // ----------------------------------------------------------
 
     data.forEach((item) => {
@@ -252,11 +367,17 @@ export default function CurrentCampaignSummery({
       if (!teamsMap.has(teamNumber)) {
         teamsMap.set(teamNumber, {
           teamNumber,
+
           teamLeader: item?.teamLeader || null,
+
           teamMember: item?.teamMember || null,
+
           unionCouncil: item?.unionCouncil || null,
+
           recorded: 0,
+
           visited: 0,
+
           covered: 0,
         });
       }
@@ -264,43 +385,34 @@ export default function CurrentCampaignSummery({
       const team = teamsMap.get(teamNumber);
 
       // --------------------------------------------------------
-      // IMPORTANT
-      //
-      // If data is already aggregated, use its values.
-      // Otherwise count individual Zerodose records.
+      // Backend already sends aggregated values
       // --------------------------------------------------------
 
-      if (
-        item?.recorded !== undefined ||
-        item?.visited !== undefined ||
-        item?.covered !== undefined
-      ) {
-        team.recorded += Number(item?.recorded || 0);
-        team.visited += Number(item?.visited || 0);
-        team.covered += Number(item?.covered || 0);
-      } else {
-        const status = String(item?.vaccinationStatus || "").toLowerCase();
+      team.recorded = Number(item?.recorded || 0);
 
-        if (status === "recorded") {
-          team.recorded += 1;
-        }
+      team.visited = Number(item?.visited || 0);
 
-        if (status === "visited") {
-          team.visited += 1;
-        }
+      team.covered = Number(item?.covered || 0);
 
-        if (status === "covered") {
-          team.covered += 1;
-        }
-      }
+      // --------------------------------------------------------
+      // Team leader
+      // --------------------------------------------------------
 
       if (item?.teamLeader) {
         team.teamLeader = item.teamLeader;
       }
 
+      // --------------------------------------------------------
+      // Team member
+      // --------------------------------------------------------
+
       if (item?.teamMember) {
         team.teamMember = item.teamMember;
       }
+
+      // --------------------------------------------------------
+      // Union Council
+      // --------------------------------------------------------
 
       if (item?.unionCouncil) {
         team.unionCouncil = item.unionCouncil;
@@ -315,21 +427,6 @@ export default function CurrentCampaignSummery({
   // ============================================================
   // SUPERVISOR SUMMARY
   // ============================================================
-  //
-  // This is used ONLY for UCMO.
-  //
-  // UCMO:
-  // Current campaign
-  //      ↓
-  // Supervisors
-  //      ↓
-  // Each supervisor's own Zerodose records
-  //      ↓
-  // Supervisor-wise totals
-  //      ↓
-  // SupervisorsTable
-  //
-  // ============================================================
 
   const supervisorSummary = useMemo(() => {
     if (!Array.isArray(currentSupervisors)) {
@@ -343,7 +440,6 @@ export default function CurrentCampaignSummery({
 
         const codeB = String(b?.supervisorCode || b?.code || "");
 
-        // Extract numeric part from supervisor code
         const numberA = Number(codeA.match(/\d+/)?.[0] || 0);
 
         const numberB = Number(codeB.match(/\d+/)?.[0] || 0);
@@ -387,6 +483,10 @@ export default function CurrentCampaignSummery({
     (total, team) => total + Number(team?.recorded || 0),
     0,
   );
+  const totalVisited = teamData.reduce(
+    (total, team) => total + Number(team?.visited || 0),
+    0,
+  );
 
   const totalCovered = teamData.reduce(
     (total, team) => total + Number(team?.covered || 0),
@@ -412,12 +512,6 @@ export default function CurrentCampaignSummery({
   }
 
   // ============================================================
-  // IS SUPERVISOR?
-  // ============================================================
-
-  const isSupervisor = authUser?.designation === "supervisor";
-
-  // ============================================================
   // RENDER
   // ============================================================
 
@@ -432,6 +526,7 @@ export default function CurrentCampaignSummery({
         label="CURRENT CAMPAIGN"
         teams={isSupervisor ? totalTeams : supervisorSummary.length}
         recorded={isSupervisor ? totalRecorded : supervisorRecorded}
+        visited={isSupervisor ? totalVisited : supervisorVisited}
         covered={isSupervisor ? totalCovered : supervisorCovered}
       />
 

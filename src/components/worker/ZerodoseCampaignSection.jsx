@@ -475,7 +475,7 @@ export default function ZerodoseCampaignSection({
                         </span>
                       </div>
 
-                      <p className="text-text-secondary mt-1 text-xs">
+                      <p className="text-text-secondary text-xs">
                         Record-{index + 1}
                       </p>
                     </div>

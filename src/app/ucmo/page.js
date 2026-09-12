@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { getCampaigns } from "@/api/campaignApi";
-import { getZerodoses } from "@/api/zerodoseApi";
-import { getUsers } from "@/api/userApi";
 
 import UCMOSummaryCards from "@/components/ucmo/UCMOSummaryCards";
 import PendingApprovalButton from "@/components/ucmo/PendingApprovalButton";
@@ -21,15 +19,10 @@ export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
 
   const [campaigns, setCampaigns] = useState([]);
-  const [zerodoses, setZerodoses] = useState([]);
-  const [supervisors, setSupervisors] = useState([]);
-  const [activeUsers, setActiveUsers] = useState([]);
 
   const [authUser, setAuthUser] = useState(null);
 
   const [pendingApprovals, setPendingApprovals] = useState(0);
-
-  const [authUnionCouncilId, setAuthUnionCouncilId] = useState(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -44,7 +37,10 @@ export default function Page() {
     totalSupervisors: 0,
     activeTeams: 0,
     recordedZerodose: 0,
+    visitedZerodose: 0,
     coveredZerodose: 0,
+    currentCampaign: null,
+    supervisors: [],
   });
 
   // ============================================================
@@ -119,7 +115,10 @@ export default function Page() {
         setError("");
 
         // --------------------------------------------------------
-        // AUTH
+        // AUTH USER
+        //
+        // Only used for UI/display.
+        // Backend authorization is handled through auth_token.
         // --------------------------------------------------------
 
         const storedAuthUser = JSON.parse(
@@ -132,13 +131,17 @@ export default function Page() {
 
         setAuthUser(storedAuthUser);
 
-        const ucmoId = String(storedAuthUser.id);
-
         // --------------------------------------------------------
         // UCMO SUMMARY
+        //
+        // IMPORTANT:
+        // No UCMO ID is sent.
+        //
+        // Backend identifies authenticated UCMO from JWT and
+        // automatically applies the correct Union Council scope.
         // --------------------------------------------------------
 
-        const summaryResponse = await getUCMOSummary(ucmoId);
+        const summaryResponse = await getUCMOSummary();
 
         if (!summaryResponse?.success) {
           throw new Error(
@@ -146,24 +149,23 @@ export default function Page() {
           );
         }
 
-        setSummary(
-          summaryResponse.data || {
-            totalSupervisors: 0,
-            activeTeams: 0,
-            recordedZerodose: 0,
-            coveredZerodose: 0,
-          },
-        );
+        setSummary({
+          totalSupervisors: summaryResponse.data?.totalSupervisors ?? 0,
 
-        // --------------------------------------------------------
-        // AUTH UNION COUNCIL
-        // --------------------------------------------------------
+          activeTeams: summaryResponse.data?.activeTeams ?? 0,
 
-        const unionCouncilId =
-          getId(storedAuthUser.unionCouncil) ||
-          getId(storedAuthUser.unionCouncilId);
+          recordedZerodose: summaryResponse.data?.recordedZerodose ?? 0,
 
-        setAuthUnionCouncilId(unionCouncilId);
+          visitedZerodose: summaryResponse.data?.visitedZerodose ?? 0,
+
+          coveredZerodose: summaryResponse.data?.coveredZerodose ?? 0,
+
+          currentCampaign: summaryResponse.data?.currentCampaign || null,
+
+          supervisors: Array.isArray(summaryResponse.data?.supervisors)
+            ? summaryResponse.data.supervisors
+            : [],
+        });
 
         // --------------------------------------------------------
         // CAMPAIGNS
@@ -177,63 +179,19 @@ export default function Page() {
           );
         }
 
-        setCampaigns(campaignsResponse.data || []);
-
-        // --------------------------------------------------------
-        // ACTIVE SUPERVISORS OF THIS UCMO
-        // --------------------------------------------------------
-
-        const supervisorsResponse = await getUsers({
-          page: 1,
-          limit: 50,
-          designation: "supervisor",
-          status: "active",
-          isActive: true,
-          ucmo: ucmoId,
-        });
-
-        if (!supervisorsResponse?.success) {
-          throw new Error(
-            supervisorsResponse?.message || "Failed to fetch UCMO supervisors.",
-          );
-        }
-
-        setSupervisors(supervisorsResponse.data || []);
-
-        // --------------------------------------------------------
-        // ACTIVE WORKERS / TEAM MEMBERS
-        //
-        // These are kept because active team information is needed
-        // for UCMO team counts.
-        // --------------------------------------------------------
-
-        if (unionCouncilId) {
-          const activeUsersResponse = await getUsers({
-            page: 1,
-            limit: 100,
-            designation: "worker",
-            status: "active",
-            isActive: true,
-            unionCouncil: unionCouncilId,
-          });
-
-          if (!activeUsersResponse?.success) {
-            throw new Error(
-              activeUsersResponse?.message || "Failed to fetch active workers.",
-            );
-          }
-
-          setActiveUsers(activeUsersResponse.data || []);
-        } else {
-          setActiveUsers([]);
-        }
+        setCampaigns(
+          Array.isArray(campaignsResponse.data) ? campaignsResponse.data : [],
+        );
 
         // --------------------------------------------------------
         // PENDING APPROVALS
+        //
+        // Keep current approval API because this is a separate
+        // requirement from Zerodose summary.
         // --------------------------------------------------------
 
         const approvalCountResponse = await getPendingApprovalCount({
-          userId: ucmoId,
+          userId: String(storedAuthUser.id),
           designation: "ucmo",
         });
 
@@ -249,40 +207,6 @@ export default function Page() {
             approvalCountResponse?.data?.count ??
             0,
         );
-
-        // --------------------------------------------------------
-        // ALL ZERODOSE
-        // --------------------------------------------------------
-
-        let allZerodoses = [];
-
-        let page = 1;
-        let totalPages = 1;
-
-        do {
-          const zerodoseResponse = await getZerodoses({
-            page,
-            limit: 50,
-            sortBy: "recordDate",
-            sortOrder: "desc",
-          });
-
-          if (!zerodoseResponse?.success) {
-            throw new Error(
-              zerodoseResponse?.message || "Failed to fetch Zerodose records.",
-            );
-          }
-
-          const pageData = zerodoseResponse.data || [];
-
-          allZerodoses = [...allZerodoses, ...pageData];
-
-          totalPages = zerodoseResponse.pagination?.totalPages || 1;
-
-          page += 1;
-        } while (page <= totalPages);
-
-        setZerodoses(allZerodoses);
       } catch (error) {
         console.error("UCMO data fetch error:", error);
 
@@ -327,6 +251,7 @@ export default function Page() {
       .filter((campaign) => campaign.campaignStatus === "previous")
       .sort((a, b) => {
         const dateA = new Date(a.startDate).getTime();
+
         const dateB = new Date(b.startDate).getTime();
 
         return dateB - dateA;
@@ -342,6 +267,7 @@ export default function Page() {
       .filter((campaign) => campaign.campaignStatus === "upcoming")
       .sort((a, b) => {
         const dateA = new Date(a.startDate).getTime();
+
         const dateB = new Date(b.startDate).getTime();
 
         return dateA - dateB;
@@ -349,427 +275,48 @@ export default function Page() {
   }, [normalizedCampaigns]);
 
   // ============================================================
-  // UCMO SUPERVISOR IDS
-  // ============================================================
-
-  const supervisorIds = useMemo(() => {
-    return new Set(
-      supervisors
-        .map((supervisor) => getId(supervisor))
-        .filter(Boolean)
-        .map(String),
-    );
-  }, [supervisors]);
-
-  // ============================================================
-  // UCMO ZERODOSE DATA
-  // ============================================================
-
-  const ucmoZerodoseData = useMemo(() => {
-    if (!supervisorIds.size) {
-      return [];
-    }
-
-    return zerodoses.filter((item) => {
-      const itemSupervisorId = getId(
-        item.supervisor || item.supervisorId || item.supervisor?._id,
-      );
-
-      if (!itemSupervisorId) {
-        return false;
-      }
-
-      return supervisorIds.has(String(itemSupervisorId));
-    });
-  }, [zerodoses, supervisorIds]);
-
-  // ============================================================
-  // CURRENT DATA
-  // ============================================================
-
-  const currentData = useMemo(() => {
-    if (!currentCampaign) {
-      return [];
-    }
-
-    const currentCampaignId = getId(currentCampaign);
-
-    if (!currentCampaignId) {
-      return [];
-    }
-
-    return ucmoZerodoseData
-      .filter((item) => {
-        const itemCampaignId = getId(
-          item.campaign || item.campaignId || item.campaign?._id,
-        );
-
-        return (
-          itemCampaignId && String(itemCampaignId) === String(currentCampaignId)
-        );
-      })
-      .map((item) => ({
-        ...item,
-        campaign: item.campaign || currentCampaign,
-      }));
-  }, [ucmoZerodoseData, currentCampaign]);
-
-  // ============================================================
-  // PREVIOUS DATA
-  // ============================================================
-
-  const previousData = useMemo(() => {
-    if (!previousCampaigns.length || !ucmoZerodoseData.length) {
-      return [];
-    }
-
-    const previousCampaignIds = new Set(
-      previousCampaigns
-        .map((campaign) => getId(campaign))
-        .filter(Boolean)
-        .map(String),
-    );
-
-    return ucmoZerodoseData
-      .filter((item) => {
-        const itemCampaignId = getId(
-          item.campaign || item.campaignId || item.campaign?._id,
-        );
-
-        return (
-          itemCampaignId && previousCampaignIds.has(String(itemCampaignId))
-        );
-      })
-      .map((item) => {
-        const itemCampaignId = getId(
-          item.campaign || item.campaignId || item.campaign?._id,
-        );
-
-        const campaign =
-          previousCampaigns.find(
-            (campaign) => String(getId(campaign)) === String(itemCampaignId),
-          ) || item.campaign;
-
-        return {
-          ...item,
-          campaign,
-        };
-      });
-  }, [ucmoZerodoseData, previousCampaigns]);
-
-  // ============================================================
-  // UPCOMING DATA
-  // ============================================================
-
-  const upcomingData = useMemo(() => {
-    if (!upcomingCampaigns.length || !ucmoZerodoseData.length) {
-      return [];
-    }
-
-    const upcomingCampaignIds = new Set(
-      upcomingCampaigns
-        .map((campaign) => getId(campaign))
-        .filter(Boolean)
-        .map(String),
-    );
-
-    return ucmoZerodoseData
-      .filter((item) => {
-        const itemCampaignId = getId(
-          item.campaign || item.campaignId || item.campaign?._id,
-        );
-
-        return (
-          itemCampaignId && upcomingCampaignIds.has(String(itemCampaignId))
-        );
-      })
-      .map((item) => {
-        const itemCampaignId = getId(
-          item.campaign || item.campaignId || item.campaign?._id,
-        );
-
-        const campaign =
-          upcomingCampaigns.find(
-            (campaign) => String(getId(campaign)) === String(itemCampaignId),
-          ) || item.campaign;
-
-        return {
-          ...item,
-          campaign,
-        };
-      });
-  }, [ucmoZerodoseData, upcomingCampaigns]);
-
-  // ============================================================
-  // CURRENT SUPERVISORS
-  // ============================================================
-
-  const currentSupervisors = useMemo(() => {
-    if (!currentCampaign) {
-      return [];
-    }
-
-    return supervisors.map((supervisor) => {
-      const supervisorId = getId(supervisor);
-
-      const supervisorZerodose = currentData.filter((item) => {
-        const itemSupervisorId = getId(
-          item.supervisor || item.supervisorId || item.supervisor?._id,
-        );
-
-        return (
-          itemSupervisorId &&
-          supervisorId &&
-          String(itemSupervisorId) === String(supervisorId)
-        );
-      });
-
-      return {
-        ...supervisor,
-        status: supervisor.status || "active",
-        zerodose: supervisorZerodose,
-      };
-    });
-  }, [supervisors, currentData, currentCampaign]);
-
-  // ============================================================
-  // PREVIOUS CAMPAIGNS WITH SUPERVISORS
-  // ============================================================
-
-  const previousCampaignsWithSupervisors = useMemo(() => {
-    return previousCampaigns.map((campaign) => {
-      const campaignId = getId(campaign);
-
-      const campaignZerodose = previousData.filter((item) => {
-        const itemCampaignId = getId(
-          item.campaign || item.campaignId || item.campaign?._id,
-        );
-
-        return (
-          itemCampaignId &&
-          campaignId &&
-          String(itemCampaignId) === String(campaignId)
-        );
-      });
-
-      const campaignSupervisors = supervisors.map((supervisor) => {
-        const supervisorId = getId(supervisor);
-
-        const supervisorZerodose = campaignZerodose.filter((item) => {
-          const itemSupervisorId = getId(
-            item.supervisor || item.supervisorId || item.supervisor?._id,
-          );
-
-          return (
-            itemSupervisorId &&
-            supervisorId &&
-            String(itemSupervisorId) === String(supervisorId)
-          );
-        });
-
-        return {
-          ...supervisor,
-          status: supervisor.status || "active",
-          zerodose: supervisorZerodose,
-        };
-      });
-
-      return {
-        ...campaign,
-        supervisors: campaignSupervisors,
-      };
-    });
-  }, [previousCampaigns, previousData, supervisors]);
-
-  // ============================================================
-  // SUMMARY
-  // ============================================================
-
-  const currentZerodoseCount = currentData.length;
-
-  // ============================================================
-  // CURRENT RECORDED ZERODOSE
-  // ============================================================
-
-  const currentRecordedZerodoseCount = useMemo(() => {
-    return currentData.filter((item) => item.vaccinationStatus === "recorded")
-      .length;
-  }, [currentData]);
-
-  // ============================================================
-  // CURRENT COVERED ZERODOSE
-  // ============================================================
-
-  const currentCoveredZerodoseCount = useMemo(() => {
-    return currentData.filter((item) => item.vaccinationStatus === "covered")
-      .length;
-  }, [currentData]);
-
-  // ============================================================
-  // ACTIVE TEAMS
-  // ============================================================
-
-  const activeTeamsCount = useMemo(() => {
-    const teamNumbers = new Set();
-
-    if (!authUnionCouncilId) {
-      return 0;
-    }
-
-    activeUsers.forEach((user) => {
-      const userUnionCouncilId =
-        getId(user.unionCouncil) || getId(user.unionCouncilId);
-
-      if (
-        user.isActive === true &&
-        userUnionCouncilId &&
-        String(userUnionCouncilId) === String(authUnionCouncilId) &&
-        user.teamNumber !== null &&
-        user.teamNumber !== undefined &&
-        String(user.teamNumber).trim() !== ""
-      ) {
-        teamNumbers.add(String(user.teamNumber));
-      }
-    });
-
-    return teamNumbers.size;
-  }, [activeUsers, authUnionCouncilId]);
-
-  // ============================================================
-  // UCMO CURRENT SUPERVISOR TABLE DATA
-  // ============================================================
+  // CURRENT SUPERVISOR DATA
   //
-  // SupervisorsTable expects:
+  // Backend already returns:
   //
   // {
-  //   supervisorCode,
+  //   supervisorId,
   //   supervisorName,
+  //   supervisorCode,
   //   totalTeams,
   //   recorded,
   //   visited,
   //   covered
   // }
   //
-  // IMPORTANT:
-  // This is separate from teamData used by Supervisor's
-  // ZerodoseTable.
+  // Therefore NO Zerodose records are processed here.
   // ============================================================
 
   const ucmoCurrentSupervisorData = useMemo(() => {
-    if (!currentCampaign || !currentSupervisors.length) {
+    if (!currentCampaign) {
       return [];
     }
 
-    return currentSupervisors.map((supervisor) => {
-      const supervisorId = getId(supervisor);
+    if (!Array.isArray(summary.supervisors)) {
+      return [];
+    }
 
-      // --------------------------------------------------------
-      // Zerodose records belonging to this supervisor
-      // --------------------------------------------------------
+    return summary.supervisors.map((supervisor) => ({
+      ...supervisor,
 
-      const supervisorZerodose = currentData.filter((item) => {
-        const itemSupervisorId = getId(
-          item.supervisor || item.supervisorId || item.supervisor?._id,
-        );
+      supervisorCode: supervisor.supervisorCode || supervisor.code || "-",
 
-        return (
-          supervisorId &&
-          itemSupervisorId &&
-          String(supervisorId) === String(itemSupervisorId)
-        );
-      });
+      supervisorName: supervisor.supervisorName || supervisor.name || "-",
 
-      // --------------------------------------------------------
-      // Team numbers belonging to this supervisor
-      //
-      // First use active workers.
-      // Then also use Zerodose records as fallback.
-      // --------------------------------------------------------
+      totalTeams: Number(supervisor.totalTeams) || 0,
 
-      const teamNumbers = new Set();
+      recorded: Number(supervisor.recorded) || 0,
 
-      activeUsers.forEach((user) => {
-        const userSupervisorId = getId(user.supervisor || user.supervisorId);
+      visited: Number(supervisor.visited) || 0,
 
-        const userTeamNumber = user.teamNumber;
-
-        if (
-          userSupervisorId &&
-          supervisorId &&
-          String(userSupervisorId) === String(supervisorId) &&
-          user.isActive === true &&
-          userTeamNumber !== null &&
-          userTeamNumber !== undefined &&
-          String(userTeamNumber).trim() !== ""
-        ) {
-          teamNumbers.add(String(userTeamNumber));
-        }
-      });
-
-      supervisorZerodose.forEach((item) => {
-        if (
-          item.teamNumber !== null &&
-          item.teamNumber !== undefined &&
-          String(item.teamNumber).trim() !== ""
-        ) {
-          teamNumbers.add(String(item.teamNumber));
-        }
-      });
-
-      // --------------------------------------------------------
-      // Recorded
-      // --------------------------------------------------------
-
-      const recorded = supervisorZerodose.filter(
-        (item) => item.vaccinationStatus === "recorded",
-      ).length;
-
-      // --------------------------------------------------------
-      // Covered
-      // --------------------------------------------------------
-
-      const covered = supervisorZerodose.filter(
-        (item) => item.vaccinationStatus === "covered",
-      ).length;
-
-      // --------------------------------------------------------
-      // Visited
-      //
-      // Support the existing Zerodose fields without changing
-      // the backend.
-      // --------------------------------------------------------
-
-      const visited = supervisorZerodose.filter((item) => {
-        if (item.visited === true) {
-          return true;
-        }
-
-        if (item.visitStatus === "visited") {
-          return true;
-        }
-
-        if (item.clientStatus === "visited") {
-          return true;
-        }
-
-        return Boolean(item.visitDate);
-      }).length;
-
-      return {
-        ...supervisor,
-
-        supervisorCode: supervisor.supervisorCode || supervisor.code || "-",
-
-        supervisorName: supervisor.supervisorName || supervisor.name || "-",
-
-        totalTeams: teamNumbers.size,
-
-        recorded,
-        visited,
-        covered,
-      };
-    });
-  }, [currentCampaign, currentSupervisors, currentData, activeUsers]);
+      covered: Number(supervisor.covered) || 0,
+    }));
+  }, [summary.supervisors, currentCampaign]);
 
   // ============================================================
   // RENDER
@@ -787,8 +334,8 @@ export default function Page() {
             <h1 className="text-text text-2xl font-bold md:text-3xl">UCMO</h1>
 
             <PendingApprovalButton
-              link={"/ucmo/pendingapprovals"}
-              name={"Supervisor Approvals"}
+              link="/ucmo/pendingapprovals"
+              name="Supervisor Approvals"
               pendingApprovals={pendingApprovals}
               loading={loading}
             />
@@ -839,7 +386,7 @@ export default function Page() {
         {activeTab === "current" && (
           <CurrentCampaignSummery
             campaign={currentCampaign}
-            data={currentData}
+            data={[]}
             loading={loading}
             authUser={authUser}
             totalSupervisors={summary.totalSupervisors}
@@ -854,7 +401,7 @@ export default function Page() {
         {activeTab === "previous" && (
           <PreviousCampaignsSummery
             campaigns={previousCampaigns}
-            data={previousData}
+            data={[]}
             loading={loading}
           />
         )}

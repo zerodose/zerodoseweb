@@ -1,30 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import PageHeaderWithDesignation from "@/components/ui/PageHeaderWithDesignation";
 
 export default function VaccinatorLayout({ children }) {
-  const [user, setUser] = useState(null);
-
-  // ============================================================
-  // Logged-in Vaccinator
-  // ============================================================
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const [user] = useState(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
 
     try {
       const authUser = localStorage.getItem("authUser");
 
-      if (!authUser) return;
+      if (!authUser) {
+        return null;
+      }
 
-      const parsedUser = JSON.parse(authUser);
-
-      setUser(parsedUser);
+      return JSON.parse(authUser);
     } catch (error) {
       console.error("Invalid authUser:", error);
+      return null;
     }
-  }, []);
+  });
 
   // ============================================================
   // Extract Vaccinator Data

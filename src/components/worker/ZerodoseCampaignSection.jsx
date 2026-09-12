@@ -1,6 +1,7 @@
 "use client";
 
 import { formatDate } from "@/lib/formatDate";
+import { getCampaignDay } from "@/lib/getCampaignDay";
 import {
   CalendarDays,
   MapPin,
@@ -94,80 +95,6 @@ export default function ZerodoseCampaignSection({
   // ...
   // End Date = Final Campaign Day
   // =========================================================
-
-  const getCampaignDay = (item, status = statusTab) => {
-    const startDate = item?.campaign?.startDate;
-    const endDate = item?.campaign?.endDate;
-
-    if (!startDate) return "-";
-
-    const date =
-      status === "covered"
-        ? item?.coveredDate
-        : status === "visited"
-          ? item?.visitDate
-          : item?.recordDate;
-
-    if (!date) return "-";
-
-    // ---------------------------------------------------------
-    // Convert date to local calendar date without UTC shifting.
-    // This prevents dates like 17 Aug becoming 16 Aug because
-    // of timezone conversion.
-    // ---------------------------------------------------------
-
-    const getDateOnly = (value) => {
-      const parsed = new Date(value);
-
-      if (Number.isNaN(parsed.getTime())) {
-        return null;
-      }
-
-      return new Date(
-        parsed.getFullYear(),
-        parsed.getMonth(),
-        parsed.getDate(),
-      );
-    };
-
-    const start = getDateOnly(startDate);
-    const current = getDateOnly(date);
-    const end = endDate ? getDateOnly(endDate) : null;
-
-    if (!start || !current) return "-";
-
-    const difference = Math.floor(
-      (current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
-    );
-
-    const campaignDay = difference + 1;
-
-    // ---------------------------------------------------------
-    // Campaign Day can never be before Day 1.
-    // ---------------------------------------------------------
-
-    if (campaignDay < 1) {
-      return "-";
-    }
-
-    // ---------------------------------------------------------
-    // If campaign end date exists, do not allow a date after
-    // the campaign end date to produce a day beyond the
-    // campaign's final day.
-    // ---------------------------------------------------------
-
-    if (end) {
-      const totalCampaignDays =
-        Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) +
-        1;
-
-      if (totalCampaignDays > 0) {
-        return Math.min(campaignDay, totalCampaignDays);
-      }
-    }
-
-    return campaignDay;
-  };
 
   const formatClientStatus = (status) => {
     if (!status) return "-";
@@ -489,7 +416,15 @@ export default function ZerodoseCampaignSection({
                     <p className="text-text-secondary text-xs">Campaign Day</p>
 
                     <p className="text-text mt-1 text-sm font-semibold">
-                      Day {getCampaignDay(item, statusTab)}
+                      Day{" "}
+                      {getCampaignDay({
+                        campaignStartDate: item?.campaign?.startDate,
+                        campaignEndDate: item?.campaign?.endDate,
+                        recordDate: item?.recordDate,
+                        visitDate: item?.visitDate,
+                        coveredDate: item?.coveredDate,
+                        status,
+                      })}
                     </p>
                   </div>
                 </div>

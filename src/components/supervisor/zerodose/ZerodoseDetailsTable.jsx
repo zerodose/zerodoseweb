@@ -10,6 +10,7 @@ import {
   Syringe,
 } from "lucide-react";
 import { formatDate } from "@/lib/formatDate";
+import { getCampaignDay } from "@/lib/getCampaignDay";
 
 export default function ZerodoseDetailsTable({ data = [] }) {
   const [search, setSearch] = useState("");
@@ -284,7 +285,15 @@ export default function ZerodoseDetailsTable({ data = [] }) {
                   <p className="text-text-secondary text-xs">Campaign Day</p>
 
                   <p className="text-text mt-1 text-sm font-semibold">
-                    Day {getCampaignDay(item, statusTab)}
+                    Day{" "}
+                    {getCampaignDay({
+                      campaignStartDate: item?.campaign?.startDate,
+                      campaignEndDate: item?.campaign?.endDate,
+                      recordDate: item?.recordDate,
+                      visitDate: item?.visitDate,
+                      coveredDate: item?.coveredDate,
+                      status,
+                    })}
                   </p>
                 </div>
 

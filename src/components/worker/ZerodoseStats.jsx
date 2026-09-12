@@ -107,7 +107,7 @@ export default function ZerodoseStats({
   ];
 
   // ============================================================
-  // Card Animation
+  // CARD ANIMATION
   // ============================================================
 
   const [animated, setAnimated] = useState(false);
@@ -119,6 +119,10 @@ export default function ZerodoseStats({
     covered: 0,
   });
 
+  // ============================================================
+  // CARD FADE / SLIDE ANIMATION
+  // ============================================================
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setAnimated(true);
@@ -128,14 +132,10 @@ export default function ZerodoseStats({
   }, []);
 
   // ============================================================
-  // Fast Number Loading Animation
+  // NUMBER ANIMATION
   // ============================================================
 
   useEffect(() => {
-    if (loading) {
-      return;
-    }
-
     const duration = 700;
     const startTime = performance.now();
 
@@ -180,10 +180,10 @@ export default function ZerodoseStats({
     return () => {
       cancelAnimationFrame(animationFrame);
     };
-  }, [total, recorded, visited, covered, loading]);
+  }, [total, recorded, visited, covered]);
 
   // ============================================================
-  // Render
+  // RENDER
   // ============================================================
 
   return (
@@ -215,7 +215,7 @@ export default function ZerodoseStats({
 
               {/* Animated Number */}
               <p className="text-text text-right text-2xl leading-none font-bold tracking-tight tabular-nums md:text-3xl">
-                {loading ? "..." : value.toLocaleString()}
+                {value.toLocaleString()}
               </p>
             </div>
 

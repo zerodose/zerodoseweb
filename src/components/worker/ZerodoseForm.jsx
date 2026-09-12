@@ -345,20 +345,16 @@ export default function ZerodoseForm({ mode = "create", zerodoseId = null }) {
       <div className="my-6">
         <div className="bg-primary dark:bg-surface relative overflow-hidden rounded-2xl p-5 shadow-sm md:p-6">
           <div className="relative z-10">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              disabled={loading}
-              className="mb-5 flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
-              title="Go back"
-            >
-              <ArrowLeft size={18} />
-            </button>
-
             <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white">
-                <User className="h-6 w-6" />
-              </div>
+              <button
+                type="button"
+                onClick={() => router.back()}
+                disabled={loading}
+                className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+                title="Go back"
+              >
+                <ArrowLeft size={18} />
+              </button>
 
               <div className="min-w-0">
                 <h1 className="text-2xl font-bold text-white md:text-3xl">

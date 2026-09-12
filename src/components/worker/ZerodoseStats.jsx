@@ -338,7 +338,7 @@ export default function ZerodoseStats({
       ...displayValuesRef.current,
     };
 
-    const duration = 500;
+    const duration = 700;
     const startTime = performance.now();
 
     const animateToFinalValues = (currentTime) => {

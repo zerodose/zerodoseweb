@@ -32,7 +32,6 @@ export default function CurrentCampaignZerodose({
 
   return (
     <section>
-
       {/* ======================================================
           CAMPAIGN HEADER
       ====================================================== */}
@@ -46,9 +45,7 @@ export default function CurrentCampaignZerodose({
               .map((item) => item?.teamNumber)
               .filter(
                 (number) =>
-                  number !== null &&
-                  number !== undefined &&
-                  number !== "",
+                  number !== null && number !== undefined && number !== "",
               ),
           ).size
         }
@@ -56,8 +53,7 @@ export default function CurrentCampaignZerodose({
         covered={
           data.filter(
             (item) =>
-              item?.coveredDate ||
-              item?.vaccinationStatus === "covered",
+              item?.coveredDate || item?.vaccinationStatus === "covered",
           ).length
         }
       />

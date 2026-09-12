@@ -260,10 +260,10 @@ export default function ZerodoseDetailsTable({ data = [] }) {
               {/* Header */}
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="bg-primary/10 text-primary flex  shrink-0 items-center justify-center rounded-lg">
+                  <div className="bg-primary/10 text-primary flex shrink-0 items-center justify-center rounded-lg">
                     {/* <Syringe size={17} /> */}
                     {item?.houseNumber && (
-                      <span className="border-border bg-surface text-text h-9 inline-flex items-center rounded-lg border px-2.5 py-1 text-[11px] font-semibold">
+                      <span className="border-border bg-surface text-text inline-flex h-9 items-center rounded-lg border px-2.5 py-1 text-[11px] font-semibold">
                         <span className="mr-1">H -</span>
                         {item.houseNumber}
                       </span>
@@ -280,7 +280,15 @@ export default function ZerodoseDetailsTable({ data = [] }) {
                   </div>
                 </div>
 
-                <StatusBadge status={status} />
+                <div className="shrink-0 text-right">
+                  <p className="text-text-secondary text-xs">Campaign Day</p>
+
+                  <p className="text-text mt-1 text-sm font-semibold">
+                    Day {getCampaignDay(item, statusTab)}
+                  </p>
+                </div>
+
+                {/* <StatusBadge status={status} /> */}
               </div>
               {/* Details */}
               <div className="grid grid-cols-2 gap-3">

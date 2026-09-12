@@ -477,6 +477,7 @@ import { toast } from "sonner";
 import { getZerodose } from "@/api/zerodoseApi";
 import WorkerPageSkeleton from "@/components/worker/WorkerPageSkeleton";
 import { formatDate } from "@/lib/formatDate";
+import ApprovalPageHeader from "@/components/ui/ApprovalPageHeader";
 
 export default function ZerodoseDetailPage() {
   const params = useParams();
@@ -580,25 +581,48 @@ export default function ZerodoseDetailPage() {
   const status = getStatus();
 
   return (
+    // <div className="min-h-full">
+    //   {/* Header */}
+    //   <div className="mt-4 mb-6 flex items-start gap-3">
+    //     <button
+    //       type="button"
+    //       onClick={() => router.back()}
+    //       className="border-border bg-background text-text-secondary hover:bg-surface flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition"
+    //     >
+    //       <ArrowLeft size={18} />
+    //     </button>
+
+    //     <div className="min-w-0 flex-1">
+    //       <h1 className="text-text text-2xl font-semibold">Zerodose Details</h1>
+
+    //       <p className="text-text-secondary mt-1 text-sm">
+    //         View complete zerodose record information.
+    //       </p>
+    //     </div>
+    //   </div>
     <div className="min-h-full">
-      {/* Header */}
-      <div className="mt-4 mb-6 flex items-start gap-3">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="border-border bg-background text-text-secondary hover:bg-surface flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition"
-        >
-          <ArrowLeft size={18} />
-        </button>
+      <ApprovalPageHeader
+        title="Zerodose Details"
+        description="View complete zerodose record information."
+        onBack={() => window.history.back()}
+        // rightContent={
+        //   <div className="border-primary/20 bg-primary-light text-primary dark:bg-primary/10 dark:border-primary/30 flex w-fit items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-sm">
+        //     <LucideSyringe size={18} />
+        //     <span>
+        //       {currentData.length} {currentData.length === 1 ? "ZD" : "ZD"}
+        //     </span>
+        //   </div>
+        // }
+      />
+      {/* ======================================================
+              ERROR
+          ====================================================== */}
 
-        <div className="min-w-0 flex-1">
-          <h1 className="text-text text-2xl font-semibold">Zerodose Details</h1>
-
-          <p className="text-text-secondary mt-1 text-sm">
-            View complete zerodose record information.
-          </p>
+      {error && (
+        <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
         </div>
-      </div>
+      )}
 
       <div className="space-y-5">
         {/* Summary */}

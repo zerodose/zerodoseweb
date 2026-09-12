@@ -1,302 +1,6 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-
-import CurrentCampaignCard from "@/components/worker/CurrentCampaignCard";
-import ZerodoseStats from "@/components/worker/ZerodoseStats";
-import WorkerActions from "@/components/worker/WorkerActions";
-import ZerodoseCampaignSection from "@/components/worker/ZerodoseCampaignSection";
-
-import { getZerodoses } from "@/api/zerodoseApi";
-import { getCampaigns } from "@/api/campaignApi";
-
-export default function Page() {
-  const [campaign, setCampaign] = useState(null);
-  const [previousCampaigns, setPreviousCampaigns] = useState([]);
-
-  const [zerodoses, setZerodoses] = useState([]);
-  const [previousZerodoses, setPreviousZerodoses] = useState([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [loadingCampaign, setLoadingCampaign] = useState(true);
-  const [loadingZerodose, setLoadingZerodose] = useState(true);
-
-  const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState("current");
-
-  // ============================================================
-  // Current Campaign
-  // ============================================================
-
-  // ============================================================
-  // Current Campaign
-  // ============================================================
-
-  const loadCampaign = async () => {
-    try {
-      setLoadingCampaign(true);
-      setError("");
-
-      console.log("🔄 Loading current campaign...");
-
-      const response = await getCampaigns({
-        status: "current",
-        page: 1,
-        limit: 1,
-      });
-
-      console.log("📦 Current campaign response:", response);
-
-      const campaigns = Array.isArray(response?.data) ? response.data : [];
-
-      const currentCampaign = campaigns[0] || null;
-
-      console.log("🎯 Current campaign:", currentCampaign);
-
-      setCampaign(currentCampaign);
-
-      return currentCampaign;
-    } catch (error) {
-      console.error("❌ Get current campaign error:", error);
-      console.error("❌ API response:", error?.response?.data);
-
-      setCampaign(null);
-
-      setError(
-        error?.response?.data?.message ||
-          error?.response?.data?.error?.message ||
-          error?.message ||
-          "Failed to load current campaign.",
-      );
-
-      return null;
-    } finally {
-      setLoadingCampaign(false);
-    }
-  };
-
-  // ============================================================
-  // Current Zerodose
-  // ============================================================
-
-  const loadZerodose = async (campaignId = campaign?._id) => {
-    try {
-      setLoadingZerodose(true);
-      setError("");
-
-      if (!campaignId) {
-        setZerodoses([]);
-        setPage(1);
-        setHasMore(false);
-        return;
-      }
-
-      const response = await getZerodoses({
-        page: 1,
-        limit: 10,
-        sortBy: "recordDate",
-        sortOrder: "desc",
-        campaign: campaignId,
-        isActive: true,
-      });
-
-      setZerodoses(response?.data || []);
-      setPage(1);
-      setHasMore(response?.pagination?.hasNextPage ?? false);
-    } catch (error) {
-      console.error("Get worker zerodose error:", error);
-
-      setError(
-        error?.response?.data?.message ||
-          error?.response?.data?.error?.message ||
-          error?.message ||
-          "Failed to load zerodose records.",
-      );
-    } finally {
-      setLoadingZerodose(false);
-    }
-  };
-
-  // ============================================================
-  // Load More Zerodose
-  // ============================================================
-
-  const loadMoreZerodose = async () => {
-    if (loadingMore || !hasMore || !campaign?._id) return;
-
-    try {
-      setLoadingMore(true);
-
-      const nextPage = page + 1;
-
-      const response = await getZerodoses({
-        page: nextPage,
-        limit: 10,
-        campaign: campaign._id,
-        sortBy: "recordDate",
-        sortOrder: "desc",
-      });
-
-      const newRecords = response?.data || [];
-
-      setZerodoses((prev) => [...prev, ...newRecords]);
-
-      setPage(nextPage);
-
-      setHasMore(response?.pagination?.hasNextPage ?? false);
-    } catch (error) {
-      console.error("Load more zerodose error:", error);
-    } finally {
-      setLoadingMore(false);
-    }
-  };
-
-  // ============================================================
-  // Campaign milne ke baad zerodose load hoga
-  // ============================================================
-
-  useEffect(() => {
-    if (campaign?._id) {
-      loadZerodose(campaign._id);
-    } else if (!loadingCampaign) {
-      setZerodoses([]);
-      setPage(1);
-      setHasMore(false);
-      setLoadingZerodose(false);
-    }
-  }, [campaign?._id, loadingCampaign]);
-
-  
-  // ============================================================
-  // Campaign pehle load hoga
-  // ============================================================
-  
-  // ============================================================
-  // Current Zerodose
-  // ============================================================
-  useEffect(() => {
-    loadCampaign();
-  }, []);
-
-  const currentZerodoses = useMemo(() => {
-    return zerodoses;
-  }, [zerodoses]);
-
-  // ============================================================
-  // Statistics
-  // ============================================================
-
-  const totalZerodose = currentZerodoses.length;
-
-  const visitedZerodose = currentZerodoses.filter(
-    (item) => item.vaccinationStatus === "visited",
-  ).length;
-
-  const coveredZerodose = currentZerodoses.filter(
-    (item) => item.vaccinationStatus === "covered",
-  ).length;
-
-  const recordedZerodose = currentZerodoses.filter(
-    (item) => item.vaccinationStatus === "recorded",
-  ).length;
-
-  // ============================================================
-  // Helpers
-  // ============================================================
-
-  const getStatus = (item) => {
-    if (item.vaccinationStatus === "covered") {
-      return {
-        label: "Covered",
-        className:
-          "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400",
-      };
-    }
-
-    if (item.vaccinationStatus === "visited") {
-      return {
-        label: "Visited",
-        className:
-          "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400",
-      };
-    }
-
-    return {
-      label: "Recorded",
-      className:
-        "bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400",
-    };
-  };
-
-  // ============================================================
-  // Refresh
-  // ============================================================
-
-  const handleRefresh = async () => {
-    const refreshedCampaign = await loadCampaign();
-
-    // IMPORTANT:
-    // loadCampaign ke baad React state update hone ka wait nahi
-    // karna. Returned campaign directly use karenge.
-    if (refreshedCampaign?._id) {
-      await loadZerodose(refreshedCampaign._id);
-    } else {
-      setZerodoses([]);
-      setPage(1);
-      setHasMore(false);
-      setLoadingZerodose(false);
-    }
-  };
-
-  return (
-    <div className="min-h-full">
-      {error && (
-        <div className="border-border bg-surface mb-5 flex items-center justify-between gap-3 rounded-xl border p-4">
-          <p className="text-text-secondary text-sm">{error}</p>
-
-          <button
-            type="button"
-            onClick={handleRefresh}
-            className="text-primary flex shrink-0 items-center gap-2 text-sm font-medium"
-          >
-            Retry
-          </button>
-        </div>
-      )}
-
-      <CurrentCampaignCard campaign={campaign} loading={loadingCampaign} />
-
-      <ZerodoseStats
-        total={totalZerodose}
-        recorded={recordedZerodose}
-        visited={visitedZerodose}
-        covered={coveredZerodose}
-        loading={loadingZerodose}
-      />
-
-      <WorkerActions campaign={campaign} />
-
-      <ZerodoseCampaignSection
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        currentZerodoses={currentZerodoses}
-        previousZerodoses={previousZerodoses}
-        loading={loadingZerodose}
-        loadingMore={loadingMore}
-        hasMore={hasMore}
-        onLoadMore={loadMoreZerodose}
-        onRefresh={handleRefresh}
-        getStatus={getStatus}
-        previousCampaigns={previousCampaigns}
-      />
-    </div>
-  );
-}
-
 // "use client";
 
-// import { useEffect, useMemo, useState } from "react";
+// import { useCallback, useEffect, useMemo, useState } from "react";
 
 // import CurrentCampaignCard from "@/components/worker/CurrentCampaignCard";
 // import ZerodoseStats from "@/components/worker/ZerodoseStats";
@@ -325,38 +29,33 @@ export default function Page() {
 //   // Current Campaign
 //   // ============================================================
 
-//   const loadCampaign = async () => {
+//   const loadCampaign = useCallback(async () => {
 //     try {
 //       setLoadingCampaign(true);
 //       setError("");
 
-//       // Sirf CURRENT campaign
+//       console.log("🔄 Loading current campaign...");
+
 //       const response = await getCampaigns({
 //         status: "current",
 //         page: 1,
 //         limit: 1,
 //       });
 
-//       // ========================================================
-//       // Handle different possible API response structures
-//       // ========================================================
+//       console.log("📦 Current campaign response:", response);
 
-//       const campaigns =
-//         Array.isArray(response?.data)
-//           ? response.data
-//           : Array.isArray(response?.data?.data)
-//             ? response.data.data
-//             : Array.isArray(response)
-//               ? response
-//               : [];
+//       const campaigns = Array.isArray(response?.data) ? response.data : [];
 
 //       const currentCampaign = campaigns[0] || null;
+
+//       console.log("🎯 Current campaign:", currentCampaign);
 
 //       setCampaign(currentCampaign);
 
 //       return currentCampaign;
 //     } catch (error) {
-//       console.error("Get current campaign error:", error);
+//       console.error("❌ Get current campaign error:", error);
+//       console.error("❌ API response:", error?.response?.data);
 
 //       setCampaign(null);
 
@@ -371,13 +70,17 @@ export default function Page() {
 //     } finally {
 //       setLoadingCampaign(false);
 //     }
-//   };
+//   }, []);
+
+//   useEffect(() => {
+//     loadCampaign();
+//   }, [loadCampaign]);
 
 //   // ============================================================
 //   // Current Zerodose
 //   // ============================================================
 
-//   const loadZerodose = async (campaignId = campaign?._id) => {
+//   const loadZerodose = useCallback(async (campaignId) => {
 //     try {
 //       setLoadingZerodose(true);
 //       setError("");
@@ -413,7 +116,13 @@ export default function Page() {
 //     } finally {
 //       setLoadingZerodose(false);
 //     }
-//   };
+//   }, []);
+
+//   useEffect(() => {
+//     if (campaign?._id) {
+//       loadZerodose(campaign._id);
+//     }
+//   }, [campaign?._id, loadZerodose]);
 
 //   // ============================================================
 //   // Load More Zerodose
@@ -450,30 +159,17 @@ export default function Page() {
 //   };
 
 //   // ============================================================
-//   // Campaign pehle load hoga
-//   // ============================================================
-
-//   useEffect(() => {
-//     loadCampaign();
-//   }, []);
-
-//   // ============================================================
 //   // Campaign milne ke baad zerodose load hoga
 //   // ============================================================
 
 //   useEffect(() => {
 //     if (campaign?._id) {
 //       loadZerodose(campaign._id);
-//     } else if (!loadingCampaign) {
-//       setZerodoses([]);
-//       setPage(1);
-//       setHasMore(false);
-//       setLoadingZerodose(false);
 //     }
-//   }, [campaign?._id, loadingCampaign]);
+//   }, [campaign?._id, loadZerodose]);
 
 //   // ============================================================
-//   // Current Zerodose
+//   // Campaign pehle load hoga
 //   // ============================================================
 
 //   const currentZerodoses = useMemo(() => {
@@ -591,254 +287,414 @@ export default function Page() {
 //   );
 // }
 
-// // "use client";
+"use client";
 
-// // import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-// // import CurrentCampaignCard from "@/components/worker/CurrentCampaignCard";
-// // import ZerodoseStats from "@/components/worker/ZerodoseStats";
-// // import WorkerActions from "@/components/worker/WorkerActions";
-// // import ZerodoseCampaignSection from "@/components/worker/ZerodoseCampaignSection";
+import CurrentCampaignCard from "@/components/worker/CurrentCampaignCard";
+import ZerodoseStats from "@/components/worker/ZerodoseStats";
+import WorkerActions from "@/components/worker/WorkerActions";
+import ZerodoseCampaignSection from "@/components/worker/ZerodoseCampaignSection";
 
-// // import { getZerodoses } from "@/api/zerodoseApi";
-// // import { getCampaigns } from "@/api/campaignApi";
+import { getZerodoses } from "@/api/zerodoseApi";
+import { getCampaigns } from "@/api/campaignApi";
 
-// // export default function Page() {
-// //   const [campaign, setCampaign] = useState(null);
-// //   const [previousCampaigns, setPreviousCampaigns] = useState([]);
+export default function Page() {
+  // ============================================================
+  // STATE
+  // ============================================================
 
-// //   const [zerodoses, setZerodoses] = useState([]);
-// //   const [previousZerodoses, setPreviousZerodoses] = useState([]);
-// //   const [page, setPage] = useState(1);
-// //   const [hasMore, setHasMore] = useState(true);
-// //   const [loadingMore, setLoadingMore] = useState(false);
-// //   const [loadingCampaign, setLoadingCampaign] = useState(true);
-// //   const [loadingZerodose, setLoadingZerodose] = useState(true);
+  const [campaign, setCampaign] = useState(null);
+  const [previousCampaigns, setPreviousCampaigns] = useState([]);
 
-// //   const [error, setError] = useState("");
-// //   const [activeTab, setActiveTab] = useState("current");
+  const [zerodoses, setZerodoses] = useState([]);
+  const [previousZerodoses, setPreviousZerodoses] = useState([]);
 
-// //   // ============================================================
-// //   // Current Campaign
-// //   // ============================================================
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-// //   const loadCampaign = async () => {
-// //     try {
-// //       setLoadingCampaign(true);
-// //       setError("");
+  const [loadingCampaign, setLoadingCampaign] = useState(true);
+  const [loadingZerodose, setLoadingZerodose] = useState(true);
 
-// //       // Sirf CURRENT campaign
-// //       const response = await getCampaigns({
-// //         status: "current",
-// //         page: 1,
-// //         limit: 1,
-// //       });
+  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("current");
 
-// //       const campaigns = response?.data || [];
+  // ============================================================
+  // FETCH CAMPAIGN + ZERODOSE DATA
+  //
+  // IMPORTANT:
+  // This function does NOT update React state.
+  // It only fetches and returns data.
+  //
+  // This separation prevents the React 19
+  // set-state-in-effect warning.
+  // ============================================================
 
-// //       setCampaign(campaigns[0] || null);
-// //     } catch (error) {
-// //       console.error("Get current campaign error:", error);
+  const fetchWorkerData = useCallback(async () => {
+    // ----------------------------------------------------------
+    // 1. Get current campaign
+    // ----------------------------------------------------------
 
-// //       setError(
-// //         error?.response?.data?.message ||
-// //           error?.message ||
-// //           "Failed to load current campaign.",
-// //       );
-// //     } finally {
-// //       setLoadingCampaign(false);
-// //     }
-// //   };
+    const campaignResponse = await getCampaigns({
+      status: "current",
+      page: 1,
+      limit: 1,
+    });
 
-// //   // ============================================================
-// //   // Current Zerodose
-// //   // ============================================================
+    console.log("📦 Current campaign response:", campaignResponse);
 
-// //   const loadZerodose = async () => {
-// //     try {
-// //       setLoadingZerodose(true);
-// //       setError("");
+    const campaigns = Array.isArray(campaignResponse?.data)
+      ? campaignResponse.data
+      : [];
 
-// //       if (!campaign?._id) {
-// //         setZerodoses([]);
-// //         setPage(1);
-// //         setHasMore(false);
-// //         return;
-// //       }
+    const currentCampaign = campaigns[0] || null;
 
-// //       const response = await getZerodoses({
-// //         page: 1,
-// //         limit: 10,
-// //         sortBy: "recordDate",
-// //         sortOrder: "desc",
-// //         campaign: campaign._id,
-// //         isActive: true,
-// //       });
+    console.log("🎯 Current campaign:", currentCampaign);
 
-// //       setZerodoses(response?.data || []);
-// //       setPage(1);
-// //       setHasMore(response?.pagination?.hasNextPage ?? false);
-// //     } catch (error) {
-// //       console.error("Get worker zerodose error:", error);
+    // ----------------------------------------------------------
+    // 2. No current campaign
+    // ----------------------------------------------------------
 
-// //       setError(
-// //         error?.response?.data?.message ||
-// //           error?.message ||
-// //           "Failed to load zerodose records.",
-// //       );
-// //     } finally {
-// //       setLoadingZerodose(false);
-// //     }
-// //   };
+    if (!currentCampaign?._id) {
+      return {
+        campaign: null,
+        zerodoses: [],
+        hasMore: false,
+      };
+    }
 
-// //   const loadMoreZerodose = async () => {
-// //     if (loadingMore || !hasMore || !campaign?._id) return;
+    // ----------------------------------------------------------
+    // 3. Get zerodose records for current campaign
+    // ----------------------------------------------------------
 
-// //     try {
-// //       setLoadingMore(true);
+    console.log("🔄 Loading zerodose for campaign:", currentCampaign._id);
 
-// //       const nextPage = page + 1;
+    const zerodoseResponse = await getZerodoses({
+      page: 1,
+      limit: 10,
+      sortBy: "recordDate",
+      sortOrder: "desc",
+      campaign: currentCampaign._id,
+      isActive: true,
+    });
 
-// //       const response = await getZerodoses({
-// //         page: nextPage,
-// //         limit: 10,
-// //         campaign: campaign._id,
-// //         sortBy: "recordDate",
-// //         sortOrder: "desc",
-// //       });
+    console.log("📦 Zerodose response:", zerodoseResponse);
 
-// //       const newRecords = response?.data || [];
+    const records = Array.isArray(zerodoseResponse?.data)
+      ? zerodoseResponse.data
+      : [];
 
-// //       setZerodoses((prev) => [...prev, ...newRecords]);
+    return {
+      campaign: currentCampaign,
+      zerodoses: records,
+      hasMore: zerodoseResponse?.pagination?.hasNextPage ?? false,
+    };
+  }, []);
 
-// //       setPage(nextPage);
+  // ============================================================
+  // INITIAL LOAD
+  //
+  // React 19 friendly:
+  // The effect does not synchronously call a function that
+  // immediately performs setState.
+  //
+  // State updates happen only after the async request completes.
+  // ============================================================
 
-// //       setHasMore(response?.pagination?.hasNextPage ?? false);
-// //     } catch (error) {
-// //       console.error("Load more zerodose error:", error);
-// //     } finally {
-// //       setLoadingMore(false);
-// //     }
-// //   };
-// //   // Campaign pehle load hoga
-// //   useEffect(() => {
-// //     loadCampaign();
-// //   }, []);
+  useEffect(() => {
+    let cancelled = false;
 
-// //   // Campaign milne ke baad zerodose load hoga
-// //   useEffect(() => {
-// //     if (campaign?._id) {
-// //       loadZerodose();
-// //     }
-// //   }, [campaign?._id]);
+    const loadInitialData = async () => {
+      try {
+        console.log("🔄 Loading worker page data...");
 
-// //   // ============================================================
-// //   // Current Zerodose
-// //   // ============================================================
+        const result = await fetchWorkerData();
 
-// //   const currentZerodoses = useMemo(() => {
-// //     return zerodoses;
-// //   }, [zerodoses]);
+        // Component may have unmounted while request was running.
+        if (cancelled) {
+          return;
+        }
 
-// //   // ============================================================
-// //   // Statistics
-// //   // ============================================================
+        // ------------------------------------------------------
+        // Update campaign state
+        // ------------------------------------------------------
 
-// //   const totalZerodose = currentZerodoses.length;
+        setCampaign(result.campaign);
 
-// //   const visitedZerodose = currentZerodoses.filter(
-// //     (item) => item.vaccinationStatus === "visited",
-// //   ).length;
+        // ------------------------------------------------------
+        // Update zerodose state
+        // ------------------------------------------------------
 
-// //   const coveredZerodose = currentZerodoses.filter(
-// //     (item) => item.vaccinationStatus === "covered",
-// //   ).length;
+        setZerodoses(result.zerodoses);
+        setPage(1);
+        setHasMore(result.hasMore);
 
-// //   const recordedZerodose = currentZerodoses.filter(
-// //     (item) => item.vaccinationStatus === "recorded",
-// //   ).length;
+        // ------------------------------------------------------
+        // Loading complete
+        // ------------------------------------------------------
 
-// //   // ============================================================
-// //   // Helpers
-// //   // ============================================================
+        setLoadingCampaign(false);
+        setLoadingZerodose(false);
+        setError("");
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
 
-// //   const getStatus = (item) => {
-// //     if (item.vaccinationStatus === "covered") {
-// //       return {
-// //         label: "Covered",
-// //         className:
-// //           "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400",
-// //       };
-// //     }
+        console.error("❌ Get worker page data error:", error);
 
-// //     if (item.vaccinationStatus === "visited") {
-// //       return {
-// //         label: "Visited",
-// //         className:
-// //           "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400",
-// //       };
-// //     }
+        console.error("❌ API response:", error?.response?.data);
 
-// //     return {
-// //       label: "Recorded",
-// //       className:
-// //         "bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400",
-// //     };
-// //   };
+        setCampaign(null);
+        setZerodoses([]);
+        setPage(1);
+        setHasMore(false);
 
-// //   // ============================================================
-// //   // Refresh
-// //   // ============================================================
+        setError(
+          error?.response?.data?.message ||
+            error?.response?.data?.error?.message ||
+            error?.message ||
+            "Failed to load worker data.",
+        );
 
-// //   const handleRefresh = async () => {
-// //     await loadCampaign();
+        setLoadingCampaign(false);
+        setLoadingZerodose(false);
+      }
+    };
 
-// //     if (campaign?._id) {
-// //       await loadZerodose();
-// //     }
-// //   };
+    loadInitialData();
 
-// //   return (
-// //     <div className="min-h-full">
-// //       {error && (
-// //         <div className="border-border bg-surface mb-5 flex items-center justify-between gap-3 rounded-xl border p-4">
-// //           <p className="text-text-secondary text-sm">{error}</p>
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchWorkerData]);
 
-// //           <button
-// //             type="button"
-// //             onClick={handleRefresh}
-// //             className="text-primary flex shrink-0 items-center gap-2 text-sm font-medium"
-// //           >
-// //             Retry
-// //           </button>
-// //         </div>
-// //       )}
+  // ============================================================
+  // LOAD MORE ZERODOSE
+  // ============================================================
 
-// //       <CurrentCampaignCard campaign={campaign} loading={loadingCampaign} />
+  const loadMoreZerodose = async () => {
+    if (loadingMore || !hasMore || !campaign?._id) {
+      return;
+    }
 
-// //       <ZerodoseStats
-// //         total={totalZerodose}
-// //         recorded={recordedZerodose}
-// //         visited={visitedZerodose}
-// //         covered={coveredZerodose}
-// //         loading={loadingZerodose}
-// //       />
+    try {
+      setLoadingMore(true);
 
-// //       <WorkerActions campaign={campaign} />
+      const nextPage = page + 1;
 
-// //       <ZerodoseCampaignSection
-// //         activeTab={activeTab}
-// //         onTabChange={setActiveTab}
-// //         currentZerodoses={currentZerodoses}
-// //         previousZerodoses={previousZerodoses}
-// //         loading={loadingZerodose}
-// //         loadingMore={loadingMore}
-// //         hasMore={hasMore}
-// //         onLoadMore={loadMoreZerodose}
-// //         onRefresh={handleRefresh}
-// //         getStatus={getStatus}
-// //         previousCampaigns={previousCampaigns}
-// //       />
-// //     </div>
-// //   );
-// // }
+      console.log("🔄 Loading zerodose page:", nextPage);
+
+      const response = await getZerodoses({
+        page: nextPage,
+        limit: 10,
+        campaign: campaign._id,
+        sortBy: "recordDate",
+        sortOrder: "desc",
+        isActive: true,
+      });
+
+      console.log("📦 Load more zerodose response:", response);
+
+      const newRecords = Array.isArray(response?.data) ? response.data : [];
+
+      setZerodoses((prev) => [...prev, ...newRecords]);
+
+      setPage(nextPage);
+
+      setHasMore(response?.pagination?.hasNextPage ?? false);
+    } catch (error) {
+      console.error("❌ Load more zerodose error:", error);
+
+      setError(
+        error?.response?.data?.message ||
+          error?.response?.data?.error?.message ||
+          error?.message ||
+          "Failed to load more zerodose records.",
+      );
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // ============================================================
+  // CURRENT ZERODOSES
+  // ============================================================
+
+  const currentZerodoses = zerodoses;
+
+  // ============================================================
+  // ZERODOSE STATS
+  // ============================================================
+
+  const totalZerodose = currentZerodoses.length;
+
+  const visitedZerodose = currentZerodoses.filter(
+    (item) => item?.vaccinationStatus === "visited",
+  ).length;
+
+  const coveredZerodose = currentZerodoses.filter(
+    (item) => item?.vaccinationStatus === "covered",
+  ).length;
+
+  const recordedZerodose = currentZerodoses.filter(
+    (item) => item?.vaccinationStatus === "recorded",
+  ).length;
+
+  // ============================================================
+  // STATUS FORMATTER
+  // ============================================================
+
+  const getStatus = (item) => {
+    const status = String(item?.vaccinationStatus || "recorded").toLowerCase();
+
+    if (status === "covered") {
+      return {
+        label: "Covered",
+        className:
+          "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400",
+      };
+    }
+
+    if (status === "visited") {
+      return {
+        label: "Visited",
+        className:
+          "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400",
+      };
+    }
+
+    return {
+      label: "Recorded",
+      className:
+        "bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400",
+    };
+  };
+
+  // ============================================================
+  // REFRESH
+  //
+  // This is an event handler, NOT an effect.
+  // Therefore normal setState calls here are completely fine.
+  // ============================================================
+
+  const handleRefresh = async () => {
+    try {
+      setError("");
+
+      setLoadingCampaign(true);
+      setLoadingZerodose(true);
+
+      const result = await fetchWorkerData();
+
+      // --------------------------------------------------------
+      // Update campaign
+      // --------------------------------------------------------
+
+      setCampaign(result.campaign);
+
+      // --------------------------------------------------------
+      // Update zerodose
+      // --------------------------------------------------------
+
+      setZerodoses(result.zerodoses);
+      setPage(1);
+      setHasMore(result.hasMore);
+
+      // --------------------------------------------------------
+      // Loading complete
+      // --------------------------------------------------------
+
+      setLoadingCampaign(false);
+      setLoadingZerodose(false);
+    } catch (error) {
+      console.error("❌ Refresh error:", error);
+
+      console.error("❌ API response:", error?.response?.data);
+
+      setCampaign(null);
+      setZerodoses([]);
+      setPage(1);
+      setHasMore(false);
+
+      setError(
+        error?.response?.data?.message ||
+          error?.response?.data?.error?.message ||
+          error?.message ||
+          "Failed to refresh data.",
+      );
+
+      setLoadingCampaign(false);
+      setLoadingZerodose(false);
+    }
+  };
+
+  // ============================================================
+  // UI
+  // ============================================================
+
+  return (
+    <div className="min-h-full">
+      {/* ======================================================
+          ERROR
+      ====================================================== */}
+
+      {error && (
+        <div className="border-border bg-surface mb-5 flex items-center justify-between gap-3 rounded-xl border p-4">
+          <p className="text-text-secondary text-sm">{error}</p>
+
+          <button
+            type="button"
+            onClick={handleRefresh}
+            className="text-primary flex shrink-0 items-center gap-2 text-sm font-medium"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* ======================================================
+          CURRENT CAMPAIGN
+      ====================================================== */}
+
+      <CurrentCampaignCard campaign={campaign} loading={loadingCampaign} />
+
+      {/* ======================================================
+          STATS
+      ====================================================== */}
+
+      <ZerodoseStats
+        total={totalZerodose}
+        recorded={recordedZerodose}
+        visited={visitedZerodose}
+        covered={coveredZerodose}
+        loading={loadingZerodose}
+      />
+
+      {/* ======================================================
+          ACTIONS
+      ====================================================== */}
+
+      <WorkerActions campaign={campaign} />
+
+      {/* ======================================================
+          CAMPAIGN SECTION
+      ====================================================== */}
+
+      <ZerodoseCampaignSection
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        currentZerodoses={currentZerodoses}
+        previousZerodoses={previousZerodoses}
+        loading={loadingZerodose}
+        loadingMore={loadingMore}
+        hasMore={hasMore}
+        onLoadMore={loadMoreZerodose}
+        onRefresh={handleRefresh}
+        getStatus={getStatus}
+        previousCampaigns={previousCampaigns}
+      />
+    </div>
+  );
+}

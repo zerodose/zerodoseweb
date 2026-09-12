@@ -450,7 +450,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   Baby,
   CalendarDays,
   Clock3,
@@ -463,7 +462,6 @@ import {
   Users,
   Building2,
   Map,
-  Navigation,
   CheckCircle2,
   AlertCircle,
   Home,
@@ -491,22 +489,28 @@ export default function ZerodoseDetailPage() {
   useEffect(() => {
     if (!id) return;
 
+    let cancelled = false;
+
     const loadZerodose = async () => {
       try {
-        setLoading(true);
-
         const response = await getZerodose(id);
 
         const data = response?.data?.data || response?.data || response;
 
+        if (cancelled) return;
+
         if (!data?._id) {
           toast.error("Zerodose not found.");
           setZerodose(null);
+          setLoading(false);
           return;
         }
 
         setZerodose(data);
+        setLoading(false);
       } catch (error) {
+        if (cancelled) return;
+
         console.error("Get zerodose detail error:", error);
 
         toast.error(
@@ -516,12 +520,15 @@ export default function ZerodoseDetailPage() {
         );
 
         setZerodose(null);
-      } finally {
         setLoading(false);
       }
     };
 
     loadZerodose();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const formatGender = (gender) => {
@@ -581,48 +588,12 @@ export default function ZerodoseDetailPage() {
   const status = getStatus();
 
   return (
-    // <div className="min-h-full">
-    //   {/* Header */}
-    //   <div className="mt-4 mb-6 flex items-start gap-3">
-    //     <button
-    //       type="button"
-    //       onClick={() => router.back()}
-    //       className="border-border bg-background text-text-secondary hover:bg-surface flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition"
-    //     >
-    //       <ArrowLeft size={18} />
-    //     </button>
-
-    //     <div className="min-w-0 flex-1">
-    //       <h1 className="text-text text-2xl font-semibold">Zerodose Details</h1>
-
-    //       <p className="text-text-secondary mt-1 text-sm">
-    //         View complete zerodose record information.
-    //       </p>
-    //     </div>
-    //   </div>
     <div className="min-h-full">
       <ApprovalPageHeader
         title="Zerodose Details"
         description="View complete zerodose record information."
-        onBack={() => window.history.back()}
-        // rightContent={
-        //   <div className="border-primary/20 bg-primary-light text-primary dark:bg-primary/10 dark:border-primary/30 flex w-fit items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-sm">
-        //     <LucideSyringe size={18} />
-        //     <span>
-        //       {currentData.length} {currentData.length === 1 ? "ZD" : "ZD"}
-        //     </span>
-        //   </div>
-        // }
+        onBack={() => router.back()}
       />
-      {/* ======================================================
-              ERROR
-          ====================================================== */}
-
-      {error && (
-        <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-          {error}
-        </div>
-      )}
 
       <div className="space-y-5">
         {/* Summary */}
@@ -711,6 +682,7 @@ export default function ZerodoseDetailPage() {
           />
 
           <DetailItem icon={MapPin} label="Address" value={zerodose.address} />
+
           {zerodose.location?.latitude != null &&
             zerodose.location?.longitude != null && (
               <div className="md:col-span-2">
@@ -882,7 +854,11 @@ export default function ZerodoseDetailPage() {
           title="Record Information"
           description="Record creation and last modification information."
         >
-          <DetailItem icon={Hash} label="Zerodose ID" value={zerodose._id} />
+          <DetailItem
+            icon={Hash}
+            label="Zerodose ID"
+            value={zerodose._id}
+          />
 
           <DetailItem
             icon={Clock3}

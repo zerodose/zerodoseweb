@@ -2,7 +2,7 @@
 
 export default function WorkerPageSkeleton() {
   return (
-    <div className="w-full px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+  <div className="min-h-full w-full">
       {/* =========================================================
           Header Skeleton
       ========================================================= */}
@@ -30,7 +30,7 @@ export default function WorkerPageSkeleton() {
         ======================================================= */}
 
         <div className="border-border bg-background rounded-2xl border shadow-sm">
-          <div className="flex items-center justify-between p-5 md:p-6">
+         <div className="flex items-center justify-between gap-4 p-5 md:p-6">
             <div className="flex min-w-0 items-start gap-4">
               {/* Icon */}
               <div className="bg-surface h-14 w-14 shrink-0 animate-pulse rounded-2xl" />

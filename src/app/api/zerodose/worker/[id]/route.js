@@ -8,6 +8,11 @@ import Zerodose from "@/models/Zerodose";
 import PendingZerodose from "@/models/PendingZerodose";
 import User from "@/models/User";
 
+import Campaign from "@/models/Campaign";
+import District from "@/models/District";
+import Town from "@/models/Town";
+import UnionCouncil from "@/models/UnionCouncil";
+
 const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!JWT_SECRET) {
@@ -227,9 +232,7 @@ export async function DELETE(request, { params }) {
     }
 
     // Actual Zerodose verify karein
-    const zerodose = await Zerodose.findById(
-      pendingZerodose.zerodose,
-    ).lean();
+    const zerodose = await Zerodose.findById(pendingZerodose.zerodose).lean();
 
     if (!zerodose) {
       return NextResponse.json(
@@ -246,8 +249,7 @@ export async function DELETE(request, { params }) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "You are not authorized to delete this pending Zerodose.",
+          message: "You are not authorized to delete this pending Zerodose.",
         },
         { status: 403 },
       );
@@ -270,8 +272,7 @@ export async function DELETE(request, { params }) {
     return NextResponse.json(
       {
         success: false,
-        message:
-          error?.message || "Failed to delete pending Zerodose.",
+        message: error?.message || "Failed to delete pending Zerodose.",
       },
       { status: 500 },
     );

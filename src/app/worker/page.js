@@ -29,37 +29,37 @@ export default function Page() {
   // Current Campaign
   // ============================================================
 
+  // ============================================================
+  // Current Campaign
+  // ============================================================
+
   const loadCampaign = async () => {
     try {
       setLoadingCampaign(true);
       setError("");
 
-      // Sirf CURRENT campaign
+      console.log("🔄 Loading current campaign...");
+
       const response = await getCampaigns({
         status: "current",
         page: 1,
         limit: 1,
       });
 
-      // ========================================================
-      // Handle different possible API response structures
-      // ========================================================
+      console.log("📦 Current campaign response:", response);
 
-      const campaigns = Array.isArray(response?.data)
-        ? response.data
-        : Array.isArray(response?.data?.data)
-          ? response.data.data
-          : Array.isArray(response)
-            ? response
-            : [];
+      const campaigns = Array.isArray(response?.data) ? response.data : [];
 
       const currentCampaign = campaigns[0] || null;
+
+      console.log("🎯 Current campaign:", currentCampaign);
 
       setCampaign(currentCampaign);
 
       return currentCampaign;
     } catch (error) {
-      console.error("Get current campaign error:", error);
+      console.error("❌ Get current campaign error:", error);
+      console.error("❌ API response:", error?.response?.data);
 
       setCampaign(null);
 
@@ -153,14 +153,6 @@ export default function Page() {
   };
 
   // ============================================================
-  // Campaign pehle load hoga
-  // ============================================================
-
-  useEffect(() => {
-    loadCampaign();
-  }, []);
-
-  // ============================================================
   // Campaign milne ke baad zerodose load hoga
   // ============================================================
 
@@ -175,9 +167,17 @@ export default function Page() {
     }
   }, [campaign?._id, loadingCampaign]);
 
+  
+  // ============================================================
+  // Campaign pehle load hoga
+  // ============================================================
+  
   // ============================================================
   // Current Zerodose
   // ============================================================
+  useEffect(() => {
+    loadCampaign();
+  }, []);
 
   const currentZerodoses = useMemo(() => {
     return zerodoses;

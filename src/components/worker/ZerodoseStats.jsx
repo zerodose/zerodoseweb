@@ -1,11 +1,6 @@
 // "use client";
 
-// import {
-//   Syringe,
-//   CheckCircle2,
-//   Clock3,
-//   MapPin,
-// } from "lucide-react";
+// import { Syringe, CheckCircle2, Clock3, MapPin } from "lucide-react";
 
 // export default function ZerodoseStats({
 //   total,
@@ -19,54 +14,50 @@
 //       label: "Total Zerodose",
 //       value: total,
 //       icon: Syringe,
-//       iconClass: "bg-primary/10 text-primary",
 //     },
 //     {
 //       label: "Recorded",
 //       value: recorded,
 //       icon: Clock3,
-//       iconClass:
-//         "bg-orange-100 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400",
 //     },
 //     {
 //       label: "Visited",
 //       value: visited,
 //       icon: MapPin,
-//       iconClass:
-//         "bg-blue-100 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400",
 //     },
 //     {
 //       label: "Covered",
 //       value: covered,
 //       icon: CheckCircle2,
-//       iconClass:
-//         "bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400",
 //     },
 //   ];
 
 //   return (
-//     <section className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+//     <section className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
 //       {cards.map((card) => {
 //         const Icon = card.icon;
 
 //         return (
 //           <div
 //             key={card.label}
-//             className="bg-surface border-border rounded-2xl border p-4 shadow-sm md:p-5"
+//             className="bg-surface border-border flex items-center gap-2.5 rounded-xl border p-3 shadow-sm sm:gap-3 sm:p-4 md:rounded-2xl md:p-5"
 //           >
-//             <div className="mb-3 flex items-center justify-between">
-//               <div
-//                 className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.iconClass}`}
-//               >
-//                 <Icon className="h-5 w-5" />
-//               </div>
+//             {/* Icon */}
+//             <div
+//               className={
+//                 "bg-primary/10 text-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9 md:h-10 md:w-10"
+//               }
+//             >
+//               <Icon className="h-4 w-4 sm:h-4.5 sm:w-4.5 md:h-5 md:w-5" />
 //             </div>
 
-//             <p className="text-text-secondary text-sm">
+//             {/* Title */}
+//             <p className="text-text-secondary min-w-0 flex-1 truncate text-xs font-medium sm:text-sm">
 //               {card.label}
 //             </p>
 
-//             <p className="text-text mt-1 text-2xl font-bold">
+//             {/* Count */}
+//             <p className="text-text shrink-0 text-lg font-bold sm:text-xl md:text-2xl">
 //               {loading ? "..." : card.value}
 //             </p>
 //           </div>
@@ -79,68 +70,167 @@
 "use client";
 
 import { Syringe, CheckCircle2, Clock3, MapPin } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function ZerodoseStats({
-  total,
-  recorded,
-  visited,
-  covered,
-  loading,
+  total = 0,
+  recorded = 0,
+  visited = 0,
+  covered = 0,
+  loading = false,
 }) {
   const cards = [
     {
+      key: "total",
       label: "Total Zerodose",
       value: total,
       icon: Syringe,
     },
     {
+      key: "recorded",
       label: "Recorded",
       value: recorded,
       icon: Clock3,
     },
     {
+      key: "visited",
       label: "Visited",
       value: visited,
       icon: MapPin,
     },
     {
+      key: "covered",
       label: "Covered",
       value: covered,
       icon: CheckCircle2,
     },
   ];
 
+  // ============================================================
+  // Card Animation
+  // ============================================================
+
+  const [animated, setAnimated] = useState(false);
+
+  const [displayValues, setDisplayValues] = useState({
+    total: 0,
+    recorded: 0,
+    visited: 0,
+    covered: 0,
+  });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAnimated(true);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // ============================================================
+  // Fast Number Loading Animation
+  // ============================================================
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+    const duration = 700;
+    const startTime = performance.now();
+
+    const targets = {
+      total: Number(total ?? 0),
+      recorded: Number(recorded ?? 0),
+      visited: Number(visited ?? 0),
+      covered: Number(covered ?? 0),
+    };
+
+    let animationFrame;
+
+    const animateNumbers = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      const nextValues = {};
+
+      Object.keys(targets).forEach((key) => {
+        const target = targets[key];
+
+        if (progress < 1) {
+          const randomMax = Math.max(Math.floor(target * 1.2), 100);
+
+          nextValues[key] = Math.floor(Math.random() * randomMax);
+        } else {
+          nextValues[key] = target;
+        }
+      });
+
+      setDisplayValues(nextValues);
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animateNumbers);
+      } else {
+        setDisplayValues(targets);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animateNumbers);
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+    };
+  }, [total, recorded, visited, covered, loading]);
+
+  // ============================================================
+  // Render
+  // ============================================================
+
   return (
-    <section className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-      {cards.map((card) => {
+    <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+      {cards.map((card, index) => {
         const Icon = card.icon;
+
+        const value = Number(displayValues[card.key] ?? 0);
 
         return (
           <div
-            key={card.label}
-            className="bg-surface border-border flex items-center gap-2.5 rounded-xl border p-3 shadow-sm sm:gap-3 sm:p-4 md:rounded-2xl md:p-5"
+            key={card.key}
+            className={`group border-border bg-background relative overflow-hidden rounded-2xl border px-4 py-3.5 shadow-[0_3px_12px_rgba(0,0,0,0.06)] transition-all duration-700 ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] md:px-5 md:py-4 dark:bg-slate-900 ${
+              animated ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
+            }`}
+            style={{
+              transitionDelay: `${index * 100}ms`,
+            }}
           >
-            {/* Icon */}
-            <div
-              className={
-                "bg-primary/10 text-primary flex h-8 w-8 shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9 md:h-10 md:w-10"
-              }
-            >
-              <Icon className="h-4 w-4 sm:h-4.5 sm:w-4.5 md:h-5 md:w-5" />
+            {/* Decorative Background */}
+            <div className="bg-primary/5 dark:bg-primary/10 absolute -top-10 -right-10 h-24 w-24 rounded-full transition-transform duration-300 group-hover:scale-125" />
+
+            {/* Top Row */}
+            <div className="relative flex items-start justify-between">
+              {/* Icon */}
+              <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-[0_3px_10px_rgba(64,165,254,0.18)] transition-all duration-200 group-hover:shadow-[0_5px_14px_rgba(64,165,254,0.25)]">
+                <Icon size={20} strokeWidth={2} />
+              </div>
+
+              {/* Animated Number */}
+              <p className="text-text text-right text-2xl leading-none font-bold tracking-tight tabular-nums md:text-3xl">
+                {loading ? "..." : value.toLocaleString()}
+              </p>
             </div>
 
-            {/* Title */}
-            <p className="text-text-secondary min-w-0 flex-1 truncate text-xs font-medium sm:text-sm">
-              {card.label}
-            </p>
+            {/* Label */}
+            <div className="relative mt-3">
+              <p className="text-text-secondary text-xs font-medium md:text-sm">
+                {card.label}
+              </p>
+            </div>
 
-            {/* Count */}
-            <p className="text-text shrink-0 text-lg font-bold sm:text-xl md:text-2xl">
-              {loading ? "..." : card.value}
-            </p>
+            {/* Bottom Accent */}
+            <div className="bg-primary absolute right-0 bottom-0 left-0 h-0.5 opacity-60" />
           </div>
         );
       })}
-    </section>
+    </div>
   );
 }

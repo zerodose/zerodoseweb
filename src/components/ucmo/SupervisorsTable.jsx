@@ -62,7 +62,7 @@ export default function SupervisorsTable({ data = [], onSupervisorClick }) {
                 >
                   {/* Supervisor Code */}
 
-                  <td className="border-border text-text group-hover:bg-primary/5 border-r px-3 py-2 text-xs font-semibold whitespace-nowrap transition-colors">
+                  <td className="border-border text-text group-hover:bg-primary/5 border-r items-center justify-center px-3 py-2 text-xs font-semibold whitespace-nowrap transition-colors">
                     {supervisor.supervisorCode || "-"}
                   </td>
 

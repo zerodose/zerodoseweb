@@ -270,12 +270,20 @@ export default function ZerodoseDetailsTable({ data = [] }) {
                       </span>
                     )}
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-text truncate text-sm font-semibold">
-                      {item?.childName || "-"}
-                    </p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-text truncate text-base font-semibold capitalize">
+                        {item.childName}
+                      </h3>
 
-                    <p className="text-text-secondary text-xs">
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${status.className}`}
+                      >
+                        {status.label}
+                      </span>
+                    </div>
+
+                    <p className="text-text-secondary mt-1 text-xs">
                       Record #{index + 1}
                     </p>
                   </div>

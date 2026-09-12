@@ -1,33 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  CheckCircle2,
-  Eye,
-  FileText,
-  MapPin,
-  Search,
-} from "lucide-react";
+import { CheckCircle2, Eye, FileText, MapPin, Search } from "lucide-react";
 import { formatDate } from "@/lib/formatDate";
 
 export default function ZerodoseDetailsTable({ data = [] }) {
   const [search, setSearch] = useState("");
-
-  // ============================================================
-  // HELPERS
-  // ============================================================
-
-  const getWorkerName = (worker) => {
-    if (!worker) {
-      return "-";
-    }
-
-    if (typeof worker === "string") {
-      return worker;
-    }
-
-    return worker?.name || "-";
-  };
 
   const getStatus = (item) => {
     if (item?.vaccinationStatus) {
@@ -333,11 +311,7 @@ export default function ZerodoseDetailsTable({ data = [] }) {
                         {item.childName}
                       </h3>
 
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${status.className}`}
-                      >
-                        {status.label}
-                      </span>
+                      <StatusBadge status={status} />
                     </div>
 
                     <p className="text-text-secondary mt-1 text-xs">

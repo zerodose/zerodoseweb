@@ -9,6 +9,7 @@ import Campaign from "@/models/Campaign";
 import District from "@/models/District";
 import Town from "@/models/Town";
 import UnionCouncil from "@/models/UnionCouncil";
+import { jwtVerify } from "jose";
 
 export async function POST(request) {
   try {
@@ -444,10 +445,9 @@ export async function GET(request) {
     // --------------------------------------------------
     // 2. Verify JWT
     // --------------------------------------------------
-    const { payload } = await jwtVerify(
-      token,
-      new TextEncoder().encode(process.env.JWT_SECRET),
-    );
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+
+    const { payload } = await jwtVerify(token, secret);
 
     const userId = payload?.userId || payload?.id || payload?._id;
 

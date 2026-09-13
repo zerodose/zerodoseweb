@@ -330,3 +330,9 @@ export const getVaccinatorSummary = async () => {
 
   return response.data;
 };
+
+export const getWorkerSummary = async () => {
+  const response = await api.get("/dashboard/worker-summary");
+
+  return response.data;
+};

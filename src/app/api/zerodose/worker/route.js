@@ -421,3 +421,246 @@ export async function POST(request) {
     );
   }
 }
+
+
+
+export async function GET(request) {
+  try {
+    await connectDB();
+
+    // ─────────────────────────────────────────────
+    // AUTH
+    // ─────────────────────────────────────────────
+    const authHeader = request.headers.get("authorization");
+
+    if (!authHeader?.startsWith("Bearer ")) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Unauthorized",
+        },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const { payload } = await jwtVerify(
+      token,
+      new TextEncoder().encode(process.env.JWT_SECRET)
+    );
+
+    const userId = payload.userId || payload.id || payload._id;
+
+    if (!userId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid token",
+        },
+        { status: 401 }
+      );
+    }
+
+    // ─────────────────────────────────────────────
+    // QUERY PARAMS
+    // ─────────────────────────────────────────────
+    const { searchParams } = new URL(request.url);
+
+    const unionCouncilId = searchParams.get("unionCouncilId");
+    const teamNumber = searchParams.get("teamNumber");
+
+    // Optional
+    // If provided = selected/previous campaign
+    // If not provided = current campaign
+    const campaignId = searchParams.get("campaignId");
+
+    // ─────────────────────────────────────────────
+    // REQUIRED PARAMS
+    // ─────────────────────────────────────────────
+    if (!unionCouncilId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "unionCouncilId is required",
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!teamNumber) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "teamNumber is required",
+        },
+        { status: 400 }
+      );
+    }
+
+    // ─────────────────────────────────────────────
+    // USER
+    // ─────────────────────────────────────────────
+    const user = await User.findById(userId).lean();
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "User not found",
+        },
+        { status: 404 }
+      );
+    }
+
+    // ─────────────────────────────────────────────
+    // CAMPAIGN
+    // ─────────────────────────────────────────────
+    let selectedCampaign;
+
+    // ─────────────────────────────────────────────
+    // SELECTED / PREVIOUS CAMPAIGN
+    // ─────────────────────────────────────────────
+    if (campaignId) {
+      selectedCampaign = await Campaign.findById(campaignId).lean();
+
+      if (!selectedCampaign) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Campaign not found",
+          },
+          { status: 404 }
+        );
+      }
+    }
+
+    // ─────────────────────────────────────────────
+    // CURRENT CAMPAIGN
+    // If campaignId is NOT provided
+    // find campaign where:
+    //
+    // startDate <= current date
+    // AND
+    // endDate >= current date
+    // ─────────────────────────────────────────────
+    else {
+      const now = new Date();
+
+      selectedCampaign = await Campaign.findOne({
+        startDate: { $lte: now },
+        endDate: { $gte: now },
+      })
+        .sort({ startDate: -1 })
+        .lean();
+
+      if (!selectedCampaign) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "No current campaign found",
+          },
+          { status: 404 }
+        );
+      }
+    }
+
+    // ─────────────────────────────────────────────
+    // BASE FILTER
+    // ─────────────────────────────────────────────
+    const filter = {
+      unionCouncilId,
+      teamNumber,
+
+      // Only Zerodose records that were actually recorded
+      recordDate: { $ne: null },
+
+      // Selected/current campaign
+      campaignId: selectedCampaign._id,
+    };
+
+    // ─────────────────────────────────────────────
+    // GET ZERODOSE DATA
+    // ─────────────────────────────────────────────
+    const records = await Zerodose.find(filter)
+      .sort({ recordDate: -1 })
+      .lean();
+
+    // ─────────────────────────────────────────────
+    // RECORDED
+    //
+    // recordDate exists
+    // visitDate does not exist
+    // coverDate does not exist
+    // ─────────────────────────────────────────────
+    const recorded = records.filter(
+      (item) =>
+        item.recordDate !== null &&
+        item.visitDate === null &&
+        item.coverDate === null
+    ).length;
+
+    // ─────────────────────────────────────────────
+    // VISITED
+    //
+    // recordDate exists
+    // visitDate exists
+    // coverDate does not exist
+    // ─────────────────────────────────────────────
+    const visited = records.filter(
+      (item) =>
+        item.recordDate !== null &&
+        item.visitDate !== null &&
+        item.coverDate === null
+    ).length;
+
+    // ─────────────────────────────────────────────
+    // COVERED
+    //
+    // recordDate exists
+    // visitDate exists
+    // coverDate exists
+    // ─────────────────────────────────────────────
+    const covered = records.filter(
+      (item) =>
+        item.recordDate !== null &&
+        item.visitDate !== null &&
+        item.coverDate !== null
+    ).length;
+
+    // ─────────────────────────────────────────────
+    // RESPONSE
+    // ─────────────────────────────────────────────
+    return NextResponse.json({
+      success: true,
+
+      data: {
+        unionCouncilId,
+        teamNumber,
+
+        campaign: {
+          id: selectedCampaign._id,
+          name: selectedCampaign.name,
+          startDate: selectedCampaign.startDate,
+          endDate: selectedCampaign.endDate,
+        },
+
+        recorded,
+        visited,
+        covered,
+
+        records,
+      },
+    });
+  } catch (error) {
+    console.error("GET ZERODOSE ERROR:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to fetch Zerodose data",
+      },
+      { status: 500 }
+    );
+  }
+}

@@ -639,7 +639,7 @@ export async function GET(request) {
     return NextResponse.json({
       success: true,
       data: {
-        unionCouncilId: user.unionCouncil,
+        unionCouncil: user.unionCouncil,
         teamNumber: user.teamNumber,
 
         worker: {

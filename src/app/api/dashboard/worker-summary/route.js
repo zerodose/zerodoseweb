@@ -107,7 +107,7 @@ export async function GET(request) {
       id: String(authUser._id),
       name: authUser.name,
       designation: authUser.designation,
-      unionCouncilId: authUser.unionCouncilId,
+      unionCouncil: authUser.unionCouncil || authUser.unionCouncil._Id,
       teamNumber: authUser.teamNumber,
       workerRole: authUser.workerRole,
     });
@@ -166,14 +166,14 @@ export async function GET(request) {
     // ========================================================
 
     const baseFilter = {
-      unionCouncilId: authUser.unionCouncilId,
+      unionCouncil: authUser.unionCouncil || authUser.unionCouncil._id,
       teamNumber: authUser.teamNumber,
       isActive: true,
       recordDate: { $ne: null },
     };
 
     console.log("WORKER SUMMARY FILTER:", {
-      unionCouncilId: authUser.unionCouncilId,
+      unionCouncil: authUser.unionCouncil || authUser.unionCouncil._id,
       teamNumber: authUser.teamNumber,
       isActive: true,
     });

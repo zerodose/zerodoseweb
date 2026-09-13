@@ -422,107 +422,116 @@ export async function POST(request) {
   }
 }
 
-
-
 export async function GET(request) {
   try {
     await connectDB();
 
-    // ─────────────────────────────────────────────
-    // AUTH
-    // ─────────────────────────────────────────────
-    const authHeader = request.headers.get("authorization");
+    // --------------------------------------------------
+    // 1. Get JWT from auth cookie
+    // --------------------------------------------------
+    const token = request.cookies.get("auth_token")?.value;
 
-    if (!authHeader?.startsWith("Bearer ")) {
+    if (!token) {
       return NextResponse.json(
         {
           success: false,
           message: "Unauthorized",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
-    const token = authHeader.split(" ")[1];
-
+    // --------------------------------------------------
+    // 2. Verify JWT
+    // --------------------------------------------------
     const { payload } = await jwtVerify(
       token,
-      new TextEncoder().encode(process.env.JWT_SECRET)
+      new TextEncoder().encode(process.env.JWT_SECRET),
     );
 
-    const userId = payload.userId || payload.id || payload._id;
+    const userId = payload?.userId || payload?.id || payload?._id;
 
-    if (!userId) {
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       return NextResponse.json(
         {
           success: false,
           message: "Invalid token",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
-    // ─────────────────────────────────────────────
-    // QUERY PARAMS
-    // ─────────────────────────────────────────────
-    const { searchParams } = new URL(request.url);
-
-    const unionCouncilId = searchParams.get("unionCouncilId");
-    const teamNumber = searchParams.get("teamNumber");
-
-    // Optional
-    // If provided = selected/previous campaign
-    // If not provided = current campaign
-    const campaignId = searchParams.get("campaignId");
-
-    // ─────────────────────────────────────────────
-    // REQUIRED PARAMS
-    // ─────────────────────────────────────────────
-    if (!unionCouncilId) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "unionCouncilId is required",
-        },
-        { status: 400 }
-      );
-    }
-
-    if (!teamNumber) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "teamNumber is required",
-        },
-        { status: 400 }
-      );
-    }
-
-    // ─────────────────────────────────────────────
-    // USER
-    // ─────────────────────────────────────────────
-    const user = await User.findById(userId).lean();
+    // --------------------------------------------------
+    // 3. Get authenticated worker
+    // --------------------------------------------------
+    const user = await User.findOne({
+      _id: userId,
+      designation: "worker",
+      isActive: true,
+    })
+      .select(
+        "_id name designation unionCouncil teamNumber supervisor workerRole",
+      )
+      .lean();
 
     if (!user) {
       return NextResponse.json(
         {
           success: false,
-          message: "User not found",
+          message: "Active worker not found",
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
-    // ─────────────────────────────────────────────
-    // CAMPAIGN
-    // ─────────────────────────────────────────────
+    // --------------------------------------------------
+    // 4. Validate worker assignment
+    // --------------------------------------------------
+    if (!user.unionCouncil) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Worker is not assigned to a Union Council",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (user.teamNumber === undefined || user.teamNumber === null) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Worker is not assigned to a team",
+        },
+        { status: 400 },
+      );
+    }
+
+    // --------------------------------------------------
+    // 5. Optional campaignId
+    // --------------------------------------------------
+    const { searchParams } = new URL(request.url);
+    const campaignId = searchParams.get("campaignId");
+
     let selectedCampaign;
 
-    // ─────────────────────────────────────────────
-    // SELECTED / PREVIOUS CAMPAIGN
-    // ─────────────────────────────────────────────
+    // --------------------------------------------------
+    // 6. Specific campaign
+    // --------------------------------------------------
     if (campaignId) {
-      selectedCampaign = await Campaign.findById(campaignId).lean();
+      if (!mongoose.Types.ObjectId.isValid(campaignId)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid campaign ID",
+          },
+          { status: 400 },
+        );
+      }
+
+      selectedCampaign = await Campaign.findById(campaignId)
+        .select("_id name year month startDate endDate")
+        .lean();
 
       if (!selectedCampaign) {
         return NextResponse.json(
@@ -530,20 +539,14 @@ export async function GET(request) {
             success: false,
             message: "Campaign not found",
           },
-          { status: 404 }
+          { status: 404 },
         );
       }
     }
 
-    // ─────────────────────────────────────────────
-    // CURRENT CAMPAIGN
-    // If campaignId is NOT provided
-    // find campaign where:
-    //
-    // startDate <= current date
-    // AND
-    // endDate >= current date
-    // ─────────────────────────────────────────────
+    // --------------------------------------------------
+    // 7. Current active campaign
+    // --------------------------------------------------
     else {
       const now = new Date();
 
@@ -551,6 +554,7 @@ export async function GET(request) {
         startDate: { $lte: now },
         endDate: { $gte: now },
       })
+        .select("_id name year month startDate endDate")
         .sort({ startDate: -1 })
         .lean();
 
@@ -560,87 +564,96 @@ export async function GET(request) {
             success: false,
             message: "No current campaign found",
           },
-          { status: 404 }
+          { status: 404 },
         );
       }
     }
 
-    // ─────────────────────────────────────────────
-    // BASE FILTER
-    // ─────────────────────────────────────────────
+    // --------------------------------------------------
+    // 8. Build worker scope
+    //
+    // IMPORTANT:
+    // unionCouncil + teamNumber come from authenticated user.
+    // Nothing comes from frontend.
+    // --------------------------------------------------
     const filter = {
-      unionCouncilId,
-      teamNumber,
-
-      // Only Zerodose records that were actually recorded
+      unionCouncil: user.unionCouncil,
+      teamNumber: Number(user.teamNumber),
+      campaign: selectedCampaign._id,
       recordDate: { $ne: null },
-
-      // Selected/current campaign
-      campaignId: selectedCampaign._id,
     };
 
-    // ─────────────────────────────────────────────
-    // GET ZERODOSE DATA
-    // ─────────────────────────────────────────────
-    const records = await Zerodose.find(filter)
-      .sort({ recordDate: -1 })
-      .lean();
-
-    // ─────────────────────────────────────────────
-    // RECORDED
+    // Optional extra safety:
+    // If you want to ensure the records also belong to
+    // this exact worker's supervisor, uncomment this:
     //
+    // filter.supervisor = user.supervisor;
+
+    // --------------------------------------------------
+    // 9. Get Zerodose records
+    // --------------------------------------------------
+    const records = await Zerodose.find(filter).sort({ recordDate: -1 }).lean();
+
+    // --------------------------------------------------
+    // 10. Calculate statuses
+    //
+    // recorded:
     // recordDate exists
-    // visitDate does not exist
-    // coverDate does not exist
-    // ─────────────────────────────────────────────
+    // visitDate null
+    // coveredDate null
+    //
+    // visited:
+    // recordDate exists
+    // visitDate exists
+    // coveredDate null
+    //
+    // covered:
+    // recordDate exists
+    // visitDate exists
+    // coveredDate exists
+    // --------------------------------------------------
     const recorded = records.filter(
       (item) =>
         item.recordDate !== null &&
         item.visitDate === null &&
-        item.coverDate === null
+        item.coveredDate === null,
     ).length;
 
-    // ─────────────────────────────────────────────
-    // VISITED
-    //
-    // recordDate exists
-    // visitDate exists
-    // coverDate does not exist
-    // ─────────────────────────────────────────────
     const visited = records.filter(
       (item) =>
         item.recordDate !== null &&
         item.visitDate !== null &&
-        item.coverDate === null
+        item.coveredDate === null,
     ).length;
 
-    // ─────────────────────────────────────────────
-    // COVERED
-    //
-    // recordDate exists
-    // visitDate exists
-    // coverDate exists
-    // ─────────────────────────────────────────────
     const covered = records.filter(
       (item) =>
         item.recordDate !== null &&
         item.visitDate !== null &&
-        item.coverDate !== null
+        item.coveredDate !== null,
     ).length;
 
-    // ─────────────────────────────────────────────
-    // RESPONSE
-    // ─────────────────────────────────────────────
+    // --------------------------------------------------
+    // 11. Response
+    // --------------------------------------------------
     return NextResponse.json({
       success: true,
-
       data: {
-        unionCouncilId,
-        teamNumber,
+        unionCouncilId: user.unionCouncil,
+        teamNumber: user.teamNumber,
+
+        worker: {
+          id: user._id,
+          name: user.name,
+          designation: user.designation,
+          workerRole: user.workerRole,
+        },
 
         campaign: {
           id: selectedCampaign._id,
           name: selectedCampaign.name,
+          year: selectedCampaign.year,
+          month: selectedCampaign.month,
           startDate: selectedCampaign.startDate,
           endDate: selectedCampaign.endDate,
         },
@@ -648,19 +661,22 @@ export async function GET(request) {
         recorded,
         visited,
         covered,
+        total: recorded + visited + covered,
 
         records,
       },
     });
   } catch (error) {
-    console.error("GET ZERODOSE ERROR:", error);
+    console.error("GET ZERODOSE WORKER ERROR:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to fetch Zerodose data",
+        message: "Failed to fetch worker Zerodose data",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

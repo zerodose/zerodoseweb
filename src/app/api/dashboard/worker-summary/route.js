@@ -47,7 +47,7 @@ async function getAuthenticatedUser(request) {
       isActive: true,
     })
       .select(
-        "_id name designation unionCouncilId teamNumber workerRole supervisor",
+        "_id name designation unionCouncil teamNumber",
       )
       .lean();
 
@@ -107,7 +107,7 @@ export async function GET(request) {
       id: String(authUser._id),
       name: authUser.name,
       designation: authUser.designation,
-      unionCouncil: authUser.unionCouncil || authUser.unionCouncil._Id,
+      unionCouncil: authUser.unionCouncil,
       teamNumber: authUser.teamNumber,
       workerRole: authUser.workerRole,
     });
@@ -130,7 +130,7 @@ export async function GET(request) {
     // VALIDATE WORKER SCOPE
     // ========================================================
 
-    if (!authUser.unionCouncilId) {
+    if (!authUser.unionCouncil) {
       return NextResponse.json(
         {
           success: false,
@@ -160,20 +160,20 @@ export async function GET(request) {
     //
     // Worker can only access:
     //
-    // unionCouncilId = authenticated worker's UC
+    // unionCouncil= authenticated worker's UC
     // teamNumber     = authenticated worker's team
     //
     // ========================================================
 
     const baseFilter = {
-      unionCouncil: authUser.unionCouncil || authUser.unionCouncil._id,
+      unionCouncil: authUser.unionCouncil,
       teamNumber: authUser.teamNumber,
       isActive: true,
       recordDate: { $ne: null },
     };
 
     console.log("WORKER SUMMARY FILTER:", {
-      unionCouncil: authUser.unionCouncil || authUser.unionCouncil._id,
+      unionCouncil: authUser.unionCouncil,
       teamNumber: authUser.teamNumber,
       isActive: true,
     });

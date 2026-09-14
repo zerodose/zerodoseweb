@@ -1,135 +1,65 @@
 "use client";
 
 import { CheckCircle, ClipboardList, Eye } from "lucide-react";
-import { useEffect, useState } from "react";
+
+import useAnimatedCounter from "@/hooks/useAnimatedCounter";
 
 export default function VaccinatorSummaryCards({
   recordedZerodose = 0,
   visitedZerodose = 0,
   coveredZerodose = 0,
+  loading = false,
 }) {
   const cards = [
     {
       key: "recordedZerodose",
-      label: "Recorded Zerodose",
-      value: recordedZerodose,
+      label: "Recorded",
       icon: ClipboardList,
     },
     {
       key: "visitedZerodose",
-      label: "Visited Zerodose",
-      value: visitedZerodose,
+      label: "Visited",
       icon: Eye,
     },
     {
       key: "coveredZerodose",
-      label: "Covered Zerodose",
-      value: coveredZerodose,
+      label: "Covered",
       icon: CheckCircle,
     },
   ];
 
   // ============================================================
-  // Card Animation
+  // ANIMATED COUNTER
   // ============================================================
 
-  const [animated, setAnimated] = useState(false);
-
-  const [displayValues, setDisplayValues] = useState({
-    recordedZerodose: 0,
-    visitedZerodose: 0,
-    coveredZerodose: 0,
-  });
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setAnimated(true);
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // ============================================================
-  // Fast Number Loading Animation
-  // Same behavior as UCMOSummaryCards
-  // ============================================================
-
-  useEffect(() => {
-    const duration = 700;
-    const startTime = performance.now();
-
-    const targets = {
-      recordedZerodose: Number(recordedZerodose ?? 0),
-      visitedZerodose: Number(visitedZerodose ?? 0),
-      coveredZerodose: Number(coveredZerodose ?? 0),
-    };
-
-    let animationFrame;
-
-    const animateNumbers = (currentTime) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      const nextValues = {};
-
-      Object.keys(targets).forEach((key) => {
-        const target = targets[key];
-
-        if (progress < 1) {
-          const randomMax = Math.max(Math.floor(target * 1.2), 100);
-
-          nextValues[key] = Math.floor(Math.random() * randomMax);
-        } else {
-          nextValues[key] = target;
-        }
-      });
-
-      setDisplayValues(nextValues);
-
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(animateNumbers);
-      } else {
-        setDisplayValues(targets);
-      }
-    };
-
-    animationFrame = requestAnimationFrame(animateNumbers);
-
-    return () => {
-      cancelAnimationFrame(animationFrame);
-    };
-  }, [recordedZerodose, visitedZerodose, coveredZerodose]);
-
-  // ============================================================
-  // Render
-  // ============================================================
+  const { values, loadingDots } = useAnimatedCounter(
+    {
+      recordedZerodose,
+      visitedZerodose,
+      coveredZerodose,
+    },
+    {
+      duration: 700,
+      loading,
+      loadingMax: 99,
+      loadingMode: "random",
+      dotsDuration: 1200,
+    },
+  );
 
   return (
-    <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
+    <div className="mb-4 grid grid-cols-3 gap-3 md:grid-cols-4 md:gap-4">
       {cards.map((card, index) => {
         const Icon = card.icon;
 
-        const value = Number(displayValues[card.key] ?? 0);
+        const value = Number(values[card.key] ?? 0);
 
         return (
           <div
             key={card.key}
-            className={`group border-border bg-background relative overflow-hidden rounded-2xl border px-4 py-3.5 shadow-[0_3px_12px_rgba(0,0,0,0.06)] transition-all duration-700 ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] md:px-5 md:py-4 ${
-              animated ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
-            }`}
-            style={{
-              transitionDelay: `${index * 100}ms`,
-            }}
+            className="group border-border bg-background relative overflow-hidden rounded-2xl border px-4 py-3.5 shadow-[0_3px_12px_rgba(0,0,0,0.06)] transition-all duration-700 ease-out hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] md:px-5 md:py-4"
           >
-            {/* ==================================================
-                Decorative Background
-            ================================================== */}
-
             <div className="bg-primary/5 absolute -top-10 -right-10 h-24 w-24 rounded-full transition-transform duration-300 group-hover:scale-125" />
-
-            {/* ==================================================
-                Top Row
-            ================================================== */}
 
             <div className="relative flex items-start justify-between">
               {/* Icon */}
@@ -138,26 +68,18 @@ export default function VaccinatorSummaryCards({
                 <Icon size={20} strokeWidth={2} />
               </div>
 
-              {/* Animated Number */}
+              {/* Number / Loading */}
 
               <p className="text-text text-right text-2xl leading-none font-bold tracking-tight tabular-nums md:text-3xl">
-                {value.toLocaleString()}
+                {loading ? loadingDots : value.toLocaleString()}
               </p>
             </div>
-
-            {/* ==================================================
-                Label
-            ================================================== */}
 
             <div className="relative mt-3">
               <p className="text-text-secondary text-xs font-medium md:text-sm">
                 {card.label}
               </p>
             </div>
-
-            {/* ==================================================
-                Bottom Accent
-            ================================================== */}
 
             <div className="bg-primary absolute right-0 bottom-0 left-0 h-0.5 opacity-60" />
           </div>

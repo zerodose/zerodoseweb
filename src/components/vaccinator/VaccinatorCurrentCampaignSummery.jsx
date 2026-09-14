@@ -10,17 +10,23 @@ export default function VaccinatorCurrentCampaignSummery({
   data = [],
   loading = false,
   authUser,
-  supervisorName = "",
-  supervisorCode = "",
 }) {
   // ============================================================
   // SUPERVISOR SUMMARY
   // ============================================================
   //
-  // Only supervisors having recorded Zerodose > 0
-  // will be displayed.
+  // API DATA:
   //
-  // Sorted by Supervisor Code.
+  // supervisorId
+  // supervisorName
+  // supervisorCode
+  // numberOfTeams
+  // recordCount
+  // visitCount
+  // coveredCount
+  //
+  // Convert API structure into the structure expected
+  // by SupervisorsTable.
   // ============================================================
 
   const supervisorSummary = useMemo(() => {
@@ -28,170 +34,46 @@ export default function VaccinatorCurrentCampaignSummery({
       return [];
     }
 
-    const supervisorsMap = new Map();
+    return (
+      data
+        .map((item) => ({
+          supervisorId: item?.supervisorId || "",
 
-    data.forEach((item) => {
-      const currentSupervisorCode =
-        item?.supervisorCode ||
-        supervisorCode ||
-        authUser?.supervisorCode ||
-        "";
+          supervisorCode: item?.supervisorCode || "-",
 
-      const currentSupervisorName =
-        item?.supervisorName ||
-        supervisorName ||
-        authUser?.supervisor?.name ||
-        "";
+          supervisorName: item?.supervisorName || "-",
 
-      // ----------------------------------------------------------
-      // If there is no supervisor information, skip it.
-      // ----------------------------------------------------------
+          totalTeams: Number(item?.numberOfTeams || 0),
 
-      const key =
-        item?.supervisorId ||
-        item?.supervisor?._id ||
-        currentSupervisorCode ||
-        currentSupervisorName;
+          recorded: Number(item?.recordCount || 0),
 
-      if (!key) {
-        return;
-      }
+          visited: Number(item?.visitCount || 0),
 
-      if (!supervisorsMap.has(key)) {
-        supervisorsMap.set(key, {
-          supervisorId: item?.supervisorId || item?.supervisor?._id || "",
+          covered: Number(item?.coveredCount || 0),
+        }))
+        // Only supervisors having recorded Zerodose
+        .filter((supervisor) => supervisor.recorded > 0)
+        // Sort by Supervisor Code
+        .sort((a, b) => {
+          const codeA = String(a?.supervisorCode || "").trim();
 
-          supervisorCode: currentSupervisorCode,
+          const codeB = String(b?.supervisorCode || "").trim();
 
-          supervisorName: currentSupervisorName,
+          const numberA = Number(codeA.match(/\d+/)?.[0] || 0);
 
-          totalTeams: 0,
+          const numberB = Number(codeB.match(/\d+/)?.[0] || 0);
 
-          recorded: 0,
+          if (numberA !== numberB) {
+            return numberA - numberB;
+          }
 
-          visited: 0,
-
-          covered: 0,
-        });
-      }
-
-      const supervisor = supervisorsMap.get(key);
-
-      // ----------------------------------------------------------
-      // Supervisor information
-      // ----------------------------------------------------------
-
-      if (currentSupervisorCode) {
-        supervisor.supervisorCode = currentSupervisorCode;
-      }
-
-      if (currentSupervisorName) {
-        supervisor.supervisorName = currentSupervisorName;
-      }
-
-      // ----------------------------------------------------------
-      // Aggregated summary record
-      // ----------------------------------------------------------
-
-      if (
-        item?.recorded !== undefined ||
-        item?.visited !== undefined ||
-        item?.covered !== undefined
-      ) {
-        supervisor.recorded += Number(item?.recorded || 0);
-
-        supervisor.visited += Number(item?.visited || 0);
-
-        supervisor.covered += Number(item?.covered || 0);
-
-        if (item?.totalTeams !== undefined) {
-          supervisor.totalTeams = Math.max(
-            supervisor.totalTeams,
-            Number(item?.totalTeams || 0),
-          );
-        }
-
-        return;
-      }
-
-      // ----------------------------------------------------------
-      // Individual Zerodose record fallback
-      // ----------------------------------------------------------
-
-      const status = String(item?.vaccinationStatus || "").toLowerCase();
-
-      if (status === "recorded") {
-        supervisor.recorded += 1;
-      }
-
-      if (status === "visited") {
-        supervisor.visited += 1;
-      }
-
-      if (status === "covered") {
-        supervisor.covered += 1;
-      }
-
-      // ----------------------------------------------------------
-      // Team information
-      // ----------------------------------------------------------
-
-      if (item?.teamNumber !== undefined && item?.teamNumber !== null) {
-        // Count unique teams per supervisor
-        const existingTeams = supervisor._teamNumbers || new Set();
-
-        existingTeams.add(String(item.teamNumber));
-
-        supervisor._teamNumbers = existingTeams;
-
-        supervisor.totalTeams = existingTeams.size;
-      }
-    });
-
-    // ==========================================================
-    // IMPORTANT:
-    //
-    // Only recorded > 0 supervisors are displayed.
-    // ==========================================================
-
-    return Array.from(supervisorsMap.values())
-      .filter((supervisor) => Number(supervisor?.recorded || 0) > 0)
-      .map((supervisor) => {
-        const cleanedSupervisor = {
-          ...supervisor,
-        };
-
-        delete cleanedSupervisor._teamNumbers;
-
-        return cleanedSupervisor;
-      })
-      .sort((a, b) => {
-        const codeA = String(a?.supervisorCode || "").trim();
-
-        const codeB = String(b?.supervisorCode || "").trim();
-
-        // ------------------------------------------------------
-        // Numeric supervisor-code sorting
-        //
-        // SUP-1
-        // SUP-2
-        // SUP-10
-        // ------------------------------------------------------
-
-        const numberA = Number(codeA.match(/\d+/)?.[0] || 0);
-
-        const numberB = Number(codeB.match(/\d+/)?.[0] || 0);
-
-        if (numberA !== numberB) {
-          return numberA - numberB;
-        }
-
-        return codeA.localeCompare(codeB);
-      });
-  }, [data, supervisorName, supervisorCode, authUser]);
+          return codeA.localeCompare(codeB);
+        })
+    );
+  }, [data]);
 
   // ============================================================
-  // SUMMARY
+  // TOTAL SUMMARY
   // ============================================================
 
   const summary = useMemo(() => {
@@ -203,9 +85,12 @@ export default function VaccinatorCurrentCampaignSummery({
 
         result.covered += Number(supervisor?.covered || 0);
 
+        result.totalTeams += Number(supervisor?.totalTeams || 0);
+
         return result;
       },
       {
+        totalTeams: 0,
         recorded: 0,
         visited: 0,
         covered: 0,
@@ -220,9 +105,10 @@ export default function VaccinatorCurrentCampaignSummery({
   if (!campaign) {
     return (
       <section>
+        {" "}
         <div className="bg-surface border-border rounded-xl border p-6 text-center md:rounded-2xl">
-          <p className="text-text font-medium">Current campaign not found.</p>
-
+          {" "}
+          <p className="text-text font-medium">Current campaign not found. </p>
           <p className="text-text-secondary mt-1 text-sm">
             No active campaign data is available for this vaccinator.
           </p>
@@ -238,20 +124,21 @@ export default function VaccinatorCurrentCampaignSummery({
   return (
     <section>
       {/* ========================================================
-          CURRENT CAMPAIGN HEADER
-      ======================================================== */}
+CURRENT CAMPAIGN HEADER
+======================================================== */}
 
       <CampaignHeader
         campaign={campaign}
         label="CURRENT CAMPAIGN"
-        teams={supervisorSummary.length}
+        teams={summary.totalTeams}
         recorded={summary.recorded}
+        visited={summary.visited}
         covered={summary.covered}
       />
 
       {/* ========================================================
-          SECTION HEADER
-      ======================================================== */}
+      SECTION HEADER
+  ======================================================== */}
 
       <div className="mt-5 mb-3 flex items-center justify-between">
         <div>
@@ -270,8 +157,8 @@ export default function VaccinatorCurrentCampaignSummery({
       </div>
 
       {/* ========================================================
-          LOADING
-      ======================================================== */}
+      LOADING
+  ======================================================== */}
 
       {loading ? (
         <div className="bg-surface border-border overflow-hidden rounded-xl border md:rounded-2xl">
@@ -284,8 +171,8 @@ export default function VaccinatorCurrentCampaignSummery({
         </div>
       ) : supervisorSummary.length === 0 ? (
         /* ======================================================
-           EMPTY STATE
-        ====================================================== */
+       EMPTY STATE
+    ====================================================== */
 
         <div className="bg-surface border-border rounded-xl border p-6 text-center md:rounded-2xl">
           <p className="text-text font-medium">No Zerodose records found.</p>
@@ -296,8 +183,8 @@ export default function VaccinatorCurrentCampaignSummery({
         </div>
       ) : (
         /* ======================================================
-           SUPERVISOR TABLE
-        ====================================================== */
+       SUPERVISOR TABLE
+    ====================================================== */
 
         <SupervisorsTable data={supervisorSummary} />
       )}

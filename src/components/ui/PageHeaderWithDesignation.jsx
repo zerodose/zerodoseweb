@@ -129,7 +129,7 @@ export default function PageHeaderWithDesignation({
       if (!response.success) {
         throw new Error(response.message || "Failed to load profile.");
       }
-      console.log("Response for me", response);
+      // console.log("Response for me", response);
       setUser(response.data.user);
     } catch (error) {
       console.error("Profile fetch error:", error);
@@ -512,21 +512,13 @@ export default function PageHeaderWithDesignation({
                       try {
                         setLoadingProfile(true);
 
-                        const response = await fetch("/api/auth/me", {
-                          method: "GET",
-                          credentials: "include",
-                          cache: "no-store",
-                        });
+                        const response = await getCurrentUser();
 
-                        const result = await response.json();
-
-                        if (!response.ok || !result.success) {
+                        if (!response.success) {
                           throw new Error(
-                            result.message ||
-                              "Failed to load account information.",
+                            response.message || "Failed to load profile.",
                           );
                         }
-
                         setUser(result.data.user);
                         setChangePasswordOpen(true);
                       } catch (error) {
@@ -618,7 +610,7 @@ export default function PageHeaderWithDesignation({
                   {/* Avatar */}
 
                   <div className="mb-6 flex flex-col items-center">
-                    <div className="bg-primary/10 text-primary flex h-20 w-20 items-center justify-center rounded-2xl text-2xl font-semibold">
+                    <div className="bg-primary/10 text-primary flex h-20 w-20 items-center  justify-center rounded-2xl text-2xl font-semibold">
                       {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                     </div>
                     {/* 
@@ -649,7 +641,7 @@ export default function PageHeaderWithDesignation({
                             Name
                           </p>
 
-                          <p className="text-text truncate text-sm font-medium">
+                          <p className="text-text truncate text-sm font-medium capitalize">
                             {user.name || user.fullName}
                           </p>
                         </div>

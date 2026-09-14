@@ -31,3 +31,9 @@ export const deleteCampaign = async (id) => {
 
   return response.data;
 };
+
+export const getCurrentCampaign = async () => {
+const response = await api.get("/campaigns/current");
+
+return response.data;
+};

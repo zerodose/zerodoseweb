@@ -20,7 +20,7 @@ export default function SupervisorsTable({ data = [], onSupervisorClick }) {
               </th>
 
               <th className="border-border text-text-secondary border-r px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap">
-                Total Teams
+                No. of Teams
               </th>
 
               <th className="border-border text-text-secondary border-r px-3 py-2.5 text-center text-xs font-semibold whitespace-nowrap">
@@ -62,8 +62,12 @@ export default function SupervisorsTable({ data = [], onSupervisorClick }) {
                 >
                   {/* Supervisor Code */}
 
-                  <td className="border-border text-text group-hover:bg-primary/5 border-r items-center justify-center px-3 py-2 text-xs font-semibold whitespace-nowrap transition-colors">
-                    {supervisor.supervisorCode || "-"}
+                  <td className="border-border text-text group-hover:bg-primary/5 flex items-center justify-center border-r px-3 py-2 text-xs font-semibold whitespace-nowrap transition-colors">
+                    {supervisor.supervisorCode
+                      ? String(supervisor.supervisorCode).startsWith("0")
+                        ? supervisor.supervisorCode
+                        : `0${supervisor.supervisorCode}`
+                      : "-"}
                   </td>
 
                   {/* Supervisor Name */}

@@ -10,77 +10,8 @@ import District from "@/models/District";
 import Town from "@/models/Town";
 import UnionCouncil from "@/models/UnionCouncil";
 import { jwtVerify } from "jose";
+import { getAuthenticatedUser } from "@/lib/auth";
 
-// ============================================================
-// AUTHENTICATED USER
-// ============================================================
-
-async function getAuthenticatedUser(request) {
-  try {
-    const token = request.cookies.get("auth_token")?.value;
-
-    if (!token) {
-      return {
-        error: NextResponse.json(
-          {
-            success: false,
-            message: "Authentication required.",
-          },
-          { status: 401 },
-        ),
-      };
-    }
-
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-
-    const { payload } = await jwtVerify(token, secret);
-
-    if (!payload?.userId) {
-      return {
-        error: NextResponse.json(
-          {
-            success: false,
-            message: "Invalid authentication token.",
-          },
-          { status: 401 },
-        ),
-      };
-    }
-
-    const user = await User.findOne({
-      _id: payload.userId,
-      isActive: true,
-    })
-      .select("_id name designation unionCouncil teamNumber")
-      .lean();
-
-    if (!user) {
-      return {
-        error: NextResponse.json(
-          {
-            success: false,
-            message: "Authenticated user not found.",
-          },
-          { status: 401 },
-        ),
-      };
-    }
-
-    return { user };
-  } catch (error) {
-    console.error("Authentication error:", error);
-
-    return {
-      error: NextResponse.json(
-        {
-          success: false,
-          message: "Invalid or expired authentication token.",
-        },
-        { status: 401 },
-      ),
-    };
-  }
-}
 
 export async function POST(request) {
   try {
@@ -494,15 +425,7 @@ export async function POST(request) {
   }
 }
 
-// ============================================================
-// GET WORKER ZERODOSE DATA
-// ============================================================
 
-
-
-// ============================================================
-// GET WORKER ZERODOSE
-// ============================================================
 
 export async function GET(request) {
   try {

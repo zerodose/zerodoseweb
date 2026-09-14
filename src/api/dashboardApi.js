@@ -325,11 +325,22 @@ export const getSupervisorSummary = async () => {
   return response.data;
 };
 
-export const getVaccinatorSummary = async () => {
-  const response = await api.get("/dashboard/vaccinator-summary");
+export const getVaccinatorTotalSummary = async () => {
+  const response = await api.get("/dashboard/vaccinator/summary");
 
   return response.data;
 };
+export const getVaccinatorSupervisorSummary = async (campaignId) => {
+  const response = await api.get("/dashboard/vaccinator/supervisors", {
+    params: {
+      campaignId,
+    },
+  });
+
+  return response.data;
+};
+
+
 
 export const getWorkerSummary = async () => {
   const response = await api.get("/dashboard/worker-summary");

@@ -902,7 +902,6 @@ export default function Page() {
       limit: 1,
     });
 
-    console.log("📦 Current campaign response:", campaignResponse);
 
     const campaigns = Array.isArray(campaignResponse?.data)
       ? campaignResponse.data
@@ -910,17 +909,14 @@ export default function Page() {
 
     const currentCampaign = campaigns[0] || null;
 
-    console.log("🎯 Current campaign:", currentCampaign);
 
     // ----------------------------------------------------------
     // 2. Get worker summary
     // ----------------------------------------------------------
 
-    console.log("📊 Loading worker summary...");
 
     const summaryResponse = await getWorkerSummary();
 
-    console.log("📊 Worker summary response:", summaryResponse);
 
     const workerSummary = summaryResponse?.data || {};
 
@@ -946,7 +942,6 @@ export default function Page() {
 
     const loadInitialData = async () => {
       try {
-        console.log("🔄 Loading worker page data...");
 
         setLoadingCampaign(true);
         setError("");
@@ -978,9 +973,6 @@ export default function Page() {
         if (cancelled) {
           return;
         }
-
-        console.error("❌ Get worker page data error:", error);
-        console.error("❌ API response:", error?.response?.data);
 
         setCampaign(null);
 
@@ -1039,8 +1031,6 @@ export default function Page() {
 
       setLoadingCampaign(false);
     } catch (error) {
-      console.error("❌ Refresh error:", error);
-      console.error("❌ API response:", error?.response?.data);
 
       setCampaign(null);
 

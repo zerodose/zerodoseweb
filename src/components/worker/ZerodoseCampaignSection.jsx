@@ -785,46 +785,6 @@ export default function ZerodoseCampaignSection({
   // Fetch Zerodose
   // =========================================================
 
-  // const fetchZerodose = async (filter) => {
-  //   // Previous campaign ke liye abhi API call nahi karni
-  //   if (activeTab !== "current") {
-  //     return;
-  //   }
-
-  //   // Campaign available nahi hai
-  //   if (!currentCampaign?._id) {
-  //     return;
-  //   }
-
-  //   try {
-  //     setLoadingZerodose(true);
-  //     setFetchError("");
-
-  //     const response = await getWorkerZerodose({
-  //       campaignId: currentCampaign._id,
-  //       filter,
-  //     });
-
-  //     const records = Array.isArray(response?.data) ? response.data : [];
-
-  //     setZerodoses(records);
-  //   } catch (error) {
-  //     console.error("❌ Get worker zerodose error:", error);
-  //     console.error("❌ API response:", error?.response?.data);
-
-  //     setZerodoses([]);
-
-  //     setFetchError(
-  //       error?.response?.data?.message ||
-  //         error?.response?.data?.error?.message ||
-  //         error?.message ||
-  //         "Failed to load zerodose records.",
-  //     );
-  //   } finally {
-  //     setLoadingZerodose(false);
-  //   }
-  // };
-
   const fetchZerodose = async (filter) => {
     if (activeTab !== "current") return;
     if (!currentCampaign?._id) return;

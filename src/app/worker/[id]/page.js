@@ -151,13 +151,13 @@ export default function ZerodoseDetailPage() {
       <div className="space-y-5">
         {/* Summary */}
         <div className="border-border bg-background rounded-2xl border shadow-sm">
-          <div className="flex items-center justify-between gap-4 p-5 md:p-6">
-            <div className="flex min-w-0 items-start gap-4">
-              <div className="bg-primary/10 text-primary flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl">
+          <div className="flex items-center justify-between gap-4 p-3 md:p-4">
+            <div className="flex min-w-0 items-center gap-4">
+              <div className="bg-primary/10 text-primary flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl">
                 <Syringe className="h-7 w-7" />
               </div>
 
-              <div className="flex flex-col flex-wrap items-center gap-2">
+              <div className="flex flex  items-center gap-2">
                 <h2 className="text-text text-xl font-semibold break-words capitalize">
                   {zerodose.childName || "-"}
                 </h2>
@@ -174,10 +174,10 @@ export default function ZerodoseDetailPage() {
             <button
               type="button"
               onClick={() => router.push(`/worker/${zerodose._id}/update`)}
-              className="border-border bg-background text-text-secondary hover:bg-surface hover:text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition"
+              className={`${zerodose.visitDate !== null ? "hidden" : "flex" } border-border bg-background text-text-secondary hover:bg-surface hover:text-primary h-11 w-11 shrink-0 items-center justify-center rounded-lg border transition`}
               title="Edit Zerodose"
             >
-              <Edit className="h-4 w-4" />
+              <Edit className="h-5 w-5" />
             </button>
           </div>
         </div>

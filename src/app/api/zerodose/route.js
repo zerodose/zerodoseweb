@@ -1905,22 +1905,37 @@ export async function POST(request) {
       designation: "worker",
       isActive: true,
       supervisor: supervisorId,
-      supervisorCode: supervisorCode,
       unionCouncil: unionCouncilId,
       teamNumber: parsedTeamNumber,
     })
       .select(
-        "_id name designation supervisor supervisorCode teamNumber workerRole unionCouncil",
+        "_id name designation supervisor teamNumber workerRole unionCouncil",
       )
       .lean();
 
-    const teamLeaderUser = teamWorkers.find(
-      (worker) => worker.workerRole === "teamLeader",
+    const currentWorker = teamWorkers.find(
+      (worker) => worker._id.toString() === userId.toString(),
     );
 
-    const teamMemberUser = teamWorkers.find(
-      (worker) => worker.workerRole === "teamMember",
-    );
+    if (!currentWorker) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Worker does not belong to the assigned team",
+        },
+        { status: 400 },
+      );
+    }
+
+    const teamLeaderUser =
+      currentWorker.workerRole === "teamLeader"
+        ? currentWorker
+        : teamWorkers.find((worker) => worker.workerRole === "teamLeader");
+
+    const teamMemberUser =
+      currentWorker.workerRole === "teamMember"
+        ? currentWorker
+        : teamWorkers.find((worker) => worker.workerRole === "teamMember");
 
     if (!teamLeaderUser) {
       return NextResponse.json(
@@ -1942,19 +1957,6 @@ export async function POST(request) {
       );
     }
 
-    const isWorkerInTeam = teamWorkers.some(
-      (worker) => worker._id.toString() === userId.toString(),
-    );
-
-    if (!isWorkerInTeam) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Worker does not belong to the assigned team",
-        },
-        { status: 400 },
-      );
-    }
 
     const latitude = Number(location.latitude);
     const longitude = Number(location.longitude);

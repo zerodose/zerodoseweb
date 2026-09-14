@@ -146,6 +146,7 @@ export default function ZerodoseDetailPage() {
         title="Zerodose Details"
         description="View complete zerodose record information."
         onBack={() => router.back()}
+     
       />
 
       <div className="space-y-5">

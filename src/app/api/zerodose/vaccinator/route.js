@@ -5,14 +5,9 @@ import { connectDB } from "@/lib/db";
 import Zerodose from "@/models/Zerodose";
 import { getAuthenticatedUser } from "@/lib/auth";
 
-
 export async function GET(request) {
   try {
     await connectDB();
-
-    // --------------------------------------------------------
-    // AUTHENTICATION
-    // --------------------------------------------------------
 
     const auth = await getAuthenticatedUser(request);
 
@@ -22,46 +17,40 @@ export async function GET(request) {
 
     const { user } = auth;
 
-    // --------------------------------------------------------
-    // ONLY WORKER
-    // --------------------------------------------------------
-
-    if (user.designation !== "worker") {
+    if (user.designation !== "vaccinator") {
       return NextResponse.json(
         {
           success: false,
-          message: "Only workers can access this data.",
+          message: "Only vaccinators can access this data.",
         },
         { status: 403 },
       );
     }
 
-    // --------------------------------------------------------
-    // UNION COUNCIL VALIDATION
-    // --------------------------------------------------------
-
     if (!user.unionCouncil) {
       return NextResponse.json(
         {
           success: false,
-          message: "Union Council is not assigned to this worker.",
+          message: "Union Council is not assigned to this vaccinator.",
         },
         { status: 400 },
       );
     }
 
-    // --------------------------------------------------------
-    // QUERY PARAMETERS
-    // --------------------------------------------------------
+    if (!mongoose.Types.ObjectId.isValid(user.unionCouncil)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid Union Council assigned to this vaccinator.",
+        },
+        { status: 400 },
+      );
+    }
 
     const { searchParams } = new URL(request.url);
 
     const campaignId = searchParams.get("campaignId");
     const filter = searchParams.get("filter");
-
-    // --------------------------------------------------------
-    // CAMPAIGN VALIDATION
-    // --------------------------------------------------------
 
     if (!campaignId) {
       return NextResponse.json(
@@ -83,111 +72,177 @@ export async function GET(request) {
       );
     }
 
-    // --------------------------------------------------------
-    // FILTER VALIDATION
-    // --------------------------------------------------------
-
-    const allowedFilters = ["all", "recorded", "visited", "covered"];
+    const allowedFilters = ["recorded", "visited", "covered"];
 
     if (!filter || !allowedFilters.includes(filter)) {
       return NextResponse.json(
         {
           success: false,
           message:
-            "Invalid filter. Allowed filters are all, recorded, visited, and covered.",
+            "Invalid filter. Allowed filters are recorded, visited, and covered.",
         },
         { status: 400 },
       );
     }
 
-    // --------------------------------------------------------
-    // BASE QUERY
-    //
-    // ONLY:
-    // 1. Selected campaign
-    // 2. Authenticated user's Union Council
-    // --------------------------------------------------------
+    const unionCouncilObjectId = new mongoose.Types.ObjectId(user.unionCouncil);
 
-    const unionCouncilId = user.unionCouncil?._id || user.unionCouncil;
+    const campaignObjectId = new mongoose.Types.ObjectId(campaignId);
 
-    const match = {
-      campaign: new mongoose.Types.ObjectId(campaignId),
-      unionCouncil: new mongoose.Types.ObjectId(unionCouncilId),
+    /*
+     * Base match:
+     * Only selected campaign + authenticated vaccinator's
+     * Union Council.
+     */
+    const baseMatch = {
+      campaign: campaignObjectId,
+      unionCouncil: unionCouncilObjectId,
     };
 
-    // --------------------------------------------------------
-    // RECORDED
-    //
-    // recordDate exists
-    // visitDate is null
-    // coverDate is null
-    // --------------------------------------------------------
+    /*
+     * Filtered match for data[].
+     */
+    const dataMatch = {
+      ...baseMatch,
+    };
 
     if (filter === "recorded") {
-      match.recordDate = { $ne: null };
-      match.visitDate = null;
-      match.coverDate = null;
+      dataMatch.recordDate = { $ne: null };
+      dataMatch.visitDate = null;
+      dataMatch.coveredDate = null;
     }
-
-    // --------------------------------------------------------
-    // VISITED
-    //
-    // recordDate exists
-    // visitDate exists
-    // coverDate is null
-    // --------------------------------------------------------
 
     if (filter === "visited") {
-      match.recordDate = { $ne: null };
-      match.visitDate = { $ne: null };
-      match.coverDate = null;
+      dataMatch.recordDate = { $ne: null };
+      dataMatch.visitDate = { $ne: null };
+      dataMatch.coveredDate = null;
     }
-
-    // --------------------------------------------------------
-    // COVERED
-    //
-    // recordDate exists
-    // visitDate exists
-    // coverDate exists
-    // --------------------------------------------------------
 
     if (filter === "covered") {
-      match.recordDate = { $ne: null };
-      match.visitDate = { $ne: null };
-      match.coverDate = { $ne: null };
+      dataMatch.recordDate = { $ne: null };
+      dataMatch.visitDate = { $ne: null };
+      dataMatch.coveredDate = { $ne: null };
     }
 
-    // --------------------------------------------------------
-    // ALL
-    //
-    // No additional date conditions.
-    // Returns all records belonging to:
-    // selected campaign + user's Union Council
-    // --------------------------------------------------------
+    /*
+     * Fetch filtered Zerodose records.
+     */
+    const zerodose = await Zerodose.find(dataMatch)
+      .sort({ createdAt: -1 })
+      .populate("campaign", "name startDate endDate")
+      .populate("district", "name")
+      .populate("town", "name")
+      .populate("unionCouncil", "name")
+      .populate("ucmo", "name")
+      .populate("supervisor", "name supervisorCode")
+      .populate("user", "name designation")
+      .populate("teamLeader", "name")
+      .populate("teamMember", "name")
+      .populate("vaccinator", "name")
+      .lean();
 
-    const zerodose = await Zerodose.find(match).sort({ createdAt: -1 }).lean();
+    /*
+     * Campaign summary:
+     *
+     * recorded = recordDate exists
+     * visited  = visitDate exists
+     * covered  = coveredDate exists
+     *
+     * These counts intentionally overlap.
+     */
+    const summaryResult = await Zerodose.aggregate([
+      {
+        $match: baseMatch,
+      },
+      {
+        $group: {
+          _id: null,
 
-    // --------------------------------------------------------
-    // RESPONSE
-    // --------------------------------------------------------
+          recorded: {
+            $sum: {
+              $cond: [{ $ne: ["$recordDate", null] }, 1, 0],
+            },
+          },
+
+          visited: {
+            $sum: {
+              $cond: [{ $ne: ["$visitDate", null] }, 1, 0],
+            },
+          },
+
+          covered: {
+            $sum: {
+              $cond: [{ $ne: ["$coveredDate", null] }, 1, 0],
+            },
+          },
+        },
+      },
+    ]);
+
+    /*
+     * vaccinationStatus counts:
+     *
+     * This counts the actual vaccinationStatus field
+     * for the selected campaign.
+     */
+    const vaccinationStatusResult = await Zerodose.aggregate([
+      {
+        $match: baseMatch,
+      },
+      {
+        $group: {
+          _id: "$vaccinationStatus",
+          count: {
+            $sum: 1,
+          },
+        },
+      },
+    ]);
+
+    const summary = {
+      recorded: Number(summaryResult[0]?.recorded || 0),
+      visited: Number(summaryResult[0]?.visited || 0),
+      covered: Number(summaryResult[0]?.covered || 0),
+    };
+
+    const vaccinationStatus = {
+      recorded: 0,
+      visited: 0,
+      covered: 0,
+    };
+
+    vaccinationStatusResult.forEach((item) => {
+      if (
+        item?._id &&
+        Object.prototype.hasOwnProperty.call(vaccinationStatus, item._id)
+      ) {
+        vaccinationStatus[item._id] = Number(item.count || 0);
+      }
+    });
 
     return NextResponse.json({
       success: true,
+
       data: zerodose,
+
+      summary,
+
+      vaccinationStatus,
+
       meta: {
         filter,
         count: zerodose.length,
         campaignId,
-        unionCouncil: unionCouncilId,
+        unionCouncil: user.unionCouncil,
       },
     });
   } catch (error) {
-    console.error("Worker Zerodose Error:", error);
+    console.error("Vaccinator Zerodose Error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to get worker Zerodose data.",
+        message: "Failed to get vaccinator Zerodose data.",
       },
       { status: 500 },
     );

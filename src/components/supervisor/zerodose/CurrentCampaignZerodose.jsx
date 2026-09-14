@@ -8,7 +8,18 @@ import ZerodoseTeamSummary from "./ZerodoseTeamSummary";
 export default function CurrentCampaignZerodose({
   campaign,
   data = [],
+  summary = {
+    recorded: 0,
+    visited: 0,
+    covered: 0,
+  },
+  vaccinationStatus = {
+    recorded: 0,
+    visited: 0,
+    covered: 0,
+  },
   unionCouncilName = "-",
+  onFilterChange,
 }) {
   if (!campaign) {
     return (
@@ -49,13 +60,9 @@ export default function CurrentCampaignZerodose({
               ),
           ).size
         }
-        recorded={data.length}
-        covered={
-          data.filter(
-            (item) =>
-              item?.coveredDate || item?.vaccinationStatus === "covered",
-          ).length
-        }
+        recorded={summary.recorded}
+        visited={summary.visited}
+        covered={summary.covered}
       />
 
       {/* ======================================================
@@ -66,6 +73,8 @@ export default function CurrentCampaignZerodose({
         data={data}
         title="Current Campaign Zerodose"
         description="Team-wise Zerodose records for the current campaign."
+        vaccinationStatus={vaccinationStatus}
+        onFilterChange={onFilterChange}
       />
     </section>
   );

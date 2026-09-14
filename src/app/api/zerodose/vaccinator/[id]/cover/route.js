@@ -371,7 +371,6 @@
 //     );
 //   }
 // }
-
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { jwtVerify } from "jose";
@@ -402,7 +401,9 @@ function isValidObjectId(value) {
 // ============================================================
 
 function objectIdEquals(a, b) {
-  if (!a || !b) return false;
+  if (!a || !b) {
+    return false;
+  }
 
   return a.toString() === b.toString();
 }
@@ -413,10 +414,6 @@ function objectIdEquals(a, b) {
 
 async function getAuthenticatedUser(request) {
   const token = request.cookies.get("auth_token")?.value;
-
-  // ----------------------------------------------------------
-  // NO TOKEN
-  // ----------------------------------------------------------
 
   if (!token) {
     return {
@@ -430,33 +427,29 @@ async function getAuthenticatedUser(request) {
     };
   }
 
-  // ----------------------------------------------------------
-  // VERIFY JWT
-  // ----------------------------------------------------------
-
   let payload;
 
   try {
     const result = await jwtVerify(token, secret);
 
-    payload = result.payload;
+    
+payload = result.payload;
+;
   } catch (error) {
     console.error("JWT verification error:", error);
 
-    return {
-      error: NextResponse.json(
-        {
-          success: false,
-          message: "Invalid or expired authentication.",
-        },
-        { status: 401 },
-      ),
-    };
+    
+return {
+  error: NextResponse.json(
+    {
+      success: false,
+      message: "Invalid or expired authentication.",
+    },
+    { status: 401 },
+  ),
+};
+;
   }
-
-  // ----------------------------------------------------------
-  // VALIDATE USER ID
-  // ----------------------------------------------------------
 
   if (!payload?.userId || !isValidObjectId(payload.userId)) {
     return {
@@ -470,15 +463,7 @@ async function getAuthenticatedUser(request) {
     };
   }
 
-  // ----------------------------------------------------------
-  // DATABASE
-  // ----------------------------------------------------------
-
   await connectDB();
-
-  // ----------------------------------------------------------
-  // GET ACTIVE USER
-  // ----------------------------------------------------------
 
   const user = await User.findOne({
     _id: payload.userId,
@@ -507,7 +492,7 @@ async function getAuthenticatedUser(request) {
 }
 
 // ============================================================
-// PATCH
+// PATCH /api/zerodose/vaccinator/[id]/cover
 // ============================================================
 
 export async function PATCH(request, { params }) {
@@ -516,244 +501,247 @@ export async function PATCH(request, { params }) {
     // DATABASE
     // ==========================================================
 
-    await connectDB();
+    
+await connectDB();
 
-    // ==========================================================
-    // PARAMS
-    // ==========================================================
+// ==========================================================
+// PARAMS
+// ==========================================================
 
-    const { id } = await params;
+const { id } = await params;
 
-    // ==========================================================
-    // VALIDATE ZERODOSE ID
-    // ==========================================================
+// ==========================================================
+// VALIDATE ZERODOSE ID
+// ==========================================================
 
-    if (!isValidObjectId(id)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid Zerodose ID.",
-        },
-        { status: 400 },
-      );
-    }
+if (!isValidObjectId(id)) {
+  return NextResponse.json(
+    {
+      success: false,
+      message: "Invalid Zerodose ID.",
+    },
+    { status: 400 },
+  );
+}
 
-    // ==========================================================
-    // AUTHENTICATION
-    // ==========================================================
+// ==========================================================
+// AUTHENTICATION
+// ==========================================================
 
-    const auth = await getAuthenticatedUser(request);
+const auth = await getAuthenticatedUser(request);
 
-    if (auth.error) {
-      return auth.error;
-    }
+if (auth.error) {
+  return auth.error;
+}
 
-    const user = auth.user;
+const user = auth.user;
 
-    // ==========================================================
-    // ONLY VACCINATOR
-    // ==========================================================
+// ==========================================================
+// ONLY VACCINATOR
+// ==========================================================
 
-    if (user.designation !== "vaccinator") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Only vaccinator can cover Zerodose.",
-        },
-        { status: 403 },
-      );
-    }
+if (user.designation !== "vaccinator") {
+  return NextResponse.json(
+    {
+      success: false,
+      message: "Only vaccinator can cover Zerodose.",
+    },
+    { status: 403 },
+  );
+}
 
-    // ==========================================================
-    // REQUEST BODY
-    // ==========================================================
+// ==========================================================
+// REQUEST BODY
+// ==========================================================
 
-    let body;
+let body;
 
-    try {
-      body = await request.json();
-    } catch (error) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid request body.",
-        },
-        { status: 400 },
-      );
-    }
+try {
+  body = await request.json();
+} catch (error) {
+  return NextResponse.json(
+    {
+      success: false,
+      message: "Invalid request body.",
+    },
+    { status: 400 },
+  );
+}
 
-    const qrCode = body?.qrCode;
+// ==========================================================
+// QR CODE FROM REQUEST
+// ==========================================================
 
-    // ==========================================================
-    // QR CODE VALIDATION
-    // ==========================================================
+const qrCode = body?.qrCode;
 
-    if (!qrCode || typeof qrCode !== "string") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "QR code is required.",
-        },
-        { status: 400 },
-      );
-    }
+// ==========================================================
+// QR CODE VALIDATION
+// ==========================================================
 
-    const scannedQrCode = qrCode.trim();
+if (qrCode === null || qrCode === undefined) {
+  return NextResponse.json(
+    {
+      success: false,
+      message: "QR code is required.",
+    },
+    { status: 400 },
+  );
+}
 
-    if (!scannedQrCode) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid QR code.",
-        },
-        { status: 400 },
-      );
-    }
+if (typeof qrCode !== "string") {
+  return NextResponse.json(
+    {
+      success: false,
+      message: "QR code must be a string.",
+    },
+    { status: 400 },
+  );
+}
 
-    // ==========================================================
-    // FIND ZERODOSE
-    // ==========================================================
+// ==========================================================
+// NORMALIZE QR
+// ==========================================================
 
-    const zerodose = await Zerodose.findById(id);
+const scannedQrCode = qrCode.trim();
 
-    if (!zerodose) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Zerodose record not found.",
-        },
-        { status: 404 },
-      );
-    }
+// ==========================================================
+// EXACT 14 DIGIT VALIDATION
+// ==========================================================
 
-    // ==========================================================
-    // VACCINATOR UNION COUNCIL SCOPE
-    // ==========================================================
-    // Vaccinator can only cover Zerodose records belonging
-    // to the same Union Council.
-    // ==========================================================
+if (!/^\d{14}$/.test(scannedQrCode)) {
+  return NextResponse.json(
+    {
+      success: false,
+      message: "QR code must be exactly 14 digits.",
+    },
+    { status: 400 },
+  );
+}
 
-    if (!objectIdEquals(user.unionCouncil, zerodose.unionCouncil)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "This Zerodose record is outside your Union Council.",
-        },
-        { status: 403 },
-      );
-    }
+// ==========================================================
+// FIND ZERODOSE
+// ==========================================================
 
-    // ==========================================================
-    // ALREADY COVERED CHECK
-    // ==========================================================
+const zerodose = await Zerodose.findById(id);
 
-    if (zerodose.vaccinationStatus === "covered") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "This child has already been covered.",
-        },
-        { status: 409 },
-      );
-    }
+if (!zerodose) {
+  return NextResponse.json(
+    {
+      success: false,
+      message: "Zerodose record not found.",
+    },
+    { status: 404 },
+  );
+}
 
-    // ==========================================================
-    // RECORD QR VALIDATION
-    // ==========================================================
+// ==========================================================
+// VACCINATOR UNION COUNCIL SCOPE
+// ==========================================================
 
-    if (!zerodose.qrCode) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "QR code is not assigned to this Zerodose record.",
-        },
-        { status: 400 },
-      );
-    }
+if (!objectIdEquals(user.unionCouncil, zerodose.unionCouncil)) {
+  return NextResponse.json(
+    {
+      success: false,
+      message: "This Zerodose record is outside your Union Council.",
+    },
+    { status: 403 },
+  );
+}
 
-    const recordQrCode = zerodose.qrCode.trim();
+// ==========================================================
+// ALREADY COVERED CHECK
+// ==========================================================
 
-    // ==========================================================
-    // SCANNED QR VS DATABASE QR
-    // ==========================================================
+if (zerodose.vaccinationStatus === "covered") {
+  return NextResponse.json(
+    {
+      success: false,
+      message: "This child has already been covered.",
+    },
+    { status: 409 },
+  );
+}
 
-    if (recordQrCode !== scannedQrCode) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid QR code for this child.",
-        },
-        { status: 400 },
-      );
-    }
+// ==========================================================
+// COVER CHILD
+// ==========================================================
 
-    // ==========================================================
-    // COVER CHILD
-    // ==========================================================
+const now = new Date();
 
-    const now = new Date();
+// ==========================================================
+// SAVE SCANNED QR CODE
+// ==========================================================
 
-    // IMPORTANT:
-    // The vaccinator who performs the cover action becomes
-    // the vaccinator saved against this Zerodose record.
-    zerodose.vaccinator = user._id;
+zerodose.qrCode = scannedQrCode;
 
-    zerodose.coveredDate = now;
+// ==========================================================
+// SAVE VACCINATOR
+// ==========================================================
 
-    zerodose.vaccinationStatus = "covered";
+zerodose.vaccinator = user._id;
 
-    // ==========================================================
-    // DIRECT COVER
-    // ==========================================================
-    // If the child was not visited before, covering it also
-    // records the visit date.
-    // ==========================================================
+// ==========================================================
+// SAVE COVER DATE
+// ==========================================================
 
-    if (!zerodose.visitDate) {
-      zerodose.visitDate = now;
-    }
+zerodose.coveredDate = now;
 
-    // ==========================================================
-    // SAVE
-    // ==========================================================
+// ==========================================================
+// SAVE VISIT DATE IF NOT ALREADY SET
+// ==========================================================
 
-    await zerodose.save();
+if (!zerodose.visitDate) {
+  zerodose.visitDate = now;
+}
 
-    // ==========================================================
-    // SUCCESS RESPONSE
-    // ==========================================================
+// ==========================================================
+// SAVE VACCINATION STATUS
+// ==========================================================
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: "Child covered successfully.",
-        data: {
-          _id: zerodose._id,
-          qrCode: zerodose.qrCode,
-          vaccinator: zerodose.vaccinator,
-          visitDate: zerodose.visitDate,
-          coveredDate: zerodose.coveredDate,
-          vaccinationStatus: zerodose.vaccinationStatus,
-          clientStatus: zerodose.clientStatus,
-        },
-      },
-      { status: 200 },
-    );
+zerodose.vaccinationStatus = "covered";
+
+// ==========================================================
+// SAVE DATABASE
+// ==========================================================
+
+await zerodose.save();
+
+// ==========================================================
+// SUCCESS RESPONSE
+// ==========================================================
+
+return NextResponse.json(
+  {
+    success: true,
+    message: "Child covered successfully.",
+    data: {
+      _id: zerodose._id,
+      qrCode: zerodose.qrCode,
+      vaccinator: zerodose.vaccinator,
+      visitDate: zerodose.visitDate,
+      coveredDate: zerodose.coveredDate,
+      vaccinationStatus: zerodose.vaccinationStatus,
+      clientStatus: zerodose.clientStatus,
+    },
+  },
+  { status: 200 },
+);
+;
   } catch (error) {
-    // ==========================================================
-    // ERROR
-    // ==========================================================
-
     console.error("Vaccinator cover API error:", error);
 
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Failed to cover child.",
-        error:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
-      },
-      { status: 500 },
-    );
+    
+return NextResponse.json(
+  {
+    success: false,
+    message: "Failed to cover child.",
+    error:
+      process.env.NODE_ENV === "development"
+        ? error.message
+        : undefined,
+  },
+  { status: 500 },
+);
+;
   }
 }

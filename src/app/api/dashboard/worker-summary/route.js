@@ -1,10 +1,202 @@
+// import mongoose from "mongoose";
+// import { NextResponse } from "next/server";
+
+// import { connectDB } from "@/lib/db";
+// import Zerodose from "@/models/Zerodose";
+// import User from "@/models/User";
+
+// // ============================================================
+// // AUTHENTICATED USER
+// // ============================================================
+
+// async function getAuthenticatedUser(request) {
+//   try {
+//     const token = request.cookies.get("auth_token")?.value;
+
+//     if (!token) {
+//       return {
+//         error: NextResponse.json(
+//           {
+//             success: false,
+//             message: "Authentication required.",
+//           },
+//           { status: 401 },
+//         ),
+//       };
+//     }
+
+//     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+
+//     const { payload } = await jwtVerify(token, secret);
+
+//     if (!payload?.userId) {
+//       return {
+//         error: NextResponse.json(
+//           {
+//             success: false,
+//             message: "Invalid authentication token.",
+//           },
+//           { status: 401 },
+//         ),
+//       };
+//     }
+
+//     const user = await User.findOne({
+//       _id: payload.userId,
+//       isActive: true,
+//     })
+//       .select("_id name designation")
+//       .lean();
+
+//     if (!user) {
+//       return {
+//         error: NextResponse.json(
+//           {
+//             success: false,
+//             message: "Authenticated user not found.",
+//           },
+//           { status: 401 },
+//         ),
+//       };
+//     }
+
+//     return { user };
+//   } catch (error) {
+//     console.error("Authentication error:", error);
+
+//     return {
+//       error: NextResponse.json(
+//         {
+//           success: false,
+//           message: "Invalid or expired authentication token.",
+//         },
+//         { status: 401 },
+//       ),
+//     };
+//   }
+// }
+
+// export async function GET(request) {
+//   try {
+//     await connectDB();
+//     console.log("Connected to MongoDB");
+//     const user = request.user;
+//     console.log("User:", user);
+
+//     if (!user) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           message: "Unauthorized",
+//         },
+//         { status: 401 },
+//       );
+//     }
+
+//     if (!user.unionCouncil) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           message: "Union Council is not assigned to this user",
+//         },
+//         { status: 400 },
+//       );
+//     }
+
+//     if (user.teamNumber === null || user.teamNumber === undefined) {
+//       return NextResponse.json(
+//         {
+//           success: false,
+//           message: "Team Number is not assigned to this user",
+//         },
+//         { status: 400 },
+//       );
+//     }
+
+//     const result = await Zerodose.aggregate([
+//       {
+//         $match: {
+//           unionCouncil: new mongoose.Types.ObjectId(user.unionCouncil),
+//           teamNumber: Number(user.teamNumber),
+//         },
+//       },
+//       {
+//         $group: {
+//           _id: null,
+
+//           recordCount: {
+//             $sum: {
+//               $cond: [
+//                 {
+//                   $ne: ["$recordDate", null],
+//                 },
+//                 1,
+//                 0,
+//               ],
+//             },
+//           },
+
+//           visitCount: {
+//             $sum: {
+//               $cond: [
+//                 {
+//                   $ne: ["$visitDate", null],
+//                 },
+//                 1,
+//                 0,
+//               ],
+//             },
+//           },
+
+//           coveredCount: {
+//             $sum: {
+//               $cond: [
+//                 {
+//                   $ne: ["$coveredDate", null],
+//                 },
+//                 1,
+//                 0,
+//               ],
+//             },
+//           },
+//         },
+//       },
+//     ]);
+
+//     const summary = result[0] || {
+//       recordCount: 0,
+//       visitCount: 0,
+//       coveredCount: 0,
+//     };
+
+//     return NextResponse.json({
+//       success: true,
+//       data: {
+//         recordCount: summary.recordCount,
+//         visitCount: summary.visitCount,
+//         coveredCount: summary.coveredCount,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Worker Summary Error:", error);
+
+//     return NextResponse.json(
+//       {
+//         success: false,
+//         message: "Failed to get worker summary",
+//       },
+//       { status: 500 },
+//     );
+//   }
+// }
+
+import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
 import { connectDB } from "@/lib/db";
-
-import User from "@/models/User";
 import Zerodose from "@/models/Zerodose";
+import User from "@/models/User";
 
 // ============================================================
 // AUTHENTICATED USER
@@ -46,9 +238,7 @@ async function getAuthenticatedUser(request) {
       _id: payload.userId,
       isActive: true,
     })
-      .select(
-        "_id name designation unionCouncil teamNumber",
-      )
+      .select("_id name designation unionCouncil teamNumber")
       .lean();
 
     if (!user) {
@@ -85,14 +275,10 @@ async function getAuthenticatedUser(request) {
 
 export async function GET(request) {
   try {
-    console.log("==============================================");
-    console.log("WORKER SUMMARY ROUTE HIT");
-    console.log("==============================================");
-
     await connectDB();
 
     // ========================================================
-    // AUTH
+    // AUTHENTICATION
     // ========================================================
 
     const auth = await getAuthenticatedUser(request);
@@ -101,22 +287,13 @@ export async function GET(request) {
       return auth.error;
     }
 
-    const authUser = auth.user;
-
-    console.log("WORKER SUMMARY USER:", {
-      id: String(authUser._id),
-      name: authUser.name,
-      designation: authUser.designation,
-      unionCouncil: authUser.unionCouncil,
-      teamNumber: authUser.teamNumber,
-      workerRole: authUser.workerRole,
-    });
+    const { user } = auth;
 
     // ========================================================
     // ONLY WORKER
     // ========================================================
 
-    if (authUser.designation !== "worker") {
+    if (user.designation !== "worker") {
       return NextResponse.json(
         {
           success: false,
@@ -127,154 +304,113 @@ export async function GET(request) {
     }
 
     // ========================================================
-    // VALIDATE WORKER SCOPE
+    // WORKER HIERARCHY
     // ========================================================
 
-    if (!authUser.unionCouncil) {
+    if (!user.unionCouncil) {
       return NextResponse.json(
         {
           success: false,
-          message: "Worker Union Council is not assigned.",
+          message: "Union Council is not assigned to this worker.",
         },
         { status: 400 },
       );
     }
 
-    if (authUser.teamNumber === null || authUser.teamNumber === undefined) {
+    if (user.teamNumber === null || user.teamNumber === undefined) {
       return NextResponse.json(
         {
           success: false,
-          message: "Worker team number is not assigned.",
+          message: "Team Number is not assigned to this worker.",
         },
         { status: 400 },
       );
     }
 
     // ========================================================
-    // WORKER ZERODOSE FILTER
-    // ========================================================
-    //
-    // IMPORTANT:
-    //
-    // No campaign filter.
-    //
-    // Worker can only access:
-    //
-    // unionCouncil= authenticated worker's UC
-    // teamNumber     = authenticated worker's team
-    //
+    // GET SUMMARY
     // ========================================================
 
-    const baseFilter = {
-      unionCouncil: authUser.unionCouncil,
-      teamNumber: authUser.teamNumber,
-      isActive: true,
-      recordDate: { $ne: null },
-    };
+    const result = await Zerodose.aggregate([
+      {
+        $match: {
+          unionCouncil: new mongoose.Types.ObjectId(user.unionCouncil),
+          teamNumber: Number(user.teamNumber),
+        },
+      },
 
-    console.log("WORKER SUMMARY FILTER:", {
-      unionCouncil: authUser.unionCouncil,
-      teamNumber: authUser.teamNumber,
-      isActive: true,
-    });
+      {
+        $group: {
+          _id: null,
 
-    // ========================================================
-    // COUNT RECORDED / VISITED / COVERED
-    // ========================================================
-    //
-    // Exactly three mutually-exclusive states:
-    //
-    // RECORDED
-    // recordDate exists
-    // visitDate is null
-    // coverDate is null
-    //
-    // VISITED
-    // recordDate exists
-    // visitDate exists
-    // coverDate is null
-    //
-    // COVERED
-    // recordDate exists
-    // visitDate exists
-    // coverDate exists
-    //
-    // ========================================================
+          recordCount: {
+            $sum: {
+              $cond: [
+                {
+                  $ne: ["$recordDate", null],
+                },
+                1,
+                0,
+              ],
+            },
+          },
 
-    const [recorded, visited, covered] = await Promise.all([
-      // ======================================================
-      // RECORDED
-      // ======================================================
+          visitCount: {
+            $sum: {
+              $cond: [
+                {
+                  $ne: ["$visitDate", null],
+                },
+                1,
+                0,
+              ],
+            },
+          },
 
-      Zerodose.countDocuments({
-        ...baseFilter,
-        visitDate: null,
-        coverDate: null,
-      }),
-
-      // ======================================================
-      // VISITED
-      // ======================================================
-
-      Zerodose.countDocuments({
-        ...baseFilter,
-        visitDate: { $ne: null },
-        coverDate: null,
-      }),
-
-      // ======================================================
-      // COVERED
-      // ======================================================
-
-      Zerodose.countDocuments({
-        ...baseFilter,
-        visitDate: { $ne: null },
-        coverDate: { $ne: null },
-      }),
+          coveredCount: {
+            $sum: {
+              $cond: [
+                {
+                  $ne: ["$coveredDate", null],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+        },
+      },
     ]);
 
     // ========================================================
-    // TOTAL
+    // DEFAULT SUMMARY
     // ========================================================
 
-    const total = recorded + visited + covered;
-
-    console.log("WORKER SUMMARY COUNTS:", {
-      total,
-      recorded,
-      visited,
-      covered,
-    });
+    const summary = result[0] || {
+      recordCount: 0,
+      visitCount: 0,
+      coveredCount: 0,
+    };
 
     // ========================================================
-    // FINAL RESPONSE
+    // RESPONSE
     // ========================================================
 
-    return NextResponse.json(
-      {
-        success: true,
-
-        data: {
-          total,
-          recorded,
-          visited,
-          covered,
-        },
+    return NextResponse.json({
+      success: true,
+      data: {
+        recordCount: summary.recordCount,
+        visitCount: summary.visitCount,
+        coveredCount: summary.coveredCount,
       },
-      { status: 200 },
-    );
+    });
   } catch (error) {
-    console.error("==============================================");
-    console.error("WORKER SUMMARY ERROR");
-    console.error("==============================================");
-    console.error(error);
+    console.error("Worker Summary Error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to load worker summary.",
-        error:
-          process.env.NODE_ENV === "development" ? error?.message : undefined,
+        message: "Failed to get worker summary",
       },
       { status: 500 },
     );

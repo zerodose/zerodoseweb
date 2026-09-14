@@ -11,6 +11,77 @@ import Town from "@/models/Town";
 import UnionCouncil from "@/models/UnionCouncil";
 import { jwtVerify } from "jose";
 
+// ============================================================
+// AUTHENTICATED USER
+// ============================================================
+
+async function getAuthenticatedUser(request) {
+  try {
+    const token = request.cookies.get("auth_token")?.value;
+
+    if (!token) {
+      return {
+        error: NextResponse.json(
+          {
+            success: false,
+            message: "Authentication required.",
+          },
+          { status: 401 },
+        ),
+      };
+    }
+
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+
+    const { payload } = await jwtVerify(token, secret);
+
+    if (!payload?.userId) {
+      return {
+        error: NextResponse.json(
+          {
+            success: false,
+            message: "Invalid authentication token.",
+          },
+          { status: 401 },
+        ),
+      };
+    }
+
+    const user = await User.findOne({
+      _id: payload.userId,
+      isActive: true,
+    })
+      .select("_id name designation unionCouncil teamNumber")
+      .lean();
+
+    if (!user) {
+      return {
+        error: NextResponse.json(
+          {
+            success: false,
+            message: "Authenticated user not found.",
+          },
+          { status: 401 },
+        ),
+      };
+    }
+
+    return { user };
+  } catch (error) {
+    console.error("Authentication error:", error);
+
+    return {
+      error: NextResponse.json(
+        {
+          success: false,
+          message: "Invalid or expired authentication token.",
+        },
+        { status: 401 },
+      ),
+    };
+  }
+}
+
 export async function POST(request) {
   try {
     await connectDB();
@@ -423,258 +494,206 @@ export async function POST(request) {
   }
 }
 
+// ============================================================
+// GET WORKER ZERODOSE DATA
+// ============================================================
+
+
+
+// ============================================================
+// GET WORKER ZERODOSE
+// ============================================================
+
 export async function GET(request) {
   try {
     await connectDB();
 
-    // --------------------------------------------------
-    // 1. Get JWT from auth cookie
-    // --------------------------------------------------
-    const token = request.cookies.get("auth_token")?.value;
+    // --------------------------------------------------------
+    // AUTHENTICATION
+    // --------------------------------------------------------
 
-    if (!token) {
+    const auth = await getAuthenticatedUser(request);
+
+    if (auth.error) {
+      return auth.error;
+    }
+
+    const { user } = auth;
+
+    // --------------------------------------------------------
+    // ONLY WORKER
+    // --------------------------------------------------------
+
+    if (user.designation !== "worker") {
       return NextResponse.json(
         {
           success: false,
-          message: "Unauthorized",
+          message: "Only workers can access this data.",
         },
-        { status: 401 },
+        { status: 403 },
       );
     }
 
-    // --------------------------------------------------
-    // 2. Verify JWT
-    // --------------------------------------------------
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    // --------------------------------------------------------
+    // WORKER TEAM VALIDATION
+    // --------------------------------------------------------
 
-    const { payload } = await jwtVerify(token, secret);
-
-    const userId = payload?.userId || payload?.id || payload?._id;
-
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid token",
-        },
-        { status: 401 },
-      );
-    }
-
-    // --------------------------------------------------
-    // 3. Get authenticated worker
-    // --------------------------------------------------
-    const user = await User.findOne({
-      _id: userId,
-      designation: "worker",
-      isActive: true,
-    })
-      .select(
-        "_id name designation unionCouncil teamNumber supervisor workerRole",
-      )
-      .lean();
-
-    if (!user) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Active worker not found",
-        },
-        { status: 404 },
-      );
-    }
-
-    // --------------------------------------------------
-    // 4. Validate worker assignment
-    // --------------------------------------------------
     if (!user.unionCouncil) {
       return NextResponse.json(
         {
           success: false,
-          message: "Worker is not assigned to a Union Council",
+          message: "Union Council is not assigned to this worker.",
         },
         { status: 400 },
       );
     }
 
-    if (user.teamNumber === undefined || user.teamNumber === null) {
+    if (user.teamNumber === null || user.teamNumber === undefined) {
       return NextResponse.json(
         {
           success: false,
-          message: "Worker is not assigned to a team",
+          message: "Team Number is not assigned to this worker.",
         },
         { status: 400 },
       );
     }
 
-    // --------------------------------------------------
-    // 5. Optional campaignId
-    // --------------------------------------------------
+    // --------------------------------------------------------
+    // QUERY PARAMETERS
+    // --------------------------------------------------------
+
     const { searchParams } = new URL(request.url);
+
     const campaignId = searchParams.get("campaignId");
+    const filter = searchParams.get("filter");
 
-    let selectedCampaign;
+    // --------------------------------------------------------
+    // CAMPAIGN VALIDATION
+    // --------------------------------------------------------
 
-    // --------------------------------------------------
-    // 6. Specific campaign
-    // --------------------------------------------------
-    if (campaignId) {
-      if (!mongoose.Types.ObjectId.isValid(campaignId)) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Invalid campaign ID",
-          },
-          { status: 400 },
-        );
-      }
-
-      selectedCampaign = await Campaign.findById(campaignId)
-        .select("_id name year month startDate endDate")
-        .lean();
-
-      if (!selectedCampaign) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Campaign not found",
-          },
-          { status: 404 },
-        );
-      }
+    if (!campaignId) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Campaign ID is required.",
+        },
+        { status: 400 },
+      );
     }
 
-    // --------------------------------------------------
-    // 7. Current active campaign
-    // --------------------------------------------------
-    else {
-      const now = new Date();
-
-      selectedCampaign = await Campaign.findOne({
-        startDate: { $lte: now },
-        endDate: { $gte: now },
-      })
-        .select("_id name year month startDate endDate")
-        .sort({ startDate: -1 })
-        .lean();
-
-      if (!selectedCampaign) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "No current campaign found",
-          },
-          { status: 404 },
-        );
-      }
+    if (!mongoose.Types.ObjectId.isValid(campaignId)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid Campaign ID.",
+        },
+        { status: 400 },
+      );
     }
 
-    // --------------------------------------------------
-    // 8. Build worker scope
+    // --------------------------------------------------------
+    // FILTER VALIDATION
+    // --------------------------------------------------------
+
+    const allowedFilters = ["recorded", "visited", "covered"];
+
+    if (!filter || !allowedFilters.includes(filter)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Invalid filter. Allowed filters are recorded, visited, and covered.",
+        },
+        { status: 400 },
+      );
+    }
+
+    // --------------------------------------------------------
+    // BASE QUERY
     //
     // IMPORTANT:
-    // unionCouncil + teamNumber come from authenticated user.
-    // Nothing comes from frontend.
-    // --------------------------------------------------
-    const filter = {
-      unionCouncil: user.unionCouncil,
+    // Only selected campaign
+    // AND authenticated worker's team
+    // --------------------------------------------------------
+
+    const match = {
+      campaign: new mongoose.Types.ObjectId(campaignId),
+
+      unionCouncil: new mongoose.Types.ObjectId(user.unionCouncil),
+
       teamNumber: Number(user.teamNumber),
-      campaign: selectedCampaign._id,
-      recordDate: { $ne: null },
     };
 
-    // Optional extra safety:
-    // If you want to ensure the records also belong to
-    // this exact worker's supervisor, uncomment this:
+    // --------------------------------------------------------
+    // RECORDED
     //
-    // filter.supervisor = user.supervisor;
-
-    // --------------------------------------------------
-    // 9. Get Zerodose records
-    // --------------------------------------------------
-    const records = await Zerodose.find(filter).sort({ recordDate: -1 }).lean();
-
-    // --------------------------------------------------
-    // 10. Calculate statuses
-    //
-    // recorded:
     // recordDate exists
-    // visitDate null
-    // coveredDate null
+    // visitDate is null
+    // coverDate is null
+    // --------------------------------------------------------
+
+    if (filter === "recorded") {
+      match.recordDate = { $ne: null };
+      match.visitDate = null;
+      match.coverDate = null;
+    }
+
+    // --------------------------------------------------------
+    // VISITED
     //
-    // visited:
     // recordDate exists
     // visitDate exists
-    // coveredDate null
+    // coverDate is null
+    // --------------------------------------------------------
+
+    if (filter === "visited") {
+      match.recordDate = { $ne: null };
+      match.visitDate = { $ne: null };
+      match.coverDate = null;
+    }
+
+    // --------------------------------------------------------
+    // COVERED
     //
-    // covered:
     // recordDate exists
     // visitDate exists
-    // coveredDate exists
-    // --------------------------------------------------
-    const recorded = records.filter(
-      (item) =>
-        item.recordDate !== null &&
-        item.visitDate === null &&
-        item.coveredDate === null,
-    ).length;
+    // coverDate exists
+    // --------------------------------------------------------
 
-    const visited = records.filter(
-      (item) =>
-        item.recordDate !== null &&
-        item.visitDate !== null &&
-        item.coveredDate === null,
-    ).length;
+    if (filter === "covered") {
+      match.recordDate = { $ne: null };
+      match.visitDate = { $ne: null };
+      match.coverDate = { $ne: null };
+    }
 
-    const covered = records.filter(
-      (item) =>
-        item.recordDate !== null &&
-        item.visitDate !== null &&
-        item.coveredDate !== null,
-    ).length;
+    // --------------------------------------------------------
+    // GET DATA
+    // --------------------------------------------------------
 
-    // --------------------------------------------------
-    // 11. Response
-    // --------------------------------------------------
+    const zerodose = await Zerodose.find(match).sort({ createdAt: -1 }).lean();
+
+    // --------------------------------------------------------
+    // RESPONSE
+    // --------------------------------------------------------
+
     return NextResponse.json({
       success: true,
-      data: {
+      data: zerodose,
+      meta: {
+        filter,
+        count: zerodose.length,
+        campaignId,
         unionCouncil: user.unionCouncil,
         teamNumber: user.teamNumber,
-
-        worker: {
-          id: user._id,
-          name: user.name,
-          designation: user.designation,
-          workerRole: user.workerRole,
-        },
-
-        campaign: {
-          id: selectedCampaign._id,
-          name: selectedCampaign.name,
-          year: selectedCampaign.year,
-          month: selectedCampaign.month,
-          startDate: selectedCampaign.startDate,
-          endDate: selectedCampaign.endDate,
-        },
-
-        recorded,
-        visited,
-        covered,
-        total: recorded + visited + covered,
-
-        records,
       },
     });
   } catch (error) {
-    console.error("GET ZERODOSE WORKER ERROR:", error);
+    console.error("Worker Zerodose Error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to fetch worker Zerodose data",
-        error:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
+        message: "Failed to get worker Zerodose data.",
       },
       { status: 500 },
     );

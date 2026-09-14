@@ -2,21 +2,21 @@
 
 export default function WorkerPageSkeleton() {
   return (
-  <div className="min-h-full w-full">
+    <div className="min-h-full w-full">
       {/* =========================================================
           Header Skeleton
       ========================================================= */}
 
       <div className="mt-4 mb-6 flex items-start gap-3">
         {/* Back Button */}
-        <div className="bg-surface h-9 w-9 shrink-0 animate-pulse rounded-lg" />
+        <div className="h-9 w-9 shrink-0 animate-pulse rounded-lg bg-slate-200/90 dark:bg-slate-700/60" />
 
         <div className="min-w-0 flex-1">
           {/* Title */}
-          <div className="bg-surface h-7 w-52 animate-pulse rounded-md" />
+          <div className="h-7 w-52 animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
 
           {/* Description */}
-          <div className="bg-surface mt-2 h-4 w-72 max-w-full animate-pulse rounded-md" />
+          <div className="mt-2 h-4 w-72 max-w-full animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
         </div>
       </div>
 
@@ -30,26 +30,26 @@ export default function WorkerPageSkeleton() {
         ======================================================= */}
 
         <div className="border-border bg-background rounded-2xl border shadow-sm">
-         <div className="flex items-center justify-between gap-4 p-5 md:p-6">
+          <div className="flex items-center justify-between gap-4 p-5 md:p-6">
             <div className="flex min-w-0 items-start gap-4">
               {/* Icon */}
-              <div className="bg-surface h-14 w-14 shrink-0 animate-pulse rounded-2xl" />
+              <div className="h-14 w-14 shrink-0 animate-pulse rounded-2xl bg-slate-200/90 dark:bg-slate-700/60" />
 
               <div className="min-w-0 flex-1">
                 {/* Child name + status */}
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="bg-surface h-6 w-40 animate-pulse rounded-md" />
+                  <div className="h-6 w-40 animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
 
-                  <div className="bg-surface h-6 w-20 animate-pulse rounded-full" />
+                  <div className="h-6 w-20 animate-pulse rounded-full bg-slate-200/90 dark:bg-slate-700/60" />
                 </div>
 
                 {/* Subtitle */}
-                <div className="bg-surface mt-2 h-4 w-32 animate-pulse rounded-md" />
+                <div className="mt-2 h-4 w-32 animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
               </div>
             </div>
 
             {/* Edit Button */}
-            <div className="bg-surface h-9 w-9 shrink-0 animate-pulse rounded-lg" />
+            <div className="h-9 w-9 shrink-0 animate-pulse rounded-lg bg-slate-200/90 dark:bg-slate-700/60" />
           </div>
         </div>
 
@@ -101,17 +101,17 @@ function SkeletonSection({
       {/* Section Header */}
       <div className="border-border flex items-center gap-3 border-b p-4 md:p-5">
         {/* Icon */}
-        <div className="bg-surface h-10 w-10 shrink-0 animate-pulse rounded-xl" />
+        <div className="h-10 w-10 shrink-0 animate-pulse rounded-xl bg-slate-200/90 dark:bg-slate-700/60" />
 
         <div className="min-w-0">
           {/* Title */}
           <div
-            className={`bg-surface h-5 ${titleWidth} animate-pulse rounded-md`}
+            className={`h-5 ${titleWidth} animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60`}
           />
 
           {/* Description */}
           <div
-            className={`bg-surface mt-1.5 h-3.5 ${descriptionWidth} max-w-full animate-pulse rounded-md`}
+            className={`mt-1.5 h-3.5 ${descriptionWidth} max-w-full animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60`}
           />
         </div>
       </div>
@@ -134,10 +134,10 @@ function SkeletonDetailItem() {
   return (
     <div>
       {/* Label */}
-      <div className="bg-surface h-3.5 w-24 animate-pulse rounded-md" />
+      <div className="h-3.5 w-24 animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
 
       {/* Value */}
-      <div className="bg-surface mt-2 h-4 w-32 max-w-full animate-pulse rounded-md" />
+      <div className="mt-2 h-4 w-32 max-w-full animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
     </div>
   );
 }

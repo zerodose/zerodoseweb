@@ -1845,15 +1845,72 @@ export async function POST(request) {
       );
     }
 
+    const [ucmoUser, supervisorUser] = await Promise.all([
+      User.findById(ucmoId)
+        .select(
+          "_id name email contactNumber designation isActive district town unionCouncil",
+        )
+        .lean(),
+
+      User.findById(supervisorId)
+        .select(
+          "_id name email contactNumber designation supervisorCode isActive district town unionCouncil",
+        )
+        .lean(),
+    ]);
+
+    if (!ucmoUser || ucmoUser.designation !== "ucmo" || !ucmoUser.isActive) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid or inactive UCMO assigned to worker",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (
+      !supervisorUser ||
+      supervisorUser.designation !== "supervisor" ||
+      !supervisorUser.isActive
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid or inactive supervisor assigned to worker",
+        },
+        { status: 400 },
+      );
+    }
+
+    const supervisorCode = Number(supervisorUser.supervisorCode);
+
+    if (
+      supervisorUser.supervisorCode === undefined ||
+      supervisorUser.supervisorCode === null ||
+      supervisorUser.supervisorCode === "" ||
+      !Number.isInteger(supervisorCode) ||
+      supervisorCode < 0
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Assigned supervisor has an invalid supervisor code",
+        },
+        { status: 400 },
+      );
+    }
+
     const teamWorkers = await User.find({
       designation: "worker",
       isActive: true,
       supervisor: supervisorId,
+      supervisorCode: supervisorCode,
       unionCouncil: unionCouncilId,
       teamNumber: parsedTeamNumber,
     })
       .select(
-        "_id name designation supervisor teamNumber workerRole unionCouncil",
+        "_id name designation supervisor supervisorCode teamNumber workerRole unionCouncil",
       )
       .lean();
 
@@ -1894,44 +1951,6 @@ export async function POST(request) {
         {
           success: false,
           message: "Worker does not belong to the assigned team",
-        },
-        { status: 400 },
-      );
-    }
-
-    const [ucmoUser, supervisorUser] = await Promise.all([
-      User.findById(ucmoId)
-        .select(
-          "_id name email contactNumber designation isActive district town unionCouncil",
-        )
-        .lean(),
-
-      User.findById(supervisorId)
-        .select(
-          "_id name email contactNumber designation supervisorCode isActive district town unionCouncil",
-        )
-        .lean(),
-    ]);
-
-    if (!ucmoUser || ucmoUser.designation !== "ucmo" || !ucmoUser.isActive) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid or inactive UCMO assigned to worker",
-        },
-        { status: 400 },
-      );
-    }
-
-    if (
-      !supervisorUser ||
-      supervisorUser.designation !== "supervisor" ||
-      !supervisorUser.isActive
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid or inactive supervisor assigned to worker",
         },
         { status: 400 },
       );
@@ -2074,6 +2093,7 @@ export async function POST(request) {
       unionCouncil: unionCouncilId,
       ucmo: ucmoId,
       supervisor: supervisorId,
+      supervisorCode: supervisorCode,
       user: userId,
 
       teamLeader: teamLeaderUser._id,

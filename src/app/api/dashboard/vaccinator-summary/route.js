@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import mongoose from "mongoose";
+import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
 import { connectDB } from "@/lib/db";
@@ -8,213 +8,143 @@ import Zerodose from "@/models/Zerodose";
 import Campaign from "@/models/Campaign";
 
 // ============================================================
-// GET UCMO SUMMARY
-//
-// Backend automatically identifies authenticated UCMO
-// from auth_token.
-//
-// No ucmoId is accepted from frontend.
+// AUTHENTICATED USER
+// ============================================================
+
+async function getAuthenticatedUser(request) {
+  try {
+    const token = request.cookies.get("auth_token")?.value;
+
+    if (!token) {
+      return {
+        error: NextResponse.json(
+          {
+            success: false,
+            message: "Authentication required.",
+          },
+          { status: 401 },
+        ),
+      };
+    }
+
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+
+    const { payload } = await jwtVerify(token, secret);
+
+    const userId = payload?.userId;
+
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return {
+        error: NextResponse.json(
+          {
+            success: false,
+            message: "Invalid authentication token.",
+          },
+          { status: 401 },
+        ),
+      };
+    }
+
+    const user = await User.findOne({
+      _id: userId,
+      isActive: true,
+    })
+      .select("_id name designation unionCouncil")
+      .lean();
+
+    if (!user) {
+      return {
+        error: NextResponse.json(
+          {
+            success: false,
+            message: "Authenticated user not found.",
+          },
+          { status: 401 },
+        ),
+      };
+    }
+
+    return {
+      user,
+    };
+  } catch (error) {
+    console.error("Authentication error:", error);
+
+    return {
+      error: NextResponse.json(
+        {
+          success: false,
+          message: "Invalid or expired authentication token.",
+        },
+        { status: 401 },
+      ),
+    };
+  }
+}
+
+// ============================================================
+// GET VACCINATOR SUMMARY
 // ============================================================
 
 export async function GET(request) {
   try {
     await connectDB();
 
-    // ==========================================================
-    // AUTHENTICATED USER
-    // ==========================================================
+    // ========================================================
+    // AUTHENTICATION
+    // ========================================================
 
-    const token = request.cookies.get("auth_token")?.value;
+    const auth = await getAuthenticatedUser(request);
 
-    if (!token) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Authentication required.",
-        },
-        { status: 401 },
-      );
+    if (auth.error) {
+      return auth.error;
     }
 
-    let decoded;
+    const { user } = auth;
 
-    try {
-      const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    // ========================================================
+    // ONLY VACCINATOR
+    // ========================================================
 
-      const verified = await jwtVerify(token, secret);
-
-      decoded = verified.payload;
-    } catch (error) {
+    if (user.designation !== "vaccinator") {
       return NextResponse.json(
         {
           success: false,
-          message: "Invalid or expired authentication token.",
-        },
-        { status: 401 },
-      );
-    }
-
-    const userId =
-      decoded?.userId || decoded?.id || decoded?._id || decoded?.sub;
-
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid authenticated user.",
-        },
-        { status: 401 },
-      );
-    }
-
-    const authUser = await User.findOne({
-      _id: new mongoose.Types.ObjectId(userId),
-      isActive: true,
-    })
-      .select("_id name designation unionCouncil district town")
-      .lean();
-
-    if (!authUser) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Authenticated user not found or inactive.",
-        },
-        { status: 401 },
-      );
-    }
-
-    // ==========================================================
-    // ONLY UCMO CAN ACCESS THIS SUMMARY
-    // ==========================================================
-
-    const designation = String(authUser.designation || "").toLowerCase();
-
-    if (designation !== "vaccinator" && designation !== "ucmo") {
-      return NextResponse.json(
-        {
-          success: false,
-          message:
-            "Only UCMO, Vaccinators, and Other Staff users can access this summary.",
+          message: "Only vaccinators can access vaccinator summary.",
         },
         { status: 403 },
       );
     }
 
-    // ==========================================================
-    // AUTHENTICATED UCMO'S UNION COUNCIL
-    // ==========================================================
+    // ========================================================
+    // UNION COUNCIL
+    // ========================================================
 
-    const unionCouncilId = authUser.unionCouncil?._id || authUser.unionCouncil;
-
-    if (!unionCouncilId || !mongoose.Types.ObjectId.isValid(unionCouncilId)) {
+    if (!user.unionCouncil) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "Authenticated UCMO is not assigned to a valid Union Council.",
+          message: "Union Council is not assigned to this vaccinator.",
         },
         { status: 400 },
       );
     }
 
-    const unionCouncilObjectId = new mongoose.Types.ObjectId(unionCouncilId);
-
-    // ==========================================================
-    // ACTIVE APPROVED SUPERVISORS
-    //
-    // IMPORTANT:
-    // Supervisors are restricted to this authenticated UCMO.
-    // ==========================================================
-
-    const supervisors = await User.find({
-      designation: "supervisor",
-      unionCouncil: authUser.unionCouncil._id || authUser.unionCouncil,
-      isActive: true,
-      approvalStatus: "approved",
-    })
-      .select("_id name supervisorCode code")
-      .sort({ name: 1 })
-      .lean();
-
-    const supervisorIds = supervisors.map((supervisor) => supervisor._id);
-
-    const totalSupervisors = supervisors.length;
-
-    // ==========================================================
-    // ACTIVE TEAMS
-    //
-    // A team is counted only when:
-    // 1. teamNumber exists
-    // 2. teamLeader exists
-    // 3. teamMember exists
-    // 4. users are active
-    //
-    // Team identity:
-    // supervisor + teamNumber
-    // ==========================================================
-
-    let activeTeams = 0;
-
-    if (supervisorIds.length) {
-      const activeWorkers = await User.find({
-        designation: "worker",
-        supervisor: {
-          $in: supervisorIds,
+    if (!mongoose.Types.ObjectId.isValid(user.unionCouncil)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid Union Council assigned to this vaccinator.",
         },
-        isActive: true,
-        teamNumber: {
-          $exists: true,
-          $nin: [null, ""],
-        },
-        workerRole: {
-          $in: ["teamLeader", "teamMember"],
-        },
-      })
-        .select("supervisor teamNumber workerRole")
-        .lean();
-
-      const teamMap = new Map();
-
-      activeWorkers.forEach((worker) => {
-        const supervisorId = String(worker.supervisor);
-
-        const teamNumber = String(worker.teamNumber).trim();
-
-        if (!teamNumber) {
-          return;
-        }
-
-        const teamKey = `${supervisorId}_${teamNumber}`;
-
-        if (!teamMap.has(teamKey)) {
-          teamMap.set(teamKey, {
-            teamLeader: false,
-            teamMember: false,
-          });
-        }
-
-        const team = teamMap.get(teamKey);
-
-        if (worker.workerRole === "teamLeader") {
-          team.teamLeader = true;
-        }
-
-        if (worker.workerRole === "teamMember") {
-          team.teamMember = true;
-        }
-      });
-
-      for (const team of teamMap.values()) {
-        if (team.teamLeader && team.teamMember) {
-          activeTeams += 1;
-        }
-      }
+        { status: 400 },
+      );
     }
 
-    // ==========================================================
+    const unionCouncilObjectId = new mongoose.Types.ObjectId(user.unionCouncil);
+
+    // ========================================================
     // CURRENT CAMPAIGN
-    // ==========================================================
+    // ========================================================
 
     const now = new Date();
 
@@ -232,208 +162,106 @@ export async function GET(request) {
       .select("_id name startDate endDate")
       .lean();
 
-    // ==========================================================
-    // DEFAULT SUPERVISOR SUMMARY
-    //
-    // Even if there is no current campaign, supervisors
-    // are still returned with zero counts.
-    // ==========================================================
+    // ========================================================
+    // DEFAULT SUMMARY
+    // ========================================================
 
-    const supervisorSummary = supervisors.map((supervisor) => ({
-      supervisorId: supervisor._id,
-      supervisorName: supervisor.name || "-",
-      supervisorCode: supervisor.supervisorCode || supervisor.code || "-",
-      totalTeams: 0,
-      recorded: 0,
-      visited: 0,
-      covered: 0,
-    }));
+    let recordCount = 0;
+    let visitCount = 0;
+    let coveredCount = 0;
 
-    // ==========================================================
-    // SUPERVISOR TEAM COUNTS
-    // ==========================================================
-
-    if (supervisorIds.length) {
-      const activeWorkers = await User.find({
-        designation: "worker",
-        supervisor: {
-          $in: supervisorIds,
-        },
-        isActive: true,
-        teamNumber: {
-          $exists: true,
-          $nin: [null, ""],
-        },
-        workerRole: {
-          $in: ["teamLeader", "teamMember"],
-        },
-      })
-        .select("supervisor teamNumber workerRole")
-        .lean();
-
-      const supervisorTeamMap = new Map();
-
-      activeWorkers.forEach((worker) => {
-        const supervisorId = String(worker.supervisor);
-
-        const teamNumber = String(worker.teamNumber).trim();
-
-        if (!teamNumber) {
-          return;
-        }
-
-        const teamKey = `${supervisorId}_${teamNumber}`;
-
-        if (!supervisorTeamMap.has(teamKey)) {
-          supervisorTeamMap.set(teamKey, {
-            supervisorId,
-            teamLeader: false,
-            teamMember: false,
-          });
-        }
-
-        const team = supervisorTeamMap.get(teamKey);
-
-        if (worker.workerRole === "teamLeader") {
-          team.teamLeader = true;
-        }
-
-        if (worker.workerRole === "teamMember") {
-          team.teamMember = true;
-        }
-      });
-
-      supervisorTeamMap.forEach((team) => {
-        if (!team.teamLeader || !team.teamMember) {
-          return;
-        }
-
-        const supervisor = supervisorSummary.find(
-          (item) => String(item.supervisorId) === String(team.supervisorId),
-        );
-
-        if (supervisor) {
-          supervisor.totalTeams += 1;
-        }
-      });
-    }
-
-    // ==========================================================
-    // CURRENT CAMPAIGN SUPERVISOR-WISE ZERODOSE COUNTS
+    // ========================================================
+    // CURRENT CAMPAIGN SUMMARY
     //
     // IMPORTANT:
-    // Only COUNT is returned.
     //
-    // No Zerodose records are returned to frontend.
-    // ==========================================================
+    // Vaccinator:
+    //     Union Council based data
+    //
+    // Worker:
+    //     Union Council + Team Number based data
+    //
+    // Vaccinator gets ALL teams inside this Union Council.
+    // ========================================================
 
-    if (currentCampaign && supervisorIds.length) {
-      const zerodoseCounts = await Zerodose.aggregate([
-        // ------------------------------------------------------
-        // CURRENT CAMPAIGN
-        // ------------------------------------------------------
+    if (currentCampaign) {
+      const result = await Zerodose.aggregate([
+        // ----------------------------------------------------
+        // UNION COUNCIL + CURRENT CAMPAIGN
+        // ----------------------------------------------------
 
         {
           $match: {
             campaign: currentCampaign._id,
-
             unionCouncil: unionCouncilObjectId,
-
-            supervisor: {
-              $in: supervisorIds,
-            },
-
-            vaccinationStatus: {
-              $in: ["recorded", "visited", "covered"],
-            },
           },
         },
 
-        // ------------------------------------------------------
-        // GROUP BY SUPERVISOR + STATUS
-        // ------------------------------------------------------
+        // ----------------------------------------------------
+        // COUNT RECORD / VISIT / COVER
+        // ----------------------------------------------------
 
         {
           $group: {
-            _id: {
-              supervisor: "$supervisor",
-              status: "$vaccinationStatus",
+            _id: null,
+
+            recordCount: {
+              $sum: {
+                $cond: [
+                  {
+                    $ne: ["$recordDate", null],
+                  },
+                  1,
+                  0,
+                ],
+              },
             },
-            count: {
-              $sum: 1,
+
+            visitCount: {
+              $sum: {
+                $cond: [
+                  {
+                    $ne: ["$visitDate", null],
+                  },
+                  1,
+                  0,
+                ],
+              },
+            },
+
+            coveredCount: {
+              $sum: {
+                $cond: [
+                  {
+                    $ne: ["$coveredDate", null],
+                  },
+                  1,
+                  0,
+                ],
+              },
             },
           },
         },
       ]);
 
-      // --------------------------------------------------------
-      // PUT COUNTS INTO CORRECT SUPERVISOR
-      // --------------------------------------------------------
-
-      zerodoseCounts.forEach((item) => {
-        const supervisorId = item?._id?.supervisor;
-
-        const status = item?._id?.status;
-
-        if (!supervisorId || !status) {
-          return;
-        }
-
-        const supervisor = supervisorSummary.find(
-          (item) => String(item.supervisorId) === String(supervisorId),
-        );
-
-        if (!supervisor) {
-          return;
-        }
-
-        if (status === "recorded") {
-          supervisor.recorded = item.count;
-        }
-
-        if (status === "visited") {
-          supervisor.visited = item.count;
-        }
-
-        if (status === "covered") {
-          supervisor.covered = item.count;
-        }
-      });
+      if (result.length > 0) {
+        recordCount = result[0].recordCount || 0;
+        visitCount = result[0].visitCount || 0;
+        coveredCount = result[0].coveredCount || 0;
+      }
     }
 
-    // ==========================================================
-    // TOTAL ZERODOSE COUNTS
-    // ==========================================================
-
-    const recordedZerodose = supervisorSummary.reduce(
-      (total, supervisor) => total + supervisor.recorded,
-      0,
-    );
-
-    const visitedZerodose = supervisorSummary.reduce(
-      (total, supervisor) => total + supervisor.visited,
-      0,
-    );
-
-    const coveredZerodose = supervisorSummary.reduce(
-      (total, supervisor) => total + supervisor.covered,
-      0,
-    );
-
-    // ==========================================================
+    // ========================================================
     // RESPONSE
-    // ==========================================================
+    // ========================================================
 
     return NextResponse.json({
       success: true,
 
       data: {
-        totalSupervisors,
-        activeTeams,
-
-        recordedZerodose,
-        visitedZerodose,
-        coveredZerodose,
+        recordCount,
+        visitCount,
+        coveredCount,
 
         currentCampaign: currentCampaign
           ? {
@@ -443,17 +271,15 @@ export async function GET(request) {
               endDate: currentCampaign.endDate,
             }
           : null,
-
-        supervisors: supervisorSummary,
       },
     });
   } catch (error) {
-    console.error("UCMO supervisor summary error:", error);
+    console.error("Vaccinator Summary Error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: error?.message || "Failed to fetch UCMO summary.",
+        message: error?.message || "Failed to get vaccinator summary.",
       },
       { status: 500 },
     );

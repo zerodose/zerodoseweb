@@ -454,7 +454,6 @@
 import { Syringe, CheckCircle2, Clock3, MapPin } from "lucide-react";
 
 export default function ZerodoseStats({
-  total = 0,
   recorded = 0,
   visited = 0,
   covered = 0,
@@ -462,12 +461,7 @@ export default function ZerodoseStats({
   loadingDots = ".",
 }) {
   const cards = [
-    {
-      key: "total",
-      label: "Total Zerodose",
-      value: total,
-      icon: Syringe,
-    },
+   
     {
       key: "recorded",
       label: "Recorded",
@@ -489,7 +483,7 @@ export default function ZerodoseStats({
   ];
 
   return (
-    <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+    <div className="mb-4 grid grid-cols-3 gap-3 sm:gap-4 md:grid-cols-3">
       {cards.map((card, index) => {
         const Icon = card.icon;
 

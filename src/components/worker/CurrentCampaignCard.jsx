@@ -63,8 +63,8 @@ export default function CurrentCampaignCard({ campaign, loading }) {
   return (
     <section className="mb-4">
       <div className="bg-primary relative overflow-hidden rounded-2xl p-5 shadow-sm md:p-6 dark:bg-surface">
-        <div className="relative z-10">
-          <div className="mb-2 flex items-center gap-2 text-white/80">
+        <div className="relative z-10 flex flex-col gap-4">
+          <div className=" flex items-center gap-2 text-white/80">
             <CalendarDays className="h-5 w-5" />
 
             <span className="text-sm font-medium">Current Campaign</span>
@@ -74,16 +74,18 @@ export default function CurrentCampaignCard({ campaign, loading }) {
             <div className="h-7 w-48 animate-pulse rounded bg-white/20" />
           ) : campaign ? (
             <>
-              <h2 className="text-2xl font-bold text-white md:text-3xl">
+              <div className="flex justify-between gap-1">
+                <h2 className="text-2xl font-bold text-white md:text-3xl">
                 {campaign.name}
               </h2>
 
-              <div className="mt-1 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/85">
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-white/85">
                 <span>{formatDate(campaign.startDate)}</span>
 
                 <span className="text-white/50">→</span>
 
                 <span>{formatDate(campaign.endDate)}</span>
+              </div>
               </div>
             </>
           ) : (

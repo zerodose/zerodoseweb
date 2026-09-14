@@ -190,7 +190,7 @@ export default function CampaignHeader({
       <div className="relative flex flex-col gap-6 p-5 md:p-6 lg:flex-row lg:items-center lg:justify-between">
         {/* Campaign Information */}
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex  justify-between flex-wrap items-center gap-3">
             <h2 className="text-xl font-bold text-white md:text-2xl">
               {campaign.name}
             </h2>

@@ -452,7 +452,7 @@
 
 import { useEffect, useState } from "react";
 
-import { getSupervisorTeamSummary } from "@/api/dashboardApi";
+import { getSupervisorSummary } from "@/api/dashboardApi";
 import { getPendingZerodoseCount } from "@/api/zerodoseApprovalApi";
 
 import SupervisorSummaryCards from "@/components/supervisor/SupervisorSummaryCards";
@@ -492,7 +492,7 @@ export default function Page() {
         setLoading(true);
         setError("");
 
-        const response = await getSupervisorTeamSummary();
+        const response = await getSupervisorSummary();
 
         console.log("Supervisor dashboard response:", response);
 

@@ -84,15 +84,9 @@ async function getAuthenticatedUser(request) {
 
 export async function GET(request) {
   try {
-    console.log("==============================================");
-    console.log("SUPERVISOR SUMMARY ROUTE HIT");
-    console.log("==============================================");
 
     await connectDB();
 
-    // ========================================================
-    // AUTH
-    // ========================================================
 
     const auth = await getAuthenticatedUser(request);
 
@@ -107,10 +101,6 @@ export async function GET(request) {
       name: authUser.name,
       designation: authUser.designation,
     });
-
-    // ========================================================
-    // ONLY SUPERVISOR
-    // ========================================================
 
     if (authUser.designation !== "supervisor") {
       return NextResponse.json(
@@ -134,19 +124,6 @@ export async function GET(request) {
     })
       .select("_id name year month startDate endDate")
       .lean();
-
-    // ========================================================
-    // ACTIVE COMPLETE TEAMS
-    // ========================================================
-    //
-    // totalTeams:
-    // All active complete teams belonging to this supervisor.
-    //
-    // A complete team must have:
-    // - teamLeader
-    // - teamMember
-    //
-    // ========================================================
 
     const activeTeams = await User.aggregate([
       {

@@ -17,12 +17,12 @@ export default function ZerodoseTable({ data = [], onTeamClick }) {
               </th>
 
               <th className="whitespace-nowrap border-r border-border px-3 py-2.5 text-left text-xs font-semibold text-text-secondary">
-                Team Leader
+                Name
               </th>
 
-              <th className="whitespace-nowrap border-r border-border px-3 py-2.5 text-left text-xs font-semibold text-text-secondary">
+              {/* <th className="whitespace-nowrap border-r border-border px-3 py-2.5 text-left text-xs font-semibold text-text-secondary">
                 Team Member
-              </th>
+              </th> */}
 
               <th className="whitespace-nowrap border-r border-border px-3 py-2.5 text-center text-xs font-semibold text-text-secondary">
                 Recorded
@@ -69,15 +69,20 @@ export default function ZerodoseTable({ data = [], onTeamClick }) {
 
                   {/* Team Leader */}
 
-                  <td className="whitespace-nowrap border-r border-border px-3 py-2 text-xs capitalize text-text transition-colors group-hover:bg-primary/5">
-                    {team.teamLeader?.name || "-"}
+                  <td className="whitespace-wrap border-r border-border px-3 py-2 text-xs capitalize text-text transition-colors group-hover:bg-primary/5">
+                  <div className="flex flex-col gap-1">
+
+                    <span className="font-normal">{team.teamLeader?.name || "-"}</span>
+                   <span className="font-normal">{team.teamMember?.name || "-"}</span>
+              
+                  </div>
                   </td>
 
                   {/* Team Member */}
-
+{/* 
                   <td className="whitespace-nowrap border-r border-border px-3 py-2 text-xs capitalize text-text transition-colors group-hover:bg-primary/5">
                     {team.teamMember?.name || "-"}
-                  </td>
+                  </td> */}
 
                   {/* Recorded */}
 
@@ -115,13 +120,13 @@ export default function ZerodoseTable({ data = [], onTeamClick }) {
             <tfoot>
               <tr className="bg-surface">
                 <td
-                  colSpan={3}
-                  className="whitespace-nowrap px-3 py-3 text-right text-xs font-semibold text-text"
+                  colSpan={2}
+                  className="whitespace-nowrap px-3 py-3 text-center text-xs font-semibold text-text"
                 >
                   Total
                 </td>
 
-                <td className="whitespace-nowrap border-r border-border px-3 py-3 text-center text-xs font-bold text-text">
+                <td className="whitespace-nowrap border-x border-border px-3 py-3 text-center text-xs font-bold text-text">
                   {data.reduce(
                     (total, team) => total + Number(team.recorded || 0),
                     0,

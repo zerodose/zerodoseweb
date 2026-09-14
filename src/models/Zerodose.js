@@ -43,6 +43,11 @@ const zerodoseSchema = new Schema(
       required: true,
       index: true,
     },
+    supervisorCode: {
+      type: Number,
+      required: true,
+      index: true,
+    },
 
     user: {
       type: Schema.Types.ObjectId,
@@ -249,8 +254,6 @@ const zerodoseSchema = new Schema(
     timestamps: true,
   },
 );
-
-
 
 const Zerodose =
   mongoose.models.Zerodose || mongoose.model("Zerodose", zerodoseSchema);

@@ -1146,7 +1146,6 @@ export default function Page() {
   // ============================================================
 
   const [summary, setSummary] = useState({
-    total: 0,
     recorded: 0,
     visited: 0,
     covered: 0,
@@ -1195,7 +1194,6 @@ export default function Page() {
     const workerSummary = summaryResponse?.data || {};
 
     const normalizedSummary = {
-      total: Number(workerSummary?.recordCount || 0),
       recorded: Number(workerSummary?.recordCount || 0),
       visited: Number(workerSummary?.visitCount || 0),
       covered: Number(workerSummary?.coveredCount || 0),
@@ -1250,7 +1248,6 @@ export default function Page() {
         setCampaign(null);
 
         setSummary({
-          total: 0,
           recorded: 0,
           visited: 0,
           covered: 0,
@@ -1280,7 +1277,6 @@ export default function Page() {
   // Animated values come from useAnimatedCounter.
   // ============================================================
 
-  const totalZerodose = animatedSummary.total;
   const recordedZerodose = animatedSummary.recorded;
   const visitedZerodose = animatedSummary.visited;
   const coveredZerodose = animatedSummary.covered;
@@ -1307,7 +1303,6 @@ export default function Page() {
       setCampaign(null);
 
       setSummary({
-        total: 0,
         recorded: 0,
         visited: 0,
         covered: 0,
@@ -1359,7 +1354,6 @@ export default function Page() {
       ====================================================== */}
 
       <ZerodoseStats
-        total={animatedSummary.total}
         recorded={animatedSummary.recorded}
         visited={animatedSummary.visited}
         covered={animatedSummary.covered}

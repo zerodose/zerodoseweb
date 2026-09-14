@@ -319,7 +319,7 @@ export const getDistrictSummary = async (districtId) => {
 //   return response.data;
 // };
 
-export const getSupervisorTeamSummary = async () => {
+export const getSupervisorSummary = async () => {
   const response = await api.get("/dashboard/supervisor-summary");
 
   return response.data;

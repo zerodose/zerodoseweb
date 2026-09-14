@@ -1223,21 +1223,9 @@ export default function Page() {
           return;
         }
 
-        // ------------------------------------------------------
-        // Campaign
-        // ------------------------------------------------------
-
         setCampaign(result.campaign);
 
-        // ------------------------------------------------------
-        // Worker Summary
-        // ------------------------------------------------------
-
         setSummary(result.summary);
-
-        // ------------------------------------------------------
-        // Loading complete
-        // ------------------------------------------------------
 
         setLoadingCampaign(false);
       } catch (error) {
@@ -1270,23 +1258,6 @@ export default function Page() {
       cancelled = true;
     };
   }, [fetchWorkerData]);
-
-  // ============================================================
-  // ZERODOSE STATS
-  //
-  // Animated values come from useAnimatedCounter.
-  // ============================================================
-
-  const recordedZerodose = animatedSummary.recorded;
-  const visitedZerodose = animatedSummary.visited;
-  const coveredZerodose = animatedSummary.covered;
-
-  // ============================================================
-  // REFRESH
-  //
-  // Refresh only campaign + summary.
-  // ZerodoseCampaignSection has its own refresh.
-  // ============================================================
 
   const handleRefresh = async () => {
     try {

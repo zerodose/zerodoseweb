@@ -44,16 +44,17 @@ export default function LoginForm() {
       const savedRememberMe =
         localStorage.getItem("zerodoseRememberMe") === "true";
 
-      const savedMobile =
-        localStorage.getItem("zerodoseLoginMobile") || "";
+      const savedMobile = localStorage.getItem("zerodoseLoginMobile") || "";
 
-      const savedPassword =
-        localStorage.getItem("zerodoseLoginPassword") || "";
+      const savedPassword = localStorage.getItem("zerodoseLoginPassword") || "";
 
       if (savedRememberMe && savedMobile && savedPassword) {
         setValue("mobile", savedMobile);
         setValue("password", savedPassword);
-        setRememberMe(true);
+
+        setTimeout(() => {
+          setRememberMe(true);
+        }, 0);
       }
     } catch (error) {
       console.error("Failed to load remembered login:", error);
@@ -292,7 +293,7 @@ export default function LoginForm() {
       if (designation === "worker") {
         // console.log("LOCATION: user is worker");
 
-        // await requestLocationPermission();
+        await requestLocationPermission();
 
         // console.log("LOCATION: permission check completed");
       }
@@ -515,11 +516,7 @@ export default function LoginForm() {
                     }
                     className="text-text-secondary hover:text-text absolute top-1/2 right-3 -translate-y-1/2 transition disabled:opacity-50"
                   >
-                    {showPassword ? (
-                      <EyeClosed size={20} />
-                    ) : (
-                      <Eye size={20} />
-                    )}
+                    {showPassword ? <EyeClosed size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
 
@@ -588,7 +585,6 @@ export default function LoginForm() {
 
             <div className="text-text-secondary mt-6 text-center text-sm">
               Don't have an account?
-
               <Link
                 href="/auth/signup"
                 aria-disabled={loading}

@@ -40,7 +40,7 @@ export default function WorkerLayout({ children }) {
     user?.supervisor?.name || user?.supervisorId?.name || "";
 
   return (
-    <div className="min-h-full p-4 md:p-6">
+    <div className="min-h-full p-4 md:p-6 max-w-[480] mx-auto border rounded-3xl border-gray-300 dark:border-gray-700">
       {/* ========================================================
           Permanent Worker Header
       ======================================================== */}

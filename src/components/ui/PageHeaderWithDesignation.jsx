@@ -15,7 +15,8 @@ import {
 
 import { changePassword } from "@/api/userApi";
 import LogoutButton from "./LogoutButton";
-import { logoutUser } from "@/api/authApi";
+import { getCurrentUser, logoutUser } from "@/api/authApi";
+import { formatDate } from "@/lib/formatDate";
 
 export default function PageHeaderWithDesignation({
   name = "",
@@ -78,32 +79,32 @@ export default function PageHeaderWithDesignation({
     normalizedDesignation === "townfp" ||
     normalizedDesignation === "districtfp";
 
-  const loadUserProfile = async () => {
-    try {
-      setLoadingProfile(true);
+  // const loadUserProfile = async () => {
+  //   try {
+  //     setLoadingProfile(true);
 
-      const response = await fetch("/api/auth/me", {
-        method: "GET",
-        credentials: "include",
-        cache: "no-store",
-      });
+  //     const response = await fetch("/api/auth/me", {
+  //       method: "GET",
+  //       credentials: "include",
+  //       cache: "no-store",
+  //     });
 
-      const result = await response.json();
+  //     const result = await response.json();
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || "Failed to load profile.");
-      }
+  //     if (!response.ok || !result.success) {
+  //       throw new Error(result.message || "Failed to load profile.");
+  //     }
 
-      setUser(result.data.user);
+  //     setUser(result.data.user);
 
-      return result.data.user;
-    } catch (error) {
-      console.error("Profile fetch error:", error);
-      throw error;
-    } finally {
-      setLoadingProfile(false);
-    }
-  };
+  //     return result.data.user;
+  //   } catch (error) {
+  //     console.error("Profile fetch error:", error);
+  //     throw error;
+  //   } finally {
+  //     setLoadingProfile(false);
+  //   }
+  // };
 
   // ============================================================
   // Profile
@@ -118,19 +119,18 @@ export default function PageHeaderWithDesignation({
     try {
       setLoadingProfile(true);
 
-      const response = await fetch("/api/auth/me", {
-        method: "GET",
-        credentials: "include",
-        cache: "no-store",
-      });
+      // const response = await fetch("/api/auth/me", {
+      //   method: "GET",
+      //   credentials: "include",
+      //   cache: "no-store",
+      // });
+      const response = await getCurrentUser();
 
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.message || "Failed to load profile.");
+      if (!response.success) {
+        throw new Error(response.message || "Failed to load profile.");
       }
-
-      setUser(result.data.user);
+      console.log("Response for me", response);
+      setUser(response.data.user);
     } catch (error) {
       console.error("Profile fetch error:", error);
     } finally {
@@ -621,7 +621,7 @@ export default function PageHeaderWithDesignation({
                     <div className="bg-primary/10 text-primary flex h-20 w-20 items-center justify-center rounded-2xl text-2xl font-semibold">
                       {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                     </div>
-
+                    {/* 
                     <h3 className="text-text mt-3 text-lg font-semibold">
                       {user.name || user.fullName || "User"}
                     </h3>
@@ -630,12 +630,12 @@ export default function PageHeaderWithDesignation({
                       <span className="bg-primary/10 text-primary mt-1 rounded-full px-3 py-1 text-xs font-medium capitalize">
                         {user.designation}
                       </span>
-                    )}
+                    )} */}
                   </div>
 
                   {/* Details */}
 
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3 space-y-3">
                     {/* Name */}
 
                     {(user.name || user.fullName) && (
@@ -651,26 +651,6 @@ export default function PageHeaderWithDesignation({
 
                           <p className="text-text truncate text-sm font-medium">
                             {user.name || user.fullName}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Email */}
-
-                    {user.email && (
-                      <div className="bg-surface flex items-center gap-3 rounded-xl p-3">
-                        <div className="bg-background text-text-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-                          <Mail size={18} />
-                        </div>
-
-                        <div className="min-w-0">
-                          <p className="text-text-secondary text-[11px]">
-                            Email
-                          </p>
-
-                          <p className="text-text truncate text-sm font-medium">
-                            {user.email}
                           </p>
                         </div>
                       </div>
@@ -696,6 +676,106 @@ export default function PageHeaderWithDesignation({
                       </div>
                     )}
 
+                    {/* Supervisor */}
+
+                    {user.supervisor && (
+                      <div className="bg-surface flex items-center gap-3 rounded-xl p-3">
+                        <div className="bg-background text-text-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+                          <User size={18} />
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="text-text-secondary text-[11px]">
+                            Supervisor
+                          </p>
+
+                          <p className="text-text truncate text-sm font-medium">
+                            {user.supervisor.name}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* UCMO */}
+
+                    {user.ucmo && (
+                      <div className="bg-surface flex items-center gap-3 rounded-xl p-3">
+                        <div className="bg-background text-text-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+                          <Shield size={18} />
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="text-text-secondary text-[11px]">
+                            UCMO
+                          </p>
+
+                          <p className="text-text text-sm font-medium capitalize">
+                            {user.ucmo.name}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* UnionCouncil */}
+
+                    {user.unionCouncil && (
+                      <div className="bg-surface flex items-center gap-3 rounded-xl p-3">
+                        <div className="bg-background text-text-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+                          <Shield size={18} />
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="text-text-secondary text-[11px]">
+                            Union Council
+                          </p>
+
+                          <p className="text-text text-sm font-medium capitalize">
+                            {user.unionCouncil.name}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Town */}
+
+                    {user.town && (
+                      <div className="bg-surface flex items-center gap-3 rounded-xl p-3">
+                        <div className="bg-background text-text-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+                          <Shield size={18} />
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="text-text-secondary text-[11px]">
+                            Town
+                          </p>
+
+                          <p className="text-text text-sm font-medium capitalize">
+                            {user.town.name}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* District */}
+
+                    {user.district && (
+                      <div className="bg-surface flex items-center gap-3 rounded-xl p-3">
+                        <div className="bg-background text-text-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+                          <Shield size={18} />
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="text-text-secondary text-[11px]">
+                            District
+                          </p>
+
+                          <p className="text-text text-sm font-medium capitalize">
+                            {user.district.name}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Joined */}
 
                     {user.createdAt && (
@@ -710,7 +790,8 @@ export default function PageHeaderWithDesignation({
                           </p>
 
                           <p className="text-text text-sm font-medium">
-                            {new Date(user.createdAt).toLocaleDateString()}
+                            {formatDate(user.createdAt)}
+                            {/* {new Date(user.createdAt).toLocaleDateString()} */}
                           </p>
                         </div>
                       </div>

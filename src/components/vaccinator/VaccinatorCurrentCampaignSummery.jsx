@@ -364,9 +364,12 @@ export default function VaccinatorCurrentCampaignSummery({
           </p>
         </div>
 
-        <span className="text-text-secondary text-xs">
-          {supervisorSummary.length} Supervisors
-        </span>
+        <p className="text-text-secondary text-xs text-nowrap">
+          <span className="border-border bg-primary/5 mr-1 h-10 w-10 rounded-full border p-1 font-semibold">
+            {supervisorSummary.length}
+          </span>
+          Supervisors
+        </p>
       </div>
 
       {/* ========================================================

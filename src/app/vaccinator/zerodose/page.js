@@ -858,11 +858,9 @@ import { getVaccinatorZerodose } from "@/api/zerodoseApi";
 import { LucideSyringe } from "lucide-react";
 
 import ZerodoseTabs from "@/components/supervisor/zerodose/ZerodoseTabs";
-import ZerodosePageSkeleton from "@/components/supervisor/zerodose/ZerodosePageSkeleton";
 import ApprovalPageHeader from "@/components/ui/ApprovalPageHeader";
 import CurrentCampaignZerodose from "@/components/supervisor/zerodose/CurrentCampaignZerodose";
 import PreviousCampaignsZerodose from "@/components/supervisor/zerodose/PreviousCampaignsZerodose";
-import Loader from "@/components/ui/Loader";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");

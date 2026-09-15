@@ -4,6 +4,7 @@ import { CalendarDays, Layers3 } from "lucide-react";
 
 import CampaignHeader from "@/components/supervisor/CampaignHeader";
 import ZerodoseTeamSummary from "./ZerodoseTeamSummary";
+import CampaignHeaderSkeleton from "../CampaignHeaderSkeleton";
 
 export default function CurrentCampaignZerodose({
   campaign,
@@ -21,7 +22,7 @@ export default function CurrentCampaignZerodose({
   onFilterChange,
   loading,
 }) {
-  if (!campaign) {
+  if (!campaign && !loading) {
     return (
       <section>
         <div className="border-border bg-surface rounded-2xl border p-8 text-center">
@@ -46,25 +47,27 @@ export default function CurrentCampaignZerodose({
       {/* ======================================================
           CAMPAIGN HEADER
       ====================================================== */}
-
-      <CampaignHeader
-        campaign={campaign}
-        label="CURRENT CAMPAIGN"
-        teams={
-          new Set(
-            data
-              .map((item) => item?.teamNumber)
-              .filter(
-                (number) =>
-                  number !== null && number !== undefined && number !== "",
-              ),
-          ).size
-        }
-        recorded={summary.recorded}
-        visited={summary.visited}
-        covered={summary.covered}
-      />
-
+      {loading && campaign ? (
+        <CampaignHeaderSkeleton />
+      ) : (
+        <CampaignHeader
+          campaign={campaign}
+          label="CURRENT CAMPAIGN"
+          teams={
+            new Set(
+              data
+                .map((item) => item?.teamNumber)
+                .filter(
+                  (number) =>
+                    number !== null && number !== undefined && number !== "",
+                ),
+            ).size
+          }
+          recorded={summary.recorded}
+          visited={summary.visited}
+          covered={summary.covered}
+        />
+      )}
       {/* ======================================================
           TEAM SUMMARY + DETAILS
       ====================================================== */}

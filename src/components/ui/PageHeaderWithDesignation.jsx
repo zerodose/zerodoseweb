@@ -11,6 +11,8 @@ import {
   Shield,
   CalendarDays,
   LockKeyhole,
+  Eye,
+  EyeClosed,
 } from "lucide-react";
 
 import { changePassword } from "@/api/userApi";
@@ -51,6 +53,8 @@ export default function PageHeaderWithDesignation({
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -367,6 +371,8 @@ export default function PageHeaderWithDesignation({
       );
     } finally {
       setChangingPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
     }
   };
 
@@ -610,7 +616,7 @@ export default function PageHeaderWithDesignation({
                   {/* Avatar */}
 
                   <div className="mb-6 flex flex-col items-center">
-                    <div className="bg-primary/10 text-primary flex h-20 w-20 items-center  justify-center rounded-2xl text-2xl font-semibold">
+                    <div className="bg-primary/10 text-primary flex h-20 w-20 items-center justify-center rounded-2xl text-2xl font-semibold">
                       {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                     </div>
                     {/* 
@@ -895,16 +901,34 @@ export default function PageHeaderWithDesignation({
                   New Password
                 </label>
 
-                <input
-                  id="new-password"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password"
-                  autoComplete="new-password"
-                  disabled={changingPassword}
-                  className="border-border bg-surface text-text placeholder:text-text-secondary focus:border-primary focus:ring-primary/20 w-full rounded-xl border px-3.5 py-2.5 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
-                />
+                <div className="relative">
+                  <input
+                    id="new-password"
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    autoComplete="new-password"
+                    disabled={changingPassword}
+                    className="border-border bg-surface text-text placeholder:text-text-secondary focus:border-primary focus:ring-primary/20 w-full rounded-xl border px-3.5 py-2.5 pr-12 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword((prev) => !prev)}
+                    disabled={changingPassword}
+                    aria-label={
+                      showNewPassword ? "Hide password" : "Show password"
+                    }
+                    className="text-text-secondary hover:text-text absolute top-1/2 right-3 -translate-y-1/2 transition disabled:opacity-50"
+                  >
+                    {showNewPassword ? (
+                      <EyeClosed size={20} />
+                    ) : (
+                      <Eye size={20} />
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* Confirm Password */}
@@ -917,16 +941,34 @@ export default function PageHeaderWithDesignation({
                   Confirm Password
                 </label>
 
-                <input
-                  id="confirm-password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
-                  autoComplete="new-password"
-                  disabled={changingPassword}
-                  className="border-border bg-surface text-text placeholder:text-text-secondary focus:border-primary focus:ring-primary/20 w-full rounded-xl border px-3.5 py-2.5 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
-                />
+                <div className="relative">
+                  <input
+                    id="confirm-password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                    autoComplete="new-password"
+                    disabled={changingPassword}
+                    className="border-border bg-surface text-text placeholder:text-text-secondary focus:border-primary focus:ring-primary/20 w-full rounded-xl border px-3.5 py-2.5 pr-12 text-sm transition outline-none focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    disabled={changingPassword}
+                    aria-label={
+                      showConfirmPassword ? "Hide password" : "Show password"
+                    }
+                    className="text-text-secondary hover:text-text absolute top-1/2 right-3 -translate-y-1/2 transition disabled:opacity-50"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeClosed size={20} />
+                    ) : (
+                      <Eye size={20} />
+                    )}
+                  </button>
+                </div>
               </div>
 
               {/* Actions */}

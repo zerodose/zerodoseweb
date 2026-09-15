@@ -939,7 +939,7 @@ function QrScannerModal({ onClose, onScan, loading }) {
          */
         const targetZoom = Math.min(
           maxZoom,
-          Math.max(minZoom, currentZoom + 0.25),
+          Math.max(minZoom, currentZoom + 0.1),
         );
 
         if (targetZoom <= currentZoom) {
@@ -966,7 +966,7 @@ function QrScannerModal({ onClose, onScan, loading }) {
             zoomTimer = null;
           }
         }
-      }, 1500);
+      }, 100);
     };
 
     const initScanner = async () => {

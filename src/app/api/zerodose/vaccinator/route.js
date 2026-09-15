@@ -189,12 +189,141 @@ export async function GET(request) {
       {
         $match: baseMatch,
       },
+
       {
         $group: {
-          _id: "$vaccinationStatus",
+          _id: {
+            supervisor: "$supervisor",
+            vaccinationStatus: "$vaccinationStatus",
+          },
           count: {
             $sum: 1,
           },
+        },
+      },
+
+      {
+        $group: {
+          _id: "$_id.supervisor",
+
+          statuses: {
+            $push: {
+              status: "$_id.vaccinationStatus",
+              count: "$count",
+            },
+          },
+
+          total: {
+            $sum: "$count",
+          },
+        },
+      },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "supervisor",
+        },
+      },
+
+      {
+        $unwind: {
+          path: "$supervisor",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $project: {
+          _id: 0,
+
+          supervisorId: "$_id",
+
+          supervisorName: {
+            $ifNull: ["$supervisor.name", "Unassigned"],
+          },
+
+          total: 1,
+
+          recorded: {
+            $let: {
+              vars: {
+                item: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$statuses",
+                        as: "status",
+                        cond: {
+                          $eq: ["$$status.status", "recorded"],
+                        },
+                      },
+                    },
+                    0,
+                  ],
+                },
+              },
+              in: {
+                $ifNull: ["$$item.count", 0],
+              },
+            },
+          },
+
+          visited: {
+            $let: {
+              vars: {
+                item: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$statuses",
+                        as: "status",
+                        cond: {
+                          $eq: ["$$status.status", "visited"],
+                        },
+                      },
+                    },
+                    0,
+                  ],
+                },
+              },
+              in: {
+                $ifNull: ["$$item.count", 0],
+              },
+            },
+          },
+
+          covered: {
+            $let: {
+              vars: {
+                item: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$statuses",
+                        as: "status",
+                        cond: {
+                          $eq: ["$$status.status", "covered"],
+                        },
+                      },
+                    },
+                    0,
+                  ],
+                },
+              },
+              in: {
+                $ifNull: ["$$item.count", 0],
+              },
+            },
+          },
+        },
+      },
+
+      {
+        $sort: {
+          supervisorName: 1,
         },
       },
     ]);
@@ -206,18 +335,27 @@ export async function GET(request) {
     };
 
     const vaccinationStatus = {
-      recorded: 0,
-      visited: 0,
-      covered: 0,
+      total: {
+        recorded: 0,
+        visited: 0,
+        covered: 0,
+      },
+
+      supervisors: vaccinationStatusResult.map((item) => ({
+        supervisorId: item.supervisorId || null,
+        supervisorName: item.supervisorName || "Unassigned",
+
+        total: Number(item.total || 0),
+        recorded: Number(item.recorded || 0),
+        visited: Number(item.visited || 0),
+        covered: Number(item.covered || 0),
+      })),
     };
 
-    vaccinationStatusResult.forEach((item) => {
-      if (
-        item?._id &&
-        Object.prototype.hasOwnProperty.call(vaccinationStatus, item._id)
-      ) {
-        vaccinationStatus[item._id] = Number(item.count || 0);
-      }
+    vaccinationStatus.supervisors.forEach((item) => {
+      vaccinationStatus.total.recorded += item.recorded;
+      vaccinationStatus.total.visited += item.visited;
+      vaccinationStatus.total.covered += item.covered;
     });
 
     return NextResponse.json({

@@ -11,9 +11,8 @@ export default function ZerodoseTeamSummary({
   title = "Zerodose",
   description = "Team-wise Zerodose records.",
   vaccinationStatus = {
-    recorded: 0,
-    visited: 0,
-    covered: 0,
+    supervisors: [],
+    total: {},
   },
   onFilterChange,
   loading,
@@ -54,6 +53,12 @@ export default function ZerodoseTeamSummary({
           teamNumber,
           teamLeader: item?.teamLeader || null,
           teamMember: item?.teamMember || null,
+          supervisor: item?.supervisor || null,
+          supervisorId:
+            item?.supervisor?._id ||
+            item?.supervisor?.id ||
+            item?.supervisor ||
+            null,
           records: [],
           recorded: 0,
           visited: 0,
@@ -62,6 +67,16 @@ export default function ZerodoseTeamSummary({
       }
 
       const team = teamsMap.get(teamNumber);
+
+      if (item?.supervisor) {
+        team.supervisor = item.supervisor;
+
+        team.supervisorId =
+          item?.supervisor?._id ||
+          item?.supervisor?.id ||
+          item?.supervisor ||
+          null;
+      }
 
       team.records.push(item);
 
@@ -219,7 +234,9 @@ export default function ZerodoseTeamSummary({
                       : "bg-primary/10 text-primary"
                   }`}
                 >
-                  {Number(vaccinationStatus?.recorded || 0).toLocaleString()}
+                  {Number(
+                    vaccinationStatus?.total?.recorded || 0,
+                  ).toLocaleString()}
                 </span>
               </button>
 
@@ -245,7 +262,9 @@ export default function ZerodoseTeamSummary({
                       : "bg-primary/10 text-primary"
                   }`}
                 >
-                  {Number(vaccinationStatus?.visited || 0).toLocaleString()}
+                  {Number(
+                    vaccinationStatus?.total?.visited || 0,
+                  ).toLocaleString()}
                 </span>
               </button>
 
@@ -271,7 +290,9 @@ export default function ZerodoseTeamSummary({
                       : "bg-primary/10 text-primary"
                   }`}
                 >
-                  {Number(vaccinationStatus?.covered || 0).toLocaleString()}
+                  {Number(
+                    vaccinationStatus?.total?.covered || 0,
+                  ).toLocaleString()}
                 </span>
               </button>
             </div>
@@ -305,6 +326,13 @@ export default function ZerodoseTeamSummary({
         <div className="space-y-3">
           {teamData.map((team) => {
             const isOpen = Boolean(openTeams[team.teamNumber]);
+
+            const supervisorStats =
+              vaccinationStatus?.supervisors?.find(
+                (supervisor) =>
+                  String(supervisor?.supervisorId) ===
+                  String(team?.supervisorId),
+              ) || {};
 
             return (
               <div
@@ -351,19 +379,24 @@ export default function ZerodoseTeamSummary({
                   {/* Desktop Stats + Arrow */}
 
                   <div className="flex shrink-0 items-center gap-3">
-                    {/* <div className="hidden items-center gap-1.5 sm:flex">
-                <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-1.5 text-[11px] font-semibold">
-                  {team.recorded} Recorded
-                </span>
+                    <div className="hidden items-center gap-1.5 sm:flex">
+                      <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-1.5 text-[11px] font-semibold">
+                        {Number(
+                          supervisorStats?.recorded || 0,
+                        ).toLocaleString()}{" "}
+                        Recorded
+                      </span>
 
-                <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-1.5 text-[11px] font-semibold">
-                  {team.visited} Visited
-                </span>
+                      <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-1.5 text-[11px] font-semibold">
+                        {Number(supervisorStats?.visited || 0).toLocaleString()}{" "}
+                        Visited
+                      </span>
 
-                <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-1.5 text-[11px] font-semibold">
-                  {team.covered} Covered
-                </span>
-              </div> */}
+                      <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-1.5 text-[11px] font-semibold">
+                        {Number(supervisorStats?.covered || 0).toLocaleString()}{" "}
+                        Covered
+                      </span>
+                    </div>
 
                     <div className="bg-surface flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
                       <ChevronDown
@@ -380,39 +413,38 @@ export default function ZerodoseTeamSummary({
               MOBILE STATS
           ================================================== */}
 
-                {/* <div className="border-border border-t px-4 py-3 sm:hidden">
-            <div className="grid grid-cols-3 gap-2">
-              <div className="bg-primary/5 rounded-lg px-2.5 py-2">
-                <p className="text-primary text-[10px] font-medium">
-                  Recorded
-                </p>
+                <div className="border-border border-t px-4 py-3 sm:hidden">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-primary/5 rounded-lg px-2.5 py-2">
+                      <p className="text-primary text-[10px] font-medium">
+                        Recorded
+                      </p>
+                      <p className="text-text mt-0.5 text-sm font-bold">
+                        {Number(
+                          supervisorStats?.recorded || 0,
+                        ).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="bg-primary/5 rounded-lg px-2.5 py-2">
+                      <p className="text-primary text-[10px] font-medium">
+                        Visited
+                      </p>
 
-                <p className="text-text mt-0.5 text-sm font-bold">
-                  {team.recorded}
-                </p>
-              </div>
+                      <p className="text-text mt-0.5 text-sm font-bold">
+                        {Number(supervisorStats?.visited || 0).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="bg-primary/5 rounded-lg px-2.5 py-2">
+                      <p className="text-primary text-[10px] font-medium">
+                        Covered
+                      </p>
 
-              <div className="bg-primary/5 rounded-lg px-2.5 py-2">
-                <p className="text-primary text-[10px] font-medium">
-                  Visited
-                </p>
-
-                <p className="text-text mt-0.5 text-sm font-bold">
-                  {team.visited}
-                </p>
-              </div>
-
-              <div className="bg-primary/5 rounded-lg px-2.5 py-2">
-                <p className="text-primary text-[10px] font-medium">
-                  Covered
-                </p>
-
-                <p className="text-text mt-0.5 text-sm font-bold">
-                  {team.covered}
-                </p>
-              </div>
-            </div>
-          </div> */}
+                      <p className="text-text mt-0.5 text-sm font-bold">
+                        {Number(supervisorStats?.covered || 0).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
                 {/* ==================================================
               DETAILS

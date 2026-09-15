@@ -883,9 +883,12 @@ export default function Page() {
   });
 
   const [vaccinationStatus, setVaccinationStatus] = useState({
-    recorded: 0,
-    visited: 0,
-    covered: 0,
+    total: {
+      recorded: 0,
+      visited: 0,
+      covered: 0,
+    },
+    supervisors: [],
   });
 
   // ============================================================
@@ -1164,6 +1167,22 @@ export default function Page() {
   ) => {
     if (!campaignId) {
       setPreviousZerodoses([]);
+
+      setSummary({
+        recorded: 0,
+        visited: 0,
+        covered: 0,
+      });
+
+      setVaccinationStatus({
+        total: {
+          recorded: 0,
+          visited: 0,
+          covered: 0,
+        },
+        supervisors: [],
+      });
+
       return;
     }
 
@@ -1182,13 +1201,49 @@ export default function Page() {
         );
       }
 
-      setPreviousZerodoses(Array.isArray(response.data) ? response.data : []);
+      const previousData = Array.isArray(response.data) ? response.data : [];
+
+      setPreviousZerodoses(previousData);
+
+      setSummary(
+        response.summary || {
+          recorded: 0,
+          visited: 0,
+          covered: 0,
+        },
+      );
+
+      setVaccinationStatus(
+        response.vaccinationStatus || {
+          total: {
+            recorded: 0,
+            visited: 0,
+            covered: 0,
+          },
+          supervisors: [],
+        },
+      );
     } catch (error) {
       console.error("Previous campaign Zerodose error:", error);
 
       setError(error?.message || "Failed to load previous campaign data.");
 
       setPreviousZerodoses([]);
+
+      setSummary({
+        recorded: 0,
+        visited: 0,
+        covered: 0,
+      });
+
+      setVaccinationStatus({
+        total: {
+          recorded: 0,
+          visited: 0,
+          covered: 0,
+        },
+        supervisors: [],
+      });
     } finally {
       setLoading(false);
     }
@@ -1210,7 +1265,7 @@ export default function Page() {
     <div className="relative min-h-full">
       {/* Loader only while API is loading */}
       {/* {loading && <Loader text="Loading..." />} */}
-     
+
       <ApprovalPageHeader
         title="Zerodose"
         description="View campaign-wise Zerodose records and team details"
@@ -1234,7 +1289,7 @@ export default function Page() {
           unionCouncilName={unionCouncilName}
           loading={loading}
           summary={summary}
-          vaccinationStatus={vaccinationStatus}          
+          vaccinationStatus={vaccinationStatus}
           onFilterChange={handleCurrentFilterChange}
         />
       )}

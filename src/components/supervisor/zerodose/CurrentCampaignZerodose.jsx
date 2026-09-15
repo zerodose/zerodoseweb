@@ -14,11 +14,7 @@ export default function CurrentCampaignZerodose({
     visited: 0,
     covered: 0,
   },
-  vaccinationStatus = {
-    recorded: 0,
-    visited: 0,
-    covered: 0,
-  },
+  vaccinationStatus,
   onFilterChange,
   loading,
 }) {

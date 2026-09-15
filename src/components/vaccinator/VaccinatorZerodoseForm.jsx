@@ -803,6 +803,171 @@ function QrScannerModal({ onClose, onScan, loading }) {
     let scanner = null;
     let mounted = true;
     let scanHandled = false;
+    let scannerStopped = false;
+    let zoomTimer = null;
+
+    const stopScanner = async () => {
+      if (!scanner || scannerStopped) {
+        return;
+      }
+
+      scannerStopped = true;
+
+      try {
+        if (scanner.isScanning) {
+          await scanner.stop();
+        }
+      } catch (error) {
+        console.error("QR scanner stop error:", error);
+      }
+
+      try {
+        scanner.clear();
+      } catch (error) {
+        console.error("QR scanner clear error:", error);
+      }
+    };
+
+    const setupAutoZoom = () => {
+      if (!scanner || !mounted) {
+        return;
+      }
+
+      /*
+       * html5-qrcode creates the video element inside
+       * #vaccinator-qr-reader.
+       */
+      const container = document.getElementById("vaccinator-qr-reader");
+
+      if (!container) {
+        return;
+      }
+
+      const video = container.querySelector("video");
+
+      if (!video) {
+        return;
+      }
+
+      const stream = video.srcObject;
+
+      if (!stream) {
+        return;
+      }
+
+      const tracks = stream.getVideoTracks();
+
+      if (!tracks.length) {
+        return;
+      }
+
+      const track = tracks[0];
+
+      if (!track?.getCapabilities) {
+        return;
+      }
+
+      const capabilities = track.getCapabilities();
+
+      /*
+       * Some mobile browsers do not expose camera zoom.
+       * In that case we simply continue normal scanning.
+       */
+      if (!capabilities?.zoom) {
+        console.log("Camera zoom is not supported on this device.");
+        return;
+      }
+
+      const minZoom = Number(capabilities.zoom.min ?? 1);
+      const maxZoom = Number(capabilities.zoom.max ?? 1);
+
+      if (maxZoom <= minZoom) {
+        return;
+      }
+
+      /*
+       * Start from a reasonable zoom level.
+       *
+       * We do NOT immediately jump to maximum zoom.
+       * The camera starts close to 1x and gradually increases.
+       */
+      let currentZoom = Math.max(minZoom, 1);
+
+      try {
+        track.applyConstraints({
+          advanced: [{ zoom: currentZoom }],
+        });
+      } catch (error) {
+        console.error("Initial camera zoom error:", error);
+      }
+
+      /*
+       * Auto zoom strategy:
+       *
+       * We use the QR scanner's video dimensions and the
+       * scanning box as a practical approximation.
+       *
+       * If QR scanning is taking time, gradually increase zoom.
+       *
+       * This avoids suddenly jumping to a very high zoom.
+       */
+      zoomTimer = window.setInterval(async () => {
+        if (!mounted || scanHandled || scannerStopped) {
+          return;
+        }
+
+        /*
+         * Only zoom if the video is actually active.
+         */
+        if (
+          video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+          video.videoWidth === 0 ||
+          video.videoHeight === 0
+        ) {
+          return;
+        }
+
+        /*
+         * Keep zoom in a safe range.
+         *
+         * Example:
+         * min = 1
+         * max = 4
+         *
+         * We gradually move:
+         * 1 -> 1.25 -> 1.5 -> 1.75 -> 2...
+         */
+        const targetZoom = Math.min(
+          maxZoom,
+          Math.max(minZoom, currentZoom + 0.25),
+        );
+
+        if (targetZoom <= currentZoom) {
+          return;
+        }
+
+        currentZoom = targetZoom;
+
+        try {
+          await track.applyConstraints({
+            advanced: [{ zoom: currentZoom }],
+          });
+        } catch (error) {
+          /*
+           * Some devices expose zoom capability but reject
+           * runtime zoom constraints.
+           *
+           * Stop auto zoom but keep QR scanning alive.
+           */
+          console.warn("Camera auto zoom unavailable:", error);
+
+          if (zoomTimer) {
+            window.clearInterval(zoomTimer);
+            zoomTimer = null;
+          }
+        }
+      }, 1500);
+    };
 
     const initScanner = async () => {
       try {
@@ -837,20 +1002,46 @@ function QrScannerModal({ onClose, onScan, loading }) {
 
             scanHandled = true;
 
-            try {
-              await scanner.stop();
-            } catch (error) {
-              console.error("QR scanner stop error:", error);
+            /*
+             * Stop auto zoom immediately.
+             */
+            if (zoomTimer) {
+              window.clearInterval(zoomTimer);
+              zoomTimer = null;
             }
+
+            /*
+             * Stop scanner only once.
+             */
+            await stopScanner();
 
             if (mounted) {
               onScan(decodedText);
             }
           },
           () => {
-            // Ignore continuous QR scan failures.
+            /*
+             * html5-qrcode continuously calls this when
+             * no QR code is detected.
+             *
+             * Ignore these errors.
+             */
           },
         );
+
+        if (!mounted || scannerStopped) {
+          return;
+        }
+
+        /*
+         * html5-qrcode inserts the <video> asynchronously.
+         * Give it a short moment before accessing its stream.
+         */
+        window.setTimeout(() => {
+          if (mounted && !scannerStopped) {
+            setupAutoZoom();
+          }
+        }, 500);
       } catch (error) {
         console.error("QR scanner initialization error:", error);
 
@@ -867,14 +1058,24 @@ function QrScannerModal({ onClose, onScan, loading }) {
     return () => {
       mounted = false;
 
-      if (scanner) {
-        scanner
-          .stop()
-          .catch(() => {})
-          .finally(() => {
-            scanner.clear().catch(() => {});
-          });
+      /*
+       * Stop zoom timer first.
+       */
+      if (zoomTimer) {
+        window.clearInterval(zoomTimer);
+        zoomTimer = null;
       }
+
+      /*
+       * Safe/idempotent scanner cleanup.
+       *
+       * This prevents:
+       * scan callback -> stop()
+       * unmount -> stop()
+       *
+       * from fighting each other.
+       */
+      stopScanner();
     };
   }, [onScan]);
 
@@ -906,7 +1107,10 @@ function QrScannerModal({ onClose, onScan, loading }) {
 
         <div className="p-5">
           <div className="overflow-hidden rounded-lg bg-black">
-            <div id="vaccinator-qr-reader" className="min-h-[300px] w-full" />
+            <div
+              id="vaccinator-qr-reader"
+              className="min-h-[300px] w-full"
+            />
           </div>
 
           {scannerError && (

@@ -18,8 +18,8 @@ export default function CurrentCampaignZerodose({
     visited: 0,
     covered: 0,
   },
-  unionCouncilName = "-",
   onFilterChange,
+  loading,
 }) {
   if (!campaign) {
     return (
@@ -75,6 +75,7 @@ export default function CurrentCampaignZerodose({
         description="Team-wise Zerodose records for the current campaign."
         vaccinationStatus={vaccinationStatus}
         onFilterChange={onFilterChange}
+        loading={loading}
       />
     </section>
   );

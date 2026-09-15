@@ -519,7 +519,7 @@ export default function PageHeaderWithDesignation({
                             response.message || "Failed to load profile.",
                           );
                         }
-                        setUser(result.data.user);
+                        setUser(response.data.user);
                         setChangePasswordOpen(true);
                       } catch (error) {
                         console.error(

@@ -966,7 +966,7 @@ function QrScannerModal({ onClose, onScan, loading }) {
             zoomTimer = null;
           }
         }
-      }, 100);
+      }, 75);
     };
 
     const initScanner = async () => {

@@ -171,11 +171,10 @@ export default function ZerodoseDetailPage() {
               </div>
             </div>
 
-            {/* Supervisor Update */}
             <button
               type="button"
               onClick={() => router.push(`/vaccinator/zerodose/${zerodose._id}/update`)}
-              className="border-border bg-background text-text-secondary hover:bg-surface hover:text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition"
+              className={`${zerodose.coveredDate !== null ? "hidden" : "flex" } border-border bg-background text-text-secondary hover:bg-surface hover:text-primary h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition`}
               title="Edit Zerodose"
             >
               <Edit className="h-4 w-4" />

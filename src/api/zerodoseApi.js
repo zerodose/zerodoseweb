@@ -95,11 +95,11 @@ export const getZerodoses = async ({
 // =====================================================
 
 export const getZerodose = async (id) => {
-  console.log("GET SINGLE ZERODOSE ID:", id);
+  // console.log("GET SINGLE ZERODOSE ID:", id);
 
   const response = await api.get(`/zerodose/${id}`);
 
-  console.log("SINGLE ZERODOSE RESPONSE:", response.data);
+  // console.log("SINGLE ZERODOSE RESPONSE:", response.data);
 
   return response.data;
 };

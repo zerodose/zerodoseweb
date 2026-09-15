@@ -10,7 +10,7 @@ export default function CampaignFilter({
   description = "Choose year, month and campaign",
 }) {
   return (
-    <div className="border-border relative mb-6 overflow-hidden rounded-2xl border shadow-sm">
+    <div className="border-border relative mb-6 overflow-y-visible rounded-2xl border shadow-sm">
       {/* Top accent */}
       <div className="from-primary via-primary-dark to-primary h-1 w-full bg-gradient-to-r" />
 
@@ -31,7 +31,7 @@ export default function CampaignFilter({
         </div>
 
         {/* Filters */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 overflow-y-visible">
           {/* Year */}
           <Select
             label="Year"

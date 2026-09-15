@@ -3,7 +3,13 @@ import mongoose from "mongoose";
 
 import { connectDB } from "@/lib/db";
 import Zerodose from "@/models/Zerodose";
+import District from "@/models/District";
+import Town from "@/models/Town";
+import UnionCouncil from "@/models/UnionCouncil";
+import User from "@/models/User";
+import Campaign from "@/models/Campaign";
 import { getAuthenticatedUser } from "@/lib/auth";
+
 
 export async function GET(request) {
   try {

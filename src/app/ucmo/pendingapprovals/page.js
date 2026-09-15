@@ -357,6 +357,7 @@ export default function Page() {
                 }}
               >
                 <SupervisorApprovalCard
+                  key={userId}
                   supervisor={user}
                   expanded={!!expandedApprovals[userId]}
                   processing={processingId === userId}

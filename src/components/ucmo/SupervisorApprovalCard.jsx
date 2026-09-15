@@ -313,7 +313,7 @@ import {
   Users,
   XCircle,
 } from "lucide-react";
-
+import { toast } from "sonner";
 // ============================================================
 // DESIGNATION LABEL
 // ============================================================
@@ -405,44 +405,37 @@ export default function SupervisorApprovalCard({
 
   const isSupervisor = designation === "supervisor";
 
-  // ============================================================
-  // SUPERVISOR CODE
-  // ============================================================
-
   const [supervisorCode, setSupervisorCode] = useState(
     supervisor?.supervisorCode?.toString() || "",
   );
 
+  // ============================================================
+  // SUPERVISOR CODE
+  // ============================================================
+
+  // const [supervisorCode, setSupervisorCode] = useState(
+  //   supervisor?.supervisorCode?.toString() || "",
+  // );
+
   // Reset input if another approval card/user is rendered
-  useEffect(() => {
-    setSupervisorCode(supervisor?.supervisorCode || "");
-  }, [supervisor?._id, supervisor?.supervisorCode]);
+  // useEffect(() => {
+  //   setSupervisorCode(supervisor?.supervisorCode || "");
+  // }, [supervisor?._id, supervisor?.supervisorCode]);
 
   // ============================================================
   // APPROVE
   // ============================================================
 
   const handleApprove = () => {
-    // Supervisor ke liye updated code parent ko bhejna
-
-    if (!supervisorCode) {
-      toast.error("Please enter supervisor code.");
-      return;
-    }
-
-    onApprove(Number(supervisorCode));
     if (isSupervisor) {
-      const code = supervisorCode;
-
-      if (!code) {
+      if (!supervisorCode) {
         return;
       }
 
-      onApprove(code);
+      onApprove(supervisorCode);
       return;
     }
 
-    // Baqi designations ke liye normal approval
     onApprove();
   };
 
@@ -665,9 +658,7 @@ export default function SupervisorApprovalCard({
 
               <button
                 type="button"
-                disabled={
-                  processing || (isSupervisor && !supervisorCode)
-                }
+                disabled={processing || (isSupervisor && !supervisorCode)}
                 onClick={handleApprove}
                 className="bg-primary hover:bg-primary-dark text-primary-foreground inline-flex h-10 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold shadow-sm transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
               >

@@ -7,8 +7,10 @@ import { getVaccinatorTotalSummary } from "@/api/dashboardApi";
 import VaccinatorSummaryCards from "@/components/vaccinator/VaccinatorSummaryCards";
 import VaccinatorActions from "@/components/vaccinator/VaccinatorActions";
 import VaccinatorCampaignSection from "@/components/vaccinator/VaccinatorCampaignSection";
+import { useTabLoader } from "@/context/TabLoaderContext";
 
 export default function VaccinatorPage() {
+  const { showTabLoader, hideTabLoader } = useTabLoader();
   const authUser = useMemo(() => {
     if (typeof window === "undefined") {
       return null;
@@ -43,7 +45,7 @@ export default function VaccinatorPage() {
     const loadVaccinatorSummary = async () => {
       try {
         setLoading(true);
-
+        showTabLoader();
         const response = await getVaccinatorTotalSummary();
 
         if (cancelled) {
@@ -86,6 +88,7 @@ export default function VaccinatorPage() {
       } finally {
         if (!cancelled) {
           setLoading(false);
+          hideTabLoader()
         }
       }
     };

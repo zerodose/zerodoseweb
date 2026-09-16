@@ -44,21 +44,49 @@ function TabLoader({ loading }) {
   if (!loading) return null;
 
   return (
-    <div className="pointer-events-none fixed top-0 right-0 left-0 z-[99999] h-0.75 overflow-hidden">
-      <div className="bg-primary h-full w-1/3 animate-[tab-loading_1s_ease-in-out_infinite]" />
+    <div
+      className="pointer-events-none fixed inset-0 z-[99999] flex items-center justify-center"
+      aria-label="Loading"
+    >
+      <div className="flex items-center gap-2">
+        <span className="loader-dot" />
+        <span className="loader-dot" />
+        <span className="loader-dot" />
+      </div>
 
       <style jsx>{`
-        @keyframes tab-loading {
-          0% {
-            transform: translateX(-100%);
-          }
+        .loader-dot {
+          display: block;
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: #40a5fe;
+          animation: dotPulse 1.2s ease-in-out infinite;
+        }
 
-          50% {
-            transform: translateX(200%);
-          }
+        .loader-dot:nth-child(1) {
+          animation-delay: 0s;
+        }
 
+        .loader-dot:nth-child(2) {
+          animation-delay: 0.15s;
+        }
+
+        .loader-dot:nth-child(3) {
+          animation-delay: 0.3s;
+        }
+
+        @keyframes dotPulse {
+          0%,
+          60%,
           100% {
-            transform: translateX(400%);
+            transform: translateY(0);
+            opacity: 0.35;
+          }
+
+          30% {
+            transform: translateY(-6px);
+            opacity: 1;
           }
         }
       `}</style>

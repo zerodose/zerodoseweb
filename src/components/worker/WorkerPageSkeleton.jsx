@@ -3,22 +3,36 @@
 export default function WorkerPageSkeleton() {
   return (
     <div className="min-h-full w-full">
-      {/* =========================================================
-          Header Skeleton
-      ========================================================= */}
+     {/* =========================================================
+    Approval Page Header Skeleton
+========================================================= */}
 
-      <div className="mt-4 mb-6 flex items-start gap-3">
-        {/* Back Button */}
-        <div className="h-9 w-9 shrink-0 animate-pulse rounded-lg bg-slate-200/90 dark:bg-slate-700/60" />
+<header className="border-border bg-background relative mb-5 w-full min-w-0 overflow-hidden rounded-2xl border shadow-[0_3px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_3px_12px_rgba(0,0,0,0.25)]">
+  {/* Decorative Background */}
+  <div className="bg-primary/5 pointer-events-none absolute -top-16 left-16 h-32 w-56 rounded-full blur-3xl" />
 
-        <div className="min-w-0 flex-1">
-          {/* Title */}
-          <div className="h-7 w-52 animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
+  <div className="bg-primary/5 pointer-events-none absolute -right-16 -bottom-16 h-32 w-56 rounded-full blur-3xl" />
 
-          {/* Description */}
-          <div className="mt-2 h-4 w-72 max-w-full animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
-        </div>
+  {/* Header Content */}
+  <div className="relative flex min-w-0 items-center justify-between gap-3 px-3.5 py-3.5 sm:px-5 sm:py-4">
+    {/* Left */}
+    <div className="flex min-w-0 flex-1 items-center gap-3">
+      {/* Back Button */}
+      <div className="h-9 w-9 shrink-0 animate-pulse rounded-lg bg-slate-200/90 dark:bg-slate-700/60" />
+
+      <div className="min-w-0 flex-1">
+        {/* Title */}
+        <div className="h-6 w-40 animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
+
+        {/* Description */}
+        <div className="mt-1.5 h-3.5 w-64 max-w-full animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
       </div>
+    </div>
+
+    {/* Refresh Button */}
+    <div className="h-10 w-10 shrink-0 animate-pulse rounded-xl bg-slate-200/90 dark:bg-slate-700/60 sm:w-24" />
+  </div>
+</header>
 
       {/* =========================================================
           Main Content
@@ -26,30 +40,24 @@ export default function WorkerPageSkeleton() {
 
       <div className="space-y-5">
         {/* =======================================================
-            Summary Skeleton
+            Summary
         ======================================================= */}
 
         <div className="border-border bg-background rounded-2xl border shadow-sm">
-          <div className="flex items-center justify-between gap-4 p-5 md:p-6">
-            <div className="flex min-w-0 items-start gap-4">
-              {/* Icon */}
-              <div className="h-14 w-14 shrink-0 animate-pulse rounded-2xl bg-slate-200/90 dark:bg-slate-700/60" />
-
-              <div className="min-w-0 flex-1">
-                {/* Child name + status */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="h-6 w-40 animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
-
-                  <div className="h-6 w-20 animate-pulse rounded-full bg-slate-200/90 dark:bg-slate-700/60" />
-                </div>
-
-                {/* Subtitle */}
-                <div className="mt-2 h-4 w-32 animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
-              </div>
+          <div className="flex items-center gap-4 p-3 md:p-4">
+            {/* Syringe Icon */}
+            <div className="bg-primary/10 flex h-11 w-11 shrink-0 animate-pulse items-center justify-center rounded-2xl">
+              <div className="bg-primary/20 h-7 w-7 rounded-md" />
             </div>
 
-            {/* Edit Button */}
-            <div className="h-9 w-9 shrink-0 animate-pulse rounded-lg bg-slate-200/90 dark:bg-slate-700/60" />
+            {/* Child Name + Status */}
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              {/* Child Name */}
+              <div className="h-6 w-40 animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
+
+              {/* Status */}
+              <div className="h-6 w-20 animate-pulse rounded-full bg-slate-200/90 dark:bg-slate-700/60" />
+            </div>
           </div>
         </div>
 
@@ -57,31 +65,31 @@ export default function WorkerPageSkeleton() {
             Child Information
         ======================================================= */}
 
-        <SkeletonSection titleWidth="w-36" descriptionWidth="w-56" items={5} />
+        <SkeletonSection titleWidth="w-36" descriptionWidth="w-56" items={6} />
 
         {/* =======================================================
             Campaign Information
         ======================================================= */}
 
-        <SkeletonSection titleWidth="w-40" descriptionWidth="w-64" items={7} />
+        <SkeletonSection titleWidth="w-40" descriptionWidth="w-64" items={9} />
 
         {/* =======================================================
             Assignment Information
         ======================================================= */}
 
-        <SkeletonSection titleWidth="w-48" descriptionWidth="w-72" items={7} />
+        <SkeletonSection titleWidth="w-48" descriptionWidth="w-72" items={10} />
 
         {/* =======================================================
-            Location
+            Update Approval Information
         ======================================================= */}
 
-        <SkeletonSection titleWidth="w-24" descriptionWidth="w-80" items={3} />
+        <SkeletonSection titleWidth="w-52" descriptionWidth="w-72" items={6} />
 
         {/* =======================================================
-            Approval Information
+            Delete Approval Information
         ======================================================= */}
 
-        <SkeletonSection titleWidth="w-44" descriptionWidth="w-64" items={6} />
+        <SkeletonSection titleWidth="w-52" descriptionWidth="w-72" items={6} />
       </div>
     </div>
   );
@@ -117,7 +125,7 @@ function SkeletonSection({
       </div>
 
       {/* Section Items */}
-      <div className="grid grid-cols-2 gap-x-10 gap-y-6 p-4 md:grid-cols-2 md:p-5">
+      <div className="grid grid-cols-2 gap-x-10 gap-y-6 p-4 md:p-5">
         {Array.from({ length: items }).map((_, index) => (
           <SkeletonDetailItem key={index} />
         ))}
@@ -134,10 +142,14 @@ function SkeletonDetailItem() {
   return (
     <div>
       {/* Label */}
-      <div className="h-3.5 w-24 animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
+      <div className="flex items-center gap-1.5">
+        <div className="h-3.5 w-3.5 animate-pulse rounded-full bg-slate-200/90 dark:bg-slate-700/60" />
+
+        <div className="h-3.5 w-24 animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
+      </div>
 
       {/* Value */}
-      <div className="mt-2 h-4 w-32 max-w-full animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
+      <div className="mt-1.5 h-4 w-32 max-w-full animate-pulse rounded-md bg-slate-200/90 dark:bg-slate-700/60" />
     </div>
   );
 }

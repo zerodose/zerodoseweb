@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -40,7 +38,10 @@ export default function ZerodoseDetailPage() {
 
   const [zerodose, setZerodose] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [pageReady, setPageReady] = useState(false);
 
+  // Initial page load
   useEffect(() => {
     if (!id) return;
 
@@ -57,12 +58,11 @@ export default function ZerodoseDetailPage() {
         if (!data?._id) {
           toast.error("Zerodose not found.");
           setZerodose(null);
-          setLoading(false);
           return;
         }
 
         setZerodose(data);
-        setLoading(false);
+        setPageReady(true);
       } catch (error) {
         if (cancelled) return;
 
@@ -75,7 +75,10 @@ export default function ZerodoseDetailPage() {
         );
 
         setZerodose(null);
-        setLoading(false);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
@@ -85,6 +88,39 @@ export default function ZerodoseDetailPage() {
       cancelled = true;
     };
   }, [id]);
+
+  // Refresh button
+  const handleRefresh = async () => {
+    if (!id || refreshing) return;
+
+    setRefreshing(true);
+
+    try {
+      const response = await getZerodose(id);
+
+      const data = response?.data?.data || response?.data || response;
+
+      if (!data?._id) {
+        toast.error("Zerodose not found.");
+        setZerodose(null);
+        return;
+      }
+
+      setZerodose(data);
+
+      toast.success("Zerodose refreshed.");
+    } catch (error) {
+      console.error("Refresh zerodose error:", error);
+
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to refresh zerodose.",
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const formatGender = (gender) => {
     if (!gender) return "-";
@@ -148,43 +184,32 @@ export default function ZerodoseDetailPage() {
         title="Zerodose Details"
         description="View complete zerodose record information."
         onBack={() => router.back()}
+        onRefresh={handleRefresh}
+        refreshing={refreshing}
+        pageReady={pageReady}
       />
 
       <div className="space-y-5">
         {/* Summary */}
         <div className="border-border bg-background rounded-2xl border shadow-sm">
-          <div className="flex items-center justify-between gap-4 p-5 md:p-6">
-            <div className="flex min-w-0 items-start gap-4">
-              <div className="bg-primary/10 text-primary flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl">
+          <div className="flex items-center justify-between gap-4 p-3 md:p-4">
+            <div className="flex min-w-0 items-center justify-center gap-4">
+              <div className="bg-primary/10 text-primary flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl">
                 <Syringe className="h-7 w-7" />
               </div>
 
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-text text-xl font-semibold break-words capitalize">
-                    {zerodose.childName || "-"}
-                  </h2>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <h2 className="text-text text-xl font-semibold break-words capitalize">
+                  {zerodose.childName || "-"}
+                </h2>
 
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${status.className}`}
-                  >
-                    {status.label}
-                  </span>
-                </div>
-
-                
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-medium ${status.className}`}
+                >
+                  {status.label}
+                </span>
               </div>
             </div>
-
-            {/* Supervisor Update */}
-            <button
-              type="button"
-              onClick={() => router.push(`/worker/${zerodose._id}/update`)}
-              className="border-border bg-background text-text-secondary hover:bg-surface hover:text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition"
-              title="Edit Zerodose"
-            >
-              <Edit className="h-4 w-4" />
-            </button>
           </div>
         </div>
 

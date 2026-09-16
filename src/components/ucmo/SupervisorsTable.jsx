@@ -429,24 +429,7 @@ export default function SupervisorsTable({ data = [], onSupervisorClick }) {
 HEADER
 ============================================================ */}
 
-      {data.length > 0 && (
-        <div className="mb-3 flex items-center justify-between gap-3 px-1">
-          <div>
-            <h3 className="text-text text-sm font-semibold sm:text-base">
-              Supervisors
-            </h3>
-
-            <p className="text-text-secondary mt-0.5 text-[11px] sm:text-xs">
-              {data.length} active supervisor{data.length !== 1 ? "s" : ""}
-            </p>
-          </div>
-
-          <div className="bg-primary/10 text-primary flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold sm:text-xs">
-            <Users size={13} />
-            {data.length}
-          </div>
-        </div>
-      )}
+    
 
       {/* ============================================================
       SUPERVISORS

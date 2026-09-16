@@ -400,137 +400,118 @@ export default function VaccinatorCurrentCampaignSummery({
 // ============================================================
 
 function SupervisorsTableSkeleton() {
-  const rows = [1, 2, 3];
+  const rows = [1, 2, 3, 4];
 
   return (
-    <div className="border-border mb-4 overflow-hidden rounded-xl border shadow-sm md:rounded-2xl">
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          {/* ==================================================
-              HEADER
-          ================================================== */}
+    <div className="mb-5">
+      {/* ============================================================
+          SUPERVISOR CARDS
+      ============================================================ */}
 
-          <thead>
-            <tr className="border-border bg-primary/10 border-b dark:bg-slate-900">
-              {/* Sup Code */}
-              <th className="border-border border-r px-3 py-2.5 text-left">
-                <div className="bg-border h-3 w-16 animate-pulse rounded-md" />
-              </th>
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        {rows.map((row) => (
+          <div
+            key={row}
+            className="border-border bg-background relative overflow-hidden rounded-2xl border shadow-sm"
+          >
+            {/* Top accent */}
+            <div className="bg-primary/40 absolute top-0 right-0 left-0 h-0.5" />
 
-              {/* Supervisor Name */}
-              <th className="border-border border-r px-3 py-2.5 text-left">
-                <div className="bg-border h-3 w-28 animate-pulse rounded-md" />
-              </th>
+            <div className="p-3.5 sm:p-4">
+              {/* ==================================================
+                  SUPERVISOR INFO
+              ================================================== */}
 
-              {/* Teams */}
-              <th className="border-border border-r px-3 py-2.5 text-center">
-                <div className="bg-border mx-auto h-3 w-20 animate-pulse rounded-md" />
-              </th>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  {/* Avatar */}
+                  <div className="bg-surface h-10 w-10 shrink-0 animate-pulse rounded-xl" />
 
-              {/* Recorded */}
-              <th className="border-border border-r px-3 py-2.5 text-center">
-                <div className="bg-border mx-auto h-3 w-16 animate-pulse rounded-md" />
-              </th>
+                  <div className="min-w-0 flex-1">
+                    {/* Name */}
+                    <div className="bg-surface h-4 w-32 animate-pulse rounded-md sm:w-40" />
 
-              {/* Visited */}
-              <th className="border-border border-r px-3 py-2.5 text-center">
-                <div className="bg-border mx-auto h-3 w-14 animate-pulse rounded-md" />
-              </th>
+                    {/* Code */}
+                    <div className="mt-2 flex items-center gap-1.5">
+                      <div className="bg-surface h-2.5 w-20 animate-pulse rounded-md" />
 
-              {/* Covered */}
-              <th className="px-3 py-2.5 text-center">
-                <div className="bg-border mx-auto h-3 w-16 animate-pulse rounded-md" />
-              </th>
-            </tr>
-          </thead>
+                      <div className="bg-surface h-5 w-12 animate-pulse rounded-md" />
+                    </div>
+                  </div>
+                </div>
 
-          {/* ==================================================
-              BODY
-          ================================================== */}
+                {/* Arrow */}
+                <div className="bg-surface h-8 w-8 shrink-0 animate-pulse rounded-lg" />
+              </div>
 
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row} className="border-border border-b last:border-b-0">
-                {/* Supervisor Code */}
+              {/* ==================================================
+                  STATS
+              ================================================== */}
 
-                <td className="border-border border-r px-3 py-2">
-                  <div className="bg-surface mx-auto h-4 w-12 animate-pulse rounded-md" />
-                </td>
+              <div className="border-border mt-3 grid grid-cols-4 overflow-hidden rounded-xl border">
+                {[1, 2, 3, 4].map((stat) => (
+                  <div
+                    key={stat}
+                    className={`bg-surface px-1.5 py-2.5 text-center sm:px-2 ${
+                      stat !== 4 ? "border-border border-r" : ""
+                    }`}
+                  >
+                    {/* Label */}
+                    <div className="bg-border mx-auto h-3 w-12 animate-pulse rounded-md sm:w-14" />
 
-                {/* Supervisor Name */}
+                    {/* Value */}
+                    <div className="bg-border mx-auto mt-2 h-5 w-7 animate-pulse rounded-md" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
 
-                <td className="border-border border-r px-3 py-2">
-                  <div className="bg-surface h-4 w-32 animate-pulse rounded-md" />
-                </td>
+      {/* ============================================================
+          OVERALL SUMMARY
+      ============================================================ */}
 
-                {/* Teams */}
+      <div className="border-primary/20 bg-primary/[0.04] mt-4 overflow-hidden rounded-2xl border shadow-sm">
+        {/* Summary Header */}
+        <div className="flex items-center justify-between px-3.5 py-3 sm:px-4">
+          <div className="flex items-center gap-2.5">
+            {/* Icon */}
+            <div className="bg-primary/10 h-9 w-9 animate-pulse rounded-xl" />
 
-                <td className="border-border border-r px-3 py-2 text-center">
-                  <div className="bg-surface mx-auto h-7 w-9 animate-pulse rounded-md" />
-                </td>
+            <div>
+              {/* Title */}
+              <div className="bg-surface h-3.5 w-24 animate-pulse rounded-md sm:w-28" />
 
-                {/* Recorded */}
+              {/* Subtitle */}
+              <div className="bg-surface mt-1.5 h-2.5 w-20 animate-pulse rounded-md sm:w-24" />
+            </div>
+          </div>
 
-                <td className="border-border border-r px-3 py-2 text-center">
-                  <div className="bg-surface mx-auto h-7 w-9 animate-pulse rounded-md" />
-                </td>
+          {/* Supervisors count */}
+          <div className="bg-surface h-3 w-20 animate-pulse rounded-md sm:w-24" />
+        </div>
 
-                {/* Visited */}
-
-                <td className="border-border border-r px-3 py-2 text-center">
-                  <div className="bg-surface mx-auto h-7 w-9 animate-pulse rounded-md" />
-                </td>
-
-                {/* Covered */}
-
-                <td className="px-3 py-2 text-center">
-                  <div className="bg-surface mx-auto h-7 w-9 animate-pulse rounded-md" />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-
-          {/* ==================================================
-              FOOTER
-          ================================================== */}
-
-          <tfoot>
-            <tr className="bg-surface">
-              {/* Total */}
-
-              <td
-                colSpan={2}
-                className="border-border border-r px-3 py-3 text-right"
+        {/* Summary Stats */}
+        <div className="border-primary/10 border-t">
+          <div className="grid grid-cols-4">
+            {[1, 2, 3, 4].map((stat) => (
+              <div
+                key={stat}
+                className={`px-1.5 py-3 text-center ${
+                  stat !== 1 ? "border-primary/10 border-l" : ""
+                }`}
               >
-                <div className="bg-border ml-auto h-3 w-10 animate-pulse rounded-md" />
-              </td>
+                {/* Label */}
+                <div className="bg-surface mx-auto h-2.5 w-12 animate-pulse rounded-md sm:w-14" />
 
-              {/* Total Teams */}
-
-              <td className="border-border border-r px-3 py-3 text-center">
-                <div className="bg-border mx-auto h-4 w-8 animate-pulse rounded-md" />
-              </td>
-
-              {/* Total Recorded */}
-
-              <td className="border-border border-r px-3 py-3 text-center">
-                <div className="bg-border mx-auto h-4 w-8 animate-pulse rounded-md" />
-              </td>
-
-              {/* Total Visited */}
-
-              <td className="border-border border-r px-3 py-3 text-center">
-                <div className="bg-border mx-auto h-4 w-8 animate-pulse rounded-md" />
-              </td>
-
-              {/* Total Covered */}
-
-              <td className="px-3 py-3 text-center">
-                <div className="bg-border mx-auto h-4 w-8 animate-pulse rounded-md" />
-              </td>
-            </tr>
-          </tfoot>
-        </table>
+                {/* Value */}
+                <div className="bg-surface mx-auto mt-1.5 h-5 w-8 animate-pulse rounded-md" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

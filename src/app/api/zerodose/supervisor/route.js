@@ -3,84 +3,13 @@ import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
 import { connectDB } from "@/lib/db";
-import User from "@/models/User";
 import Zerodose from "@/models/Zerodose";
-
-async function getAuthenticatedUser(request) {
-  try {
-    const token = request.cookies.get("auth_token")?.value;
-
-    if (!token) {
-      return {
-        error: NextResponse.json(
-          {
-            success: false,
-            message: "Authentication required.",
-          },
-          { status: 401 },
-        ),
-      };
-    }
-
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-
-    const { payload } = await jwtVerify(token, secret);
-
-    const userId = payload?.userId;
-
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      return {
-        error: NextResponse.json(
-          {
-            success: false,
-            message: "Invalid authentication token.",
-          },
-          { status: 401 },
-        ),
-      };
-    }
-
-    // --------------------------------------------------------
-    // IMPORTANT
-    // Only active users can authenticate as supervisor.
-    // We also fetch supervisorCode because Zerodose ownership
-    // is based on supervisorCode + unionCouncil.
-    // --------------------------------------------------------
-
-    const user = await User.findOne({
-      _id: userId,
-      isActive: true,
-    })
-      .select("_id name designation isActive unionCouncil supervisorCode")
-      .lean();
-
-    if (!user) {
-      return {
-        error: NextResponse.json(
-          {
-            success: false,
-            message: "Authenticated user not found or inactive.",
-          },
-          { status: 401 },
-        ),
-      };
-    }
-
-    return { user };
-  } catch (error) {
-    console.error("Supervisor Authentication Error:", error);
-
-    return {
-      error: NextResponse.json(
-        {
-          success: false,
-          message: "Invalid or expired authentication token.",
-        },
-        { status: 401 },
-      ),
-    };
-  }
-}
+import District from "@/models/District";
+import Town from "@/models/Town";
+import UnionCouncil from "@/models/UnionCouncil";
+import User from "@/models/User";
+import Campaign from "@/models/Campaign";
+import { getAuthenticatedUser } from "@/lib/auth";
 
 export async function GET(request) {
   try {
@@ -97,6 +26,24 @@ export async function GET(request) {
     }
 
     const { user } = auth;
+    console.log(" User data", user)
+    const supervisorUser = await User.findOne({
+      _id: user._id,
+      designation: "supervisor",
+      isActive: true,
+    })
+      .select("_id name designation unionCouncil supervisorCode isActive")
+      .lean();
+
+    if (!supervisorUser) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Active supervisor not found.",
+        },
+        { status: 401 },
+      );
+    }
 
     // ========================================================
     // ONLY SUPERVISOR
@@ -107,24 +54,6 @@ export async function GET(request) {
         {
           success: false,
           message: "Only supervisors can access this data.",
-        },
-        { status: 403 },
-      );
-    }
-
-    // ========================================================
-    // ACTIVE SUPERVISOR CHECK
-    // ========================================================
-    //
-    // getAuthenticatedUser already checks isActive: true.
-    // This additional check keeps the business rule explicit.
-    //
-
-    if (user.isActive !== true) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Supervisor account is inactive.",
         },
         { status: 403 },
       );
@@ -151,12 +80,12 @@ export async function GET(request) {
     // SUPERVISOR CODE VALIDATION
     // ========================================================
 
-    const supervisorCode = Number(user.supervisorCode);
+    const supervisorCode = Number(supervisorUser.supervisorCode);
 
     if (
-      user.supervisorCode === null ||
-      user.supervisorCode === undefined ||
-      user.supervisorCode === "" ||
+      supervisorUser.supervisorCode === null ||
+      supervisorUser.supervisorCode === undefined ||
+      supervisorUser.supervisorCode === "" ||
       !Number.isFinite(supervisorCode)
     ) {
       return NextResponse.json(
@@ -218,114 +147,325 @@ export async function GET(request) {
       );
     }
 
+    const unionCouncilObjectId = new mongoose.Types.ObjectId(user.unionCouncil);
+
+    const campaignObjectId = new mongoose.Types.ObjectId(campaignId);
+
     // ========================================================
-    // BASE QUERY
+    // BASE MATCH
     // ========================================================
     //
-    // IMPORTANT:
+    // Supervisor scope:
     //
-    // Supervisor can have multiple teams.
+    //     campaign
+    //     +
+    //     unionCouncil
+    //     +
+    //     supervisorCode
     //
-    // Therefore:
     // NO teamNumber filter.
     //
-    // Supervisor identity for historical Zerodose data:
-    //
-    //     unionCouncil + supervisorCode
-    //
-    // NOT:
-    //
-    //     supervisor._id
-    //
-    // This allows a new active supervisor to access old
-    // supervisor data when the supervisorCode remains same
-    // within the same Union Council.
+    // This allows the supervisor to see all teams assigned
+    // to this supervisor.
     //
     // ========================================================
 
-    const match = {
-      campaign: new mongoose.Types.ObjectId(campaignId),
-
-      unionCouncil: new mongoose.Types.ObjectId(user.unionCouncil),
-
+    const baseMatch = {
+      campaign: campaignObjectId,
+      unionCouncil: unionCouncilObjectId,
       supervisorCode,
     };
 
+
     // ========================================================
-    // RECORDED
+    // FILTERED MATCH
     // ========================================================
-    //
-    // recordDate exists
-    // visitDate is null
-    // coveredDate is null
-    //
-    // ========================================================
+
+    const dataMatch = {
+      ...baseMatch,
+    };
 
     if (filter === "recorded") {
-      match.recordDate = {
-        $ne: null,
-      };
-
-      match.visitDate = null;
-
-      match.coveredDate = null;
+      dataMatch.recordDate = { $ne: null };
+      dataMatch.visitDate = null;
+      dataMatch.coveredDate = null;
     }
-
-    // ========================================================
-    // VISITED
-    // ========================================================
-    //
-    // recordDate exists
-    // visitDate exists
-    // coveredDate is null
-    //
-    // ========================================================
 
     if (filter === "visited") {
-      match.recordDate = {
-        $ne: null,
-      };
-
-      match.visitDate = {
-        $ne: null,
-      };
-
-      match.coveredDate = null;
+      dataMatch.recordDate = { $ne: null };
+      dataMatch.visitDate = { $ne: null };
+      dataMatch.coveredDate = null;
     }
-
-    // ========================================================
-    // COVERED
-    // ========================================================
-    //
-    // recordDate exists
-    // visitDate exists
-    // coveredDate exists
-    //
-    // ========================================================
 
     if (filter === "covered") {
-      match.recordDate = {
-        $ne: null,
-      };
-
-      match.visitDate = {
-        $ne: null,
-      };
-
-      match.coveredDate = {
-        $ne: null,
-      };
+      dataMatch.recordDate = { $ne: null };
+      dataMatch.visitDate = { $ne: null };
+      dataMatch.coveredDate = { $ne: null };
     }
-
     // ========================================================
-    // GET ZERODOSE DATA
+    // GET FILTERED ZERODOSE DATA
     // ========================================================
 
-    const zerodose = await Zerodose.find(match)
+    const zerodose = await Zerodose.find(dataMatch)
       .sort({
         createdAt: -1,
       })
+      .populate("campaign", "name startDate endDate")
+      .populate("district", "name")
+      .populate("town", "name")
+      .populate("unionCouncil", "name")
+      .populate("ucmo", "name")
+      .populate("supervisor", "name supervisorCode")
+      .populate("user", "name designation")
+      .populate("teamLeader", "name")
+      .populate("teamMember", "name")
+      .populate("vaccinator", "name")
       .lean();
+
+    // ========================================================
+    // SUMMARY
+    // ========================================================
+    //
+    // Counts are based on actual dates and intentionally
+    // overlap:
+    //
+    // recorded = recordDate exists
+    // visited  = visitDate exists
+    // covered  = coveredDate exists
+    //
+    // ========================================================
+
+    const summaryResult = await Zerodose.aggregate([
+      {
+        $match: baseMatch,
+      },
+
+      {
+        $group: {
+          _id: null,
+
+          recorded: {
+            $sum: {
+              $cond: [
+                {
+                  $ne: ["$recordDate", null],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+
+          visited: {
+            $sum: {
+              $cond: [
+                {
+                  $ne: ["$visitDate", null],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+
+          covered: {
+            $sum: {
+              $cond: [
+                {
+                  $ne: ["$coveredDate", null],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+        },
+      },
+    ]);
+
+    // ========================================================
+    // TEAM-WISE VACCINATION STATUS
+    // ========================================================
+    //
+    // This gives the supervisor's teams separately:
+    //
+    // [
+    //   {
+    //     teamNumber,
+    //     recorded,
+    //     visited,
+    //     covered
+    //   }
+    // ]
+    //
+    // ========================================================
+
+    const vaccinationStatusResult = await Zerodose.aggregate([
+      {
+        $match: baseMatch,
+      },
+
+      {
+        $group: {
+          _id: {
+            teamNumber: "$teamNumber",
+            vaccinationStatus: "$vaccinationStatus",
+          },
+
+          count: {
+            $sum: 1,
+          },
+        },
+      },
+
+      {
+        $group: {
+          _id: "$_id.teamNumber",
+
+          statuses: {
+            $push: {
+              status: "$_id.vaccinationStatus",
+              count: "$count",
+            },
+          },
+        },
+      },
+
+      {
+        $project: {
+          _id: 0,
+
+          teamNumber: "$_id",
+
+          recorded: {
+            $let: {
+              vars: {
+                item: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$statuses",
+                        as: "status",
+                        cond: {
+                          $eq: ["$$status.status", "recorded"],
+                        },
+                      },
+                    },
+                    0,
+                  ],
+                },
+              },
+
+              in: {
+                $ifNull: ["$$item.count", 0],
+              },
+            },
+          },
+
+          visited: {
+            $let: {
+              vars: {
+                item: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$statuses",
+                        as: "status",
+                        cond: {
+                          $eq: ["$$status.status", "visited"],
+                        },
+                      },
+                    },
+                    0,
+                  ],
+                },
+              },
+
+              in: {
+                $ifNull: ["$$item.count", 0],
+              },
+            },
+          },
+
+          covered: {
+            $let: {
+              vars: {
+                item: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$statuses",
+                        as: "status",
+                        cond: {
+                          $eq: ["$$status.status", "covered"],
+                        },
+                      },
+                    },
+                    0,
+                  ],
+                },
+              },
+
+              in: {
+                $ifNull: ["$$item.count", 0],
+              },
+            },
+          },
+        },
+      },
+
+      {
+        $sort: {
+          teamNumber: 1,
+        },
+      },
+    ]);
+
+    // ========================================================
+    // SUMMARY OBJECT
+    // ========================================================
+
+    const summary = {
+      recorded: Number(summaryResult[0]?.recorded || 0),
+
+      visited: Number(summaryResult[0]?.visited || 0),
+
+      covered: Number(summaryResult[0]?.covered || 0),
+    };
+
+    // ========================================================
+    // VACCINATION STATUS OBJECT
+    // ========================================================
+
+    const vaccinationStatus = {
+      total: {
+        recorded: 0,
+        visited: 0,
+        covered: 0,
+      },
+
+      teams: vaccinationStatusResult.map((item) => ({
+        teamNumber: item.teamNumber,
+
+        recorded: Number(item.recorded || 0),
+
+        visited: Number(item.visited || 0),
+
+        covered: Number(item.covered || 0),
+      })),
+    };
+
+    // ========================================================
+    // CALCULATE TEAM TOTALS
+    // ========================================================
+
+    vaccinationStatus.teams.forEach((item) => {
+      vaccinationStatus.total.recorded += item.recorded;
+
+      vaccinationStatus.total.visited += item.visited;
+
+      vaccinationStatus.total.covered += item.covered;
+    });
 
     // ========================================================
     // RESPONSE
@@ -336,6 +476,10 @@ export async function GET(request) {
 
       data: zerodose,
 
+      summary,
+
+      vaccinationStatus,
+
       meta: {
         filter,
 
@@ -343,11 +487,11 @@ export async function GET(request) {
 
         campaignId,
 
-        supervisorCode,
-
         unionCouncil: user.unionCouncil,
 
         supervisor: user._id,
+
+        supervisorCode,
 
         supervisorName: user.name || null,
 

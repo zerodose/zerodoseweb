@@ -210,9 +210,9 @@ export default function ZerodoseTeamSummary({
   ====================================================== */}
 
         {(data.length > 0 ||
-          vaccinationStatus.recorded > 0 ||
-          vaccinationStatus.visited > 0 ||
-          vaccinationStatus.covered > 0) && (
+          Number(vaccinationStatus?.total?.recorded || 0) > 0 ||
+          Number(vaccinationStatus?.total?.visited || 0) > 0 ||
+          Number(vaccinationStatus?.total?.covered || 0) > 0) && (
           <div className="border-border bg-surface mb-4 rounded-xl border p-2">
             <div className="grid grid-cols-3 gap-2">
               {/* RECORDED */}

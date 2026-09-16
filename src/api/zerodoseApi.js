@@ -173,6 +173,19 @@ export const vaccinatorCover = async (zerodoseId, qrCode) => {
   return response.data;
 };
 
+export const getSupervisorZerodose = async ({ campaignId, filter }) => {
+  const response = await api.get("/zerodose/supervisor", {
+    params: {
+      campaignId,
+      filter,
+    },
+  });
+
+  return response.data;
+};
+
+
+
 
 export const getVaccinatorZerodose = async ({ campaignId, filter }) => {
   const response = await api.get("/zerodose/vaccinator", {

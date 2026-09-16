@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -40,45 +39,6 @@ export default function Page() {
     },
     teams: [],
   });
-
-  // ============================================================
-  // CAMPAIGN STATUS
-  // ============================================================
-
-  const getCampaignStatus = (campaign) => {
-    if (!campaign?.startDate || !campaign?.endDate) {
-      return "previous";
-    }
-
-    const now = new Date();
-
-    const startDate = new Date(campaign.startDate);
-    const endDate = new Date(campaign.endDate);
-
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    const start = new Date(
-      startDate.getFullYear(),
-      startDate.getMonth(),
-      startDate.getDate(),
-    );
-
-    const end = new Date(
-      endDate.getFullYear(),
-      endDate.getMonth(),
-      endDate.getDate(),
-    );
-
-    if (today < start) {
-      return "upcoming";
-    }
-
-    if (today >= start && today <= end) {
-      return "current";
-    }
-
-    return "previous";
-  };
 
   // ============================================================
   // INITIAL LOAD
@@ -164,9 +124,13 @@ export default function Page() {
 
             setVaccinationStatus(
               response.vaccinationStatus || {
-                recorded: 0,
-                visited: 0,
-                covered: 0,
+                total: {
+                  recorded: 0,
+                  visited: 0,
+                  covered: 0,
+                },
+
+                teams: [],
               },
             );
           }
@@ -203,10 +167,6 @@ export default function Page() {
           : [];
 
         const previous = campaigns
-          .map((campaign) => ({
-            ...campaign,
-            campaignStatus: getCampaignStatus(campaign),
-          }))
           .filter((campaign) => campaign.campaignStatus === "previous")
           .sort((a, b) => {
             const dateA = new Date(a?.startDate || 0).getTime();
@@ -291,9 +251,12 @@ export default function Page() {
 
       setVaccinationStatus(
         response.vaccinationStatus || {
-          recorded: 0,
-          visited: 0,
-          covered: 0,
+          total: {
+            recorded: 0,
+            visited: 0,
+            covered: 0,
+          },
+          teams: [],
         },
       );
     } catch (error) {
@@ -330,7 +293,7 @@ export default function Page() {
           visited: 0,
           covered: 0,
         },
-        supervisors: [],
+        teams: [],
       });
 
       return;
@@ -392,7 +355,7 @@ export default function Page() {
           visited: 0,
           covered: 0,
         },
-        supervisors: [],
+        teams: [],
       });
     } finally {
       setLoading(false);

@@ -43,7 +43,7 @@ export default function CurrentCampaignZerodose({
       {/* ======================================================
           CAMPAIGN HEADER
       ====================================================== */}
-      {loading && campaign ? (
+      {loading && !campaign ? (
         <CampaignHeaderSkeleton />
       ) : (
         <CampaignHeader

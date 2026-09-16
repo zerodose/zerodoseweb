@@ -11,7 +11,7 @@ export default function ZerodoseTeamSummary({
   title = "Zerodose",
   description = "Team-wise Zerodose records.",
   vaccinationStatus = {
-    supervisors: [],
+    teams: [],
     total: {},
   },
   onFilterChange,
@@ -197,9 +197,12 @@ export default function ZerodoseTeamSummary({
             </p>
           </div>
 
-          <span className="bg-primary/10 text-primary shrink-0 rounded-full px-3 py-1 text-xs font-semibold">
-            {teamData.length} Teams
-          </span>
+          <p className="text-text-secondary text-xs text-nowrap">
+            <span className="border-border bg-primary/5 mr-1 h-10 w-10 rounded-full border p-1 font-semibold">
+              {teamData.length}
+            </span>
+            Teams
+          </p>
         </div>
 
         {/* ======================================================
@@ -327,11 +330,10 @@ export default function ZerodoseTeamSummary({
           {teamData.map((team) => {
             const isOpen = Boolean(openTeams[team.teamNumber]);
 
-            const supervisorStats =
-              vaccinationStatus?.supervisors?.find(
-                (supervisor) =>
-                  String(supervisor?.supervisorId) ===
-                  String(team?.supervisorId),
+            const teamStats =
+              vaccinationStatus?.teams?.find(
+                (statusTeam) =>
+                  String(statusTeam?.teamNumber) === String(team?.teamNumber),
               ) || {};
 
             return (
@@ -340,8 +342,8 @@ export default function ZerodoseTeamSummary({
                 className="border-border overflow-hidden rounded-2xl border bg-white shadow-sm transition-shadow duration-200 hover:shadow-md dark:bg-slate-900"
               >
                 {/* ==================================================
-              TEAM HEADER
-          ================================================== */}
+        TEAM HEADER
+    ================================================== */}
 
                 <button
                   type="button"
@@ -361,14 +363,14 @@ export default function ZerodoseTeamSummary({
                       <div className="mt-1 flex min-w-0 flex-wrap gap-x-4 gap-y-1 text-xs">
                         <span className="text-text-secondary whitespace-nowrap">
                           Leader:{" "}
-                          <span className="text-text font-medium">
+                          <span className="text-text font-medium capitalize">
                             {getWorkerName(team.teamLeader)}
                           </span>
                         </span>
 
                         <span className="text-text-secondary whitespace-nowrap">
                           Member:{" "}
-                          <span className="text-text font-medium">
+                          <span className="text-text font-medium capitalize">
                             {getWorkerName(team.teamMember)}
                           </span>
                         </span>
@@ -381,19 +383,17 @@ export default function ZerodoseTeamSummary({
                   <div className="flex shrink-0 items-center gap-3">
                     <div className="hidden items-center gap-1.5 sm:flex">
                       <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-1.5 text-[11px] font-semibold">
-                        {Number(
-                          supervisorStats?.recorded || 0,
-                        ).toLocaleString()}{" "}
+                        {Number(teamStats?.recorded || 0).toLocaleString()}{" "}
                         Recorded
                       </span>
 
                       <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-1.5 text-[11px] font-semibold">
-                        {Number(supervisorStats?.visited || 0).toLocaleString()}{" "}
+                        {Number(teamStats?.visited || 0).toLocaleString()}{" "}
                         Visited
                       </span>
 
                       <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-1.5 text-[11px] font-semibold">
-                        {Number(supervisorStats?.covered || 0).toLocaleString()}{" "}
+                        {Number(teamStats?.covered || 0).toLocaleString()}{" "}
                         Covered
                       </span>
                     </div>
@@ -410,8 +410,8 @@ export default function ZerodoseTeamSummary({
                 </button>
 
                 {/* ==================================================
-              MOBILE STATS
-          ================================================== */}
+        MOBILE STATS
+    ================================================== */}
 
                 <div className="border-border border-t px-4 py-3 sm:hidden">
                   <div className="grid grid-cols-3 gap-2">
@@ -419,36 +419,37 @@ export default function ZerodoseTeamSummary({
                       <p className="text-primary text-[10px] font-medium">
                         Recorded
                       </p>
+
                       <p className="text-text mt-0.5 text-sm font-bold">
-                        {Number(
-                          supervisorStats?.recorded || 0,
-                        ).toLocaleString()}
+                        {Number(teamStats?.recorded || 0).toLocaleString()}
                       </p>
                     </div>
+
                     <div className="bg-primary/5 rounded-lg px-2.5 py-2">
                       <p className="text-primary text-[10px] font-medium">
                         Visited
                       </p>
 
                       <p className="text-text mt-0.5 text-sm font-bold">
-                        {Number(supervisorStats?.visited || 0).toLocaleString()}
+                        {Number(teamStats?.visited || 0).toLocaleString()}
                       </p>
                     </div>
+
                     <div className="bg-primary/5 rounded-lg px-2.5 py-2">
                       <p className="text-primary text-[10px] font-medium">
                         Covered
                       </p>
 
                       <p className="text-text mt-0.5 text-sm font-bold">
-                        {Number(supervisorStats?.covered || 0).toLocaleString()}
+                        {Number(teamStats?.covered || 0).toLocaleString()}
                       </p>
                     </div>
                   </div>
                 </div>
 
                 {/* ==================================================
-              DETAILS
-          ================================================== */}
+        DETAILS
+    ================================================== */}
 
                 <div
                   className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${

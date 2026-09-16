@@ -888,7 +888,7 @@ export default function Page() {
       visited: 0,
       covered: 0,
     },
-    supervisors: [],
+    teams: [],
   });
 
   // ============================================================
@@ -1220,7 +1220,7 @@ export default function Page() {
             visited: 0,
             covered: 0,
           },
-          supervisors: [],
+          teams: [],
         },
       );
     } catch (error) {

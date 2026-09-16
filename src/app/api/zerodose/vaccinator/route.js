@@ -10,7 +10,6 @@ import User from "@/models/User";
 import Campaign from "@/models/Campaign";
 import { getAuthenticatedUser } from "@/lib/auth";
 
-
 export async function GET(request) {
   try {
     await connectDB();
@@ -199,9 +198,10 @@ export async function GET(request) {
       {
         $group: {
           _id: {
-            supervisor: "$supervisor",
+            teamNumber: "$teamNumber",
             vaccinationStatus: "$vaccinationStatus",
           },
+
           count: {
             $sum: 1,
           },
@@ -210,7 +210,7 @@ export async function GET(request) {
 
       {
         $group: {
-          _id: "$_id.supervisor",
+          _id: "$_id.teamNumber",
 
           statuses: {
             $push: {
@@ -218,26 +218,6 @@ export async function GET(request) {
               count: "$count",
             },
           },
-
-          total: {
-            $sum: "$count",
-          },
-        },
-      },
-
-      {
-        $lookup: {
-          from: "users",
-          localField: "_id",
-          foreignField: "_id",
-          as: "supervisor",
-        },
-      },
-
-      {
-        $unwind: {
-          path: "$supervisor",
-          preserveNullAndEmptyArrays: true,
         },
       },
 
@@ -245,13 +225,7 @@ export async function GET(request) {
         $project: {
           _id: 0,
 
-          supervisorId: "$_id",
-
-          supervisorName: {
-            $ifNull: ["$supervisor.name", "Unassigned"],
-          },
-
-          total: 1,
+          teamNumber: "$_id",
 
           recorded: {
             $let: {
@@ -271,6 +245,7 @@ export async function GET(request) {
                   ],
                 },
               },
+
               in: {
                 $ifNull: ["$$item.count", 0],
               },
@@ -295,6 +270,7 @@ export async function GET(request) {
                   ],
                 },
               },
+
               in: {
                 $ifNull: ["$$item.count", 0],
               },
@@ -319,6 +295,7 @@ export async function GET(request) {
                   ],
                 },
               },
+
               in: {
                 $ifNull: ["$$item.count", 0],
               },
@@ -329,7 +306,7 @@ export async function GET(request) {
 
       {
         $sort: {
-          supervisorName: 1,
+          teamNumber: 1,
         },
       },
     ]);
@@ -347,22 +324,21 @@ export async function GET(request) {
         covered: 0,
       },
 
-      supervisors: vaccinationStatusResult.map((item) => ({
-        supervisorId: item.supervisorId || null,
-        supervisorName: item.supervisorName || "Unassigned",
-
-        total: Number(item.total || 0),
+      teams: vaccinationStatusResult.map((item) => ({
+        teamNumber: item.teamNumber,
         recorded: Number(item.recorded || 0),
         visited: Number(item.visited || 0),
         covered: Number(item.covered || 0),
       })),
     };
 
-    vaccinationStatus.supervisors.forEach((item) => {
+    vaccinationStatus.teams.forEach((item) => {
       vaccinationStatus.total.recorded += item.recorded;
       vaccinationStatus.total.visited += item.visited;
       vaccinationStatus.total.covered += item.covered;
     });
+
+   
 
     return NextResponse.json({
       success: true,

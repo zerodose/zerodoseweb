@@ -16,6 +16,7 @@ export default function ZerodoseTeamSummary({
   },
   onFilterChange,
   loading,
+  designation,
 }) {
   const [openTeams, setOpenTeams] = useState({});
   const [statusFilter, setStatusFilter] = useState("recorded");
@@ -197,7 +198,9 @@ export default function ZerodoseTeamSummary({
             </p>
           </div>
 
-          <p className="text-text-secondary text-xs text-nowrap">
+          <p
+            className={`${designation === "worker" && "hidden"} text-text-secondary text-xs text-nowrap`}
+          >
             <span className="border-border bg-primary/5 mr-1 h-10 w-10 rounded-full border p-1 font-semibold">
               {teamData.length}
             </span>
@@ -381,19 +384,21 @@ export default function ZerodoseTeamSummary({
                   {/* Desktop Stats + Arrow */}
 
                   <div className="flex shrink-0 items-center gap-3">
-                    <div className="hidden items-center gap-1.5 sm:flex">
+                    <div
+                      className={`${designation === "worker" ? "hidden" : "hidden sm:flex"} items-center gap-1.5`}
+                    >
                       <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-1.5 text-[11px] font-semibold">
-                        {Number(teamStats?.recorded || 0).toLocaleString()}{" "}
+                        {Number(teamStats?.recorded || 0).toLocaleString()}
                         Recorded
                       </span>
 
                       <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-1.5 text-[11px] font-semibold">
-                        {Number(teamStats?.visited || 0).toLocaleString()}{" "}
+                        {Number(teamStats?.visited || 0).toLocaleString()}
                         Visited
                       </span>
 
                       <span className="bg-primary/10 text-primary rounded-lg px-2.5 py-1.5 text-[11px] font-semibold">
-                        {Number(teamStats?.covered || 0).toLocaleString()}{" "}
+                        {Number(teamStats?.covered || 0).toLocaleString()}
                         Covered
                       </span>
                     </div>
@@ -413,8 +418,10 @@ export default function ZerodoseTeamSummary({
         MOBILE STATS
     ================================================== */}
 
-                <div className="border-border border-t px-4 py-3 sm:hidden">
-                  <div className="grid grid-cols-3 gap-2">
+                <div
+                  className={`${designation === "worker" ? "hidden" : "flex sm:hidden"} w-full border-border border-t px-4 py-3`}
+                >
+                  <div className="grid grid-cols-3 gap-2  w-full">
                     <div className="bg-primary/5 rounded-lg px-2.5 py-2">
                       <p className="text-primary text-[10px] font-medium">
                         Recorded

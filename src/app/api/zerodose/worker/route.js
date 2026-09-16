@@ -12,7 +12,6 @@ import UnionCouncil from "@/models/UnionCouncil";
 import { jwtVerify } from "jose";
 import { getAuthenticatedUser } from "@/lib/auth";
 
-
 export async function POST(request) {
   try {
     await connectDB();
@@ -425,15 +424,13 @@ export async function POST(request) {
   }
 }
 
-
-
 export async function GET(request) {
   try {
     await connectDB();
 
-    // --------------------------------------------------------
+    // ============================================================
     // AUTHENTICATION
-    // --------------------------------------------------------
+    // ============================================================
 
     const auth = await getAuthenticatedUser(request);
 
@@ -443,9 +440,9 @@ export async function GET(request) {
 
     const { user } = auth;
 
-    // --------------------------------------------------------
+    // ============================================================
     // ONLY WORKER
-    // --------------------------------------------------------
+    // ============================================================
 
     if (user.designation !== "worker") {
       return NextResponse.json(
@@ -457,9 +454,9 @@ export async function GET(request) {
       );
     }
 
-    // --------------------------------------------------------
-    // WORKER TEAM VALIDATION
-    // --------------------------------------------------------
+    // ============================================================
+    // WORKER UNION COUNCIL
+    // ============================================================
 
     if (!user.unionCouncil) {
       return NextResponse.json(
@@ -471,6 +468,20 @@ export async function GET(request) {
       );
     }
 
+    if (!mongoose.Types.ObjectId.isValid(user.unionCouncil)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid Union Council assigned to this worker.",
+        },
+        { status: 400 },
+      );
+    }
+
+    // ============================================================
+    // WORKER TEAM
+    // ============================================================
+
     if (user.teamNumber === null || user.teamNumber === undefined) {
       return NextResponse.json(
         {
@@ -481,18 +492,30 @@ export async function GET(request) {
       );
     }
 
-    // --------------------------------------------------------
+    const teamNumber = Number(user.teamNumber);
+
+    if (!Number.isFinite(teamNumber)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid Team Number assigned to this worker.",
+        },
+        { status: 400 },
+      );
+    }
+
+    // ============================================================
     // QUERY PARAMETERS
-    // --------------------------------------------------------
+    // ============================================================
 
     const { searchParams } = new URL(request.url);
 
     const campaignId = searchParams.get("campaignId");
-    const filter = searchParams.get("filter");
+    const filter = searchParams.get("filter") || "recorded";
 
-    // --------------------------------------------------------
+    // ============================================================
     // CAMPAIGN VALIDATION
-    // --------------------------------------------------------
+    // ============================================================
 
     if (!campaignId) {
       return NextResponse.json(
@@ -514,13 +537,13 @@ export async function GET(request) {
       );
     }
 
-    // --------------------------------------------------------
+    // ============================================================
     // FILTER VALIDATION
-    // --------------------------------------------------------
+    // ============================================================
 
     const allowedFilters = ["recorded", "visited", "covered"];
 
-    if (!filter || !allowedFilters.includes(filter)) {
+    if (!allowedFilters.includes(filter)) {
       return NextResponse.json(
         {
           success: false,
@@ -531,83 +554,142 @@ export async function GET(request) {
       );
     }
 
-    // --------------------------------------------------------
-    // BASE QUERY
+    // ============================================================
+    // OBJECT IDS
+    // ============================================================
+
+    const campaignObjectId = new mongoose.Types.ObjectId(campaignId);
+
+    const unionCouncilObjectId = new mongoose.Types.ObjectId(user.unionCouncil);
+
+    // ============================================================
+    // BASE SCOPE
     //
-    // IMPORTANT:
-    // Only selected campaign
-    // AND authenticated worker's team
-    // --------------------------------------------------------
+    // Worker can only access:
+    // campaign + worker's UC + worker's team
+    //
+    // UC and team are taken from authenticated user.
+    // ============================================================
 
-    const match = {
-      campaign: new mongoose.Types.ObjectId(campaignId),
-
-      unionCouncil: new mongoose.Types.ObjectId(user.unionCouncil),
-
-      teamNumber: Number(user.teamNumber),
+    const baseMatch = {
+      campaign: campaignObjectId,
+      unionCouncil: unionCouncilObjectId,
+      teamNumber,
     };
 
-    // --------------------------------------------------------
-    // RECORDED
-    //
-    // recordDate exists
-    // visitDate is null
-    // coverDate is null
-    // --------------------------------------------------------
+    // ============================================================
+    // FILTERED DATA MATCH
+    // ============================================================
+
+    const dataMatch = {
+      ...baseMatch,
+    };
 
     if (filter === "recorded") {
-      match.recordDate = { $ne: null };
-      match.visitDate = null;
-      match.coverDate = null;
+      dataMatch.recordDate = { $ne: null };
+      dataMatch.visitDate = null;
+      dataMatch.coveredDate = null;
     }
-
-    // --------------------------------------------------------
-    // VISITED
-    //
-    // recordDate exists
-    // visitDate exists
-    // coverDate is null
-    // --------------------------------------------------------
 
     if (filter === "visited") {
-      match.recordDate = { $ne: null };
-      match.visitDate = { $ne: null };
-      match.coverDate = null;
+      dataMatch.recordDate = { $ne: null };
+      dataMatch.visitDate = { $ne: null };
+      dataMatch.coveredDate = null;
     }
-
-    // --------------------------------------------------------
-    // COVERED
-    //
-    // recordDate exists
-    // visitDate exists
-    // coverDate exists
-    // --------------------------------------------------------
 
     if (filter === "covered") {
-      match.recordDate = { $ne: null };
-      match.visitDate = { $ne: null };
-      match.coverDate = { $ne: null };
+      dataMatch.recordDate = { $ne: null };
+      dataMatch.visitDate = { $ne: null };
+      dataMatch.coveredDate = { $ne: null };
     }
 
-    // --------------------------------------------------------
-    // GET DATA
-    // --------------------------------------------------------
+    // ============================================================
+    // GET FILTERED DATA
+    // ============================================================
 
-    const zerodose = await Zerodose.find(match).sort({ createdAt: -1 }).lean();
+    const zerodose = await Zerodose.find(dataMatch)
+      .sort({ createdAt: -1 })
+      .populate("campaign", "name startDate endDate")
+      .populate("district", "name")
+      .populate("town", "name")
+      .populate("unionCouncil", "name")
+      .populate("ucmo", "name")
+      .populate("supervisor", "name supervisorCode")
+      .populate("user", "name designation")
+      .populate("teamLeader", "name")
+      .populate("teamMember", "name")
+      .populate("vaccinator", "name")
+      .lean();
 
-    // --------------------------------------------------------
+    // ============================================================
+    // SUMMARY
+    //
+    // All three statuses for:
+    // campaign + worker UC + worker team
+    // ============================================================
+
+    const [recordedCount, visitedCount, coveredCount] = await Promise.all([
+      Zerodose.countDocuments({
+        ...baseMatch,
+        recordDate: { $ne: null },
+        visitDate: null,
+        coveredDate: null,
+      }),
+
+      Zerodose.countDocuments({
+        ...baseMatch,
+        recordDate: { $ne: null },
+        visitDate: { $ne: null },
+        coveredDate: null,
+      }),
+
+      Zerodose.countDocuments({
+        ...baseMatch,
+        recordDate: { $ne: null },
+        visitDate: { $ne: null },
+        coveredDate: { $ne: null },
+      }),
+    ]);
+
+    const summary = {
+      recorded: recordedCount,
+      visited: visitedCount,
+      covered: coveredCount,
+    };
+
+    // ============================================================
+    // VACCINATION STATUS
+    //
+    // Worker belongs to one team only.
+    // ============================================================
+
+    const vaccinationStatus = {
+      total: {
+        recorded: recordedCount,
+        visited: visitedCount,
+        covered: coveredCount,
+      },
+    };
+
+    // ============================================================
     // RESPONSE
-    // --------------------------------------------------------
+    // ============================================================
 
     return NextResponse.json({
       success: true,
+
       data: zerodose,
+
+      summary,
+
+      vaccinationStatus,
+
       meta: {
         filter,
         count: zerodose.length,
         campaignId,
         unionCouncil: user.unionCouncil,
-        teamNumber: user.teamNumber,
+        teamNumber,
       },
     });
   } catch (error) {
@@ -616,7 +698,7 @@ export async function GET(request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to get worker Zerodose data.",
+        message: error?.message || "Failed to get worker Zerodose data.",
       },
       { status: 500 },
     );

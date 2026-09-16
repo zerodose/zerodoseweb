@@ -1,1398 +1,441 @@
-// "use client";
-
-// import { formatDate } from "@/lib/formatDate";
-// import {
-//   CalendarDays,
-//   MapPin,
-//   RefreshCw,
-//   Syringe,
-//   User,
-//   Baby,
-//   Clock3,
-// } from "lucide-react";
-// import { useEffect, useMemo, useState } from "react";
-// import { useRouter } from "next/navigation";
-// import { getWorkerZerodose } from "@/api/zerodoseApi";
-
-// export default function ZerodoseCampaignSection({
-//   activeTab,
-//   onTabChange,
-//   currentCampaign,
-//   previousZerodoses = [],
-//   loading = false,
-//   onRefresh,
-//   getStatus,
-// }) {
-//   const router = useRouter();
-//   const [statusTab, setStatusTab] = useState("recorded");
-//   const [zerodoses, setZerodoses] = useState([]);
-//   const [loadingZerodose, setLoadingZerodose] = useState(false);
-//   const [fetchError, setFetchError] = useState("");
-
-//   const handleTabChange = async (tab) => {
-//     setActiveTab(tab);
-
-//     if (!campaign?._id) {
-//       return;
-//     }
-
-//     // Current tab ko API filter mein convert karein
-//     const filter =
-//       tab === "visited"
-//         ? "visited"
-//         : tab === "covered"
-//           ? "covered"
-//           : "recorded";
-
-//     try {
-//       setLoadingZerodose(true);
-//       setError("");
-
-//       const response = await getWorkerZerodose({
-//         campaignId: campaign._id,
-//         filter,
-//       });
-
-//       const records = Array.isArray(response?.data) ? response.data : [];
-
-//       setZerodoses(records);
-//     } catch (error) {
-//       console.error("❌ Get worker zerodose error:", error);
-//       console.error("❌ API response:", error?.response?.data);
-
-//       setZerodoses([]);
-
-//       setError(
-//         error?.response?.data?.message ||
-//           error?.response?.data?.error?.message ||
-//           error?.message ||
-//           "Failed to load zerodose records.",
-//       );
-//     } finally {
-//       setLoadingZerodose(false);
-//     }
-//   };
-
-//   // const zerodoses = useMemo(() => {
-//   //   const source =
-//   //     activeTab === "current" ? currentZerodoses : previousZerodoses;
-
-//   //   return Array.isArray(source) ? source : [];
-//   // }, [activeTab, currentZerodoses, previousZerodoses]);
-
-//   const title =
-//     activeTab === "current"
-//       ? "Current Campaign Zerodose"
-//       : "Previous Campaign Zerodose";
-
-//   const description =
-//     activeTab === "current"
-//       ? "Zerodose recorded by your team during the current campaign."
-//       : "Zerodose recorded by your team during previous campaigns.";
-
-//   const fetchZerodose = async (filter) => {
-//     if (!currentCampaign?._id) {
-//       setZerodoses([]);
-//       return;
-//     }
-
-//     try {
-//       setLoadingZerodose(true);
-//       setFetchError("");
-
-//       const response = await getWorkerZerodose({
-//         campaignId: currentCampaign._id,
-//         filter,
-//       });
-
-//       const records = Array.isArray(response?.data) ? response.data : [];
-
-//       setZerodoses(records);
-//     } catch (error) {
-//       console.error("❌ Get worker zerodose error:", error);
-//       console.error("❌ API response:", error?.response?.data);
-
-//       setZerodoses([]);
-
-//       setFetchError(
-//         error?.response?.data?.message ||
-//           error?.response?.data?.error?.message ||
-//           error?.message ||
-//           "Failed to load zerodose records.",
-//       );
-//     } finally {
-//       setLoadingZerodose(false);
-//     }
-//   };
-
-//   const fetchZerodose = async (filter) => {
-//     if (!currentCampaign?._id) {
-//       setZerodoses([]);
-//       return;
-//     }
-
-//     try {
-//       setLoadingZerodose(true);
-//       setFetchError("");
-
-//       const response = await getWorkerZerodose({
-//         campaignId: currentCampaign._id,
-//         filter,
-//       });
-
-//       const records = Array.isArray(response?.data) ? response.data : [];
-
-//       setZerodoses(records);
-//     } catch (error) {
-//       console.error("❌ Get worker zerodose error:", error);
-//       console.error("❌ API response:", error?.response?.data);
-
-//       setZerodoses([]);
-
-//       setFetchError(
-//         error?.response?.data?.message ||
-//           error?.response?.data?.error?.message ||
-//           error?.message ||
-//           "Failed to load zerodose records.",
-//       );
-//     } finally {
-//       setLoadingZerodose(false);
-//     }
-//   };
-
-//   // =========================================================
-//   // Google Maps
-//   // =========================================================
-
-//   const openGoogleMaps = (item) => {
-//     const latitude = item?.location?.latitude ?? item?.latitude;
-//     const longitude = item?.location?.longitude ?? item?.longitude;
-
-//     if (
-//       latitude === undefined ||
-//       latitude === null ||
-//       longitude === undefined ||
-//       longitude === null
-//     ) {
-//       return;
-//     }
-
-//     const url = `https://www.google.com/maps?q=${encodeURIComponent(
-//       `${latitude},${longitude}`,
-//     )}`;
-
-//     window.open(url, "_blank", "noopener,noreferrer");
-//   };
-
-//   const getCampaignDay = (item, status = statusTab) => {
-//     const startDate = item?.campaign?.startDate;
-//     const endDate = item?.campaign?.endDate;
-
-//     if (!startDate) return "-";
-
-//     const date =
-//       status === "covered"
-//         ? item?.coveredDate
-//         : status === "visited"
-//           ? item?.visitDate
-//           : item?.recordDate;
-
-//     if (!date) return "-";
-
-//     // ---------------------------------------------------------
-//     // Convert date to local calendar date without UTC shifting.
-//     // This prevents dates like 17 Aug becoming 16 Aug because
-//     // of timezone conversion.
-//     // ---------------------------------------------------------
-
-//     const getDateOnly = (value) => {
-//       const parsed = new Date(value);
-
-//       if (Number.isNaN(parsed.getTime())) {
-//         return null;
-//       }
-
-//       return new Date(
-//         parsed.getFullYear(),
-//         parsed.getMonth(),
-//         parsed.getDate(),
-//       );
-//     };
-
-//     const start = getDateOnly(startDate);
-//     const current = getDateOnly(date);
-//     const end = endDate ? getDateOnly(endDate) : null;
-
-//     if (!start || !current) return "-";
-
-//     const difference = Math.floor(
-//       (current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
-//     );
-
-//     const campaignDay = difference + 1;
-
-//     // ---------------------------------------------------------
-//     // Campaign Day can never be before Day 1.
-//     // ---------------------------------------------------------
-
-//     if (campaignDay < 1) {
-//       return "-";
-//     }
-
-//     // ---------------------------------------------------------
-//     // If campaign end date exists, do not allow a date after
-//     // the campaign end date to produce a day beyond the
-//     // campaign's final day.
-//     // ---------------------------------------------------------
-
-//     if (end) {
-//       const totalCampaignDays =
-//         Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) +
-//         1;
-
-//       if (totalCampaignDays > 0) {
-//         return Math.min(campaignDay, totalCampaignDays);
-//       }
-//     }
-
-//     return campaignDay;
-//   };
-
-//   const formatClientStatus = (status) => {
-//     if (!status) return "-";
-
-//     return status
-//       .split("_")
-//       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-//       .join(" ");
-//   };
-
-//   // =========================================================
-//   // Status Tabs
-//   // =========================================================
-
-//   const statusTabs = [
-//     {
-//       key: "recorded",
-//       label: "Recorded",
-//     },
-//     {
-//       key: "visited",
-//       label: "Visited",
-//     },
-//     {
-//       key: "covered",
-//       label: "Covered",
-//     },
-//   ];
-
-//   // =========================================================
-//   // Card Skeleton
-//   // =========================================================
-
-//   const renderCardSkeleton = (index) => (
-//     <div
-//       key={index}
-//       className="bg-background border-border rounded-xl border p-4 shadow-sm md:p-5"
-//     >
-//       {/* Card Header */}
-//       <div className="flex items-start gap-3">
-//         <div className="h-10 w-10 shrink-0 animate-pulse rounded-xl bg-gray-200" />
-
-//         <div className="min-w-0 flex-1 space-y-2">
-//           <div className="h-5 w-32 animate-pulse rounded bg-gray-200" />
-//           <div className="h-3 w-20 animate-pulse rounded bg-gray-200" />
-//         </div>
-//       </div>
-
-//       {/* Child Information */}
-//       <div className="border-border mt-4 grid grid-cols-2 gap-x-4 gap-y-4 border-t pt-4 md:grid-cols-4">
-//         {[1, 2, 3, 4].map((item) => (
-//           <div key={item} className="space-y-2">
-//             <div className="h-3 w-16 animate-pulse rounded bg-gray-200" />
-//             <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* Extra Information */}
-//       <div className="border-border mt-4 grid grid-cols-2 gap-4 border-t pt-4 md:grid-cols-3">
-//         {[1].map((item) => (
-//           <div key={item} className="space-y-2">
-//             <div className="h-3 w-20 animate-pulse rounded bg-gray-200" />
-//             <div className="h-4 w-28 animate-pulse rounded bg-gray-200" />
-//           </div>
-//         ))}
-//       </div>
-
-//       {/* Address */}
-//       <div className="border-border mt-4 flex items-start gap-2 border-t pt-3">
-//         <div className="mt-0.5 h-4 w-4 shrink-0 animate-pulse rounded bg-gray-200" />
-
-//         <div className="flex-1 space-y-2">
-//           <div className="h-3 w-full animate-pulse rounded bg-gray-200" />
-//           <div className="h-3 w-3/4 animate-pulse rounded bg-gray-200" />
-//         </div>
-//       </div>
-//     </div>
-//   );
-
-//   return (
-//     <section className="bg-surface border-border overflow-hidden rounded-2xl border shadow-sm">
-//       {/* =========================================================
-//             Campaign Tabs
-//         ========================================================= */}
-
-//       <div className="border-border border-b p-3 md:p-4">
-//         <div className="grid grid-cols-2 gap-2 md:gap-3">
-//           {/* Current Campaign */}
-//           <button
-//             type="button"
-//             onClick={() => onTabChange?.("current")}
-//             className={`group relative flex min-h-[72px] min-w-0 items-center overflow-hidden rounded-xl px-3 py-3 text-left transition md:min-h-[82px] md:px-4 ${
-//               activeTab === "current"
-//                 ? "bg-primary dark:bg-background text-white shadow-sm"
-//                 : "bg-background text-text-secondary border-border hover:border-primary hover:text-primary border"
-//             }`}
-//           >
-//             <div className="relative z-10 flex min-w-0 items-center gap-2.5">
-//               <CalendarDays
-//                 className={`h-5 w-5 shrink-0 ${
-//                   activeTab === "current"
-//                     ? "text-white/90"
-//                     : "text-primary/70 group-hover:text-primary"
-//                 }`}
-//               />
-
-//               <span className="min-w-0 text-sm leading-5 font-semibold md:text-base">
-//                 <span className="block">Current</span>
-//                 <span className="block">Campaign</span>
-//               </span>
-//             </div>
-
-//             {/* Background Calendar */}
-//             <CalendarDays
-//               className={`pointer-events-none absolute -right-4 -bottom-5 z-0 h-20 w-20 ${
-//                 activeTab === "current"
-//                   ? "text-white/10"
-//                   : "text-primary/10 group-hover:text-primary/15"
-//               }`}
-//             />
-//           </button>
-
-//           {/* Previous Campaigns */}
-//           <button
-//             type="button"
-//             onClick={() => onTabChange?.("previous")}
-//             className={`group relative flex min-h-[72px] min-w-0 items-center overflow-hidden rounded-xl px-3 py-3 text-left transition md:min-h-[82px] md:px-4 ${
-//               activeTab === "previous"
-//                 ? "bg-primary dark:bg-background text-white shadow-sm"
-//                 : "bg-background text-text-secondary border-border hover:border-primary hover:text-primary border"
-//             }`}
-//           >
-//             <div className="relative z-10 flex min-w-0 items-center gap-2.5">
-//               <CalendarDays
-//                 className={`h-5 w-5 shrink-0 ${
-//                   activeTab === "previous"
-//                     ? "text-white/90"
-//                     : "text-primary/70 group-hover:text-primary"
-//                 }`}
-//               />
-
-//               <span className="min-w-0 text-sm leading-5 font-semibold md:text-base">
-//                 <span className="block">Previous</span>
-//                 <span className="block">Campaigns</span>
-//               </span>
-//             </div>
-
-//             {/* Background Calendar */}
-//             <CalendarDays
-//               className={`pointer-events-none absolute -right-4 -bottom-5 z-0 h-20 w-20 ${
-//                 activeTab === "previous"
-//                   ? "text-white/10"
-//                   : "text-primary/10 group-hover:text-primary/15"
-//               }`}
-//             />
-//           </button>
-//         </div>
-//       </div>
-
-//       {/* =========================================================
-//             Section Header
-//         ========================================================= */}
-
-//       <div className="border-border bg-background flex flex-col border-b p-4 md:p-5">
-//         {/* Heading + Refresh */}
-//         <div className="flex w-full items-center justify-between gap-3">
-//           <div className="flex min-w-0 items-center gap-2">
-//             <h2 className="text-text text-lg font-semibold text-wrap">
-//               {title}
-//             </h2>
-//           </div>
-
-//           <button
-//             type="button"
-//             onClick={onRefresh}
-//             disabled={loading}
-//             className="border-border bg-primary dark:bg-background hover:bg-primary-dark flex w-fit shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-50"
-//           >
-//             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-//             Refresh
-//           </button>
-//         </div>
-
-//         {/* Description - full width */}
-//         <p className="text-text-secondary mt-2 w-full text-sm leading-relaxed">
-//           {description}
-//         </p>
-//       </div>
-
-//       {/* =========================================================
-//             Status Tabs
-//         ========================================================= */}
-
-//       <div className="border-border border-b p-3 md:p-4">
-//         <div className="border-border bg-background grid grid-cols-3 gap-1.5 rounded-2xl border p-1.5">
-//           {statusTabs.map((tab) => {
-//             const Icon =
-//               tab.key === "recorded"
-//                 ? Clock3
-//                 : tab.key === "visited"
-//                   ? CalendarDays
-//                   : Syringe;
-
-//             const isDisabled = loading && statusTab !== tab.key;
-
-//             return (
-//               <button
-//                 key={tab.key}
-//                 type="button"
-//                 onClick={() => {
-//                   setStatusTab(tab.key);
-//                   fetchZerodose(tab.key);
-//                 }}
-//                 disabled={isDisabled}
-//                 className={`flex min-w-0 items-center justify-center gap-2 rounded-xl px-2 py-2.5 text-sm font-semibold transition-all ${
-//                   statusTab === tab.key
-//                     ? "bg-primary text-white shadow-sm"
-//                     : "text-text-secondary hover:bg-background hover:text-primary dark:hover:bg-slate-800"
-//                 } ${
-//                   isDisabled
-//                     ? "hover:text-text-secondary cursor-not-allowed opacity-50 hover:bg-transparent dark:hover:bg-transparent"
-//                     : ""
-//                 }`}
-//               >
-//                 <Icon className="h-4 w-4 shrink-0" />
-
-//                 <span className="truncate">{tab.label}</span>
-//               </button>
-//             );
-//           })}
-//         </div>
-//       </div>
-
-//       {/* =========================================================
-//             Loading
-//         ========================================================= */}
-
-//       {loading ? (
-//         <div className="space-y-3 p-3 md:space-y-4 md:p-5">
-//           {[1, 2, 3].map((item) => renderCardSkeleton(item))}
-//         </div>
-//       ) : filteredZerodoses.length === 0 ? (
-//         /* =========================================================
-//             Empty
-//           ========================================================= */
-
-//         <div className="flex flex-col items-center justify-center px-5 py-12 text-center">
-//           <div className="bg-primary/10 text-primary flex h-14 w-14 items-center justify-center rounded-2xl">
-//             <Syringe className="h-7 w-7" />
-//           </div>
-
-//           <h3 className="text-text mt-4 font-semibold">
-//             No {statusTab.charAt(0).toUpperCase() + statusTab.slice(1)} Zerodose
-//           </h3>
-
-//           <p className="text-text-secondary mt-1 max-w-sm text-sm">
-//             {activeTab === "current"
-//               ? `Your team has not recorded any ${statusTab} Zerodose during the current campaign yet.`
-//               : `No ${statusTab} Zerodose records were found from previous campaigns.`}
-//           </p>
-//         </div>
-//       ) : (
-//         /* =========================================================
-//             Zerodose Cards
-//           ========================================================= */
-
-//         <div className="space-y-3 p-3 md:space-y-4 md:p-5">
-//           {filteredZerodoses.map((item, index) => {
-//             const vaccinationStatus = String(
-//               item?.vaccinationStatus || "",
-//             ).toLowerCase();
-
-//             const status =
-//               typeof getStatus === "function"
-//                 ? getStatus(item)
-//                 : {
-//                     label: formatClientStatus(vaccinationStatus),
-//                     className: "bg-gray-100 text-gray-700",
-//                   };
-
-//             return (
-//               <div
-//                 key={item._id || `${item.childName || "zerodose"}-${index}`}
-//                 onClick={() => router.push(`/worker/${item._id}`)}
-//                 className="bg-background border-border hover:border-primary cursor-pointer rounded-xl border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md md:p-5"
-//               >
-//                 {/* =================================================
-//                       Card Header
-//                   ================================================= */}
-
-//                 <div className="flex items-start justify-between gap-3">
-//                   {/* Left: Syringe + Child + Status */}
-
-//                   <div className="flex min-w-0 flex-1 items-start gap-3">
-//                     {/* Syringe Icon */}
-
-//                     <div className="bg-primary/10 text-primary flex shrink-0 items-center justify-center rounded-lg">
-//                       {/* <Syringe size={17} /> */}
-//                       {item?.houseNumber && (
-//                         <span className="border-border bg-surface text-text inline-flex h-9 items-center rounded-lg border px-2.5 py-1 text-[11px] font-semibold">
-//                           <span className="mr-1">H -</span>
-//                           {item.houseNumber}
-//                         </span>
-//                       )}
-//                     </div>
-
-//                     {/* Child */}
-
-//                     <div className="min-w-0 flex-1">
-//                       <div className="flex flex-wrap items-center gap-2">
-//                         <h3 className="text-text truncate text-base font-semibold capitalize">
-//                           {item.childName}
-//                         </h3>
-
-//                         <span
-//                           className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${status.className}`}
-//                         >
-//                           {status.label}
-//                         </span>
-//                       </div>
-
-//                       <p className="text-text-secondary text-xs">
-//                         Record-{index + 1}
-//                       </p>
-//                     </div>
-//                   </div>
-
-//                   {/* Right: Campaign Day */}
-
-//                   <div className="shrink-0 text-right">
-//                     <p className="text-text-secondary text-xs">Campaign Day</p>
-
-//                     <p className="text-text mt-1 text-sm font-semibold">
-//                       Day {getCampaignDay(item, statusTab)}
-//                     </p>
-//                   </div>
-//                 </div>
-
-//                 {/* =================================================
-//       Child Information
-//   ================================================= */}
-
-//                 <div className="border-border mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t pt-4 md:grid-cols-4">
-//                   {/* Father */}
-
-//                   <div className="min-w-0">
-//                     <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-//                       <User className="h-3.5 w-3.5 shrink-0" />
-
-//                       <span>Father</span>
-//                     </div>
-
-//                     <p className="text-text mt-1 truncate text-sm font-medium capitalize">
-//                       {item.fatherName || "-"}
-//                     </p>
-//                   </div>
-
-//                   {/* Age */}
-
-//                   <div>
-//                     <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-//                       <Baby className="h-3.5 w-3.5 shrink-0" />
-
-//                       <span>Age</span>
-//                     </div>
-
-//                     <p className="text-text mt-1 text-sm font-medium">
-//                       {item.age ?? "-"} months
-//                     </p>
-//                   </div>
-
-//                   {/* Contact */}
-
-//                   <div>
-//                     <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-//                       <User className="h-3.5 w-3.5 shrink-0" />
-
-//                       <span>Contact</span>
-//                     </div>
-
-//                     <p className="text-text mt-1 text-sm font-medium">
-//                       {item.contactNo || "-"}
-//                     </p>
-//                   </div>
-
-//                   {/* Recorded */}
-
-//                   <div>
-//                     <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-//                       <Clock3 className="h-3.5 w-3.5 shrink-0" />
-
-//                       <span>Recorded</span>
-//                     </div>
-
-//                     <p className="text-text mt-1 text-sm font-medium">
-//                       {formatDate(item.recordDate)}
-//                     </p>
-//                   </div>
-
-//                   {/* Visited */}
-
-//                   {statusTab === "visited" && (
-//                     <div>
-//                       <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-//                         <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-
-//                         <span>Visited Date</span>
-//                       </div>
-
-//                       <p className="text-text mt-1 text-sm font-medium">
-//                         {formatDate(item.visitDate)}
-//                       </p>
-//                     </div>
-//                   )}
-
-//                   {/* Covered */}
-
-//                   {statusTab === "covered" && (
-//                     <>
-//                       <div>
-//                         <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-//                           <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-
-//                           <span>Visited Date</span>
-//                         </div>
-
-//                         <p className="text-text mt-1 text-sm font-medium">
-//                           {formatDate(item.visitDate)}
-//                         </p>
-//                       </div>
-
-//                       <div>
-//                         <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-//                           <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-
-//                           <span>Covered Date</span>
-//                         </div>
-
-//                         <p className="text-text mt-1 text-sm font-medium">
-//                           {formatDate(item.coveredDate)}
-//                         </p>
-//                       </div>
-//                     </>
-//                   )}
-//                 </div>
-
-//                 {/* =================================================
-//                       Address + Google Maps
-//                       Recorded + Visited only
-//                   ================================================= */}
-
-//                 {statusTab !== "covered" && item.address && (
-//                   <div className="border-border mt-4 flex items-start gap-2 border-t pt-3">
-//                     <div className="flex min-w-0 flex-1 items-start gap-2">
-//                       <MapPin className="text-text-secondary mt-0.5 h-4 w-4 shrink-0" />
-
-//                       <p className="text-text-secondary text-xs leading-5 capitalize">
-//                         {item.address}
-//                       </p>
-//                     </div>
-
-//                     {((item?.location?.latitude !== undefined &&
-//                       item?.location?.latitude !== null &&
-//                       item?.location?.longitude !== undefined &&
-//                       item?.location?.longitude !== null) ||
-//                       (item?.latitude !== undefined &&
-//                         item?.latitude !== null &&
-//                         item?.longitude !== undefined &&
-//                         item?.longitude !== null)) && (
-//                       <button
-//                         type="button"
-//                         onClick={(event) => {
-//                           event.stopPropagation();
-//                           openGoogleMaps(item);
-//                         }}
-//                         title="Open location in Google Maps"
-//                         className="bg-primary/10 text-primary hover:bg-primary/20 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition"
-//                       >
-//                         <MapPin className="h-4 w-4" />
-//                       </button>
-//                     )}
-//                   </div>
-//                 )}
-//               </div>
-//             );
-//           })}
-//         </div>
-//       )}
-//     </section>
-//   );
-// }
-
 "use client";
 
-import { formatDate } from "@/lib/formatDate";
-import { getCampaignDay } from "@/lib/getCampaignDay";
-import {
-  CalendarDays,
-  MapPin,
-  RefreshCw,
-  Syringe,
-  User,
-  Baby,
-  Clock3,
-} from "lucide-react";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+
+import { getCampaigns, getCurrentCampaign } from "@/api/campaignApi";
+
 import { getWorkerZerodose } from "@/api/zerodoseApi";
+import ZerodoseTabs from "@/components/supervisor/zerodose/ZerodoseTabs";
+import CurrentCampaignZerodose from "@/components/supervisor/zerodose/CurrentCampaignZerodose";
+import PreviousCampaignsZerodose from "@/components/supervisor/zerodose/PreviousCampaignsZerodose";
 
-export default function ZerodoseCampaignSection({
-  activeTab,
-  onTabChange,
-  currentCampaign,
-  previousCampaigns = [],
-  loadingCampaign = false,
-}) {
-  const router = useRouter();
+export default function Page() {
+  const [activeTab, setActiveTab] = useState("current");
 
-  const [statusTab, setStatusTab] = useState("recorded");
+  const [currentCampaign, setCurrentCampaign] = useState(null);
+  const [previousCampaigns, setPreviousCampaigns] = useState([]);
+
   const [zerodoses, setZerodoses] = useState([]);
-  const [loadingZerodose, setLoadingZerodose] = useState(false);
-  const [fetchError, setFetchError] = useState("");
+  const [previousZerodoses, setPreviousZerodoses] = useState([]);
 
-  // =========================================================
-  // Fetch Zerodose
-  // =========================================================
+  const [unionCouncilName, setUnionCouncilName] = useState("-");
 
-  const fetchZerodose = async (filter) => {
-    if (activeTab !== "current") return;
-    if (!currentCampaign?._id) return;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [designation, setDesignation] = useState("");
+
+  const [summary, setSummary] = useState({
+    recorded: 0,
+    visited: 0,
+    covered: 0,
+  });
+
+  const [vaccinationStatus, setVaccinationStatus] = useState({
+    total: {
+      recorded: 0,
+      visited: 0,
+      covered: 0,
+    },
+    teams: [],
+  });
+
+  // ============================================================
+  // CAMPAIGN STATUS
+  // ============================================================
+
+  const getCampaignStatus = (campaign) => {
+    if (!campaign?.startDate || !campaign?.endDate) {
+      return "previous";
+    }
+
+    const now = new Date();
+
+    const startDate = new Date(campaign.startDate);
+    const endDate = new Date(campaign.endDate);
+
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const start = new Date(
+      startDate.getFullYear(),
+      startDate.getMonth(),
+      startDate.getDate(),
+    );
+
+    const end = new Date(
+      endDate.getFullYear(),
+      endDate.getMonth(),
+      endDate.getDate(),
+    );
+
+    if (today < start) {
+      return "upcoming";
+    }
+
+    if (today >= start && today <= end) {
+      return "current";
+    }
+
+    return "previous";
+  };
+
+  // ============================================================
+  // INITIAL LOAD
+  // ============================================================
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        // --------------------------------------------------------
+        // AUTH USER
+        // --------------------------------------------------------
+
+        let storedAuthUser = {};
+
+        try {
+          storedAuthUser = JSON.parse(localStorage.getItem("authUser") || "{}");
+        } catch (error) {
+          console.error("Failed to parse authUser:", error);
+        }
+        setDesignation(storedAuthUser?.designation || "");
+        // --------------------------------------------------------
+        // CURRENT CAMPAIGN
+        // --------------------------------------------------------
+
+        const currentCampaignResponse = await getCurrentCampaign();
+
+        if (!currentCampaignResponse?.success) {
+          throw new Error(
+            currentCampaignResponse?.message ||
+              "Failed to fetch current campaign.",
+          );
+        }
+
+        const campaign = currentCampaignResponse?.data?.currentCampaign || null;
+
+        if (cancelled) {
+          return;
+        }
+
+        setCurrentCampaign(campaign);
+
+        // --------------------------------------------------------
+        // UNION COUNCIL
+        // --------------------------------------------------------
+
+        setUnionCouncilName(storedAuthUser?.unionCouncil?.name || "-");
+
+        // --------------------------------------------------------
+        // CURRENT CAMPAIGN ZERODOSE
+        // --------------------------------------------------------
+
+        if (campaign?._id) {
+          const response = await getWorkerZerodose({
+            campaignId: campaign._id,
+            filter: "recorded",
+          });
+
+          if (!response?.success) {
+            throw new Error(
+              response?.message || "Failed to fetch current Zerodose.",
+            );
+          }
+
+          console.log("Vaccinator Zerodose response:", response);
+
+          const currentData = Array.isArray(response.data) ? response.data : [];
+
+          if (!cancelled) {
+            setZerodoses(currentData);
+
+            setSummary(
+              response.summary || {
+                recorded: 0,
+                visited: 0,
+                covered: 0,
+              },
+            );
+
+            setVaccinationStatus(
+              response.vaccinationStatus || {
+                recorded: 0,
+                visited: 0,
+                covered: 0,
+              },
+            );
+          }
+        } else {
+          setZerodoses([]);
+
+          setSummary({
+            recorded: 0,
+            visited: 0,
+            covered: 0,
+          });
+
+          setVaccinationStatus({
+            recorded: 0,
+            visited: 0,
+            covered: 0,
+          });
+        }
+
+        // --------------------------------------------------------
+        // PREVIOUS CAMPAIGNS
+        // --------------------------------------------------------
+
+        const campaignsResponse = await getCampaigns();
+
+        if (!campaignsResponse?.success) {
+          throw new Error(
+            campaignsResponse?.message || "Failed to fetch campaigns.",
+          );
+        }
+
+        const campaigns = Array.isArray(campaignsResponse.data)
+          ? campaignsResponse.data
+          : [];
+
+        const previous = campaigns
+          .map((campaign) => ({
+            ...campaign,
+            campaignStatus: getCampaignStatus(campaign),
+          }))
+          .filter((campaign) => campaign.campaignStatus === "previous")
+          .sort((a, b) => {
+            const dateA = new Date(a?.startDate || 0).getTime();
+
+            const dateB = new Date(b?.startDate || 0).getTime();
+
+            return dateB - dateA;
+          });
+
+        if (!cancelled) {
+          setPreviousCampaigns(previous);
+        }
+
+        console.log("Vaccinator Zerodose data fetched successfully:", {
+          currentCampaignId: campaign?._id || null,
+          currentRecordedCount: campaign?._id
+            ? Array.isArray(zerodoses)
+              ? zerodoses.length
+              : 0
+            : 0,
+          previousCampaigns: previous.length,
+        });
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        console.error("Vaccinator Zerodose fetch error:", error);
+
+        setError(error?.message || "Failed to load Zerodose data.");
+
+        setCurrentCampaign(null);
+        setPreviousCampaigns([]);
+        setZerodoses([]);
+        setPreviousZerodoses([]);
+        setUnionCouncilName("-");
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // ============================================================
+  // CURRENT FILTER
+  // ============================================================
+
+  const handleCurrentFilterChange = async (filter) => {
+    if (!currentCampaign?._id) {
+      return;
+    }
 
     try {
-      setLoadingZerodose(true);
-      setFetchError("");
+      setLoading(true);
+      setError("");
 
       const response = await getWorkerZerodose({
         campaignId: currentCampaign._id,
         filter,
       });
 
-      const records = Array.isArray(response?.data) ? response.data : [];
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to fetch Zerodose data.");
+      }
 
-      setZerodoses(records);
+      setZerodoses(Array.isArray(response.data) ? response.data : []);
+
+      setSummary(
+        response.summary || {
+          recorded: 0,
+          visited: 0,
+          covered: 0,
+        },
+      );
+
+      setVaccinationStatus(
+        response.vaccinationStatus || {
+          recorded: 0,
+          visited: 0,
+          covered: 0,
+        },
+      );
     } catch (error) {
-      console.error("❌ Get worker zerodose error:", error);
-      console.error("❌ API response:", error?.response?.data);
+      console.error("Vaccinator current Zerodose filter error:", error);
+
+      setError(error?.message || "Failed to load Zerodose data.");
 
       setZerodoses([]);
-
-      setFetchError(
-        error?.response?.data?.message ||
-          error?.response?.data?.error?.message ||
-          error?.message ||
-          "Failed to load zerodose records.",
-      );
     } finally {
-      setLoadingZerodose(false);
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (activeTab !== "current") return;
-    if (!currentCampaign?._id) return;
+  // ============================================================
+  // PREVIOUS CAMPAIGN DATA
+  // ============================================================
 
-    const timer = setTimeout(() => {
-      fetchZerodose(statusTab);
-    }, 0);
+  const handlePreviousCampaignSelect = async (
+    campaignId,
+    filter = "recorded",
+  ) => {
+    if (!campaignId) {
+      setPreviousZerodoses([]);
 
-    return () => clearTimeout(timer);
+      setSummary({
+        recorded: 0,
+        visited: 0,
+        covered: 0,
+      });
 
-    // fetchZerodose intentionally excluded because
-    // it is recreated on every render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, currentCampaign?._id, statusTab]);
+      setVaccinationStatus({
+        total: {
+          recorded: 0,
+          visited: 0,
+          covered: 0,
+        },
+        supervisors: [],
+      });
 
-  const handleStatusTabChange = (tabKey) => {
-    if (activeTab !== "current") return;
-
-    setStatusTab(tabKey);
-  };
-
-  // =========================================================
-  // Google Maps
-  // =========================================================
-
-  const openGoogleMaps = (item) => {
-    const latitude = item?.location?.latitude ?? item?.latitude;
-
-    const longitude = item?.location?.longitude ?? item?.longitude;
-
-    if (
-      latitude === undefined ||
-      latitude === null ||
-      longitude === undefined ||
-      longitude === null
-    ) {
       return;
     }
 
-    const url = `https://www.google.com/maps?q=${encodeURIComponent(
-      `${latitude},${longitude}`,
-    )}`;
+    try {
+      setLoading(true);
+      setError("");
 
-    window.open(url, "_blank", "noopener,noreferrer");
+      const response = await getWorkerZerodose({
+        campaignId,
+        filter,
+      });
+
+      if (!response?.success) {
+        throw new Error(
+          response?.message || "Failed to fetch previous campaign Zerodose.",
+        );
+      }
+
+      const previousData = Array.isArray(response.data) ? response.data : [];
+
+      setPreviousZerodoses(previousData);
+
+      setSummary(
+        response.summary || {
+          recorded: 0,
+          visited: 0,
+          covered: 0,
+        },
+      );
+
+      setVaccinationStatus(
+        response.vaccinationStatus || {
+          total: {
+            recorded: 0,
+            visited: 0,
+            covered: 0,
+          },
+          teams: [],
+        },
+      );
+    } catch (error) {
+      console.error("Previous campaign Zerodose error:", error);
+
+      setError(error?.message || "Failed to load previous campaign data.");
+
+      setPreviousZerodoses([]);
+
+      setSummary({
+        recorded: 0,
+        visited: 0,
+        covered: 0,
+      });
+
+      setVaccinationStatus({
+        total: {
+          recorded: 0,
+          visited: 0,
+          covered: 0,
+        },
+        supervisors: [],
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // =========================================================
-  // Status Tabs
-  // =========================================================
+  // ============================================================
+  // INITIAL SKELETON
+  // ============================================================
 
-  const statusTabs = [
-    {
-      key: "recorded",
-      label: "Recorded",
-    },
-    {
-      key: "visited",
-      label: "Visited",
-    },
-    {
-      key: "covered",
-      label: "Covered",
-    },
-  ];
+  // if (loading && !currentCampaign) {
+  //   return <ZerodosePageSkeleton />;
+  // }
 
-  // =========================================================
-  // Card Skeleton
-  // =========================================================
-
-  const renderCardSkeleton = (index) => (
-    <div
-      key={index}
-      className="bg-background border-border rounded-xl border p-4 shadow-sm md:p-5"
-    >
-      {/* Card Header */}
-
-      <div className="flex items-start gap-3">
-        <div className="h-10 w-10 shrink-0 animate-pulse rounded-xl bg-gray-200" />
-
-        <div className="min-w-0 flex-1 space-y-2">
-          <div className="h-5 w-32 animate-pulse rounded bg-gray-200" />
-          <div className="h-3 w-20 animate-pulse rounded bg-gray-200" />
-        </div>
-      </div>
-
-      {/* Child Information */}
-
-      <div className="border-border mt-4 grid grid-cols-2 gap-x-4 gap-y-4 border-t pt-4 md:grid-cols-4">
-        {[1, 2, 3, 4].map((item) => (
-          <div key={item} className="space-y-2">
-            <div className="h-3 w-16 animate-pulse rounded bg-gray-200" />
-            <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
-          </div>
-        ))}
-      </div>
-
-      {/* Extra Information */}
-
-      <div className="border-border mt-4 grid grid-cols-2 gap-4 border-t pt-4 md:grid-cols-3">
-        <div className="space-y-2">
-          <div className="h-3 w-20 animate-pulse rounded bg-gray-200" />
-          <div className="h-4 w-28 animate-pulse rounded bg-gray-200" />
-        </div>
-      </div>
-
-      {/* Address */}
-
-      <div className="border-border mt-4 flex items-start gap-2 border-t pt-3">
-        <div className="mt-0.5 h-4 w-4 shrink-0 animate-pulse rounded bg-gray-200" />
-
-        <div className="flex-1 space-y-2">
-          <div className="h-3 w-full animate-pulse rounded bg-gray-200" />
-          <div className="h-3 w-3/4 animate-pulse rounded bg-gray-200" />
-        </div>
-      </div>
-    </div>
-  );
-
-  // =========================================================
-  // Campaign Title
-  // =========================================================
-
-  const title =
-    activeTab === "current"
-      ? "Current Campaign Zerodose"
-      : "Previous Campaign Zerodose";
-
-  const description =
-    activeTab === "current"
-      ? "Zerodose recorded by your team during the current campaign."
-      : "Zerodose recorded by your team during previous campaigns.";
-
-  // =========================================================
-  // Render
-  // =========================================================
+  // ============================================================
+  // RENDER
+  // ============================================================
 
   return (
-    <section className="bg-surface border-border overflow-hidden rounded-2xl border shadow-sm">
-      {/* =========================================================
-            Campaign Tabs
-        ========================================================= */}
-
-      <div className="border-border border-b p-3 md:p-4">
-        <div className="grid grid-cols-2 gap-2 md:gap-3">
-          {/* Current Campaign */}
-
-          <button
-            type="button"
-            onClick={() => onTabChange?.("current")}
-            className={`group relative flex min-h-[72px] min-w-0 items-center overflow-hidden rounded-xl px-3 py-3 text-left transition md:min-h-[82px] md:px-4 ${
-              activeTab === "current"
-                ? "bg-primary dark:bg-background text-white shadow-sm"
-                : "bg-background text-text-secondary border-border hover:border-primary hover:text-primary border"
-            }`}
-          >
-            <div className="relative z-10 flex min-w-0 items-center gap-2.5">
-              <CalendarDays
-                className={`h-5 w-5 shrink-0 ${
-                  activeTab === "current"
-                    ? "text-white/90"
-                    : "text-primary/70 group-hover:text-primary"
-                }`}
-              />
-
-              <span className="min-w-0 text-sm leading-5 font-semibold md:text-base">
-                <span className="block">Current</span>
-                <span className="block">Campaign</span>
-              </span>
-            </div>
-
-            <CalendarDays
-              className={`pointer-events-none absolute -right-4 -bottom-5 z-0 h-20 w-20 ${
-                activeTab === "current"
-                  ? "text-white/10"
-                  : "text-primary/10 group-hover:text-primary/15"
-              }`}
-            />
-          </button>
-
-          {/* Previous Campaigns */}
-
-          <button
-            type="button"
-            onClick={() => onTabChange?.("previous")}
-            className={`group relative flex min-h-[72px] min-w-0 items-center overflow-hidden rounded-xl px-3 py-3 text-left transition md:min-h-[82px] md:px-4 ${
-              activeTab === "previous"
-                ? "bg-primary dark:bg-background text-white shadow-sm"
-                : "bg-background text-text-secondary border-border hover:border-primary hover:text-primary border"
-            }`}
-          >
-            <div className="relative z-10 flex min-w-0 items-center gap-2.5">
-              <CalendarDays
-                className={`h-5 w-5 shrink-0 ${
-                  activeTab === "previous"
-                    ? "text-white/90"
-                    : "text-primary/70 group-hover:text-primary"
-                }`}
-              />
-
-              <span className="min-w-0 text-sm leading-5 font-semibold md:text-base">
-                <span className="block">Previous</span>
-                <span className="block">Campaigns</span>
-              </span>
-            </div>
-
-            <CalendarDays
-              className={`pointer-events-none absolute -right-4 -bottom-5 z-0 h-20 w-20 ${
-                activeTab === "previous"
-                  ? "text-white/10"
-                  : "text-primary/10 group-hover:text-primary/15"
-              }`}
-            />
-          </button>
-        </div>
-      </div>
-
-      {/* =========================================================
-            Section Header
-        ========================================================= */}
-
-      <div className="border-border bg-background flex flex-col border-b p-4 md:p-5">
-        <div className="flex w-full items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <h2 className="text-text text-lg font-semibold text-wrap">
-              {title}
-            </h2>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => fetchZerodose(statusTab)}
-            disabled={
-              loadingZerodose || loadingCampaign || activeTab !== "current"
-            }
-            className="border-border bg-primary dark:bg-background hover:bg-primary-dark flex w-fit shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${loadingZerodose ? "animate-spin" : ""}`}
-            />
-            Refresh
-            
-          </button>
-        </div>
-
-        <p className="text-text-secondary mt-2 w-full text-sm leading-relaxed">
-          {description}
-        </p>
-      </div>
-
-      {/* =========================================================
-            Status Tabs
-        ========================================================= */}
-
-      <div className="border-border border-b p-3 md:p-4">
-        <div className="border-border bg-background grid grid-cols-3 gap-1.5 rounded-2xl border p-1.5">
-          {statusTabs.map((tab) => {
-            const Icon =
-              tab.key === "recorded"
-                ? Clock3
-                : tab.key === "visited"
-                  ? CalendarDays
-                  : Syringe;
-
-            const isDisabled = loadingZerodose && statusTab !== tab.key;
-
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => handleStatusTabChange(tab.key)}
-                disabled={isDisabled || activeTab !== "current"}
-                className={`flex min-w-0 items-center justify-center gap-2 rounded-xl px-2 py-2.5 text-sm font-semibold transition-all ${
-                  statusTab === tab.key
-                    ? "bg-primary text-white shadow-sm"
-                    : "text-text-secondary hover:bg-background hover:text-primary dark:hover:bg-slate-800"
-                } ${
-                  isDisabled || activeTab !== "current"
-                    ? "hover:text-text-secondary cursor-not-allowed opacity-50 hover:bg-transparent dark:hover:bg-transparent"
-                    : ""
-                }`}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-
-                <span className="truncate">{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* =========================================================
-            Error
-        ========================================================= */}
-
-      {fetchError && activeTab === "current" && (
-        <div className="border-border border-b px-4 py-3 md:px-5">
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {fetchError}
-          </div>
-        </div>
+    <div className="relative min-h-full">
+      <ZerodoseTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+      {activeTab === "current" && (
+        <CurrentCampaignZerodose
+          campaign={currentCampaign}
+          data={zerodoses}
+          unionCouncilName={unionCouncilName}
+          loading={loading}
+          summary={summary}
+          vaccinationStatus={vaccinationStatus}
+          onFilterChange={handleCurrentFilterChange}
+          designation={designation}
+        />
       )}
-
-      {/* =========================================================
-            Loading
-        ========================================================= */}
-
-      {loadingZerodose || loadingCampaign ? (
-        <div className="space-y-3 p-3 md:space-y-4 md:p-5">
-          {[1, 2, 3].map((item) => renderCardSkeleton(item))}
-        </div>
-      ) : activeTab === "previous" ? (
-        /* =========================================================
-            Previous Campaign Placeholder
-        ========================================================= */
-
-        <div className="flex flex-col items-center justify-center px-5 py-12 text-center">
-          <div className="bg-primary/10 text-primary flex h-14 w-14 items-center justify-center rounded-2xl">
-            <CalendarDays className="h-7 w-7" />
-          </div>
-
-          <h3 className="text-text mt-4 font-semibold">Previous Campaigns</h3>
-
-          <p className="text-text-secondary mt-1 max-w-sm text-sm">
-            Previous campaign Zerodose data will be loaded when previous
-            campaign selection is implemented.
-          </p>
-
-          {previousCampaigns.length > 0 && (
-            <p className="text-text-secondary mt-2 text-xs">
-              {previousCampaigns.length} previous campaign
-              {previousCampaigns.length > 1 ? "s" : ""} available.
-            </p>
-          )}
-        </div>
-      ) : zerodoses.length === 0 ? (
-        /* =========================================================
-            Empty
-        ========================================================= */
-
-        <div className="flex flex-col items-center justify-center px-5 py-12 text-center">
-          <div className="bg-primary/10 text-primary flex h-14 w-14 items-center justify-center rounded-2xl">
-            <Syringe className="h-7 w-7" />
-          </div>
-
-          <h3 className="text-text mt-4 font-semibold">
-            No {statusTab.charAt(0).toUpperCase() + statusTab.slice(1)} Zerodose
-          </h3>
-
-          <p className="text-text-secondary mt-1 max-w-sm text-sm">
-            Your team has not recorded any {statusTab} Zerodose during the
-            current campaign yet.
-          </p>
-        </div>
-      ) : (
-        /* =========================================================
-            Zerodose Cards
-        ========================================================= */
-
-        <div className="space-y-3 p-3 md:space-y-4 md:p-5">
-          {zerodoses.map((item, index) => {
-            const campaignDay = getCampaignDay({
-              campaignStartDate: currentCampaign?.startDate,
-              campaignEndDate: currentCampaign?.endDate,
-              recordDate: item.recordDate,
-              visitDate: item.recordDate,
-              coveredDate: item.recordDate,
-              status: statusTab,
-            });
-
-            return (
-              <div
-                key={item._id || `${item.childName || "zerodose"}-${index}`}
-                onClick={() => router.push(`/worker/${item._id}`)}
-                className="bg-background border-border hover:border-primary cursor-pointer rounded-xl border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md md:p-5"
-              >
-                {/* =================================================
-                    Card Header
-                ================================================= */}
-
-                <div className="flex items-start justify-between gap-3">
-                  {/* Left */}
-
-                  <div className="flex min-w-0 flex-1 items-start gap-3">
-                    {/* House Number */}
-
-                    <div className="bg-primary/10 text-primary flex shrink-0 items-center justify-center rounded-lg">
-                      {item?.houseNumber && (
-                        <span className="border-border bg-surface text-text inline-flex h-9 items-center rounded-lg border px-2.5 py-1 text-[11px] font-semibold">
-                          <span className="mr-1">H -</span>
-                          {item.houseNumber}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Child */}
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-text truncate text-base font-semibold capitalize">
-                          {item.childName || "-"}
-                        </h3>
-
-                        <span className="bg-primary/10 text-primary rounded-full px-2.5 py-1 text-[11px] font-medium">
-                          {statusTab.charAt(0).toUpperCase() +
-                            statusTab.slice(1)}
-                        </span>
-                      </div>
-
-                      <p className="text-text-secondary text-xs">
-                        Record-{index + 1}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Right: Campaign Day */}
-
-                  <div className="shrink-0 text-right">
-                    <p className="text-text-secondary text-xs">Campaign Day</p>
-
-                    <p className="text-text mt-1 text-sm font-semibold">
-                      Day {campaignDay}
-                    </p>
-                  </div>
-                </div>
-
-                {/* =================================================
-                    Child Information
-                ================================================= */}
-
-                <div className="border-border mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t pt-4 md:grid-cols-4">
-                  {/* Father */}
-
-                  <div className="min-w-0">
-                    <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-                      <User className="h-3.5 w-3.5 shrink-0" />
-
-                      <span>Father</span>
-                    </div>
-
-                    <p className="text-text mt-1 truncate text-sm font-medium capitalize">
-                      {item.fatherName || "-"}
-                    </p>
-                  </div>
-
-                  {/* Age */}
-
-                  <div>
-                    <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-                      <Baby className="h-3.5 w-3.5 shrink-0" />
-
-                      <span>Age</span>
-                    </div>
-
-                    <p className="text-text mt-1 text-sm font-medium">
-                      {item.age ?? "-"} months
-                    </p>
-                  </div>
-
-                  {/* Contact */}
-
-                  <div>
-                    <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-                      <User className="h-3.5 w-3.5 shrink-0" />
-
-                      <span>Contact</span>
-                    </div>
-
-                    <p className="text-text mt-1 text-sm font-medium">
-                      {item.contactNo || "-"}
-                    </p>
-                  </div>
-
-                  {/* Recorded */}
-
-                  <div>
-                    <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-                      <Clock3 className="h-3.5 w-3.5 shrink-0" />
-
-                      <span>Recorded</span>
-                    </div>
-
-                    <p className="text-text mt-1 text-sm font-medium">
-                      {formatDate(item.recordDate)}
-                    </p>
-                  </div>
-
-                  {/* Visited */}
-
-                  {statusTab === "visited" && (
-                    <div>
-                      <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-                        <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-
-                        <span>Visited Date</span>
-                      </div>
-
-                      <p className="text-text mt-1 text-sm font-medium">
-                        {formatDate(item.visitDate)}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Covered */}
-
-                  {statusTab === "covered" && (
-                    <>
-                      <div>
-                        <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-                          <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-
-                          <span>Visited Date</span>
-                        </div>
-
-                        <p className="text-text mt-1 text-sm font-medium">
-                          {formatDate(item.visitDate)}
-                        </p>
-                      </div>
-
-                      <div>
-                        <div className="text-text-secondary flex items-center gap-1.5 text-xs">
-                          <CalendarDays className="h-3.5 w-3.5 shrink-0" />
-
-                          <span>Covered Date</span>
-                        </div>
-
-                        <p className="text-text mt-1 text-sm font-medium">
-                          {formatDate(item.coverDate)}
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* =================================================
-                    Address + Google Maps
-                    Recorded + Visited only
-                ================================================= */}
-
-                {statusTab !== "covered" && item.address && (
-                  <div className="border-border mt-4 flex items-start gap-2 border-t pt-3">
-                    <div className="flex min-w-0 flex-1 items-start gap-2">
-                      <MapPin className="text-text-secondary mt-0.5 h-4 w-4 shrink-0" />
-
-                      <p className="text-text-secondary text-xs leading-5 capitalize">
-                        {item.address}
-                      </p>
-                    </div>
-
-                    {((item?.location?.latitude !== undefined &&
-                      item?.location?.latitude !== null &&
-                      item?.location?.longitude !== undefined &&
-                      item?.location?.longitude !== null) ||
-                      (item?.latitude !== undefined &&
-                        item?.latitude !== null &&
-                        item?.longitude !== undefined &&
-                        item?.longitude !== null)) && (
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          openGoogleMaps(item);
-                        }}
-                        title="Open location in Google Maps"
-                        className="bg-primary/10 text-primary hover:bg-primary/20 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition"
-                      >
-                        <MapPin className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      {activeTab === "previous" && (
+        <PreviousCampaignsZerodose
+          campaigns={previousCampaigns}
+          data={previousZerodoses}
+          unionCouncilName={unionCouncilName}
+          loading={loading}
+          summary={summary}
+          vaccinationStatus={vaccinationStatus}
+          onCampaignSelect={handlePreviousCampaignSelect}
+          designation={designation}
+        />
       )}
-    </section>
+    </div>
   );
 }

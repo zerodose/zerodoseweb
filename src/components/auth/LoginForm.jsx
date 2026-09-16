@@ -293,7 +293,7 @@ export default function LoginForm() {
       if (designation === "worker") {
         // console.log("LOCATION: user is worker");
 
-        await requestLocationPermission();
+        // await requestLocationPermission();
 
         // console.log("LOCATION: permission check completed");
       }

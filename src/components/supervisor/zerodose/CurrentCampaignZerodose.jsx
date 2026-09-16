@@ -17,6 +17,7 @@ export default function CurrentCampaignZerodose({
   vaccinationStatus,
   onFilterChange,
   loading,
+  designation,
 }) {
   if (!campaign && !loading) {
     return (
@@ -75,6 +76,7 @@ export default function CurrentCampaignZerodose({
         vaccinationStatus={vaccinationStatus}
         onFilterChange={onFilterChange}
         loading={loading}
+        designation={designation}
       />
     </section>
   );

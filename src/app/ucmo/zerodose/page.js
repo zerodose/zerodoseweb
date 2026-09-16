@@ -1,44 +1,45 @@
+
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
-import { getCampaigns } from "@/api/campaignApi";
-import { getZerodoses } from "@/api/zerodoseApi";
-import { getUsers } from "@/api/userApi";
+import { getCampaigns, getCurrentCampaign } from "@/api/campaignApi";
+import { getUCMOZerodose } from "@/api/zerodoseApi";
 import { LucideSyringe } from "lucide-react";
 
 import ZerodoseTabs from "@/components/supervisor/zerodose/ZerodoseTabs";
-import CurrentCampaign from "@/components/supervisor/zerodose/CurrentCampaignZerodose";
-// import PreviousCampaigns from "@/components/supervisor/zerodose/PreviousCampaigns";
-import ZerodosePageSkeleton from "@/components/supervisor/zerodose/ZerodosePageSkeleton";
 import ApprovalPageHeader from "@/components/ui/ApprovalPageHeader";
+import CurrentCampaignZerodose from "@/components/supervisor/zerodose/CurrentCampaignZerodose";
 import PreviousCampaignsZerodose from "@/components/supervisor/zerodose/PreviousCampaignsZerodose";
 
 export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
 
-  const [campaigns, setCampaigns] = useState([]);
+  const [currentCampaign, setCurrentCampaign] = useState(null);
+  const [previousCampaigns, setPreviousCampaigns] = useState([]);
+
   const [zerodoses, setZerodoses] = useState([]);
-  const [supervisors, setSupervisors] = useState([]);
+  const [previousZerodoses, setPreviousZerodoses] = useState([]);
+
+  const [unionCouncilName, setUnionCouncilName] = useState("-");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // ============================================================
-  // SAFE ID
-  // ============================================================
+  const [summary, setSummary] = useState({
+    recorded: 0,
+    visited: 0,
+    covered: 0,
+  });
 
-  const getId = (value) => {
-    if (!value) {
-      return null;
-    }
-
-    if (typeof value === "object") {
-      return value._id?.toString() || value.id?.toString() || null;
-    }
-
-    return value.toString();
-  };
+  const [vaccinationStatus, setVaccinationStatus] = useState({
+    total: {
+      recorded: 0,
+      visited: 0,
+      covered: 0,
+    },
+    teams: [],
+  });
 
   // ============================================================
   // CAMPAIGN STATUS
@@ -80,27 +81,113 @@ export default function Page() {
   };
 
   // ============================================================
-  // FETCH DATA
+  // INITIAL LOAD
   // ============================================================
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchData = async () => {
       try {
         setLoading(true);
         setError("");
 
-        const storedAuthUser = JSON.parse(
-          localStorage.getItem("authUser") || "{}",
-        );
+        // --------------------------------------------------------
+        // AUTH USER
+        // --------------------------------------------------------
 
-        if (!storedAuthUser?.id) {
-          throw new Error("UCMO authentication data not found.");
+        let storedAuthUser = {};
+
+        try {
+          storedAuthUser = JSON.parse(localStorage.getItem("authUser") || "{}");
+        } catch (error) {
+          console.error("Failed to parse authUser:", error);
         }
 
-        const ucmoId = String(storedAuthUser.id);
+        // --------------------------------------------------------
+        // CURRENT CAMPAIGN
+        // --------------------------------------------------------
+
+        const currentCampaignResponse = await getCurrentCampaign();
+
+        if (!currentCampaignResponse?.success) {
+          throw new Error(
+            currentCampaignResponse?.message ||
+              "Failed to fetch current campaign.",
+          );
+        }
+
+        const campaign = currentCampaignResponse?.data?.currentCampaign || null;
+
+        if (cancelled) {
+          return;
+        }
+
+        setCurrentCampaign(campaign);
 
         // --------------------------------------------------------
-        // CAMPAIGNS
+        // UNION COUNCIL
+        // --------------------------------------------------------
+
+        setUnionCouncilName(storedAuthUser?.unionCouncil?.name || "-");
+
+        // --------------------------------------------------------
+        // CURRENT CAMPAIGN ZERODOSE
+        // --------------------------------------------------------
+
+        if (campaign?._id) {
+          const response = await getUCMOZerodose({
+            campaignId: campaign._id,
+            filter: "recorded",
+          });
+
+          if (!response?.success) {
+            throw new Error(
+              response?.message || "Failed to fetch current Zerodose.",
+            );
+          }
+
+          console.log("ucmo Zerodose response:", response);
+
+          const currentData = Array.isArray(response.data) ? response.data : [];
+
+          if (!cancelled) {
+            setZerodoses(currentData);
+
+            setSummary(
+              response.summary || {
+                recorded: 0,
+                visited: 0,
+                covered: 0,
+              },
+            );
+
+            setVaccinationStatus(
+              response.vaccinationStatus || {
+                recorded: 0,
+                visited: 0,
+                covered: 0,
+              },
+            );
+          }
+        } else {
+          setZerodoses([]);
+
+          setSummary({
+            recorded: 0,
+            visited: 0,
+            covered: 0,
+          });
+
+          setVaccinationStatus({
+            recorded: 0,
+            visited: 0,
+            covered: 0,
+          });
+        }
+
+        // --------------------------------------------------------
+        // PREVIOUS CAMPAIGNS
         // --------------------------------------------------------
 
         const campaignsResponse = await getCampaigns();
@@ -111,236 +198,262 @@ export default function Page() {
           );
         }
 
-        setCampaigns(campaignsResponse.data || []);
+        const campaigns = Array.isArray(campaignsResponse.data)
+          ? campaignsResponse.data
+          : [];
 
-        // --------------------------------------------------------
-        // SUPERVISORS UNDER THIS UCMO
-        // --------------------------------------------------------
+        const previous = campaigns
+          .map((campaign) => ({
+            ...campaign,
+            campaignStatus: getCampaignStatus(campaign),
+          }))
+          .filter((campaign) => campaign.campaignStatus === "previous")
+          .sort((a, b) => {
+            const dateA = new Date(a?.startDate || 0).getTime();
 
-        const supervisorsResponse = await getUsers({
-          page: 1,
-          limit: 100,
-          designation: "supervisor",
-          isActive: true,
-          ucmo: ucmoId,
-        });
+            const dateB = new Date(b?.startDate || 0).getTime();
 
-        if (!supervisorsResponse?.success) {
-          throw new Error(
-            supervisorsResponse?.message || "Failed to fetch UCMO supervisors.",
-          );
-        }
-
-        setSupervisors(supervisorsResponse.data || []);
-
-        // --------------------------------------------------------
-        // ZERODOSE
-        // --------------------------------------------------------
-        // Directly fetch Zerodose belonging to this UCMO.
-        // This includes Zerodose from ALL supervisors
-        // under the logged-in UCMO.
-
-        let allZerodoses = [];
-
-        let page = 1;
-        let totalPages = 1;
-
-        do {
-          const zerodoseResponse = await getZerodoses({
-            page,
-            limit: 50,
-            sortBy: "recordDate",
-            sortOrder: "desc",
-            ucmo: ucmoId,
+            return dateB - dateA;
           });
 
-          if (!zerodoseResponse?.success) {
-            throw new Error(
-              zerodoseResponse?.message || "Failed to fetch Zerodose records.",
-            );
-          }
+        if (!cancelled) {
+          setPreviousCampaigns(previous);
+        }
 
-          const pageData = zerodoseResponse.data || [];
-
-          allZerodoses = [...allZerodoses, ...pageData];
-
-          totalPages = zerodoseResponse.pagination?.totalPages || 1;
-
-          page += 1;
-        } while (page <= totalPages);
-
-        setZerodoses(allZerodoses);
+        console.log("Vaccinator Zerodose data fetched successfully:", {
+          currentCampaignId: campaign?._id || null,
+          currentRecordedCount: campaign?._id
+            ? Array.isArray(zerodoses)
+              ? zerodoses.length
+              : 0
+            : 0,
+          previousCampaigns: previous.length,
+        });
       } catch (error) {
-        console.error("UCMO Zerodose fetch error:", error);
+        if (cancelled) {
+          return;
+        }
+
+        console.error("Vaccinator Zerodose fetch error:", error);
 
         setError(error?.message || "Failed to load Zerodose data.");
+
+        setCurrentCampaign(null);
+        setPreviousCampaigns([]);
+        setZerodoses([]);
+        setPreviousZerodoses([]);
+        setUnionCouncilName("-");
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     fetchData();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // ============================================================
-  // UCMO ZERODOSE DATA
+  // CURRENT FILTER
   // ============================================================
 
-  // No supervisor-specific filtering here.
-  // The API already returns all Zerodose records
-  // belonging to the logged-in UCMO.
+  const handleCurrentFilterChange = async (filter) => {
+    if (!currentCampaign?._id) {
+      return;
+    }
 
-  const ucmoZerodoses = useMemo(() => {
-    return zerodoses;
-  }, [zerodoses]);
+    try {
+      setLoading(true);
+      setError("");
 
-  // ============================================================
-  // NORMALIZED CAMPAIGNS
-  // ============================================================
-
-  const normalizedCampaigns = useMemo(() => {
-    return campaigns.map((campaign) => ({
-      ...campaign,
-      campaignStatus: getCampaignStatus(campaign),
-    }));
-  }, [campaigns]);
-
-  // ============================================================
-  // CURRENT CAMPAIGN
-  // ============================================================
-
-  const currentCampaign = useMemo(() => {
-    return (
-      normalizedCampaigns.find(
-        (campaign) => campaign.campaignStatus === "current",
-      ) || null
-    );
-  }, [normalizedCampaigns]);
-
-  // ============================================================
-  // PREVIOUS CAMPAIGNS
-  // ============================================================
-
-  const previousCampaigns = useMemo(() => {
-    return normalizedCampaigns
-      .filter((campaign) => campaign.campaignStatus === "previous")
-      .sort((a, b) => {
-        const dateA = new Date(a?.startDate || 0).getTime();
-        const dateB = new Date(b?.startDate || 0).getTime();
-
-        return dateB - dateA;
+      const response = await getUCMOZerodose({
+        campaignId: currentCampaign._id,
+        filter,
       });
-  }, [normalizedCampaigns]);
 
-  // ============================================================
-  // CURRENT DATA
-  // ============================================================
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to fetch Zerodose data.");
+      }
 
-  const currentData = useMemo(() => {
-    if (!currentCampaign) {
-      return [];
-    }
+      setZerodoses(Array.isArray(response.data) ? response.data : []);
 
-    const currentCampaignId = getId(currentCampaign);
-
-    if (!currentCampaignId) {
-      return [];
-    }
-
-    return ucmoZerodoses.filter((item) => {
-      const itemCampaignId = getId(
-        item?.campaign || item?.campaignId || item?.campaign?._id,
+      setSummary(
+        response.summary || {
+          recorded: 0,
+          visited: 0,
+          covered: 0,
+        },
       );
 
-      return (
-        itemCampaignId && String(itemCampaignId) === String(currentCampaignId)
+      setVaccinationStatus(
+        response.vaccinationStatus || {
+          recorded: 0,
+          visited: 0,
+          covered: 0,
+        },
       );
-    });
-  }, [ucmoZerodoses, currentCampaign]);
+    } catch (error) {
+      console.error("Vaccinator current Zerodose filter error:", error);
+
+      setError(error?.message || "Failed to load Zerodose data.");
+
+      setZerodoses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ============================================================
-  // PREVIOUS DATA
+  // PREVIOUS CAMPAIGN DATA
   // ============================================================
 
-  const previousData = useMemo(() => {
-    if (!previousCampaigns.length) {
-      return [];
+  const handlePreviousCampaignSelect = async (
+    campaignId,
+    filter = "recorded",
+  ) => {
+    if (!campaignId) {
+      setPreviousZerodoses([]);
+
+      setSummary({
+        recorded: 0,
+        visited: 0,
+        covered: 0,
+      });
+
+      setVaccinationStatus({
+        total: {
+          recorded: 0,
+          visited: 0,
+          covered: 0,
+        },
+        supervisors: [],
+      });
+
+      return;
     }
 
-    const previousIds = new Set(
-      previousCampaigns.map((campaign) => getId(campaign)).filter(Boolean),
-    );
+    try {
+      setLoading(true);
+      setError("");
 
-    return ucmoZerodoses.filter((item) => {
-      const itemCampaignId = getId(
-        item?.campaign || item?.campaignId || item?.campaign?._id,
+      const response = await getUCMOZerodose({
+        campaignId,
+        filter,
+      });
+
+      if (!response?.success) {
+        throw new Error(
+          response?.message || "Failed to fetch previous campaign Zerodose.",
+        );
+      }
+
+      const previousData = Array.isArray(response.data) ? response.data : [];
+
+      setPreviousZerodoses(previousData);
+
+      setSummary(
+        response.summary || {
+          recorded: 0,
+          visited: 0,
+          covered: 0,
+        },
       );
 
-      return itemCampaignId && previousIds.has(String(itemCampaignId));
-    });
-  }, [ucmoZerodoses, previousCampaigns]);
+      setVaccinationStatus(
+        response.vaccinationStatus || {
+          total: {
+            recorded: 0,
+            visited: 0,
+            covered: 0,
+          },
+          teams: [],
+        },
+      );
+    } catch (error) {
+      console.error("Previous campaign Zerodose error:", error);
+
+      setError(error?.message || "Failed to load previous campaign data.");
+
+      setPreviousZerodoses([]);
+
+      setSummary({
+        recorded: 0,
+        visited: 0,
+        covered: 0,
+      });
+
+      setVaccinationStatus({
+        total: {
+          recorded: 0,
+          visited: 0,
+          covered: 0,
+        },
+        supervisors: [],
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ============================================================
-  // LOADING
+  // INITIAL SKELETON
   // ============================================================
 
-  if (loading) {
-    return <ZerodosePageSkeleton />;
-  }
+  // if (loading && !currentCampaign) {
+  //   return <ZerodosePageSkeleton />;
+  // }
 
   // ============================================================
   // RENDER
   // ============================================================
 
   return (
-    <div className="min-h-full">
+    <div className="relative min-h-full">
+      {/* Loader only while API is loading */}
+      {/* {loading && <Loader text="Loading..." />} */}
+
       <ApprovalPageHeader
         title="Zerodose"
         description="View campaign-wise Zerodose records and team details"
         onBack={() => window.history.back()}
         rightContent={
-          <div className="border-primary/20 bg-primary-light text-primary dark:border-primary/30 dark:bg-primary/10 flex w-fit items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-sm">
+          <div className="border-primary/10 bg-primary-light text-primary dark:bg-primary/10 dark:border-primary/30 flex w-fit items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-sm">
             <LucideSyringe size={18} />
-
-            <span>
-              {currentData.length} {currentData.length === 1 ? "ZD" : "ZD"}
-            </span>
           </div>
         }
       />
-
-      {/* ======================================================
-          ERROR
-      ====================================================== */}
-
       {error && (
         <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {error}
         </div>
       )}
-
-      {/* ======================================================
-          TABS
-      ====================================================== */}
-
       <ZerodoseTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-
-      {/* ======================================================
-          CURRENT
-      ====================================================== */}
-
       {activeTab === "current" && (
-        <CurrentCampaign campaign={currentCampaign} data={currentData} />
+        <CurrentCampaignZerodose
+          campaign={currentCampaign}
+          data={zerodoses}
+          unionCouncilName={unionCouncilName}
+          loading={loading}
+          summary={summary}
+          vaccinationStatus={vaccinationStatus}
+          onFilterChange={handleCurrentFilterChange}
+        />
       )}
-
-      {/* ======================================================
-          PREVIOUS
-      ====================================================== */}
-
       {activeTab === "previous" && (
-        // <PreviousCampaigns campaigns={previousCampaigns} data={previousData} />
-          <PreviousCampaignsZerodose campaigns={previousCampaigns} data={previousData} />
-)}
+        <PreviousCampaignsZerodose
+          campaigns={previousCampaigns}
+          data={previousZerodoses}
+          unionCouncilName={unionCouncilName}
+          loading={loading}
+          summary={summary}
+          vaccinationStatus={vaccinationStatus}
+          onCampaignSelect={handlePreviousCampaignSelect}
+        />
+      )}
     </div>
   );
 }

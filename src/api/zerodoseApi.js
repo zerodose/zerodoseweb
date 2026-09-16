@@ -187,6 +187,17 @@ export const getSupervisorZerodose = async ({ campaignId, filter }) => {
 
 
 
+export const getUCMOZerodose = async ({ campaignId, filter }) => {
+  const response = await api.get("/zerodose/ucmo", {
+    params: {
+      campaignId,
+      filter,
+    },
+  });
+
+  return response.data;
+};
+
 export const getVaccinatorZerodose = async ({ campaignId, filter }) => {
   const response = await api.get("/zerodose/vaccinator", {
     params: {

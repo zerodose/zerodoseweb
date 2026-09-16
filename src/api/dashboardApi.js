@@ -325,6 +325,12 @@ export const getSupervisorSummary = async () => {
   return response.data;
 };
 
+export const getUCMOTotalSummary = async () => {
+  const response = await api.get("/dashboard/ucmo/summary");
+
+  return response.data;
+};
+
 export const getVaccinatorTotalSummary = async () => {
   const response = await api.get("/dashboard/vaccinator/summary");
 
@@ -341,6 +347,15 @@ export const getVaccinatorSupervisorSummary = async (campaignId) => {
 };
 
 
+export const getUCMOSupervisorSummary = async (campaignId) => {
+  const response = await api.get("/dashboard/ucmo/supervisors", {
+    params: {
+      campaignId,
+    },
+  });
+
+  return response.data;
+};
 
 export const getWorkerSummary = async () => {
   const response = await api.get("/dashboard/worker-summary");

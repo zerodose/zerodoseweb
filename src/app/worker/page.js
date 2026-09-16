@@ -65,24 +65,24 @@ export default function Page() {
 
   return (
     <div className="min-h-full">
-      {error && (
+      {/* {error && (
         <div className="border-border bg-surface mb-5 rounded-xl border p-4">
           {" "}
           <p className="text-text-secondary text-sm">{error}</p>{" "}
         </div>
       )}
 
-      <CurrentCampaignCard campaign={campaign} loading={loading} />
+      <CurrentCampaignCard campaign={campaign} loading={loading} /> */}
 
       <ZerodoseStats />
 
       <WorkerActions campaign={campaign} />
 
       <ZerodoseCampaignSection
-        activeTab="current"
-        onTabChange={() => {}}
-        currentCampaign={campaign}
-        loadingCampaign={loading}
+        // activeTab="current"
+        // onTabChange={() => {}}
+        // currentCampaign={campaign}
+        // loadingCampaign={loading}
       />
     </div>
   );

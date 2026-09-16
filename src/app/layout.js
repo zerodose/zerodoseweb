@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import AuthGuard from "@/components/auth/AuthGuard";
+import { TabLoaderProvider } from "@/context/TabLoaderContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,21 +26,10 @@ export default function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+         <TabLoaderProvider>
         <AuthGuard>{children}</AuthGuard>
-        <Toaster position="top-right"  duration={3000} />
-        {/* <Toaster
-          position="top-right"
-          closeButton
-          duration={2000}
-          toastOptions={{
-            classNames: {
-              toast: "bg-background border-border text-text shadow-lg",
-              success: "bg-primary text-primary-foreground border-primary",
-              error:
-                "bg-red-50 text-red-600 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/50",
-            },
-          }}
-        /> */}
+        <Toaster position="top-right" duration={3000} />
+        </TabLoaderProvider>
       </body>
     </html>
   );

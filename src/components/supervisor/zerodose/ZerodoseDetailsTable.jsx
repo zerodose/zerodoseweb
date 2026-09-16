@@ -808,7 +808,7 @@ export default function ZerodoseDetailsTable({ data = [] }) {
                         {item.childName}
                       </h3>
 
-                      <StatusBadge status={status} />
+                      {/* <StatusBadge status={status} /> */}
                     </div>
 
                     <p className="text-text-secondary text-xs">

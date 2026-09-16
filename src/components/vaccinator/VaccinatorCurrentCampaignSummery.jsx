@@ -197,13 +197,11 @@ import { useMemo } from "react";
 import CampaignHeader from "../supervisor/CampaignHeader";
 import SupervisorsTable from "../ucmo/SupervisorsTable";
 import CampaignHeaderSkeleton from "./CampaignHeaderSkeleton";
-import { Users } from "lucide-react";
 
 export default function VaccinatorCurrentCampaignSummery({
   campaign,
   data = [],
   loading = false,
-  authUser,
 }) {
   // ============================================================
   // SUPERVISOR SUMMARY

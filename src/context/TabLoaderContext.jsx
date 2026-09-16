@@ -44,7 +44,7 @@ function TabLoader({ loading }) {
   if (!loading) return null;
 
   return (
-    <div className="pointer-events-none fixed top-0 right-0 left-0 z-[99999] h-0.5 overflow-hidden">
+    <div className="pointer-events-none fixed top-0 right-0 left-0 z-[99999] h-0.75 overflow-hidden">
       <div className="bg-primary h-full w-1/3 animate-[tab-loading_1s_ease-in-out_infinite]" />
 
       <style jsx>{`

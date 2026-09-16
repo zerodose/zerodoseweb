@@ -64,7 +64,7 @@ export default function VaccinatorSummaryCards({
             <div className="relative flex items-start justify-between">
               {/* Icon */}
 
-              <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-[0_3px_10px_rgba(64,165,254,0.18)] transition-all duration-200 group-hover:shadow-[0_5px_14px_rgba(64,165,254,0.25)]">
+              <div className="bg-primary/5 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-[0_3px_10px_rgba(64,165,254,0.18)] transition-all duration-200 group-hover:shadow-[0_5px_14px_rgba(64,165,254,0.25)]">
                 <Icon size={20} strokeWidth={2} />
               </div>
 

@@ -12,7 +12,7 @@ export default function VaccinatorActions() {
       >
         <div className="bg-primary/5 dark:bg-primary/10 pointer-events-none absolute -top-10 -right-10 h-24 w-24 rounded-full transition-transform duration-300 group-hover:scale-125" />
 
-        <div className="bg-primary/10 text-primary relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-[0_3px_10px_rgba(64,165,254,0.18)] transition-all duration-200 group-hover:shadow-[0_5px_14px_rgba(64,165,254,0.25)] sm:h-11 sm:w-11">
+        <div className="bg-primary/5 text-primary relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-[0_3px_10px_rgba(64,165,254,0.18)] transition-all duration-200 group-hover:shadow-[0_5px_14px_rgba(64,165,254,0.25)] sm:h-11 sm:w-11">
           <Syringe className="h-5 w-5 sm:h-5.5 sm:w-5.5" strokeWidth={2} />
         </div>
 

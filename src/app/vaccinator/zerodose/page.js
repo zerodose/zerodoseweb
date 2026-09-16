@@ -421,7 +421,7 @@ export default function Page() {
         description="View campaign-wise Zerodose records and team details"
         onBack={() => window.history.back()}
         rightContent={
-          <div className="border-primary/20 bg-primary-light text-primary dark:bg-primary/10 dark:border-primary/30 flex w-fit items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-sm">
+          <div className="border-primary/10 bg-primary-light text-primary dark:bg-primary/10 dark:border-primary/30 flex w-fit items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold shadow-sm">
             <LucideSyringe size={18} />
           </div>
         }

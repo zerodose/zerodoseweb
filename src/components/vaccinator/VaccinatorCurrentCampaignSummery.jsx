@@ -473,46 +473,6 @@ function SupervisorsTableSkeleton() {
           OVERALL SUMMARY
       ============================================================ */}
 
-      <div className="border-primary/20 bg-primary/[0.04] mt-4 overflow-hidden rounded-2xl border shadow-sm">
-        {/* Summary Header */}
-        <div className="flex items-center justify-between px-3.5 py-3 sm:px-4">
-          <div className="flex items-center gap-2.5">
-            {/* Icon */}
-            <div className="bg-primary/10 h-9 w-9 animate-pulse rounded-xl" />
-
-            <div>
-              {/* Title */}
-              <div className="bg-surface h-3.5 w-24 animate-pulse rounded-md sm:w-28" />
-
-              {/* Subtitle */}
-              <div className="bg-surface mt-1.5 h-2.5 w-20 animate-pulse rounded-md sm:w-24" />
-            </div>
-          </div>
-
-          {/* Supervisors count */}
-          <div className="bg-surface h-3 w-20 animate-pulse rounded-md sm:w-24" />
-        </div>
-
-        {/* Summary Stats */}
-        <div className="border-primary/10 border-t">
-          <div className="grid grid-cols-4">
-            {[1, 2, 3, 4].map((stat) => (
-              <div
-                key={stat}
-                className={`px-1.5 py-3 text-center ${
-                  stat !== 1 ? "border-primary/10 border-l" : ""
-                }`}
-              >
-                {/* Label */}
-                <div className="bg-surface mx-auto h-2.5 w-12 animate-pulse rounded-md sm:w-14" />
-
-                {/* Value */}
-                <div className="bg-surface mx-auto mt-1.5 h-5 w-8 animate-pulse rounded-md" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

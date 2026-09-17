@@ -462,7 +462,7 @@ export default function ZerodoseTable({ data = [], onTeamClick }) {
       {/* ============================================================
       OVERALL SUMMARY
   ============================================================ */}
-
+{/* 
       {data.length > 0 && (
         <div className="border-primary/20 bg-primary/[0.04] mt-4 overflow-hidden rounded-2xl border shadow-sm">
           <div className="flex items-center justify-between px-3.5 py-3 sm:px-4">
@@ -521,7 +521,7 @@ export default function ZerodoseTable({ data = [], onTeamClick }) {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

@@ -65,7 +65,7 @@ export async function POST(request) {
 
     const user = await User.findOne({
       contactNumber: mobile,
-      isActive: true,
+      // isActive: true,
     })
       .select("+password")
       .populate("district", "_id name code")
@@ -82,6 +82,16 @@ export async function POST(request) {
           message: "Invalid mobile number or password.",
         },
         { status: 401 },
+      );
+    }
+
+    if (!user.isActive && user.approvalStatus === "pending") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Your account is waiting for approval.",
+        },
+        { status: 403 },
       );
     }
 

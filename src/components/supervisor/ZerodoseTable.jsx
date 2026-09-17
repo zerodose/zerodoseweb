@@ -345,8 +345,6 @@ export default function ZerodoseTable({ data = [], onTeamClick }) {
 
   return (
     <div className="mb-5">
-
-
       {data.length === 0 ? (
         <div className="border-border bg-background rounded-2xl border px-4 py-12 text-center shadow-sm">
           <div className="bg-primary/5 text-primary mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl">
@@ -385,24 +383,26 @@ export default function ZerodoseTable({ data = [], onTeamClick }) {
                       <Users size={19} />
                     </div>
 
-                    <div className="flex min-w-0 items-center gap-4">
+                    <div className="flex min-w-0 justify-between items-center gap-4">
                       <div className="flex min-w-0 items-center gap-2">
                         <h4 className="text-text truncate text-sm font-semibold sm:text-[15px]">
                           {getTeamNumber(team.teamNumber)}
                         </h4>
                       </div>
 
-                      <div className="flex min-w-0 gap-2 text-primary">
-                        <p className="text-[13px] font-semibold ">
-                          <span>Leader: </span>
-                           <span className=" truncate text-[13px] capitalize">
+                     
+                      <div className="flex min-w-0 flex-col gap-0 text-gray-700">
+                        <p className="flex items-center justify-between gap-1 text-[13px]">
+                          <span className="font-semibold">Leader: </span>
+                          <span className="text-[13px] capitalize">
                             {team.teamLeader?.name || "-"}
                           </span>
                         </p>
-                        <p className="text-[13px] font-semibold ">
-                          <span>Member: </span>
-                          <span className="truncate text-[13px] capitalize">
-                            {team.teamMember?.name || "-"}
+
+                        <p className="flex items-center justify-between gap-1 text-[13px]">
+                          <span className="font-semibold">Member: </span>
+                          <span className="text-[13px] capitalize">
+                           {team.teamMember?.name || "-"}
                           </span>
                         </p>
                       </div>

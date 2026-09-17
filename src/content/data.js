@@ -365,6 +365,7 @@ export const designationRoutes = {
   districtfp: "/districtfp",
   townfp: "/townfp",
   ucmo: "/ucmo",
+  otherstaff: "/otherstaff",
   supervisor: "/supervisor",
   vaccinator: "/vaccinator",
   worker: "/worker",

@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { getVaccinatorTotalSummary } from "@/api/dashboardApi";
+import { getOtherStaffTotalSummary } from "@/api/dashboardApi";
 
 import VaccinatorSummaryCards from "@/components/vaccinator/VaccinatorSummaryCards";
-import VaccinatorActions from "@/components/vaccinator/VaccinatorActions";
 import VaccinatorCampaignSection from "@/components/vaccinator/VaccinatorCampaignSection";
 import { useTabLoader } from "@/context/TabLoaderContext";
+import OtherStaffActions from "@/components/otherstaff/OtherStaffActions";
 
 export default function VaccinatorPage() {
   const { showTabLoader, hideTabLoader } = useTabLoader();
@@ -46,7 +46,7 @@ export default function VaccinatorPage() {
       try {
         setLoading(true);
         showTabLoader();
-        const response = await getVaccinatorTotalSummary();
+        const response = await getOtherStaffTotalSummary();
 
         if (cancelled) {
           return;
@@ -109,7 +109,7 @@ export default function VaccinatorPage() {
         loading={loading}
       />
 
-      <VaccinatorActions />
+      <OtherStaffActions />
 
       <VaccinatorCampaignSection authUser={authUser} />
     </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { getCampaigns, getCurrentCampaign } from "@/api/campaignApi";
-import { getVaccinatorZerodose } from "@/api/zerodoseApi";
+import { getOtherStaffZerodose } from "@/api/zerodoseApi";
 import { LucideSyringe } from "lucide-react";
 
 import ZerodoseTabs from "@/components/supervisor/zerodose/ZerodoseTabs";
@@ -96,7 +96,7 @@ export default function Page() {
         // --------------------------------------------------------
 
         if (campaign?._id) {
-          const response = await getVaccinatorZerodose({
+          const response = await getOtherStaffZerodose({
             campaignId: campaign._id,
             filter: "recorded",
           });
@@ -233,7 +233,7 @@ export default function Page() {
       setLoading(true);
       setError("");
 
-      const response = await getVaccinatorZerodose({
+      const response = await getOtherStaffZerodose({
         campaignId: currentCampaign._id,
         filter,
       });
@@ -306,7 +306,7 @@ export default function Page() {
       setLoading(true);
       setError("");
 
-      const response = await getVaccinatorZerodose({
+      const response = await getOtherStaffZerodose({
         campaignId,
         filter,
       });

@@ -198,6 +198,19 @@ export const getUCMOZerodose = async ({ campaignId, filter }) => {
   return response.data;
 };
 
+
+export const getOtherStaffZerodose = async ({ campaignId, filter }) => {
+  const response = await api.get("/zerodose/otherstaff", {
+    params: {
+      campaignId,
+      filter,
+    },
+  });
+
+  return response.data;
+};
+
+
 export const getVaccinatorZerodose = async ({ campaignId, filter }) => {
   const response = await api.get("/zerodose/vaccinator", {
     params: {

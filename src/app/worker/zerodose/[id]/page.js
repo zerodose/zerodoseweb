@@ -179,7 +179,7 @@ export default function ZerodoseDetailPage() {
               className={`${zerodose.visitDate !== null ? "hidden" : "flex"} border-border bg-background text-text-secondary hover:bg-surface hover:text-primary h-11 w-11 shrink-0 items-center justify-center rounded-lg border transition`}
               title="Edit Zerodose"
             >
-              <Edit className="h-5 w-5" />
+              <Edit className="h-4 w-4" />
             </button>
           </div>
         </div>

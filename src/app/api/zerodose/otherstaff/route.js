@@ -143,7 +143,7 @@ export async function GET(request) {
       .populate("user", "name designation")
       .populate("teamLeader", "name")
       .populate("teamMember", "name")
-      .populate("otherstaff", "name")
+      .populate("vaccinator", "name")
       .lean();
 
     /*

@@ -990,7 +990,7 @@ export default function StaffManagementPage() {
                   No active workers found for this supervisor.
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   {[...fromSupervisorWorkers]
                     .sort((a, b) => {
                       const teamA = Number(a.teamNumber) || 0;
@@ -1056,7 +1056,7 @@ export default function StaffManagementPage() {
             Current Assignment
           </h3>
 
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <Info label="Name" value={selectedUser.name} />
 
             <Info label="Designation" value={selectedUser.designation} />
@@ -1092,7 +1092,7 @@ export default function StaffManagementPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {selectedWorkerObjects.map((worker) => (
               <div
                 key={getUserId(worker)}

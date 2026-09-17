@@ -12,15 +12,15 @@ export default function UCMOActions() {
       icon: UsersRound,
     },
     {
-      href: "/ucmo/supervisorDetail",
-      label: "Supervisor Details",
-      description: "View your supervisor details",
-      icon: UsersRound,
-    },
-    {
       href: "/ucmo/staff-management",
       label: "Staff Transfer",
       description: "Transfer supervisors",
+      icon: UsersRound,
+    },
+    {
+      href: "/ucmo/staff-details",
+      label: "Staff Details",
+      description: "View your staff details",
       icon: UsersRound,
     },
         {

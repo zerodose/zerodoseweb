@@ -8,12 +8,11 @@ import exportPDF from "@/utils/export/exportPDF";
 import exportExcel from "@/utils/export/exportExcel";
 
 import { getUsers, updateUser } from "@/api/userApi";
-import ClientPageHeader from "@/components/ui/ClientPageHeader";
 import ApprovalPageHeader from "@/components/ui/ApprovalPageHeader";
 
 export default function SupervisorDetailPage() {
   const router = useRouter();
-
+  const [ucmoId, setUcmoId] = useState(null);
   // ============================================================
   // Tabs
   // ============================================================
@@ -24,7 +23,7 @@ export default function SupervisorDetailPage() {
   // Data
   // ============================================================
 
-  const [supervisors, setSupervisors] = useState([]);
+  const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -42,11 +41,33 @@ export default function SupervisorDetailPage() {
     hasPreviousPage: false,
   });
 
+  useEffect(() => {
+    try {
+      const storedAuthUser = localStorage.getItem("authUser");
+
+      if (!storedAuthUser) {
+        console.error("UCMO authentication data not found.");
+        return;
+      }
+
+      const parsedAuthUser = JSON.parse(storedAuthUser);
+
+      if (!parsedAuthUser?.id) {
+        console.error("UCMO ID not found in authentication data.");
+        return;
+      }
+
+      setUcmoId(String(parsedAuthUser.id));
+    } catch (error) {
+      console.error("Get UCMO authentication error:", error);
+    }
+  }, []);
+
   // ============================================================
-  // Get Supervisors
+  // Get Staff
   // ============================================================
 
-  const getSupervisorsData = async () => {
+  const getUsersData = async () => {
     try {
       setLoading(true);
 
@@ -54,30 +75,30 @@ export default function SupervisorDetailPage() {
         page: pagination.page,
         limit: pagination.limit,
         search,
-        designation: "supervisor",
+        ucmo: ucmoId,
         isActive: activeTab === "active",
       });
 
-      const formattedSupervisors = (response.data || []).map((supervisor) => ({
-        ...supervisor,
+      const formattedStaff = (response.data || []).map((staff) => ({
+        ...staff,
 
-        districtName: supervisor.district?.name || "-",
-        townName: supervisor.town?.name || "-",
-        unionCouncilName: supervisor.unionCouncil?.name || "-",
+        districtName: staff.district?.name || "-",
+        townName: staff.town?.name || "-",
+        unionCouncilName: staff.unionCouncil?.name || "-",
 
-        approvalStatus: supervisor.approvalStatus || "-",
+        approvalStatus: staff.approvalStatus || "-",
       }));
 
-      setSupervisors(formattedSupervisors);
+      setStaff(formattedStaff);
 
       setPagination((previous) => ({
         ...previous,
         ...(response.pagination || {}),
       }));
     } catch (error) {
-      console.error("Get supervisors error:", error);
+      console.error("Get staff error:", error);
 
-      setSupervisors([]);
+      setStaff([]);
 
       setPagination((previous) => ({
         ...previous,
@@ -96,12 +117,14 @@ export default function SupervisorDetailPage() {
   // ============================================================
 
   useEffect(() => {
+    if (!ucmoId) return;
+
     const timer = setTimeout(() => {
-      getSupervisorsData();
+      getUsersData();
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [pagination.page, pagination.limit, search, activeTab]);
+  }, [ucmoId, pagination.page, pagination.limit, search, activeTab]);
 
   // ============================================================
   // Tab Change
@@ -158,25 +181,13 @@ export default function SupervisorDetailPage() {
     }));
   };
 
-  const handleToggleActive = async (user) => {
-    try {
-      await updateUser(user._id, {
-        isActive: !user.isActive,
-      });
-
-      await getSupervisorsData();
-    } catch (error) {
-      console.error("Update supervisor status error:", error);
-    }
-  };
-
   return (
     <div className="space-y-5">
       <ApprovalPageHeader
         title="Supervisor Details"
         description="Review and manage details."
         onBack={() => router.back()}
-        onRefresh={() => fetchApprovals(true)}
+        onRefresh={() => getUsersData(true)}
       />
       {/* ========================================================
           Tabs
@@ -192,7 +203,7 @@ export default function SupervisorDetailPage() {
               : "text-text-secondary hover:bg-surface hover:text-text"
           }`}
         >
-          Current Supervisors
+          Current Staff
         </button>
 
         <button
@@ -204,7 +215,7 @@ export default function SupervisorDetailPage() {
               : "text-text-secondary hover:bg-surface hover:text-text"
           }`}
         >
-          Left Supervisors
+          Left Staff
         </button>
       </div>
 
@@ -213,15 +224,13 @@ export default function SupervisorDetailPage() {
       ======================================================== */}
 
       <Table
-        data={supervisors}
+        data={staff}
         loading={loading}
-        pageTitle={
-          activeTab === "active" ? "Current Supervisors" : "Left Supervisors"
-        }
+        pageTitle={activeTab === "active" ? "Current Staff" : "Left Staff"}
         pageDescription={
           activeTab === "active"
-            ? "View and manage active supervisors."
-            : "View inactive supervisors."
+            ? "View and manage active Staff."
+            : "View inactive Staff."
         }
 
         pageBreadcrumbs={false}
@@ -234,13 +243,6 @@ export default function SupervisorDetailPage() {
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
         onSearchChange={handleSearchChange}
-
-        rowActions={[
-          {
-            label: (user) => (user.isActive ? "Deactivate" : "Activate"),
-            onClick: handleToggleActive,
-          },
-        ]}
 
         hiddenColumns={[
           "_id",
@@ -278,8 +280,41 @@ export default function SupervisorDetailPage() {
           "isActive",
         ]}
 
+        filterOptions={[
+          {
+            key: "designation",
+            label: "Designation",
+            type: "select",
+            column: "designation",
+          },
+          {
+            key: "districtName",
+            label: "District",
+            type: "select",
+            column: "districtName",
+          },
+          {
+            key: "townName",
+            label: "Town",
+            type: "select",
+            column: "townName",
+          },
+          {
+            key: "unionCouncilName",
+            label: "Union Council",
+            type: "select",
+            column: "unionCouncilName",
+          },
+          {
+            key: "isActive",
+            label: "Active",
+            type: "select",
+            column: "isActive",
+          },
+        ]}
+
         onRowClick={(supervisor) => {
-          router.push(`/ucmo/supervisorDetail/${supervisor._id}`);
+          router.push(`/ucmo/staff-details/${supervisor._id}`);
         }}
 
         onExportPDF={exportPDF}

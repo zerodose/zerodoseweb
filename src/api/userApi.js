@@ -191,3 +191,9 @@ export async function getStaffByScope({
   return response.data;
 };
 
+
+export const updateUserStatus = async (id, data) => {
+const response = await api.put(`/users/${id}/status`, data);
+
+return response.data;
+};

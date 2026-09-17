@@ -115,6 +115,7 @@ export async function PUT(request, { params }) {
       supervisor,
       teamNumber,
       password,
+      approvalStatus,
       isActive,
     } = body;
 
@@ -633,6 +634,17 @@ export async function PUT(request, { params }) {
       updateData.isActive = isActive;
     }
 
+    if (approvalStatus !== undefined) {
+      const allowedApprovalStatuses = ["pending", "approved", "rejected"];
+      if (!allowedApprovalStatuses.includes(approvalStatus)) {
+        return NextResponse.json(
+          { success: false, message: "Invalid approval status" },
+          { status: 400 },
+        );
+      }
+      updateData.approvalStatus = approvalStatus;
+    }
+    
     // =================================================
     // Update
     // =================================================

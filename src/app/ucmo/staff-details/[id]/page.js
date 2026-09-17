@@ -1,15 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { deleteUser, getUser } from "@/api/userApi";
+import { getUser, updateUserStatus } from "@/api/userApi";
 
 import AdminSignupForm from "@/components/auth/AdminSignupForm";
-import ActionButtons from "@/components/admin/ui/ActionButtons";
-import TopHeader from "@/components/admin/ui/TopHeader";
 import ApprovalPageHeader from "@/components/ui/ApprovalPageHeader";
 
 export default function UserViewPage() {
@@ -18,9 +15,7 @@ export default function UserViewPage() {
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isUCMO, setIsUCMO] = useState(false);
 
   // =====================================================
   // Check Admin
@@ -36,7 +31,7 @@ export default function UserViewPage() {
     try {
       const loggedInUser = JSON.parse(authUser);
 
-      setIsAdmin(loggedInUser?.designation === "admin");
+      setIsUCMO(loggedInUser?.designation === "ucmo");
     } catch (error) {
       console.error("Auth user parse error:", error);
     }
@@ -78,27 +73,36 @@ export default function UserViewPage() {
     }
   }, [params?.id, router]);
 
-  // =====================================================
-  // Delete User
-  // =====================================================
+  const handleToggleStatus = async () => {
+    if (!user) return;
 
-  const handleDelete = async () => {
     try {
-      setDeleting(true);
+      const newIsActive = !user.isActive;
 
-      await deleteUser(user._id);
+      const newApprovalStatus = newIsActive ? "approved" : "pending";
 
-      toast.success("User deleted successfully.");
+      await updateUserStatus(user._id, {
+        isActive: newIsActive,
+        approvalStatus: newApprovalStatus,
+      });
 
-      setDeleteModalOpen(false);
+      setUser((previous) => ({
+        ...previous,
+        isActive: newIsActive,
+        approvalStatus: newApprovalStatus,
+      }));
 
-      router.push("/dashboard/users");
+      toast.success(
+        newIsActive
+          ? "User activated and approved successfully."
+          : "User deactivated and moved to pending.",
+      );
     } catch (error) {
-      console.error("Delete user error:", error);
+      console.error("Update user status error:", error);
 
-      toast.error(error?.response?.data?.message || "Failed to delete user.");
-    } finally {
-      setDeleting(false);
+      toast.error(
+        error?.response?.data?.message || "Failed to update user status.",
+      );
     }
   };
 
@@ -112,7 +116,7 @@ export default function UserViewPage() {
       {/* Left Side */}
 
       <ApprovalPageHeader
-        title="Supervisor Details"
+        title="User Details"
         description="Review and manage details."
         onBack={() => router.back()}
       />
@@ -124,6 +128,17 @@ export default function UserViewPage() {
       {/* =====================================================
           User Form
       ===================================================== */}
+      {isUCMO && user && (
+        <div className="mb-4 flex items-center justify-end">
+          <button
+            type="button"
+            onClick={handleToggleStatus}
+            className="bg-primary hover:bg-gray-dark rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition"
+          >
+            {user.isActive ? "Deactivate & Set Pending" : "Activate & Approve"}
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="bg-background border-border rounded-2xl border shadow-sm">

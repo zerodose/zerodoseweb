@@ -157,7 +157,7 @@ export default function ZerodoseDetailPage() {
                 <Syringe className="h-7 w-7" />
               </div>
 
-              <div className="flex flex  items-center gap-2">
+              <div className="flex items-center gap-2">
                 <h2 className="text-text text-xl font-semibold break-words capitalize">
                   {zerodose.childName || "-"}
                 </h2>
@@ -173,8 +173,10 @@ export default function ZerodoseDetailPage() {
             {/* Supervisor Update */}
             <button
               type="button"
-              onClick={() => router.push(`/worker/${zerodose._id}/update`)}
-              className={`${zerodose.visitDate !== null ? "hidden" : "flex" } border-border bg-background text-text-secondary hover:bg-surface hover:text-primary h-11 w-11 shrink-0 items-center justify-center rounded-lg border transition`}
+              onClick={() =>
+                router.push(`/worker/zerodose/${zerodose._id}/update`)
+              }
+              className={`${zerodose.visitDate !== null ? "hidden" : "flex"} border-border bg-background text-text-secondary hover:bg-surface hover:text-primary h-11 w-11 shrink-0 items-center justify-center rounded-lg border transition`}
               title="Edit Zerodose"
             >
               <Edit className="h-5 w-5" />
@@ -292,7 +294,6 @@ export default function ZerodoseDetailPage() {
             value={formatDate(zerodose.visitDate)}
           />
 
-
           <DetailItem
             icon={Syringe}
             label="Vaccination Status"
@@ -310,7 +311,7 @@ export default function ZerodoseDetailPage() {
             label="Covered Date"
             value={formatDate(zerodose.coveredDate)}
           />
-          
+
           <DetailItem
             icon={QrCode}
             label="QR Code"

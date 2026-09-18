@@ -330,7 +330,11 @@ export const getUCMOTotalSummary = async () => {
 
   return response.data;
 };
+export const getVaccinatorTotalSummary = async () => {
+  const response = await api.get("/dashboard/vaccinator/summary");
 
+  return response.data;
+};
 export const getOtherStaffTotalSummary = async () => {
   const response = await api.get("/dashboard/otherstaff/summary");
 

@@ -5,11 +5,11 @@ import { useEffect, useMemo, useState } from "react";
 import { getOtherStaffTotalSummary } from "@/api/dashboardApi";
 
 import VaccinatorSummaryCards from "@/components/vaccinator/VaccinatorSummaryCards";
-import VaccinatorCampaignSection from "@/components/vaccinator/VaccinatorCampaignSection";
 import { useTabLoader } from "@/context/TabLoaderContext";
 import OtherStaffActions from "@/components/otherstaff/OtherStaffActions";
+import OtherStaffCampaignSection from "@/components/otherstaff/OtherStaffCampaignSection";
 
-export default function VaccinatorPage() {
+export default function OtherStaffPage() {
   const { showTabLoader, hideTabLoader } = useTabLoader();
   const authUser = useMemo(() => {
     if (typeof window === "undefined") {
@@ -42,7 +42,7 @@ export default function VaccinatorPage() {
   useEffect(() => {
     let cancelled = false;
 
-    const loadVaccinatorSummary = async () => {
+    const loadOtherStaffSummary = async () => {
       try {
         setLoading(true);
         showTabLoader();
@@ -88,12 +88,12 @@ export default function VaccinatorPage() {
       } finally {
         if (!cancelled) {
           setLoading(false);
-          hideTabLoader()
+          hideTabLoader();
         }
       }
     };
 
-    loadVaccinatorSummary();
+    loadOtherStaffSummary();
 
     return () => {
       cancelled = true;
@@ -111,7 +111,7 @@ export default function VaccinatorPage() {
 
       <OtherStaffActions />
 
-      <VaccinatorCampaignSection authUser={authUser} />
+      <OtherStaffCampaignSection authUser={authUser} />
     </div>
   );
 }

@@ -6,11 +6,11 @@ import CampaignTabs from "@/components/supervisor/CampaignTabs";
 import VaccinatorCurrentCampaignSummery from "@/components/vaccinator/VaccinatorCurrentCampaignSummery";
 import PreviousCampaignsSummery from "@/components/supervisor/PreviousCampaignsSummery";
 
-import { getVaccinatorSupervisorSummary } from "@/api/dashboardApi";
+import { getOtherStaffSupervisorSummary } from "@/api/dashboardApi";
 
 import { getCurrentCampaign } from "@/api/campaignApi";
 
-export default function VaccinatorCampaignSection({ authUser }) {
+export default function OtherStaffCampaignSection({ authUser }) {
   const [activeTab, setActiveTab] = useState("current");
   const [currentCampaign, setCurrentCampaign] = useState(null);
   const [zerodoseData, setZerodoseData] = useState([]);
@@ -37,6 +37,8 @@ export default function VaccinatorCampaignSection({ authUser }) {
         if (cancelled) {
           return;
         }
+
+        // console.error("Failed to fetch current campaign:", error);
 
         setCurrentCampaign(null);
         setZerodoseData([]);
@@ -72,7 +74,7 @@ export default function VaccinatorCampaignSection({ authUser }) {
       try {
         setLoading(true);
 
-        const response = await getVaccinatorSupervisorSummary(campaignId);
+        const response = await getOtherStaffSupervisorSummary(campaignId);
 
         if (cancelled) {
           return;

@@ -1,3 +1,139 @@
+// "use client";
+
+// import { useEffect, useState } from "react";
+
+// import CampaignTabs from "@/components/supervisor/CampaignTabs";
+// import VaccinatorCurrentCampaignSummery from "@/components/vaccinator/VaccinatorCurrentCampaignSummery";
+// import PreviousCampaignsSummery from "@/components/supervisor/PreviousCampaignsSummery";
+
+// import { getOtherStaffSupervisorSummary } from "@/api/dashboardApi";
+
+// import { getCurrentCampaign } from "@/api/campaignApi";
+
+// export default function OtherStaffCampaignSection({ authUser }) {
+//   const [activeTab, setActiveTab] = useState("current");
+//   const [currentCampaign, setCurrentCampaign] = useState(null);
+//   const [zerodoseData, setZerodoseData] = useState([]);
+//   const [loading, setLoading] = useState(true);
+
+//   useEffect(() => {
+//     let cancelled = false;
+
+//     const loadCurrentCampaign = async () => {
+//       try {
+//         setLoading(true);
+
+//         const response = await getCurrentCampaign();
+
+//         if (cancelled) {
+//           return;
+//         }
+
+//         const data = response?.data || {};
+//         const campaign = data?.currentCampaign || null;
+
+//         setCurrentCampaign(campaign);
+//       } catch (error) {
+//         if (cancelled) {
+//           return;
+//         }
+
+//         // console.error("Failed to fetch current campaign:", error);
+
+//         setCurrentCampaign(null);
+//         setZerodoseData([]);
+//       }
+//     };
+
+//     loadCurrentCampaign();
+
+//     return () => {
+//       cancelled = true;
+//     };
+//   }, []);
+
+//   useEffect(() => {
+//     let cancelled = false;
+
+//     const loadSupervisorSummary = async () => {
+//       if (!currentCampaign) {
+//         return;
+//       }
+
+//       const campaignId = currentCampaign._id;
+
+//       if (!campaignId) {
+//         console.warn("Current campaign ID is missing.");
+
+//         setZerodoseData([]);
+//         setLoading(false);
+
+//         return;
+//       }
+
+//       try {
+//         setLoading(true);
+
+//         const response = await getOtherStaffSupervisorSummary(campaignId);
+
+//         if (cancelled) {
+//           return;
+//         }
+
+//         const data = response?.data || {};
+
+//         setZerodoseData(
+//           Array.isArray(data?.supervisors) ? data.supervisors : [],
+//         );
+//       } catch (error) {
+//         if (cancelled) {
+//           return;
+//         }
+
+//         // console.error("Failed to fetch supervisor summary:", error);
+
+//         setZerodoseData([]);
+//       } finally {
+//         if (!cancelled) {
+//           setLoading(false);
+//         }
+//       }
+//     };
+
+//     loadSupervisorSummary();
+
+//     return () => {
+//       cancelled = true;
+//     };
+//   }, [currentCampaign]);
+
+//   const previousCampaigns = [];
+
+//   return (
+//     <div className="w-full space-y-6">
+//       <CampaignTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+
+//       {activeTab === "current" && (
+//         <VaccinatorCurrentCampaignSummery
+//           campaign={currentCampaign}
+//           data={zerodoseData}
+//           loading={loading}
+//           authUser={authUser}
+//         />
+//       )}
+
+//       {activeTab === "previous" && (
+//         <PreviousCampaignsSummery
+//           campaigns={previousCampaigns}
+//           data={[]}
+//           loading={loading}
+//         />
+//       )}
+//     </div>
+//   );
+// }
+
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,128 +143,142 @@ import VaccinatorCurrentCampaignSummery from "@/components/vaccinator/Vaccinator
 import PreviousCampaignsSummery from "@/components/supervisor/PreviousCampaignsSummery";
 
 import { getOtherStaffSupervisorSummary } from "@/api/dashboardApi";
-
 import { getCurrentCampaign } from "@/api/campaignApi";
 
 export default function OtherStaffCampaignSection({ authUser }) {
-  const [activeTab, setActiveTab] = useState("current");
-  const [currentCampaign, setCurrentCampaign] = useState(null);
-  const [zerodoseData, setZerodoseData] = useState([]);
-  const [loading, setLoading] = useState(true);
+const [activeTab, setActiveTab] = useState("current");
+const [currentCampaign, setCurrentCampaign] = useState(null);
+const [zerodoseData, setZerodoseData] = useState([]);
+const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
+useEffect(() => {
+let cancelled = false;
 
-    const loadCurrentCampaign = async () => {
-      try {
-        setLoading(true);
 
-        const response = await getCurrentCampaign();
+const loadCurrentCampaign = async () => {
+  try {
+    setLoading(true);
 
-        if (cancelled) {
-          return;
-        }
+    const response = await getCurrentCampaign();
 
-        const data = response?.data || {};
-        const campaign = data?.currentCampaign || null;
+    if (cancelled) {
+      return;
+    }
 
-        setCurrentCampaign(campaign);
-      } catch (error) {
-        if (cancelled) {
-          return;
-        }
+    const data = response?.data || {};
+    const campaign = data?.currentCampaign || null;
 
-        // console.error("Failed to fetch current campaign:", error);
+    setCurrentCampaign(campaign);
 
-        setCurrentCampaign(null);
-        setZerodoseData([]);
-      }
-    };
+    if (!campaign) {
+      setZerodoseData([]);
+      setLoading(false);
+    }
+  } catch (error) {
+    if (cancelled) {
+      return;
+    }
 
-    loadCurrentCampaign();
+    setCurrentCampaign(null);
+    setZerodoseData([]);
+    setLoading(false);
+  }
+};
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+loadCurrentCampaign();
 
-  useEffect(() => {
-    let cancelled = false;
+return () => {
+  cancelled = true;
+};
 
-    const loadSupervisorSummary = async () => {
-      if (!currentCampaign) {
-        return;
-      }
 
-      const campaignId = currentCampaign._id;
+}, []);
 
-      if (!campaignId) {
-        console.warn("Current campaign ID is missing.");
+useEffect(() => {
+let cancelled = false;
 
-        setZerodoseData([]);
-        setLoading(false);
 
-        return;
-      }
+const loadSupervisorSummary = async () => {
+  if (!currentCampaign) {
+    return;
+  }
 
-      try {
-        setLoading(true);
+  const campaignId = currentCampaign?._id;
 
-        const response = await getOtherStaffSupervisorSummary(campaignId);
+  if (!campaignId) {
+    console.warn("Current campaign ID is missing.");
 
-        if (cancelled) {
-          return;
-        }
+    setZerodoseData([]);
+    setLoading(false);
 
-        const data = response?.data || {};
+    return;
+  }
 
-        setZerodoseData(
-          Array.isArray(data?.supervisors) ? data.supervisors : [],
-        );
-      } catch (error) {
-        if (cancelled) {
-          return;
-        }
+  try {
+    setLoading(true);
 
-        // console.error("Failed to fetch supervisor summary:", error);
+    const response =
+      await getOtherStaffSupervisorSummary(campaignId);
 
-        setZerodoseData([]);
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
+    if (cancelled) {
+      return;
+    }
 
-    loadSupervisorSummary();
+    const data = response?.data || {};
 
-    return () => {
-      cancelled = true;
-    };
-  }, [currentCampaign]);
+    setZerodoseData(
+      Array.isArray(data?.supervisors)
+        ? data.supervisors
+        : [],
+    );
+  } catch (error) {
+    if (cancelled) {
+      return;
+    }
 
-  const previousCampaigns = [];
+    setZerodoseData([]);
+  } finally {
+    if (!cancelled) {
+      setLoading(false);
+    }
+  }
+};
 
-  return (
-    <div className="w-full space-y-6">
-      <CampaignTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+loadSupervisorSummary();
 
-      {activeTab === "current" && (
-        <VaccinatorCurrentCampaignSummery
-          campaign={currentCampaign}
-          data={zerodoseData}
-          loading={loading}
-          authUser={authUser}
-        />
-      )}
+return () => {
+  cancelled = true;
+};
 
-      {activeTab === "previous" && (
-        <PreviousCampaignsSummery
-          campaigns={previousCampaigns}
-          data={[]}
-          loading={loading}
-        />
-      )}
-    </div>
-  );
+
+}, [currentCampaign]);
+
+const previousCampaigns = [];
+
+return ( <div className="w-full space-y-6"> <CampaignTabs
+     activeTab={activeTab}
+     setActiveTab={setActiveTab}
+   />
+
+
+  {activeTab === "current" && (
+    <VaccinatorCurrentCampaignSummery
+      campaign={currentCampaign}
+      data={zerodoseData}
+      loading={loading}
+      authUser={authUser}
+    />
+  )}
+
+  {activeTab === "previous" && (
+    <PreviousCampaignsSummery
+      campaigns={previousCampaigns}
+      data={[]}
+      loading={loading}
+    />
+  )}
+</div>
+
+
+);
 }

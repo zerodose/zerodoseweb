@@ -23,10 +23,6 @@ export default function OtherStaffLayout({ children }) {
     }
   });
 
-  // ============================================================
-  // Extract OtherStaff Data
-  // ============================================================
-
   const designation = user?.designation || "otherstaff";
 
   const ucCode = user?.unionCouncil?.code || user?.unionCouncilId?.code || "";
@@ -35,9 +31,6 @@ export default function OtherStaffLayout({ children }) {
 
   return (
     <div className="min-h-full p-4 md:p-6">
-      {/* ========================================================
-          Permanent OtherStaff Header
-      ======================================================== */}
 
       <PageHeaderWithDesignation
         name={user?.name}
@@ -46,9 +39,7 @@ export default function OtherStaffLayout({ children }) {
         ucName={ucName}
       />
 
-      {/* ========================================================
-          Page Content
-      ======================================================== */}
+
 
       {children}
     </div>

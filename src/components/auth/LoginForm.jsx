@@ -301,8 +301,9 @@ export default function LoginForm() {
       // =================================================
       // Dashboard Route
       // =================================================
-
+      // console.log("Desgination Route", designation)
       const route = designationRoutes[designation];
+      // console.log("Desgination Route", route)
 
       if (!route) {
         throw new Error(

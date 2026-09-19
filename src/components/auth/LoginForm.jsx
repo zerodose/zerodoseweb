@@ -372,10 +372,10 @@ export default function LoginForm() {
           description: message,
         });
 
-        setError("password", {
-          type: "server",
-          message,
-        });
+        // setError("password", {
+        //   type: "server",
+        //   message,
+        // });
       }
 
       setLoading(false);

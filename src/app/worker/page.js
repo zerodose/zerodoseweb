@@ -19,8 +19,6 @@ export default function Page() {
     covered: 0,
   });
 
-  const [loadingSummary, setLoadingSummary] = useState(true);
-
   // ============================================================
   // GET CURRENT CAMPAIGN
   // ============================================================
@@ -78,7 +76,7 @@ export default function Page() {
 
     const loadSummary = async () => {
       try {
-        setLoadingSummary(true);
+        setLoading(true);
 
         const response = await getWorkerSummary();
 
@@ -107,7 +105,7 @@ export default function Page() {
         });
       } finally {
         if (!cancelled) {
-          setLoadingSummary(false);
+          setLoading(false);
         }
       }
     };
@@ -125,8 +123,7 @@ export default function Page() {
 
   return (
     <div className="min-h-full">
-
-      <ZerodoseStats summary={summary} loading={loadingSummary} />
+      <ZerodoseStats summary={summary} loading={loading} />
       <WorkerActions campaign={campaign} />
       <ZerodoseCampaignSection />
     </div>

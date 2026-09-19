@@ -381,23 +381,33 @@ export default function PageHeaderWithDesignation({
               Name + Information
           ==================================================== */}
 
-          <div
-            onClick={handleDashboardClick}
-            className={`min-w-0 ${dashboardRoute ? "cursor-pointer" : ""}`}
-          >
-            {/* Main Name */}
+          <div className="flex justify-start items-center gap-4">
+            <Image
+              src="/images/logo.png"
+              alt="Zerodose Logo"
+              width={48}
+              height={48}
+              className="h-auto w-[48px]"
+              priority
+            />
+            <div
+              onClick={handleDashboardClick}
+              className={`min-w-0 ${dashboardRoute ? "cursor-pointer" : ""}`}
+            >
+              {/* Main Name */}
 
-            <h1 className="text-text truncate text-xl font-bold uppercase md:text-2xl">
-              {headerInfo.title}
-            </h1>
+              <h1 className="text-text truncate text-xl font-bold uppercase md:text-2xl">
+                {headerInfo.title}
+              </h1>
 
-            {/* Designation-specific Information */}
+              {/* Designation-specific Information */}
 
-            {headerInfo.details && (
-              <div className="text-text-secondary mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs md:text-sm">
-                {headerInfo.details}
-              </div>
-            )}
+              {headerInfo.details && (
+                <div className="text-text-secondary mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs md:text-sm">
+                  {headerInfo.details}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -622,8 +632,6 @@ export default function PageHeaderWithDesignation({
                         </div>
                       </div>
                     )}
-
-     
 
                     {user.designation && (
                       <div className="bg-surface flex items-center gap-3 rounded-xl p-3">

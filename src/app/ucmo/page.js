@@ -567,12 +567,6 @@ export default function Page() {
               SUMMARY
           ====================================================== */}
 
-        {/* <UCMOSummaryCards
-          totalSupervisors={summary.totalSupervisors}
-          activeTeams={summary.activeTeams}
-          recordedZerodose={summary.recordedZerodose}
-          coveredZerodose={summary.coveredZerodose}
-        /> */}
         <UCMOSummaryCards
           totalSupervisors={summary.totalSupervisors}
           activeTeams={summary.activeTeams}

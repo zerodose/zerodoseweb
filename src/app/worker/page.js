@@ -2,17 +2,28 @@
 
 import { useEffect, useState } from "react";
 
-import CurrentCampaignCard from "@/components/worker/CurrentCampaignCard";
 import ZerodoseStats from "@/components/worker/ZerodoseStats";
 import WorkerActions from "@/components/worker/WorkerActions";
 import ZerodoseCampaignSection from "@/components/worker/ZerodoseCampaignSection";
-
+import { getWorkerSummary } from "@/api/dashboardApi";
 import { getCurrentCampaign } from "@/api/campaignApi";
 
 export default function Page() {
   const [campaign, setCampaign] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [summary, setSummary] = useState({
+    recorded: 0,
+    visited: 0,
+    covered: 0,
+  });
+
+  const [loadingSummary, setLoadingSummary] = useState(true);
+
+  // ============================================================
+  // GET CURRENT CAMPAIGN
+  // ============================================================
 
   useEffect(() => {
     let cancelled = false;
@@ -23,8 +34,6 @@ export default function Page() {
         setError("");
 
         const response = await getCurrentCampaign();
-
-        // console.log("Worker current campaign response:", response);
 
         if (cancelled) {
           return;
@@ -37,9 +46,6 @@ export default function Page() {
         if (cancelled) {
           return;
         }
-
-        console.error("Worker current campaign error:", error);
-        console.error("API response:", error?.response?.data);
 
         setCampaign(null);
 
@@ -63,27 +69,66 @@ export default function Page() {
     };
   }, []);
 
+  // ============================================================
+  // GET WORKER SUMMARY
+  // ============================================================
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadSummary = async () => {
+      try {
+        setLoadingSummary(true);
+
+        const response = await getWorkerSummary();
+
+        if (cancelled) {
+          return;
+        }
+
+        const data = response?.data || {};
+
+        setSummary({
+          recorded: Number(data?.recordCount || 0),
+          visited: Number(data?.visitCount || 0),
+          covered: Number(data?.coveredCount || 0),
+        });
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        console.error("❌ Get worker summary error:", error);
+
+        setSummary({
+          recorded: 0,
+          visited: 0,
+          covered: 0,
+        });
+      } finally {
+        if (!cancelled) {
+          setLoadingSummary(false);
+        }
+      }
+    };
+
+    loadSummary();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // ============================================================
+  // UI
+  // ============================================================
+
   return (
     <div className="min-h-full">
-      {/* {error && (
-        <div className="border-border bg-surface mb-5 rounded-xl border p-4">
-          {" "}
-          <p className="text-text-secondary text-sm">{error}</p>{" "}
-        </div>
-      )}
 
-      <CurrentCampaignCard campaign={campaign} loading={loading} /> */}
-
-      <ZerodoseStats />
-
+      <ZerodoseStats summary={summary} loading={loadingSummary} />
       <WorkerActions campaign={campaign} />
-
-      <ZerodoseCampaignSection
-        // activeTab="current"
-        // onTabChange={() => {}}
-        // currentCampaign={campaign}
-        // loadingCampaign={loading}
-      />
+      <ZerodoseCampaignSection />
     </div>
   );
 }

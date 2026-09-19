@@ -398,6 +398,7 @@ import UCMOSummaryCards from "@/components/ucmo/UCMOSummaryCards";
 import PendingApprovalButton from "@/components/ucmo/PendingApprovalButton";
 import UCMOActions from "@/components/ucmo/UCMOAction";
 import UCMOCampaignSection from "@/components/ucmo/UCMOCampaignSection";
+import VaccinatorCampaignSection from "@/components/vaccinator/VaccinatorCampaignSection";
 
 export default function Page() {
   const [campaigns, setCampaigns] = useState([]);
@@ -583,7 +584,8 @@ export default function Page() {
               CAMPAIGNS
           ====================================================== */}
 
-        <UCMOCampaignSection authUser={authUser} />
+        {/* <VacciantorCampaignSection authUser={authUser} /> */}
+        <VaccinatorCampaignSection authUser={authUser} />
       </div>
     </div>
   );

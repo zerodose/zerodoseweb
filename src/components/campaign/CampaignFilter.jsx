@@ -1,21 +1,158 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { Filter } from "lucide-react";
 
 import Select from "../ui/Select";
 
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
 export default function CampaignFilter({
-  filter,
+  campaigns = [],
+  onCampaignSelect,
   title = "Campaign Filter",
   description = "Choose year, month and campaign",
 }) {
+  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedCampaignId, setSelectedCampaignId] = useState("");
+
+  const getId = (value) => {
+    if (!value) {
+      return null;
+    }
+
+    if (typeof value === "object") {
+      return value?._id?.toString() || value?.id?.toString() || null;
+    }
+
+    return value.toString();
+  };
+
+  const uniqueCampaigns = useMemo(() => {
+    const map = new Map();
+
+    campaigns.forEach((campaign) => {
+      const campaignId = getId(campaign);
+
+      if (!campaignId) {
+        return;
+      }
+
+      if (!map.has(campaignId)) {
+        map.set(campaignId, campaign);
+      }
+    });
+
+    return Array.from(map.values());
+  }, [campaigns]);
+
+  const yearOptions = useMemo(() => {
+    const years = [
+      ...new Set(
+        uniqueCampaigns
+          .map((campaign) => campaign?.year)
+          .filter((year) => year !== null && year !== undefined && year !== ""),
+      ),
+    ].sort((a, b) => Number(b) - Number(a));
+
+    return years.map((year) => ({
+      value: String(year),
+      label: String(year),
+    }));
+  }, [uniqueCampaigns]);
+
+  const monthOptions = useMemo(() => {
+    if (!selectedYear) {
+      return [];
+    }
+
+    const months = [
+      ...new Set(
+        uniqueCampaigns
+          .filter((campaign) => String(campaign?.year) === String(selectedYear))
+          .map((campaign) => campaign?.month)
+          .filter(
+            (month) => month !== null && month !== undefined && month !== "",
+          ),
+      ),
+    ].sort((a, b) => Number(b) - Number(a));
+
+    return months.map((month) => ({
+      value: String(month),
+      label: MONTH_NAMES[Number(month) - 1] || String(month),
+    }));
+  }, [uniqueCampaigns, selectedYear]);
+
+  const campaignSelectOptions = useMemo(() => {
+    if (!selectedYear || !selectedMonth) {
+      return [];
+    }
+
+    return uniqueCampaigns
+      .filter(
+        (campaign) =>
+          String(campaign?.year) === String(selectedYear) &&
+          String(campaign?.month) === String(selectedMonth),
+      )
+      .map((campaign) => {
+        const campaignId = getId(campaign);
+
+        if (!campaignId) {
+          return null;
+        }
+
+        return {
+          value: campaignId,
+          label: campaign?.name || "Unnamed Campaign",
+        };
+      })
+      .filter(Boolean);
+  }, [uniqueCampaigns, selectedYear, selectedMonth]);
+
+  const handleYearChange = (value) => {
+    setSelectedYear(value);
+    setSelectedMonth("");
+    setSelectedCampaignId("");
+  };
+
+  const handleMonthChange = (value) => {
+    setSelectedMonth(value);
+    setSelectedCampaignId("");
+  };
+
+  const handleCampaignChange = (value) => {
+    setSelectedCampaignId(value);
+  };
+
+  const handleApplyFilter = () => {
+    if (!selectedCampaignId) {
+      return;
+    }
+
+    if (onCampaignSelect) {
+      onCampaignSelect(selectedCampaignId);
+    }
+  };
+
   return (
     <div className="border-border relative mb-6 overflow-y-visible rounded-2xl border shadow-sm">
-      {/* Top accent */}
       <div className="from-primary via-primary-dark to-primary h-1 w-full bg-gradient-to-r" />
 
       <div className="p-4 md:p-5">
-        {/* Filter heading */}
         <div className="mb-5 flex items-center gap-3">
           <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
             <Filter size={18} />
@@ -30,43 +167,51 @@ export default function CampaignFilter({
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 overflow-y-visible">
-          {/* Year */}
+        <div className="grid grid-cols-2 gap-4 overflow-y-visible md:grid-cols-4">
           <Select
-            label="Year"
+            label="Select Year"
             name="year"
-            value={filter.selectedYear}
-            onChange={(event) => filter.handleYearChange(event.target.value)}
-            options={filter.yearOptions}
+            value={selectedYear}
+            onChange={(event) => handleYearChange(event.target.value)}
+            options={yearOptions}
             placeholder="Select Year"
           />
 
-          {/* Month */}
           <Select
-            label="Month"
+            label="Select Month"
             name="month"
-            value={filter.selectedMonth}
-            onChange={(event) => filter.handleMonthChange(event.target.value)}
-            options={filter.monthOptions}
+            value={selectedMonth}
+            onChange={(event) => handleMonthChange(event.target.value)}
+            options={monthOptions}
             placeholder="Select Month"
-            disabled={!filter.selectedYear}
+            disabled={!selectedYear}
           />
 
-          {/* Campaign */}
           <Select
-            label="Campaign"
+            label="Select Campaign"
             name="campaign"
-            value={filter.selectedCampaignId}
-            onChange={(event) =>
-              filter.handleCampaignChange(event.target.value)
-            }
-            options={filter.campaignSelectOptions}
+            value={selectedCampaignId}
+            onChange={(event) => handleCampaignChange(event.target.value)}
+            options={campaignSelectOptions}
             placeholder="Select Campaign"
-            disabled={!filter.selectedMonth}
+            disabled={!selectedMonth}
             searchable
             searchPlaceholder="Search campaign..."
           />
+
+          <div>
+            <span className="text-text min-h-5 z-50 mb-2 block text-sm font-medium">
+              {/* Filter Button */}
+            </span>
+            <button
+              type="button"
+              onClick={handleApplyFilter}
+              disabled={!selectedCampaignId}
+              className="bg-primary hover disabled disabled disabled h-12 w-full rounded-lg px-5 text-sm font-medium text-white transition"
+            >
+              Apply Filter
+            </button>
+          </div>
         </div>
       </div>
     </div>

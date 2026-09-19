@@ -202,6 +202,7 @@ export default function VaccinatorCurrentCampaignSummery({
   campaign,
   data = [],
   loading = false,
+  mode,
 }) {
   // ============================================================
   // SUPERVISOR SUMMARY
@@ -215,7 +216,7 @@ export default function VaccinatorCurrentCampaignSummery({
     return (
       data
         .map((item) => ({
-          supervisorId: item?.supervisorId || "",
+          // supervisorId: item?.supervisorId || "",
           supervisorCode: item?.supervisorCode || "-",
           supervisorName: item?.supervisorName || "-",
 

@@ -8,6 +8,15 @@ export const getCampaigns = async (params = {}) => {
   return response.data;
 };
 
+export const getCampaignFilter = async () => {
+  const response = await api.get("/campaigns/filter");
+  const data = response?.data;
+  if (!data?.success) {
+    throw new Error(data?.message || "Failed to fetch campaigns");
+  }
+  return Array.isArray(data?.data) ? data.data : [];
+};
+
 export const getCampaign = async (id) => {
   const response = await api.get(`/campaigns/${id}`);
 
@@ -33,7 +42,7 @@ export const deleteCampaign = async (id) => {
 };
 
 export const getCurrentCampaign = async () => {
-const response = await api.get("/campaigns/current");
+  const response = await api.get("/campaigns/current");
 
-return response.data;
+  return response.data;
 };

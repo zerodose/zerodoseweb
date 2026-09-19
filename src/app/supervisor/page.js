@@ -1,452 +1,1210 @@
+// // // // "use client";
+
+// // // // import { useEffect, useMemo, useState } from "react";
+
+// // // // import { getCampaigns } from "@/api/campaignApi";
+// // // // import { getSupervisorTeamSummary } from "@/api/dashboardApi";
+// // // // import { getActiveSupervisorTeamCount } from "@/api/userApi";
+// // // // import SupervisorSummaryCards from "@/components/supervisor/SupervisorSummaryCards";
+// // // // import SupervisorActions from "@/components/supervisor/SupervisorActions";
+// // // // import CampaignTabs from "@/components/supervisor/CampaignTabs";
+// // // // import { getPendingZerodoseCount } from "@/api/zerodoseApprovalApi";
+// // // // import PendingApprovalButton from "@/components/ucmo/PendingApprovalButton";
+// // // // import CurrentCampaignSummery from "@/components/supervisor/CurrentCampaignSummery";
+// // // // import PreviousCampaignsSummery from "@/components/supervisor/PreviousCampaignsSummery";
+
+// // // // export default function Page() {
+// // // //   const [activeTab, setActiveTab] = useState("current");
+// // // //   const [activeTeamCount, setActiveTeamCount] = useState(0);
+// // // //   const [campaigns, setCampaigns] = useState([]);
+// // // //   const [teamSummary, setTeamSummary] = useState([]);
+// // // //   const [authUser, setAuthUser] = useState(null);
+// // // //   const [loading, setLoading] = useState(true);
+// // // //   const [error, setError] = useState("");
+
+// // // //   const [pendingApprovals, setPendingApprovals] = useState(0);
+// // // //   const [pendingApprovalsLoading, setPendingApprovalsLoading] = useState(true);
+
+// // // //   const getCampaignStatus = (campaign) => {
+// // // //     if (!campaign?.startDate || !campaign?.endDate) {
+// // // //       return "previous";
+// // // //     }
+
+// // // //     const now = new Date();
+
+// // // //     const startDate = new Date(campaign.startDate);
+// // // //     const endDate = new Date(campaign.endDate);
+
+// // // //     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+// // // //     const start = new Date(
+// // // //       startDate.getFullYear(),
+// // // //       startDate.getMonth(),
+// // // //       startDate.getDate(),
+// // // //     );
+
+// // // //     const end = new Date(
+// // // //       endDate.getFullYear(),
+// // // //       endDate.getMonth(),
+// // // //       endDate.getDate(),
+// // // //     );
+
+// // // //     if (today < start) {
+// // // //       return "upcoming";
+// // // //     }
+
+// // // //     if (today >= start && today <= end) {
+// // // //       return "current";
+// // // //     }
+
+// // // //     return "previous";
+// // // //   };
+
+// // // //   /*
+// // // //    * ============================================================
+// // // //    * CAMPAIGNS + TEAM SUMMARY
+// // // //    * ============================================================
+// // // //    */
+// // // //   useEffect(() => {
+// // // //     const fetchSupervisorData = async () => {
+// // // //       try {
+// // // //         setLoading(true);
+// // // //         setError("");
+
+// // // //         const storedAuthUser = JSON.parse(
+// // // //           localStorage.getItem("authUser") || "{}",
+// // // //         );
+// // // //         setAuthUser(storedAuthUser);
+// // // //         const supervisorId = storedAuthUser?.id;
+
+// // // //         const [teamCountResponse, campaignsResponse, summaryResponse] =
+// // // //           await Promise.all([
+// // // //             getActiveSupervisorTeamCount(supervisorId),
+// // // //             getCampaigns(),
+// // // //             getSupervisorTeamSummary(),
+// // // //           ]);
+
+// // // //         if (!campaignsResponse?.success) {
+// // // //           throw new Error(
+// // // //             campaignsResponse?.message || "Failed to fetch campaigns.",
+// // // //           );
+// // // //         }
+
+// // // //         if (!summaryResponse?.success) {
+// // // //           throw new Error(
+// // // //             summaryResponse?.message ||
+// // // //               "Failed to fetch supervisor team summary.",
+// // // //           );
+// // // //         }
+
+// // // //         setCampaigns(campaignsResponse.data || []);
+// // // //         setTeamSummary(summaryResponse.data || []);
+// // // //         setActiveTeamCount(teamCountResponse.count || 0);
+// // // //       } catch (error) {
+// // // //         console.error("Supervisor data fetch error:", error);
+
+// // // //         setError(error?.message || "Failed to load supervisor dashboard.");
+// // // //       } finally {
+// // // //         setLoading(false);
+// // // //       }
+// // // //     };
+
+// // // //     fetchSupervisorData();
+// // // //   }, []);
+
+// // // //   /*
+// // // //    * ============================================================
+// // // //    * PENDING ZERODOSE APPROVAL COUNT
+// // // //    * ============================================================
+// // // //    */
+// // // //   useEffect(() => {
+// // // //     const fetchPendingApprovals = async () => {
+// // // //       try {
+// // // //         setPendingApprovalsLoading(true);
+
+// // // //         const storedAuthUser = JSON.parse(
+// // // //           localStorage.getItem("authUser") || "{}",
+// // // //         );
+
+// // // //         if (!storedAuthUser?.id) {
+// // // //           setPendingApprovals(0);
+// // // //           return;
+// // // //         }
+
+// // // //         const supervisorId = String(storedAuthUser.id);
+
+// // // //         const response = await getPendingZerodoseCount(supervisorId);
+
+// // // //         if (!response?.success) {
+// // // //           setPendingApprovals(0);
+// // // //           return;
+// // // //         }
+
+// // // //         setPendingApprovals(response.count || 0);
+// // // //       } catch (error) {
+// // // //         console.error("Pending Zerodose count error:", error);
+// // // //         setPendingApprovals(0);
+// // // //       } finally {
+// // // //         setPendingApprovalsLoading(false);
+// // // //       }
+// // // //     };
+
+// // // //     fetchPendingApprovals();
+// // // //   }, []);
+
+// // // //   /*
+// // // //    * ============================================================
+// // // //    * NORMALIZED CAMPAIGNS
+// // // //    * ============================================================
+// // // //    */
+// // // //   const normalizedCampaigns = useMemo(() => {
+// // // //     return campaigns.map((campaign) => ({
+// // // //       ...campaign,
+// // // //       campaignStatus: getCampaignStatus(campaign),
+// // // //     }));
+// // // //   }, [campaigns]);
+
+// // // //   const currentCampaign = useMemo(() => {
+// // // //     return (
+// // // //       normalizedCampaigns.find(
+// // // //         (campaign) => campaign.campaignStatus === "current",
+// // // //       ) || null
+// // // //     );
+// // // //   }, [normalizedCampaigns]);
+
+// // // //   const previousCampaigns = useMemo(() => {
+// // // //     return normalizedCampaigns
+// // // //       .filter((campaign) => campaign.campaignStatus === "previous")
+// // // //       .sort((a, b) => {
+// // // //         const dateA = new Date(a.startDate).getTime();
+// // // //         const dateB = new Date(b.startDate).getTime();
+
+// // // //         return dateB - dateA;
+// // // //       });
+// // // //   }, [normalizedCampaigns]);
+
+// // // //   /*
+// // // //    * ============================================================
+// // // //    * TEAM SUMMARY
+// // // //    *
+// // // //    * Expected API response:
+// // // //    *
+// // // //    * {
+// // // //    *   teamNumber: 1,
+// // // //    *   teamLeader: {
+// // // //    *     _id: "...",
+// // // //    *     name: "Ali"
+// // // //    *   },
+// // // //    *   teamMember: {
+// // // //    *     _id: "...",
+// // // //    *     name: "Ahmed"
+// // // //    *   },
+// // // //    *   recorded: 100,
+// // // //    *   visited: 70,
+// // // //    *   covered: 60,
+// // // //    *   campaign: {
+// // // //    *     _id: "...",
+// // // //    *     name: "NID"
+// // // //    *   }
+// // // //    * }
+// // // //    *
+// // // //    * ============================================================
+// // // //    */
+
+// // // //   const activeTeams = useMemo(() => {
+// // // //     if (!currentCampaign) {
+// // // //       return [];
+// // // //     }
+
+// // // //     const currentCampaignId = String(currentCampaign._id || currentCampaign.id);
+
+// // // //     const teamsMap = new Map();
+
+// // // //     teamSummary.forEach((record) => {
+// // // //       const recordCampaignId =
+// // // //         record.campaign?._id || record.campaign?.id || record.campaign;
+
+// // // //       if (!recordCampaignId || String(recordCampaignId) !== currentCampaignId) {
+// // // //         return;
+// // // //       }
+
+// // // //       if (record.teamNumber === null || record.teamNumber === undefined) {
+// // // //         return;
+// // // //       }
+
+// // // //       const teamNumber = String(record.teamNumber);
+
+// // // //       if (!teamsMap.has(teamNumber)) {
+// // // //         teamsMap.set(teamNumber, {
+// // // //           teamNumber: record.teamNumber,
+// // // //           teamLeader: record.teamLeader || null,
+// // // //           teamMember: record.teamMember || null,
+// // // //           unionCouncil: record.unionCouncil || null,
+// // // //         });
+// // // //       }
+// // // //     });
+
+// // // //     return Array.from(teamsMap.values()).sort(
+// // // //       (a, b) => Number(a.teamNumber) - Number(b.teamNumber),
+// // // //     );
+// // // //   }, [teamSummary, currentCampaign]);
+
+// // // //   /*
+// // // //    * ============================================================
+// // // //    * CURRENT CAMPAIGN TEAM SUMMARY
+// // // //    * ============================================================
+// // // //    */
+// // // //   const currentData = useMemo(() => {
+// // // //     if (!currentCampaign) {
+// // // //       return [];
+// // // //     }
+
+// // // //     const currentCampaignId = String(currentCampaign._id || currentCampaign.id);
+
+// // // //     const teamsMap = new Map();
+
+// // // //     teamSummary.forEach((record) => {
+// // // //       const teamCampaignId =
+// // // //         record.campaign?._id || record.campaign?.id || record.campaign;
+
+// // // //       if (!teamCampaignId || String(teamCampaignId) !== currentCampaignId) {
+// // // //         return;
+// // // //       }
+
+// // // //       if (record.teamNumber === null || record.teamNumber === undefined) {
+// // // //         return;
+// // // //       }
+
+// // // //       const teamNumber = String(record.teamNumber);
+
+// // // //       if (!teamsMap.has(teamNumber)) {
+// // // //         teamsMap.set(teamNumber, {
+// // // //           teamNumber: record.teamNumber,
+// // // //           teamLeader: record.teamLeader || null,
+// // // //           teamMember: record.teamMember || null,
+// // // //           unionCouncil: record.unionCouncil || null,
+// // // //           campaign: record.campaign || currentCampaign,
+
+// // // //           recorded: 0,
+// // // //           visited: 0,
+// // // //           covered: 0,
+// // // //         });
+// // // //       }
+
+// // // //       const team = teamsMap.get(teamNumber);
+
+// // // //       const status = String(record.vaccinationStatus || "").toLowerCase();
+
+// // // //       /*
+// // // //        * Every Zerodose record is a recorded Zerodose.
+// // // //        */
+// // // //       team.recorded += 1;
+
+// // // //       /*
+// // // //        * Visited and Covered are status-based counts.
+// // // //        */
+// // // //       if (status === "visited") {
+// // // //         team.visited += 1;
+// // // //       }
+
+// // // //       if (status === "covered") {
+// // // //         team.covered += 1;
+// // // //       }
+// // // //     });
+
+// // // //     return Array.from(teamsMap.values()).sort(
+// // // //       (a, b) => Number(a.teamNumber) - Number(b.teamNumber),
+// // // //     );
+// // // //   }, [teamSummary, currentCampaign]);
+
+// // // //   /*
+// // // //    * ============================================================
+// // // //    * PREVIOUS CAMPAIGN TEAM SUMMARY
+// // // //    * ============================================================
+// // // //    */
+// // // //   const previousData = useMemo(() => {
+// // // //     if (!previousCampaigns.length) {
+// // // //       return [];
+// // // //     }
+
+// // // //     const previousCampaignIds = new Set(
+// // // //       previousCampaigns
+// // // //         .map((campaign) => String(campaign._id || campaign.id))
+// // // //         .filter(Boolean),
+// // // //     );
+
+// // // //     return teamSummary
+// // // //       .filter((team) => {
+// // // //         const teamCampaignId =
+// // // //           team.campaign?._id || team.campaign?.id || team.campaign;
+
+// // // //         return (
+// // // //           teamCampaignId && previousCampaignIds.has(String(teamCampaignId))
+// // // //         );
+// // // //       })
+// // // //       .sort((a, b) => {
+// // // //         const dateA = new Date(a.campaign?.startDate || 0).getTime();
+
+// // // //         const dateB = new Date(b.campaign?.startDate || 0).getTime();
+
+// // // //         return dateB - dateA;
+// // // //       });
+// // // //   }, [teamSummary, previousCampaigns]);
+
+// // // //   /*
+// // // //    * ============================================================
+// // // //    * DASHBOARD COUNTS
+// // // //    * ============================================================
+// // // //    */
+// // // //   const totalRecorded = useMemo(() => {
+// // // //     return currentData.reduce(
+// // // //       (total, team) => total + Number(team.recorded || 0),
+// // // //       0,
+// // // //     );
+// // // //   }, [currentData]);
+
+// // // //   const totalVisited = useMemo(() => {
+// // // //     return currentData.reduce(
+// // // //       (total, team) => total + Number(team.visited || 0),
+// // // //       0,
+// // // //     );
+// // // //   }, [currentData]);
+
+// // // //   const totalCovered = useMemo(() => {
+// // // //     return currentData.reduce(
+// // // //       (total, team) => total + Number(team.covered || 0),
+// // // //       0,
+// // // //     );
+// // // //   }, [currentData]);
+
+// // // //   /*
+// // // //    * ============================================================
+// // // //    * UNION COUNCIL
+// // // //    * ============================================================
+// // // //    */
+// // // //   const currentUC = useMemo(() => {
+// // // //     return (
+// // // //       teamSummary.find((team) => team.unionCouncil?.name)?.unionCouncil?.name ||
+// // // //       "-"
+// // // //     );
+// // // //   }, [teamSummary]);
+
+// // // //   return (
+// // // //     <div className="min-h-full">
+// // // //       <div className="mb-4 flex flex-col md:mb-6">
+// // // //         <div className="mb-4 flex items-center justify-between">
+// // // //           <h1 className="text-text text-2xl font-bold md:text-3xl">
+// // // //             Supervisor
+// // // //           </h1>
+
+// // // //           <PendingApprovalButton
+// // // //             link="/supervisor/zerodoseApproval"
+// // // //             name="Zerodose Approval"
+// // // //             pendingApprovals={pendingApprovals}
+// // // //             loading={pendingApprovalsLoading}
+// // // //           />
+// // // //         </div>
+
+// // // //         <p className="text-text-secondary mt-1 text-sm">
+// // // //           Manage teams and campaign-wise Zerodose records
+// // // //         </p>
+// // // //       </div>
+
+// // // //       {error && (
+// // // //         <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+// // // //           {error}
+// // // //         </div>
+// // // //       )}
+
+// // // //       <SupervisorSummaryCards
+// // // //         totalTeams={activeTeamCount}
+// // // //         recordedZerodose={totalRecorded}
+// // // //         visitedZerodose={totalVisited}
+// // // //         coveredZerodose={totalCovered}
+// // // //       />
+
+// // // //       <SupervisorActions />
+
+// // // //       <CampaignTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+
+// // // //       {activeTab === "current" && (
+// // // //         <CurrentCampaignSummery
+// // // //           campaign={currentCampaign}
+// // // //           data={currentData}
+// // // //           activeTeams={activeTeams}
+// // // //           loading={loading}
+// // // //           authUser={authUser}
+// // // //         />
+// // // //       )}
+
+// // // //       {activeTab === "previous" && (
+// // // //         <PreviousCampaignsSummery
+// // // //           campaigns={previousCampaigns}
+// // // //           data={previousData}
+// // // //           loading={loading}
+// // // //         />
+// // // //       )}
+// // // //     </div>
+// // // //   );
+// // // // }
+
+// // // "use client";
+
+// // // import { useEffect, useState } from "react";
+
+// // // import { getSupervisorSummary } from "@/api/dashboardApi";
+// // // import { getPendingZerodoseCount } from "@/api/zerodoseApprovalApi";
+
+// // // import SupervisorSummaryCards from "@/components/supervisor/SupervisorSummaryCards";
+// // // import SupervisorActions from "@/components/supervisor/SupervisorActions";
+// // // import CampaignTabs from "@/components/supervisor/CampaignTabs";
+// // // import PendingApprovalButton from "@/components/ucmo/PendingApprovalButton";
+// // // import CurrentCampaignSummery from "@/components/supervisor/CurrentCampaignSummery";
+// // // import PreviousCampaignsSummery from "@/components/supervisor/PreviousCampaignsSummery";
+// // // import ZerodoseStats from "@/components/worker/ZerodoseStats";
+
+// // // export default function Page() {
+// // //   const [activeTab, setActiveTab] = useState("current");
+
+// // //   const [dashboardData, setDashboardData] = useState({
+// // //     totalTeams: 0,
+// // //     recordedZerodose: 0,
+// // //     visitedZerodose: 0,
+// // //     coveredZerodose: 0,
+// // //     currentCampaign: null,
+// // //     teams: [],
+// // //   });
+
+// // //   const [loading, setLoading] = useState(true);
+// // //   const [error, setError] = useState("");
+
+// // //   const [pendingApprovals, setPendingApprovals] = useState(0);
+// // //   const [pendingApprovalsLoading, setPendingApprovalsLoading] = useState(true);
+
+// // //   // ============================================================
+// // //   // SUPERVISOR DASHBOARD
+// // //   // ============================================================
+
+// // //   useEffect(() => {
+// // //     let cancelled = false;
+
+// // //     const fetchSupervisorData = async () => {
+// // //       try {
+// // //         setLoading(true);
+// // //         setError("");
+
+// // //         const response = await getSupervisorSummary();
+
+// // //         console.log("Supervisor dashboard response:", response);
+
+// // //         if (!response?.success) {
+// // //           throw new Error(
+// // //             response?.message || "Failed to fetch supervisor dashboard.",
+// // //           );
+// // //         }
+
+// // //         const data = response?.data || {};
+
+// // //         if (cancelled) return;
+
+// // //         setDashboardData({
+// // //           totalTeams: Number(data.totalTeams || 0),
+
+// // //           recordedZerodose: Number(data.recordedZerodose || 0),
+
+// // //           visitedZerodose: Number(data.visitedZerodose || 0),
+
+// // //           coveredZerodose: Number(data.coveredZerodose || 0),
+
+// // //           currentCampaign: data.currentCampaign || null,
+
+// // //           teams: Array.isArray(data.teams)
+// // //             ? data.teams.map((team) => ({
+// // //                 teamNumber: Number(team.teamNumber || 0),
+
+// // //                 teamLeader: {
+// // //                   name: team.teamLeader?.name || "Not assigned",
+// // //                   userId: team.teamLeader?.userId || null,
+// // //                   workerRole: team.teamLeader?.workerRole || "teamLeader",
+// // //                 },
+
+// // //                 teamMember: {
+// // //                   name: team.teamMember?.name || "Not assigned",
+// // //                   userId: team.teamMember?.userId || null,
+// // //                   workerRole: team.teamMember?.workerRole || "teamMember",
+// // //                 },
+
+// // //                 recorded: Number(team.recorded || 0),
+
+// // //                 visited: Number(team.visited || 0),
+
+// // //                 covered: Number(team.covered || 0),
+// // //               }))
+// // //             : [],
+// // //         });
+// // //       } catch (error) {
+// // //         if (cancelled) return;
+
+// // //         console.error("Supervisor dashboard fetch error:", error);
+
+// // //         setError(error?.message || "Failed to load supervisor dashboard.");
+
+// // //         setDashboardData({
+// // //           totalTeams: 0,
+// // //           recordedZerodose: 0,
+// // //           visitedZerodose: 0,
+// // //           coveredZerodose: 0,
+// // //           currentCampaign: null,
+// // //           teams: [],
+// // //         });
+// // //       } finally {
+// // //         if (!cancelled) {
+// // //           setLoading(false);
+// // //         }
+// // //       }
+// // //     };
+
+// // //     fetchSupervisorData();
+
+// // //     return () => {
+// // //       cancelled = true;
+// // //     };
+// // //   }, []);
+
+// // //   // ============================================================
+// // //   // PENDING ZERODOSE APPROVALS
+// // //   // ============================================================
+
+// // //   useEffect(() => {
+// // //     let cancelled = false;
+
+// // //     const fetchPendingApprovals = async () => {
+// // //       try {
+// // //         setPendingApprovalsLoading(true);
+
+// // //         let supervisorId = null;
+
+// // //         try {
+// // //           const storedAuthUser = localStorage.getItem("authUser");
+
+// // //           if (storedAuthUser) {
+// // //             const parsedUser = JSON.parse(storedAuthUser);
+
+// // //             supervisorId = parsedUser?.id ? String(parsedUser.id) : null;
+// // //           }
+// // //         } catch (error) {
+// // //           console.error("Auth user parse error:", error);
+// // //         }
+
+// // //         if (!supervisorId) {
+// // //           if (!cancelled) {
+// // //             setPendingApprovals(0);
+// // //           }
+
+// // //           return;
+// // //         }
+
+// // //         const response = await getPendingZerodoseCount(supervisorId);
+
+// // //         if (cancelled) return;
+
+// // //         if (!response?.success) {
+// // //           setPendingApprovals(0);
+// // //           return;
+// // //         }
+
+// // //         setPendingApprovals(Number(response.count || 0));
+// // //       } catch (error) {
+// // //         if (cancelled) return;
+
+// // //         console.error("Pending Zerodose count error:", error);
+
+// // //         setPendingApprovals(0);
+// // //       } finally {
+// // //         if (!cancelled) {
+// // //           setPendingApprovalsLoading(false);
+// // //         }
+// // //       }
+// // //     };
+
+// // //     fetchPendingApprovals();
+
+// // //     return () => {
+// // //       cancelled = true;
+// // //     };
+// // //   }, []);
+
+// // //   // ============================================================
+// // //   // CURRENT CAMPAIGN DATA
+// // //   // ============================================================
+
+// // //   const currentCampaign = dashboardData.currentCampaign;
+
+// // //   const currentData = dashboardData.teams;
+
+// // //   const activeTeams = dashboardData.teams;
+
+// // //   // ============================================================
+// // //   // PREVIOUS CAMPAIGNS
+// // //   // ============================================================
+
+// // //   const previousCampaigns = [];
+
+// // //   const previousData = [];
+
+// // //   // ============================================================
+// // //   // UI
+// // //   // ============================================================
+
+// // //   return (
+// // //     <div className="min-h-full">
+// // //       <div className="mx-auto w-full max-w-7xl">
+// // //         {/* Header */}
+// // //         <div className="mb-4 flex flex-col md:mb-6">
+// // //           <div className="mb-4 flex items-center justify-between gap-4">
+// // //             <h1 className="text-text text-2xl font-bold md:text-3xl">
+// // //               Supervisor
+// // //             </h1>
+
+// // //             <PendingApprovalButton
+// // //               link="/supervisor/zerodoseApproval"
+// // //               name="Zerodose Approval"
+// // //               pendingApprovals={pendingApprovals}
+// // //               loading={pendingApprovalsLoading}
+// // //             />
+// // //           </div>
+
+// // //           <p className="text-text-secondary mt-1 text-sm">
+// // //             Manage teams and campaign-wise Zerodose records
+// // //           </p>
+// // //         </div>
+
+// // //         {/* Error */}
+// // //         {error && (
+// // //           <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+// // //             {error}
+// // //           </div>
+// // //         )}
+
+// // //         <ZerodoseStats summary={summary} loading={loadingSummary} />
+// // //         {/* Actions */}
+// // //         <SupervisorActions />
+
+// // //         {/* Campaign Tabs */}
+// // //         <CampaignTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+
+// // //         {/* Current Campaign */}
+// // //         {activeTab === "current" && (
+// // //           <CurrentCampaignSummery
+// // //             campaign={currentCampaign}
+// // //             data={currentData}
+// // //             activeTeams={activeTeams}
+// // //             loading={loading}
+// // //             mode="supervisor"
+// // //           />
+// // //         )}
+
+// // //         {/* Previous Campaigns */}
+// // //         {activeTab === "previous" && (
+// // //           <PreviousCampaignsSummery
+// // //             campaigns={previousCampaigns}
+// // //             data={previousData}
+// // //             loading={loading}
+// // //           />
+// // //         )}
+// // //       </div>
+// // //     </div>
+// // //   );
+// // // }
+
+// // "use client";
+
+// // import { useEffect, useState } from "react";
+
+// // import { getSupervisorSummary } from "@/api/dashboardApi";
+// // import { getPendingZerodoseCount } from "@/api/zerodoseApprovalApi";
+
+// // import SupervisorActions from "@/components/supervisor/SupervisorActions";
+// // import CampaignTabs from "@/components/supervisor/CampaignTabs";
+// // import PendingApprovalButton from "@/components/ucmo/PendingApprovalButton";
+// // import CurrentCampaignSummery from "@/components/supervisor/CurrentCampaignSummery";
+// // import PreviousCampaignsSummery from "@/components/supervisor/PreviousCampaignsSummery";
+// // import ZerodoseStats from "@/components/worker/ZerodoseStats";
+
+// // export default function Page() {
+// //   const [activeTab, setActiveTab] = useState("current");
+
+// //   const [dashboardData, setDashboardData] = useState({
+// //     // totalTeams: 0,
+// //     recordedZerodose: 0,
+// //     visitedZerodose: 0,
+// //     coveredZerodose: 0,
+// //     // currentCampaign: null,
+// //     // teams: [],
+// //   });
+
+// //   const [loading, setLoading] = useState(true);
+// //   const [error, setError] = useState("");
+
+// //   const [summary, setSummary] = useState({
+// //     recorded: 0,
+// //     visited: 0,
+// //     covered: 0,
+// //   });
+
+// //   const [loadingSummary, setLoadingSummary] = useState(true);
+
+// //   const [pendingApprovals, setPendingApprovals] = useState(0);
+// //   const [pendingApprovalsLoading, setPendingApprovalsLoading] = useState(true);
+
+// //   useEffect(() => {
+// //     let cancelled = false;
+
+// //     const fetchSupervisorData = async () => {
+// //       try {
+// //         setLoading(true);
+// //         setLoadingSummary(true);
+// //         setError("");
+
+// //         const response = await getSupervisorSummary();
+
+// //         console.log("Supervisor dashboard response:", response);
+
+// //         if (!response?.success) {
+// //           throw new Error(
+// //             response?.message || "Failed to fetch supervisor dashboard.",
+// //           );
+// //         }
+
+// //         const data = response?.data || {};
+
+// //         if (cancelled) {
+// //           return;
+// //         }
+
+// //         setSummary({
+// //           recorded: Number(data.recordCount || 0),
+// //           visited: Number(data.visitCount || 0),
+// //           covered: Number(data.coveredCount || 0),
+// //         });
+
+// //         setLoadingSummary(false);
+
+// //         // ======================================================
+// //         // SUPERVISOR DASHBOARD DATA
+// //         // ======================================================
+
+// //         setDashboardData({
+// //           // totalTeams: Number(data.totalTeams || 0),
+
+// //           recordedZerodose: Number(data.recordedZerodose || 0),
+
+// //           visitedZerodose: Number(data.visitedZerodose || 0),
+
+// //           coveredZerodose: Number(data.coveredZerodose || 0),
+
+// //           // currentCampaign: data.currentCampaign || null,
+// //         });
+// //       } catch (error) {
+// //         if (cancelled) {
+// //           return;
+// //         }
+
+// //         console.error("Supervisor dashboard fetch error:", error);
+
+// //         setError(error?.message || "Failed to load supervisor dashboard.");
+
+// //         setSummary({
+// //           recorded: 0,
+// //           visited: 0,
+// //           covered: 0,
+// //         });
+
+// //         setDashboardData({
+// //           recordedZerodose: 0,
+// //           visitedZerodose: 0,
+// //           coveredZerodose: 0,
+// //         });
+
+// //         setLoadingSummary(false);
+// //       } finally {
+// //         if (!cancelled) {
+// //           setLoading(false);
+// //         }
+// //       }
+// //     };
+
+// //     fetchSupervisorData();
+
+// //     return () => {
+// //       cancelled = true;
+// //     };
+// //   }, []);
+
+// //   // ============================================================
+// //   // PENDING ZERODOSE APPROVALS
+// //   // ============================================================
+
+// //   useEffect(() => {
+// //     let cancelled = false;
+
+// //     const fetchPendingApprovals = async () => {
+// //       try {
+// //         setPendingApprovalsLoading(true);
+
+// //         let supervisorId = null;
+
+// //         try {
+// //           const storedAuthUser = localStorage.getItem("authUser");
+
+// //           if (storedAuthUser) {
+// //             const parsedUser = JSON.parse(storedAuthUser);
+
+// //             supervisorId = parsedUser?.id ? String(parsedUser.id) : null;
+// //           }
+// //         } catch (error) {
+// //           console.error("Auth user parse error:", error);
+// //         }
+
+// //         if (!supervisorId) {
+// //           if (!cancelled) {
+// //             setPendingApprovals(0);
+// //           }
+
+// //           return;
+// //         }
+
+// //         const response = await getPendingZerodoseCount(supervisorId);
+
+// //         if (cancelled) {
+// //           return;
+// //         }
+
+// //         if (!response?.success) {
+// //           setPendingApprovals(0);
+// //           return;
+// //         }
+
+// //         setPendingApprovals(Number(response.count || 0));
+// //       } catch (error) {
+// //         if (cancelled) {
+// //           return;
+// //         }
+
+// //         console.error("Pending Zerodose count error:", error);
+
+// //         setPendingApprovals(0);
+// //       } finally {
+// //         if (!cancelled) {
+// //           setPendingApprovalsLoading(false);
+// //         }
+// //       }
+// //     };
+
+// //     fetchPendingApprovals();
+
+// //     return () => {
+// //       cancelled = true;
+// //     };
+// //   }, []);
+
+// //   // ============================================================
+// //   // CURRENT CAMPAIGN DATA
+// //   // ============================================================
+
+// //   const currentCampaign = dashboardData.currentCampaign;
+
+// //   const currentData = dashboardData.teams;
+
+// //   const activeTeams = dashboardData.teams;
+
+// //   // ============================================================
+// //   // PREVIOUS CAMPAIGNS
+// //   // ============================================================
+
+// //   const previousCampaigns = [];
+
+// //   const previousData = [];
+
+// //   // ============================================================
+// //   // UI
+// //   // ============================================================
+
+// //   return (
+// //     <div className="min-h-full">
+// //       <div className="mx-auto w-full max-w-7xl">
+// //         {/* Header */}
+
+// //         <div className="mb-4 flex flex-col md:mb-6">
+// //           <div className="mb-4 flex items-center justify-between gap-4">
+// //             <h1 className="text-text text-2xl font-bold md:text-3xl">
+// //               Supervisor
+// //             </h1>
+
+// //             <PendingApprovalButton
+// //               link="/supervisor/zerodoseApproval"
+// //               name="Zerodose Approval"
+// //               pendingApprovals={pendingApprovals}
+// //               loading={pendingApprovalsLoading}
+// //             />
+// //           </div>
+
+// //           <p className="text-text-secondary mt-1 text-sm">
+// //             Manage teams and campaign-wise Zerodose records
+// //           </p>
+// //         </div>
+
+// //         {/* Error */}
+
+// //         {error && (
+// //           <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+// //             {error}
+// //           </div>
+// //         )}
+
+// //         {/* Overall Zerodose Stats */}
+
+// //         <ZerodoseStats summary={summary} loading={loadingSummary} />
+
+// //         {/* Actions */}
+
+// //         <SupervisorActions />
+
+// //         {/* Campaign Tabs */}
+
+// //         <CampaignTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+
+// //         {/* Current Campaign */}
+
+// //         {activeTab === "current" && (
+// //           <CurrentCampaignSummery
+// //             campaign={currentCampaign}
+// //             data={currentData}
+// //             activeTeams={activeTeams}
+// //             loading={loading}
+// //             mode="supervisor"
+// //           />
+// //         )}
+
+// //         {/* Previous Campaigns */}
+
+// //         {activeTab === "previous" && (
+// //           <PreviousCampaignsSummery
+// //             campaigns={previousCampaigns}
+// //             data={previousData}
+// //             loading={loading}
+// //           />
+// //         )}
+// //       </div>
+// //     </div>
+// //   );
+// // }
+
 // "use client";
 
-// import { useEffect, useMemo, useState } from "react";
+// import { useEffect, useState } from "react";
 
-// import { getCampaigns } from "@/api/campaignApi";
-// import { getSupervisorTeamSummary } from "@/api/dashboardApi";
-// import { getActiveSupervisorTeamCount } from "@/api/userApi";
-// import SupervisorSummaryCards from "@/components/supervisor/SupervisorSummaryCards";
-// import SupervisorActions from "@/components/supervisor/SupervisorActions";
-// import CampaignTabs from "@/components/supervisor/CampaignTabs";
+// import { getSupervisorSummary } from "@/api/dashboardApi";
 // import { getPendingZerodoseCount } from "@/api/zerodoseApprovalApi";
+
+// import SupervisorActions from "@/components/supervisor/SupervisorActions";
 // import PendingApprovalButton from "@/components/ucmo/PendingApprovalButton";
-// import CurrentCampaignSummery from "@/components/supervisor/CurrentCampaignSummery";
-// import PreviousCampaignsSummery from "@/components/supervisor/PreviousCampaignsSummery";
+// import ZerodoseStats from "@/components/worker/ZerodoseStats";
+// import SupervisorCampaignSection from "@/components/supervisor/SupervisorCampaignSection";
 
 // export default function Page() {
-//   const [activeTab, setActiveTab] = useState("current");
-//   const [activeTeamCount, setActiveTeamCount] = useState(0);
-//   const [campaigns, setCampaigns] = useState([]);
-//   const [teamSummary, setTeamSummary] = useState([]);
-//   const [authUser, setAuthUser] = useState(null);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState("");
+//   const [summary, setSummary] = useState({
+//     recorded: 0,
+//     visited: 0,
+//     covered: 0,
+//   });
 
+//   const [loadingSummary, setLoadingSummary] = useState(true);
+//   const [error, setError] = useState("");
 //   const [pendingApprovals, setPendingApprovals] = useState(0);
 //   const [pendingApprovalsLoading, setPendingApprovalsLoading] = useState(true);
 
-//   const getCampaignStatus = (campaign) => {
-//     if (!campaign?.startDate || !campaign?.endDate) {
-//       return "previous";
-//     }
+//   // ============================================================
+//   // GET SUPERVISOR SUMMARY
+//   // ============================================================
 
-//     const now = new Date();
-
-//     const startDate = new Date(campaign.startDate);
-//     const endDate = new Date(campaign.endDate);
-
-//     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-//     const start = new Date(
-//       startDate.getFullYear(),
-//       startDate.getMonth(),
-//       startDate.getDate(),
-//     );
-
-//     const end = new Date(
-//       endDate.getFullYear(),
-//       endDate.getMonth(),
-//       endDate.getDate(),
-//     );
-
-//     if (today < start) {
-//       return "upcoming";
-//     }
-
-//     if (today >= start && today <= end) {
-//       return "current";
-//     }
-
-//     return "previous";
-//   };
-
-//   /*
-//    * ============================================================
-//    * CAMPAIGNS + TEAM SUMMARY
-//    * ============================================================
-//    */
 //   useEffect(() => {
-//     const fetchSupervisorData = async () => {
+//     let cancelled = false;
+
+//     const fetchSupervisorSummary = async () => {
 //       try {
-//         setLoading(true);
+//         setLoadingSummary(true);
 //         setError("");
 
-//         const storedAuthUser = JSON.parse(
-//           localStorage.getItem("authUser") || "{}",
-//         );
-//         setAuthUser(storedAuthUser);
-//         const supervisorId = storedAuthUser?.id;
+//         const response = await getSupervisorSummary();
 
-//         const [teamCountResponse, campaignsResponse, summaryResponse] =
-//           await Promise.all([
-//             getActiveSupervisorTeamCount(supervisorId),
-//             getCampaigns(),
-//             getSupervisorTeamSummary(),
-//           ]);
+//         console.log("Supervisor summary response:", response);
 
-//         if (!campaignsResponse?.success) {
+//         if (!response?.success) {
 //           throw new Error(
-//             campaignsResponse?.message || "Failed to fetch campaigns.",
+//             response?.message || "Failed to fetch supervisor summary.",
 //           );
 //         }
 
-//         if (!summaryResponse?.success) {
-//           throw new Error(
-//             summaryResponse?.message ||
-//               "Failed to fetch supervisor team summary.",
-//           );
+//         const data = response?.data || {};
+
+//         if (cancelled) {
+//           return;
 //         }
 
-//         setCampaigns(campaignsResponse.data || []);
-//         setTeamSummary(summaryResponse.data || []);
-//         setActiveTeamCount(teamCountResponse.count || 0);
+//         setSummary({
+//           recorded: Number(data.recordCount || 0),
+//           visited: Number(data.visitCount || 0),
+//           covered: Number(data.coveredCount || 0),
+//         });
 //       } catch (error) {
-//         console.error("Supervisor data fetch error:", error);
+//         if (cancelled) {
+//           return;
+//         }
 
-//         setError(error?.message || "Failed to load supervisor dashboard.");
+//         console.error("Supervisor summary error:", error);
+
+//         setError(error?.message || "Failed to load supervisor summary.");
+
+//         setSummary({
+//           recorded: 0,
+//           visited: 0,
+//           covered: 0,
+//         });
 //       } finally {
-//         setLoading(false);
+//         if (!cancelled) {
+//           setLoadingSummary(false);
+//         }
 //       }
 //     };
 
-//     fetchSupervisorData();
+//     fetchSupervisorSummary();
+
+//     return () => {
+//       cancelled = true;
+//     };
 //   }, []);
 
-//   /*
-//    * ============================================================
-//    * PENDING ZERODOSE APPROVAL COUNT
-//    * ============================================================
-//    */
+//   // ============================================================
+//   // PENDING ZERODOSE APPROVALS
+//   // ============================================================
+
 //   useEffect(() => {
+//     let cancelled = false;
+
 //     const fetchPendingApprovals = async () => {
 //       try {
 //         setPendingApprovalsLoading(true);
 
-//         const storedAuthUser = JSON.parse(
-//           localStorage.getItem("authUser") || "{}",
-//         );
+//         let supervisorId = null;
 
-//         if (!storedAuthUser?.id) {
-//           setPendingApprovals(0);
+//         try {
+//           const storedAuthUser = localStorage.getItem("authUser");
+
+//           if (storedAuthUser) {
+//             const parsedUser = JSON.parse(storedAuthUser);
+
+//             supervisorId = parsedUser?.id ? String(parsedUser.id) : null;
+//           }
+//         } catch (error) {
+//           console.error("Auth user parse error:", error);
+//         }
+
+//         if (!supervisorId) {
+//           if (!cancelled) {
+//             setPendingApprovals(0);
+//           }
+
 //           return;
 //         }
 
-//         const supervisorId = String(storedAuthUser.id);
-
 //         const response = await getPendingZerodoseCount(supervisorId);
+
+//         if (cancelled) {
+//           return;
+//         }
 
 //         if (!response?.success) {
 //           setPendingApprovals(0);
 //           return;
 //         }
 
-//         setPendingApprovals(response.count || 0);
+//         setPendingApprovals(Number(response.count || 0));
 //       } catch (error) {
+//         if (cancelled) {
+//           return;
+//         }
+
 //         console.error("Pending Zerodose count error:", error);
+
 //         setPendingApprovals(0);
 //       } finally {
-//         setPendingApprovalsLoading(false);
+//         if (!cancelled) {
+//           setPendingApprovalsLoading(false);
+//         }
 //       }
 //     };
 
 //     fetchPendingApprovals();
+
+//     return () => {
+//       cancelled = true;
+//     };
 //   }, []);
 
-//   /*
-//    * ============================================================
-//    * NORMALIZED CAMPAIGNS
-//    * ============================================================
-//    */
-//   const normalizedCampaigns = useMemo(() => {
-//     return campaigns.map((campaign) => ({
-//       ...campaign,
-//       campaignStatus: getCampaignStatus(campaign),
-//     }));
-//   }, [campaigns]);
-
-//   const currentCampaign = useMemo(() => {
-//     return (
-//       normalizedCampaigns.find(
-//         (campaign) => campaign.campaignStatus === "current",
-//       ) || null
-//     );
-//   }, [normalizedCampaigns]);
-
-//   const previousCampaigns = useMemo(() => {
-//     return normalizedCampaigns
-//       .filter((campaign) => campaign.campaignStatus === "previous")
-//       .sort((a, b) => {
-//         const dateA = new Date(a.startDate).getTime();
-//         const dateB = new Date(b.startDate).getTime();
-
-//         return dateB - dateA;
-//       });
-//   }, [normalizedCampaigns]);
-
-//   /*
-//    * ============================================================
-//    * TEAM SUMMARY
-//    *
-//    * Expected API response:
-//    *
-//    * {
-//    *   teamNumber: 1,
-//    *   teamLeader: {
-//    *     _id: "...",
-//    *     name: "Ali"
-//    *   },
-//    *   teamMember: {
-//    *     _id: "...",
-//    *     name: "Ahmed"
-//    *   },
-//    *   recorded: 100,
-//    *   visited: 70,
-//    *   covered: 60,
-//    *   campaign: {
-//    *     _id: "...",
-//    *     name: "NID"
-//    *   }
-//    * }
-//    *
-//    * ============================================================
-//    */
-
-//   const activeTeams = useMemo(() => {
-//     if (!currentCampaign) {
-//       return [];
-//     }
-
-//     const currentCampaignId = String(currentCampaign._id || currentCampaign.id);
-
-//     const teamsMap = new Map();
-
-//     teamSummary.forEach((record) => {
-//       const recordCampaignId =
-//         record.campaign?._id || record.campaign?.id || record.campaign;
-
-//       if (!recordCampaignId || String(recordCampaignId) !== currentCampaignId) {
-//         return;
-//       }
-
-//       if (record.teamNumber === null || record.teamNumber === undefined) {
-//         return;
-//       }
-
-//       const teamNumber = String(record.teamNumber);
-
-//       if (!teamsMap.has(teamNumber)) {
-//         teamsMap.set(teamNumber, {
-//           teamNumber: record.teamNumber,
-//           teamLeader: record.teamLeader || null,
-//           teamMember: record.teamMember || null,
-//           unionCouncil: record.unionCouncil || null,
-//         });
-//       }
-//     });
-
-//     return Array.from(teamsMap.values()).sort(
-//       (a, b) => Number(a.teamNumber) - Number(b.teamNumber),
-//     );
-//   }, [teamSummary, currentCampaign]);
-
-//   /*
-//    * ============================================================
-//    * CURRENT CAMPAIGN TEAM SUMMARY
-//    * ============================================================
-//    */
-//   const currentData = useMemo(() => {
-//     if (!currentCampaign) {
-//       return [];
-//     }
-
-//     const currentCampaignId = String(currentCampaign._id || currentCampaign.id);
-
-//     const teamsMap = new Map();
-
-//     teamSummary.forEach((record) => {
-//       const teamCampaignId =
-//         record.campaign?._id || record.campaign?.id || record.campaign;
-
-//       if (!teamCampaignId || String(teamCampaignId) !== currentCampaignId) {
-//         return;
-//       }
-
-//       if (record.teamNumber === null || record.teamNumber === undefined) {
-//         return;
-//       }
-
-//       const teamNumber = String(record.teamNumber);
-
-//       if (!teamsMap.has(teamNumber)) {
-//         teamsMap.set(teamNumber, {
-//           teamNumber: record.teamNumber,
-//           teamLeader: record.teamLeader || null,
-//           teamMember: record.teamMember || null,
-//           unionCouncil: record.unionCouncil || null,
-//           campaign: record.campaign || currentCampaign,
-
-//           recorded: 0,
-//           visited: 0,
-//           covered: 0,
-//         });
-//       }
-
-//       const team = teamsMap.get(teamNumber);
-
-//       const status = String(record.vaccinationStatus || "").toLowerCase();
-
-//       /*
-//        * Every Zerodose record is a recorded Zerodose.
-//        */
-//       team.recorded += 1;
-
-//       /*
-//        * Visited and Covered are status-based counts.
-//        */
-//       if (status === "visited") {
-//         team.visited += 1;
-//       }
-
-//       if (status === "covered") {
-//         team.covered += 1;
-//       }
-//     });
-
-//     return Array.from(teamsMap.values()).sort(
-//       (a, b) => Number(a.teamNumber) - Number(b.teamNumber),
-//     );
-//   }, [teamSummary, currentCampaign]);
-
-//   /*
-//    * ============================================================
-//    * PREVIOUS CAMPAIGN TEAM SUMMARY
-//    * ============================================================
-//    */
-//   const previousData = useMemo(() => {
-//     if (!previousCampaigns.length) {
-//       return [];
-//     }
-
-//     const previousCampaignIds = new Set(
-//       previousCampaigns
-//         .map((campaign) => String(campaign._id || campaign.id))
-//         .filter(Boolean),
-//     );
-
-//     return teamSummary
-//       .filter((team) => {
-//         const teamCampaignId =
-//           team.campaign?._id || team.campaign?.id || team.campaign;
-
-//         return (
-//           teamCampaignId && previousCampaignIds.has(String(teamCampaignId))
-//         );
-//       })
-//       .sort((a, b) => {
-//         const dateA = new Date(a.campaign?.startDate || 0).getTime();
-
-//         const dateB = new Date(b.campaign?.startDate || 0).getTime();
-
-//         return dateB - dateA;
-//       });
-//   }, [teamSummary, previousCampaigns]);
-
-//   /*
-//    * ============================================================
-//    * DASHBOARD COUNTS
-//    * ============================================================
-//    */
-//   const totalRecorded = useMemo(() => {
-//     return currentData.reduce(
-//       (total, team) => total + Number(team.recorded || 0),
-//       0,
-//     );
-//   }, [currentData]);
-
-//   const totalVisited = useMemo(() => {
-//     return currentData.reduce(
-//       (total, team) => total + Number(team.visited || 0),
-//       0,
-//     );
-//   }, [currentData]);
-
-//   const totalCovered = useMemo(() => {
-//     return currentData.reduce(
-//       (total, team) => total + Number(team.covered || 0),
-//       0,
-//     );
-//   }, [currentData]);
-
-//   /*
-//    * ============================================================
-//    * UNION COUNCIL
-//    * ============================================================
-//    */
-//   const currentUC = useMemo(() => {
-//     return (
-//       teamSummary.find((team) => team.unionCouncil?.name)?.unionCouncil?.name ||
-//       "-"
-//     );
-//   }, [teamSummary]);
+//   // ============================================================
+//   // UI
+//   // ============================================================
 
 //   return (
 //     <div className="min-h-full">
-//       <div className="mb-4 flex flex-col md:mb-6">
-//         <div className="mb-4 flex items-center justify-between">
-//           <h1 className="text-text text-2xl font-bold md:text-3xl">
-//             Supervisor
-//           </h1>
+//       <div className="mx-auto w-full max-w-7xl">
+//         {/* Header */}
 
-//           <PendingApprovalButton
-//             link="/supervisor/zerodoseApproval"
-//             name="Zerodose Approval"
-//             pendingApprovals={pendingApprovals}
-//             loading={pendingApprovalsLoading}
-//           />
+//         <div className="mb-4 flex flex-col md:mb-6">
+//           <div className="mb-4 flex items-center justify-between gap-4">
+//             <h1 className="text-text text-2xl font-bold md:text-3xl">
+//               Supervisor
+//             </h1>
+
+//             <PendingApprovalButton
+//               link="/supervisor/zerodoseApproval"
+//               name="Zerodose Approval"
+//               pendingApprovals={pendingApprovals}
+//               loading={pendingApprovalsLoading}
+//             />
+//           </div>
+
+//           <p className="text-text-secondary mt-1 text-sm">
+//             Manage teams and campaign-wise Zerodose records
+//           </p>
 //         </div>
 
-//         <p className="text-text-secondary mt-1 text-sm">
-//           Manage teams and campaign-wise Zerodose records
-//         </p>
+//         {/* Error */}
+
+//         {error && (
+//           <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+//             {error}
+//           </div>
+//         )}
+
+//         {/* Overall Zerodose Stats */}
+
+//         <ZerodoseStats summary={summary} loading={loadingSummary} />
+
+//         {/* Actions */}
+
+//         <SupervisorActions />
+
+//         {/* Campaign Section */}
+
+//         <SupervisorCampaignSection />
 //       </div>
-
-//       {error && (
-//         <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-//           {error}
-//         </div>
-//       )}
-
-//       <SupervisorSummaryCards
-//         totalTeams={activeTeamCount}
-//         recordedZerodose={totalRecorded}
-//         visitedZerodose={totalVisited}
-//         coveredZerodose={totalCovered}
-//       />
-
-//       <SupervisorActions />
-
-//       <CampaignTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-
-//       {activeTab === "current" && (
-//         <CurrentCampaignSummery
-//           campaign={currentCampaign}
-//           data={currentData}
-//           activeTeams={activeTeams}
-//           loading={loading}
-//           authUser={authUser}
-//         />
-//       )}
-
-//       {activeTab === "previous" && (
-//         <PreviousCampaignsSummery
-//           campaigns={previousCampaigns}
-//           data={previousData}
-//           loading={loading}
-//         />
-//       )}
 //     </div>
 //   );
 // }
+
+
 
 "use client";
 
@@ -455,270 +1213,259 @@ import { useEffect, useState } from "react";
 import { getSupervisorSummary } from "@/api/dashboardApi";
 import { getPendingZerodoseCount } from "@/api/zerodoseApprovalApi";
 
-import SupervisorSummaryCards from "@/components/supervisor/SupervisorSummaryCards";
 import SupervisorActions from "@/components/supervisor/SupervisorActions";
-import CampaignTabs from "@/components/supervisor/CampaignTabs";
 import PendingApprovalButton from "@/components/ucmo/PendingApprovalButton";
-import CurrentCampaignSummery from "@/components/supervisor/CurrentCampaignSummery";
-import PreviousCampaignsSummery from "@/components/supervisor/PreviousCampaignsSummery";
+import ZerodoseStats from "@/components/worker/ZerodoseStats";
+import SupervisorCampaignSection from "@/components/supervisor/SupervisorCampaignSection";
 
 export default function Page() {
-  const [activeTab, setActiveTab] = useState("current");
+const [authUser, setAuthUser] = useState(null);
 
-  const [dashboardData, setDashboardData] = useState({
-    totalTeams: 0,
-    recordedZerodose: 0,
-    visitedZerodose: 0,
-    coveredZerodose: 0,
-    currentCampaign: null,
-    teams: [],
-  });
+const [summary, setSummary] = useState({
+recorded: 0,
+visited: 0,
+covered: 0,
+});
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+const [loadingSummary, setLoadingSummary] = useState(true);
+const [error, setError] = useState("");
 
-  const [pendingApprovals, setPendingApprovals] = useState(0);
-  const [pendingApprovalsLoading, setPendingApprovalsLoading] = useState(true);
+const [pendingApprovals, setPendingApprovals] = useState(0);
+const [pendingApprovalsLoading, setPendingApprovalsLoading] =
+useState(true);
 
-  // ============================================================
-  // SUPERVISOR DASHBOARD
-  // ============================================================
+// ============================================================
+// GET AUTH USER
+// ============================================================
 
-  useEffect(() => {
-    let cancelled = false;
+useEffect(() => {
+let cancelled = false;
 
-    const fetchSupervisorData = async () => {
-      try {
-        setLoading(true);
-        setError("");
 
-        const response = await getSupervisorSummary();
+const loadAuthUser = () => {
+  try {
+    const storedAuthUser = localStorage.getItem("authUser");
 
-        console.log("Supervisor dashboard response:", response);
-
-        if (!response?.success) {
-          throw new Error(
-            response?.message || "Failed to fetch supervisor dashboard.",
-          );
-        }
-
-        const data = response?.data || {};
-
-        if (cancelled) return;
-
-        setDashboardData({
-          totalTeams: Number(data.totalTeams || 0),
-
-          recordedZerodose: Number(data.recordedZerodose || 0),
-
-          visitedZerodose: Number(data.visitedZerodose || 0),
-
-          coveredZerodose: Number(data.coveredZerodose || 0),
-
-          currentCampaign: data.currentCampaign || null,
-
-          teams: Array.isArray(data.teams)
-            ? data.teams.map((team) => ({
-                teamNumber: Number(team.teamNumber || 0),
-
-                teamLeader: {
-                  name: team.teamLeader?.name || "Not assigned",
-                  userId: team.teamLeader?.userId || null,
-                  workerRole: team.teamLeader?.workerRole || "teamLeader",
-                },
-
-                teamMember: {
-                  name: team.teamMember?.name || "Not assigned",
-                  userId: team.teamMember?.userId || null,
-                  workerRole: team.teamMember?.workerRole || "teamMember",
-                },
-
-                recorded: Number(team.recorded || 0),
-
-                visited: Number(team.visited || 0),
-
-                covered: Number(team.covered || 0),
-              }))
-            : [],
-        });
-      } catch (error) {
-        if (cancelled) return;
-
-        console.error("Supervisor dashboard fetch error:", error);
-
-        setError(error?.message || "Failed to load supervisor dashboard.");
-
-        setDashboardData({
-          totalTeams: 0,
-          recordedZerodose: 0,
-          visitedZerodose: 0,
-          coveredZerodose: 0,
-          currentCampaign: null,
-          teams: [],
-        });
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+    if (!storedAuthUser) {
+      if (!cancelled) {
+        setAuthUser(null);
       }
-    };
 
-    fetchSupervisorData();
+      return;
+    }
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    const parsedUser = JSON.parse(storedAuthUser);
 
-  // ============================================================
-  // PENDING ZERODOSE APPROVALS
-  // ============================================================
+    if (!cancelled) {
+      setAuthUser(parsedUser);
+    }
+  } catch (error) {
+    console.error("Auth user parse error:", error);
 
-  useEffect(() => {
-    let cancelled = false;
+    if (!cancelled) {
+      setAuthUser(null);
+    }
+  }
+};
 
-    const fetchPendingApprovals = async () => {
-      try {
-        setPendingApprovalsLoading(true);
+loadAuthUser();
 
-        let supervisorId = null;
+return () => {
+  cancelled = true;
+};
 
-        try {
-          const storedAuthUser = localStorage.getItem("authUser");
 
-          if (storedAuthUser) {
-            const parsedUser = JSON.parse(storedAuthUser);
+}, []);
 
-            supervisorId = parsedUser?.id ? String(parsedUser.id) : null;
-          }
-        } catch (error) {
-          console.error("Auth user parse error:", error);
-        }
+// ============================================================
+// GET SUPERVISOR SUMMARY
+// ============================================================
 
-        if (!supervisorId) {
-          if (!cancelled) {
-            setPendingApprovals(0);
-          }
+useEffect(() => {
+let cancelled = false;
 
-          return;
-        }
 
-        const response = await getPendingZerodoseCount(supervisorId);
+const fetchSupervisorSummary = async () => {
+  try {
+    setLoadingSummary(true);
+    setError("");
 
-        if (cancelled) return;
+    const response = await getSupervisorSummary();
 
-        if (!response?.success) {
-          setPendingApprovals(0);
-          return;
-        }
+    console.log("Supervisor summary response:", response);
 
-        setPendingApprovals(Number(response.count || 0));
-      } catch (error) {
-        if (cancelled) return;
+    if (!response?.success) {
+      throw new Error(
+        response?.message ||
+          "Failed to fetch supervisor summary.",
+      );
+    }
 
-        console.error("Pending Zerodose count error:", error);
+    const data = response?.data || {};
 
+    if (cancelled) {
+      return;
+    }
+
+    setSummary({
+      recorded: Number(data.recordCount || 0),
+      visited: Number(data.visitCount || 0),
+      covered: Number(data.coveredCount || 0),
+    });
+  } catch (error) {
+    if (cancelled) {
+      return;
+    }
+
+    console.error("Supervisor summary error:", error);
+
+    setError(
+      error?.message ||
+        "Failed to load supervisor summary.",
+    );
+
+    setSummary({
+      recorded: 0,
+      visited: 0,
+      covered: 0,
+    });
+  } finally {
+    if (!cancelled) {
+      setLoadingSummary(false);
+    }
+  }
+};
+
+fetchSupervisorSummary();
+
+return () => {
+  cancelled = true;
+};
+
+
+}, []);
+
+// ============================================================
+// PENDING ZERODOSE APPROVALS
+// ============================================================
+
+useEffect(() => {
+let cancelled = false;
+
+
+const fetchPendingApprovals = async () => {
+  try {
+    setPendingApprovalsLoading(true);
+
+    const supervisorId = authUser?.id
+      ? String(authUser.id)
+      : null;
+
+    if (!supervisorId) {
+      if (!cancelled) {
         setPendingApprovals(0);
-      } finally {
-        if (!cancelled) {
-          setPendingApprovalsLoading(false);
-        }
+        setPendingApprovalsLoading(false);
       }
-    };
 
-    fetchPendingApprovals();
+      return;
+    }
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    const response =
+      await getPendingZerodoseCount(supervisorId);
 
-  // ============================================================
-  // CURRENT CAMPAIGN DATA
-  // ============================================================
+    if (cancelled) {
+      return;
+    }
 
-  const currentCampaign = dashboardData.currentCampaign;
+    if (!response?.success) {
+      setPendingApprovals(0);
+      return;
+    }
 
-  const currentData = dashboardData.teams;
+    setPendingApprovals(
+      Number(response.count || 0),
+    );
+  } catch (error) {
+    if (cancelled) {
+      return;
+    }
 
-  const activeTeams = dashboardData.teams;
+    console.error(
+      "Pending Zerodose count error:",
+      error,
+    );
 
-  // ============================================================
-  // PREVIOUS CAMPAIGNS
-  // ============================================================
+    setPendingApprovals(0);
+  } finally {
+    if (!cancelled) {
+      setPendingApprovalsLoading(false);
+    }
+  }
+};
 
-  const previousCampaigns = [];
+fetchPendingApprovals();
 
-  const previousData = [];
+return () => {
+  cancelled = true;
+};
 
-  // ============================================================
-  // UI
-  // ============================================================
 
-  return (
-    <div className="min-h-full">
-      <div className="mx-auto w-full max-w-7xl">
-        {/* Header */}
-        <div className="mb-4 flex flex-col md:mb-6">
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <h1 className="text-text text-2xl font-bold md:text-3xl">
-              Supervisor
-            </h1>
+}, [authUser]);
 
-            <PendingApprovalButton
-              link="/supervisor/zerodoseApproval"
-              name="Zerodose Approval"
-              pendingApprovals={pendingApprovals}
-              loading={pendingApprovalsLoading}
-            />
-          </div>
+// ============================================================
+// UI
+// ============================================================
 
-          <p className="text-text-secondary mt-1 text-sm">
-            Manage teams and campaign-wise Zerodose records
-          </p>
-        </div>
+return ( <div className="min-h-full"> <div className="mx-auto w-full max-w-7xl">
+{/* Header */}
 
-        {/* Error */}
-        {error && (
-          <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-            {error}
-          </div>
-        )}
 
-        {/* Summary Cards */}
-        <SupervisorSummaryCards
-          totalTeams={dashboardData.totalTeams}
-          recordedZerodose={dashboardData.recordedZerodose}
-          visitedZerodose={dashboardData.visitedZerodose}
-          coveredZerodose={dashboardData.coveredZerodose}
+    <div className="mb-4 flex flex-col md:mb-6">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <h1 className="text-text text-2xl font-bold md:text-3xl">
+          Supervisor
+        </h1>
+
+        <PendingApprovalButton
+          link="/supervisor/zerodoseApproval"
+          name="Zerodose Approval"
+          pendingApprovals={pendingApprovals}
+          loading={pendingApprovalsLoading}
         />
-
-        {/* Actions */}
-        <SupervisorActions />
-
-        {/* Campaign Tabs */}
-        <CampaignTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-
-        {/* Current Campaign */}
-        {activeTab === "current" && (
-          <CurrentCampaignSummery
-            campaign={currentCampaign}
-            data={currentData}
-            activeTeams={activeTeams}
-            loading={loading}
-            mode="supervisor"
-          />
-        )}
-
-        {/* Previous Campaigns */}
-        {activeTab === "previous" && (
-          <PreviousCampaignsSummery
-            campaigns={previousCampaigns}
-            data={previousData}
-            loading={loading}
-          />
-        )}
       </div>
+
+      <p className="text-text-secondary mt-1 text-sm">
+        Manage teams and campaign-wise Zerodose records
+      </p>
     </div>
-  );
+
+    {/* Error */}
+
+    {error && (
+      <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+        {error}
+      </div>
+    )}
+
+    {/* Overall Zerodose Stats */}
+
+    <ZerodoseStats
+      summary={summary}
+      loading={loadingSummary}
+    />
+
+    {/* Actions */}
+
+    <SupervisorActions />
+
+    {/* Campaign Section */}
+
+    <SupervisorCampaignSection
+      authUser={authUser}
+    />
+  </div>
+</div>
+
+
+);
 }

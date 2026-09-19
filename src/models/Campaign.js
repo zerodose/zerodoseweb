@@ -49,28 +49,43 @@ const campaignSchema = new mongoose.Schema(
     },
   },
 );
+// ============================================================
+// CAMPAIGN STATUS
+// Date-based only
+// ============================================================
 
-// Automatically determine campaign status
 campaignSchema.virtual("campaignStatus").get(function () {
   const now = new Date();
 
-  const startDate = new Date(this.startDate);
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  const endDate = new Date(this.endDate);
-  endDate.setHours(23, 59, 59, 999);
+  const startDate = new Date(
+    this.startDate.getFullYear(),
+    this.startDate.getMonth(),
+    this.startDate.getDate(),
+  );
 
-  if (now < startDate) {
+  const endDate = new Date(
+    this.endDate.getFullYear(),
+    this.endDate.getMonth(),
+    this.endDate.getDate(),
+  );
+
+  if (today < startDate) {
     return "upcoming";
   }
 
-  if (now > endDate) {
+  if (today > endDate) {
     return "previous";
   }
 
   return "current";
 });
 
-// Validate dates
+// ============================================================
+// VALIDATE DATES
+// ============================================================
+
 campaignSchema.pre("validate", function () {
   if (this.startDate > this.endDate) {
     throw new Error("Campaign end date cannot be before start date.");

@@ -1,10 +1,9 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 
-import { getCampaigns, getCurrentCampaign } from "@/api/campaignApi";
-import { getVaccinatorZerodose } from "@/api/zerodoseApi";
+import { getCampaignFilter, getCurrentCampaign } from "@/api/campaignApi";
+import { getUCZerodose } from "@/api/zerodoseApi";
 import { LucideSyringe } from "lucide-react";
 
 import ZerodoseTabs from "@/components/supervisor/zerodose/ZerodoseTabs";
@@ -16,6 +15,7 @@ export default function Page() {
   const [activeTab, setActiveTab] = useState("current");
 
   const [currentCampaign, setCurrentCampaign] = useState(null);
+
   const [previousCampaigns, setPreviousCampaigns] = useState([]);
 
   const [zerodoses, setZerodoses] = useState([]);
@@ -25,7 +25,15 @@ export default function Page() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedPreviousCampaign, setSelectedPreviousCampaign] =
+    useState(null);
 
+  const [previousTotal, setPreviousTotal] = useState({
+    numberOfTeams: 0,
+    recordCount: 0,
+    visitCount: 0,
+    coveredCount: 0,
+  });
   const [summary, setSummary] = useState({
     recorded: 0,
     visited: 0,
@@ -40,45 +48,6 @@ export default function Page() {
     },
     teams: [],
   });
-
-  // ============================================================
-  // CAMPAIGN STATUS
-  // ============================================================
-
-  const getCampaignStatus = (campaign) => {
-    if (!campaign?.startDate || !campaign?.endDate) {
-      return "previous";
-    }
-
-    const now = new Date();
-
-    const startDate = new Date(campaign.startDate);
-    const endDate = new Date(campaign.endDate);
-
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    const start = new Date(
-      startDate.getFullYear(),
-      startDate.getMonth(),
-      startDate.getDate(),
-    );
-
-    const end = new Date(
-      endDate.getFullYear(),
-      endDate.getMonth(),
-      endDate.getDate(),
-    );
-
-    if (today < start) {
-      return "upcoming";
-    }
-
-    if (today >= start && today <= end) {
-      return "current";
-    }
-
-    return "previous";
-  };
 
   // ============================================================
   // INITIAL LOAD
@@ -136,7 +105,7 @@ export default function Page() {
         // --------------------------------------------------------
 
         if (campaign?._id) {
-          const response = await getVaccinatorZerodose({
+          const response = await getUCZerodose({
             campaignId: campaign._id,
             filter: "recorded",
           });
@@ -164,9 +133,12 @@ export default function Page() {
 
             setVaccinationStatus(
               response.vaccinationStatus || {
-                recorded: 0,
-                visited: 0,
-                covered: 0,
+                total: {
+                  recorded: 0,
+                  visited: 0,
+                  covered: 0,
+                },
+                teams: [],
               },
             );
           }
@@ -180,54 +152,31 @@ export default function Page() {
           });
 
           setVaccinationStatus({
-            recorded: 0,
-            visited: 0,
-            covered: 0,
+            total: {
+              recorded: 0,
+              visited: 0,
+              covered: 0,
+            },
+            teams: [],
           });
         }
 
         // --------------------------------------------------------
         // PREVIOUS CAMPAIGNS
+        //
+        // getCampaignFilter() already returns previous
+        // campaigns, so no client-side status filtering needed.
         // --------------------------------------------------------
 
-        const campaignsResponse = await getCampaigns();
-
-        if (!campaignsResponse?.success) {
-          throw new Error(
-            campaignsResponse?.message || "Failed to fetch campaigns.",
-          );
-        }
-
-        const campaigns = Array.isArray(campaignsResponse.data)
-          ? campaignsResponse.data
-          : [];
-
-        const previous = campaigns
-          .map((campaign) => ({
-            ...campaign,
-            campaignStatus: getCampaignStatus(campaign),
-          }))
-          .filter((campaign) => campaign.campaignStatus === "previous")
-          .sort((a, b) => {
-            const dateA = new Date(a?.startDate || 0).getTime();
-
-            const dateB = new Date(b?.startDate || 0).getTime();
-
-            return dateB - dateA;
-          });
+        const campaigns = await getCampaignFilter();
 
         if (!cancelled) {
-          setPreviousCampaigns(previous);
+          setPreviousCampaigns(campaigns);
         }
 
         console.log("Vaccinator Zerodose data fetched successfully:", {
           currentCampaignId: campaign?._id || null,
-          currentRecordedCount: campaign?._id
-            ? Array.isArray(zerodoses)
-              ? zerodoses.length
-              : 0
-            : 0,
-          previousCampaigns: previous.length,
+          previousCampaigns: campaigns.length,
         });
       } catch (error) {
         if (cancelled) {
@@ -243,6 +192,21 @@ export default function Page() {
         setZerodoses([]);
         setPreviousZerodoses([]);
         setUnionCouncilName("-");
+
+        setSummary({
+          recorded: 0,
+          visited: 0,
+          covered: 0,
+        });
+
+        setVaccinationStatus({
+          total: {
+            recorded: 0,
+            visited: 0,
+            covered: 0,
+          },
+          teams: [],
+        });
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -270,7 +234,7 @@ export default function Page() {
       setLoading(true);
       setError("");
 
-      const response = await getVaccinatorZerodose({
+      const response = await getUCZerodose({
         campaignId: currentCampaign._id,
         filter,
       });
@@ -291,9 +255,12 @@ export default function Page() {
 
       setVaccinationStatus(
         response.vaccinationStatus || {
-          recorded: 0,
-          visited: 0,
-          covered: 0,
+          total: {
+            recorded: 0,
+            visited: 0,
+            covered: 0,
+          },
+          teams: [],
         },
       );
     } catch (error) {
@@ -316,7 +283,15 @@ export default function Page() {
     filter = "recorded",
   ) => {
     if (!campaignId) {
+      setSelectedPreviousCampaign(null);
       setPreviousZerodoses([]);
+
+      setPreviousTotal({
+        numberOfTeams: 0,
+        recordCount: 0,
+        visitCount: 0,
+        coveredCount: 0,
+      });
 
       setSummary({
         recorded: 0,
@@ -330,7 +305,7 @@ export default function Page() {
           visited: 0,
           covered: 0,
         },
-        supervisors: [],
+        teams: [],
       });
 
       return;
@@ -340,7 +315,13 @@ export default function Page() {
       setLoading(true);
       setError("");
 
-      const response = await getVaccinatorZerodose({
+      const selectedCampaign = previousCampaigns.find(
+        (campaign) => String(campaign?._id) === String(campaignId),
+      );
+
+      setSelectedPreviousCampaign(selectedCampaign || null);
+
+      const response = await getUCZerodose({
         campaignId,
         filter,
       });
@@ -354,6 +335,22 @@ export default function Page() {
       const previousData = Array.isArray(response.data) ? response.data : [];
 
       setPreviousZerodoses(previousData);
+
+      setPreviousTotal(
+        response.total || {
+          numberOfTeams: new Set(
+            previousData
+              .map((item) => item?.teamNumber)
+              .filter(
+                (number) =>
+                  number !== null && number !== undefined && number !== "",
+              ),
+          ).size,
+          recordCount: Number(response?.summary?.recorded || 0),
+          visitCount: Number(response?.summary?.visited || 0),
+          coveredCount: Number(response?.summary?.covered || 0),
+        },
+      );
 
       setSummary(
         response.summary || {
@@ -380,6 +377,13 @@ export default function Page() {
 
       setPreviousZerodoses([]);
 
+      setPreviousTotal({
+        numberOfTeams: 0,
+        recordCount: 0,
+        visitCount: 0,
+        coveredCount: 0,
+      });
+
       setSummary({
         recorded: 0,
         visited: 0,
@@ -392,20 +396,20 @@ export default function Page() {
           visited: 0,
           covered: 0,
         },
-        supervisors: [],
+        teams: [],
       });
     } finally {
       setLoading(false);
     }
   };
 
-  // ============================================================
-  // INITIAL SKELETON
-  // ============================================================
+  const handlePreviousFilterChange = async (filter) => {
+    if (!selectedPreviousCampaign?._id) {
+      return;
+    }
 
-  // if (loading && !currentCampaign) {
-  //   return <ZerodosePageSkeleton />;
-  // }
+    await handlePreviousCampaignSelect(selectedPreviousCampaign._id, filter);
+  };
 
   // ============================================================
   // RENDER
@@ -413,9 +417,6 @@ export default function Page() {
 
   return (
     <div className="relative min-h-full">
-      {/* Loader only while API is loading */}
-      {/* {loading && <Loader text="Loading..." />} */}
-
       <ApprovalPageHeader
         title="Zerodose"
         description="View campaign-wise Zerodose records and team details"
@@ -426,12 +427,15 @@ export default function Page() {
           </div>
         }
       />
+
       {error && (
         <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
           {error}
         </div>
       )}
+
       <ZerodoseTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+
       {activeTab === "current" && (
         <CurrentCampaignZerodose
           campaign={currentCampaign}
@@ -443,15 +447,20 @@ export default function Page() {
           onFilterChange={handleCurrentFilterChange}
         />
       )}
+
       {activeTab === "previous" && (
         <PreviousCampaignsZerodose
           campaigns={previousCampaigns}
+          selectedCampaign={selectedPreviousCampaign}
           data={previousZerodoses}
           unionCouncilName={unionCouncilName}
           loading={loading}
           summary={summary}
+          total={previousTotal}
           vaccinationStatus={vaccinationStatus}
           onCampaignSelect={handlePreviousCampaignSelect}
+          onFilterChange={handlePreviousFilterChange}
+          designation="vaccinator"
         />
       )}
     </div>

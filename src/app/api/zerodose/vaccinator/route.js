@@ -22,11 +22,14 @@ export async function GET(request) {
 
     const { user } = auth;
 
-    if (user.designation !== "vaccinator") {
+    const allowedDesignations = ["vaccinator", "otherstaff", "ucmo"];
+
+    if (!allowedDesignations.includes(user.designation)) {
       return NextResponse.json(
         {
           success: false,
-          message: "Only vaccinators can access this data.",
+          message:
+            "Only vaccinators, other staff, and UCMOs can access this data.",
         },
         { status: 403 },
       );
@@ -337,8 +340,6 @@ export async function GET(request) {
       vaccinationStatus.total.visited += item.visited;
       vaccinationStatus.total.covered += item.covered;
     });
-
-   
 
     return NextResponse.json({
       success: true,

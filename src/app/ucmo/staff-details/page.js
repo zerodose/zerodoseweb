@@ -272,6 +272,7 @@ export default function SupervisorDetailPage() {
           "name",
           "email",
           "contactNumber",
+          "designation",
           "supervisorCode",
           "approvalStatus",
           "districtName",

@@ -1,3 +1,139 @@
+// "use client";
+
+// import { useEffect, useState } from "react";
+
+// import CampaignTabs from "@/components/supervisor/CampaignTabs";
+// import VaccinatorCurrentCampaignSummery from "@/components/vaccinator/VaccinatorCurrentCampaignSummery";
+// import PreviousCampaignsSummery from "@/components/supervisor/PreviousCampaignsSummery";
+
+// import { getUCMOSupervisorSummary } from "@/api/dashboardApi";
+
+// import { getCurrentCampaign } from "@/api/campaignApi";
+
+// export default function UCMOCampaignSection({ authUser }) {
+//   const [activeTab, setActiveTab] = useState("current");
+//   const [currentCampaign, setCurrentCampaign] = useState(null);
+//   const [zerodoseData, setZerodoseData] = useState([]);
+//   const [loading, setLoading] = useState(true);
+
+//   useEffect(() => {
+//     let cancelled = false;
+
+//     const loadCurrentCampaign = async () => {
+//       try {
+//         setLoading(true);
+
+//         const response = await getCurrentCampaign();
+
+//         if (cancelled) {
+//           return;
+//         }
+
+//         const data = response?.data || {};
+//         const campaign = data?.currentCampaign || null;
+
+//         setCurrentCampaign(campaign);
+//       } catch (error) {
+//         if (cancelled) {
+//           return;
+//         }
+
+//         // console.error("Failed to fetch current campaign:", error);
+
+//         setCurrentCampaign(null);
+//         setZerodoseData([]);
+//       }
+//     };
+
+//     loadCurrentCampaign();
+
+//     return () => {
+//       cancelled = true;
+//     };
+//   }, []);
+
+//   useEffect(() => {
+//     let cancelled = false;
+
+//     const loadSupervisorSummary = async () => {
+//       if (!currentCampaign) {
+//         return;
+//       }
+
+//       const campaignId = currentCampaign._id;
+
+//       if (!campaignId) {
+//         console.warn("Current campaign ID is missing.");
+
+//         setZerodoseData([]);
+//         setLoading(false);
+
+//         return;
+//       }
+
+//       try {
+//         setLoading(true);
+
+//         const response = await getUCMOSupervisorSummary(campaignId);
+
+//         if (cancelled) {
+//           return;
+//         }
+
+//         const data = response?.data || {};
+
+//         setZerodoseData(
+//           Array.isArray(data?.supervisors) ? data.supervisors : [],
+//         );
+//       } catch (error) {
+//         if (cancelled) {
+//           return;
+//         }
+
+//         // console.error("Failed to fetch supervisor summary:", error);
+
+//         setZerodoseData([]);
+//       } finally {
+//         if (!cancelled) {
+//           setLoading(false);
+//         }
+//       }
+//     };
+
+//     loadSupervisorSummary();
+
+//     return () => {
+//       cancelled = true;
+//     };
+//   }, [currentCampaign]);
+
+//   const previousCampaigns = [];
+
+//   return (
+//     <div className="w-full space-y-6">
+//       <CampaignTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+
+//       {activeTab === "current" && (
+//         <VaccinatorCurrentCampaignSummery
+//           campaign={currentCampaign}
+//           data={zerodoseData}
+//           loading={loading}
+//           authUser={authUser}
+//         />
+//       )}
+
+//       {activeTab === "previous" && (
+//         <PreviousCampaignsSummery
+//           campaigns={previousCampaigns}
+//           data={[]}
+//           loading={loading}
+//         />
+//       )}
+//     </div>
+//   );
+// }
+
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,128 +143,286 @@ import VaccinatorCurrentCampaignSummery from "@/components/vaccinator/Vaccinator
 import PreviousCampaignsSummery from "@/components/supervisor/PreviousCampaignsSummery";
 
 import { getUCMOSupervisorSummary } from "@/api/dashboardApi";
-
-import { getCurrentCampaign } from "@/api/campaignApi";
+import {
+getCampaignFilter,
+getCurrentCampaign,
+} from "@/api/campaignApi";
 
 export default function UCMOCampaignSection({ authUser }) {
-  const [activeTab, setActiveTab] = useState("current");
-  const [currentCampaign, setCurrentCampaign] = useState(null);
-  const [zerodoseData, setZerodoseData] = useState([]);
-  const [loading, setLoading] = useState(true);
+const [activeTab, setActiveTab] = useState("current");
 
-  useEffect(() => {
-    let cancelled = false;
+const [campaigns, setCampaigns] = useState([]);
+const [currentCampaign, setCurrentCampaign] = useState(null);
 
-    const loadCurrentCampaign = async () => {
-      try {
-        setLoading(true);
+const [zerodoseData, setZerodoseData] = useState([]);
+const [previousZerodoseData, setPreviousZerodoseData] =
+useState([]);
 
-        const response = await getCurrentCampaign();
+const [selectedPreviousCampaignId, setSelectedPreviousCampaignId] =
+useState("");
 
-        if (cancelled) {
-          return;
-        }
+const [loading, setLoading] = useState(true);
+const [previousLoading, setPreviousLoading] = useState(false);
 
-        const data = response?.data || {};
-        const campaign = data?.currentCampaign || null;
+// ============================================================
+// GET CURRENT CAMPAIGN
+// ============================================================
 
-        setCurrentCampaign(campaign);
-      } catch (error) {
-        if (cancelled) {
-          return;
-        }
+useEffect(() => {
+let cancelled = false;
 
-        // console.error("Failed to fetch current campaign:", error);
 
-        setCurrentCampaign(null);
-        setZerodoseData([]);
-      }
-    };
+const loadCurrentCampaign = async () => {
+  try {
+    setLoading(true);
 
-    loadCurrentCampaign();
+    const response = await getCurrentCampaign();
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    if (cancelled) {
+      return;
+    }
 
-  useEffect(() => {
-    let cancelled = false;
+    const data = response?.data || {};
+    const campaign = data?.currentCampaign || null;
 
-    const loadSupervisorSummary = async () => {
-      if (!currentCampaign) {
-        return;
-      }
+    setCurrentCampaign(campaign);
 
-      const campaignId = currentCampaign._id;
+    if (!campaign?._id) {
+      setZerodoseData([]);
+      setLoading(false);
 
-      if (!campaignId) {
-        console.warn("Current campaign ID is missing.");
+      return;
+    }
+  } catch (error) {
+    if (cancelled) {
+      return;
+    }
 
-        setZerodoseData([]);
-        setLoading(false);
+    console.error("Get current campaign error:", error);
 
-        return;
-      }
+    setCurrentCampaign(null);
+    setZerodoseData([]);
+    setLoading(false);
+  }
+};
 
-      try {
-        setLoading(true);
+loadCurrentCampaign();
 
-        const response = await getUCMOSupervisorSummary(campaignId);
+return () => {
+  cancelled = true;
+};
 
-        if (cancelled) {
-          return;
-        }
 
-        const data = response?.data || {};
+}, []);
 
-        setZerodoseData(
-          Array.isArray(data?.supervisors) ? data.supervisors : [],
-        );
-      } catch (error) {
-        if (cancelled) {
-          return;
-        }
+// ============================================================
+// GET CURRENT UCMO SUPERVISOR SUMMARY
+// ============================================================
 
-        // console.error("Failed to fetch supervisor summary:", error);
+useEffect(() => {
+let cancelled = false;
 
-        setZerodoseData([]);
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
 
-    loadSupervisorSummary();
+const loadSupervisorSummary = async () => {
+  if (!currentCampaign?._id) {
+    return;
+  }
 
-    return () => {
-      cancelled = true;
-    };
-  }, [currentCampaign]);
+  try {
+    setLoading(true);
 
-  const previousCampaigns = [];
+    const response =
+      await getUCMOSupervisorSummary(
+        currentCampaign._id,
+      );
 
-  return (
-    <div className="w-full space-y-6">
-      <CampaignTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+    if (cancelled) {
+      return;
+    }
 
-      {activeTab === "current" && (
-        <VaccinatorCurrentCampaignSummery
-          campaign={currentCampaign}
-          data={zerodoseData}
-          loading={loading}
-          authUser={authUser}
-        />
-      )}
+    const data = response?.data || {};
 
-      {activeTab === "previous" && (
-        <PreviousCampaignsSummery
-          campaigns={previousCampaigns}
-          data={[]}
-          loading={loading}
-        />
-      )}
-    </div>
+    console.log("Current UCMO Summary ==>", data);
+
+    setZerodoseData(
+      Array.isArray(data?.supervisors)
+        ? data.supervisors
+        : [],
+    );
+  } catch (error) {
+    if (cancelled) {
+      return;
+    }
+
+    console.error(
+      "Get current UCMO supervisor summary error:",
+      error,
+    );
+
+    setZerodoseData([]);
+  } finally {
+    if (!cancelled) {
+      setLoading(false);
+    }
+  }
+};
+
+loadSupervisorSummary();
+
+return () => {
+  cancelled = true;
+};
+
+
+}, [currentCampaign]);
+
+// ============================================================
+// TAB CHANGE
+// ============================================================
+
+const handleTabChange = async (tab) => {
+setActiveTab(tab);
+
+
+if (tab !== "previous") {
+  return;
+}
+
+// Campaigns already loaded
+if (campaigns.length > 0) {
+  return;
+}
+
+try {
+  setLoading(true);
+
+  const response = await getCampaignFilter();
+
+  const campaignList = Array.isArray(response)
+    ? response
+    : Array.isArray(response?.data)
+      ? response.data
+      : [];
+
+  setCampaigns(campaignList);
+} catch (error) {
+  console.error(
+    "Get previous campaigns error:",
+    error,
   );
+
+  setCampaigns([]);
+} finally {
+  setLoading(false);
+}
+
+
+};
+
+// ============================================================
+// PREVIOUS CAMPAIGN SELECT
+// ============================================================
+
+const handlePreviousCampaignSelect = async (campaignId) => {
+if (!campaignId) {
+setSelectedPreviousCampaignId("");
+setPreviousZerodoseData([]);
+
+
+  return;
+}
+
+setSelectedPreviousCampaignId(campaignId);
+setPreviousZerodoseData([]);
+setPreviousLoading(true);
+
+try {
+  const response =
+    await getUCMOSupervisorSummary(campaignId);
+
+  const data = response?.data || {};
+
+  console.log(
+    "Previous UCMO Summary ==>",
+    data,
+  );
+
+  setPreviousZerodoseData(
+    Array.isArray(data?.supervisors)
+      ? data.supervisors
+      : [],
+  );
+} catch (error) {
+  console.error(
+    "Get previous UCMO supervisor summary error:",
+    error,
+  );
+
+  setPreviousZerodoseData([]);
+} finally {
+  setPreviousLoading(false);
+}
+
+
+};
+
+// ============================================================
+// SELECTED PREVIOUS CAMPAIGN
+// ============================================================
+
+const selectedPreviousCampaign =
+campaigns.find(
+(campaign) =>
+String(campaign?._id) ===
+String(selectedPreviousCampaignId),
+) || null;
+
+// ============================================================
+// UI
+// ============================================================
+
+return ( <div className="w-full space-y-6">
+{/* ======================================================
+CAMPAIGN TABS
+====================================================== */}
+
+
+  <CampaignTabs
+    activeTab={activeTab}
+    setActiveTab={handleTabChange}
+  />
+
+  {/* ======================================================
+      CURRENT CAMPAIGN
+  ====================================================== */}
+
+  {activeTab === "current" && (
+    <VaccinatorCurrentCampaignSummery
+      campaign={currentCampaign}
+      data={zerodoseData}
+      loading={loading}
+      authUser={authUser}
+    />
+  )}
+
+  {/* ======================================================
+      PREVIOUS CAMPAIGNS
+  ====================================================== */}
+
+  {activeTab === "previous" && (
+    <PreviousCampaignsSummery
+      campaigns={campaigns}
+      selectedCampaign={selectedPreviousCampaign}
+      data={previousZerodoseData}
+      loading={previousLoading}
+      onCampaignSelect={
+        handlePreviousCampaignSelect
+      }
+   
+    />
+  )}
+</div>
+
+
+);
 }

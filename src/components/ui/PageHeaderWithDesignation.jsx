@@ -7,18 +7,23 @@ import {
   User,
   ChevronDown,
   X,
-  Mail,
-  Shield,
   CalendarDays,
   LockKeyhole,
   Eye,
   EyeClosed,
+  BadgeCheck,
+  UserRound,
+  UserCog,
+  MapPinned,
+  Building2,
+  Map,
 } from "lucide-react";
 
 import { changePassword } from "@/api/userApi";
 import LogoutButton from "./LogoutButton";
 import { getCurrentUser, logoutUser } from "@/api/authApi";
 import { formatDate } from "@/lib/formatDate";
+import Image from "next/image";
 
 export default function PageHeaderWithDesignation({
   name = "",
@@ -51,7 +56,6 @@ export default function PageHeaderWithDesignation({
   const [profileOpen, setProfileOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
 
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -82,37 +86,6 @@ export default function PageHeaderWithDesignation({
     normalizedDesignation === "ucmo" ||
     normalizedDesignation === "townfp" ||
     normalizedDesignation === "districtfp";
-
-  // const loadUserProfile = async () => {
-  //   try {
-  //     setLoadingProfile(true);
-
-  //     const response = await fetch("/api/auth/me", {
-  //       method: "GET",
-  //       credentials: "include",
-  //       cache: "no-store",
-  //     });
-
-  //     const result = await response.json();
-
-  //     if (!response.ok || !result.success) {
-  //       throw new Error(result.message || "Failed to load profile.");
-  //     }
-
-  //     setUser(result.data.user);
-
-  //     return result.data.user;
-  //   } catch (error) {
-  //     console.error("Profile fetch error:", error);
-  //     throw error;
-  //   } finally {
-  //     setLoadingProfile(false);
-  //   }
-  // };
-
-  // ============================================================
-  // Profile
-  // ============================================================
 
   const handleProfile = async () => {
     setOpen(false);
@@ -616,24 +589,20 @@ export default function PageHeaderWithDesignation({
                   {/* Avatar */}
 
                   <div className="mb-6 flex flex-col items-center">
-                    <div className="bg-primary/10 text-primary flex h-20 w-20 items-center justify-center rounded-2xl text-2xl font-semibold">
-                      {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+                    <div className="bg-primary/10 flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl">
+                      <Image
+                        src="/images/logo.png"
+                        alt="Logo"
+                        width={80}
+                        height={80}
+                        className="h-full w-full object-contain p-2"
+                      />
                     </div>
-                    {/* 
-                    <h3 className="text-text mt-3 text-lg font-semibold">
-                      {user.name || user.fullName || "User"}
-                    </h3>
-
-                    {user.designation && (
-                      <span className="bg-primary/10 text-primary mt-1 rounded-full px-3 py-1 text-xs font-medium capitalize">
-                        {user.designation}
-                      </span>
-                    )} */}
                   </div>
 
                   {/* Details */}
 
-                  <div className="grid grid-cols-2 gap-3 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
                     {/* Name */}
 
                     {(user.name || user.fullName) && (
@@ -643,31 +612,31 @@ export default function PageHeaderWithDesignation({
                         </div>
 
                         <div className="min-w-0">
-                          <p className="text-text-secondary text-[11px]">
+                          <p className="text-text-secondary text-[10px]">
                             Name
                           </p>
 
-                          <p className="text-text truncate text-sm font-medium capitalize">
+                          <p className="text-text truncate text-xs font-medium capitalize">
                             {user.name || user.fullName}
                           </p>
                         </div>
                       </div>
                     )}
 
-                    {/* Designation */}
+     
 
                     {user.designation && (
                       <div className="bg-surface flex items-center gap-3 rounded-xl p-3">
                         <div className="bg-background text-text-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-                          <Shield size={18} />
+                          <BadgeCheck size={18} />
                         </div>
 
                         <div className="min-w-0">
-                          <p className="text-text-secondary text-[11px]">
+                          <p className="text-text-secondary text-[10px]">
                             Designation
                           </p>
 
-                          <p className="text-text text-sm font-medium capitalize">
+                          <p className="text-text truncate text-xs font-medium capitalize">
                             {user.designation}
                           </p>
                         </div>
@@ -679,15 +648,15 @@ export default function PageHeaderWithDesignation({
                     {user.supervisor && (
                       <div className="bg-surface flex items-center gap-3 rounded-xl p-3">
                         <div className="bg-background text-text-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-                          <User size={18} />
+                          <UserRound size={18} />
                         </div>
 
                         <div className="min-w-0">
-                          <p className="text-text-secondary text-[11px]">
+                          <p className="text-text-secondary text-[10px]">
                             Supervisor
                           </p>
 
-                          <p className="text-text truncate text-sm font-medium">
+                          <p className="text-text truncate text-xs font-medium">
                             {user.supervisor.name}
                           </p>
                         </div>
@@ -699,15 +668,15 @@ export default function PageHeaderWithDesignation({
                     {user.ucmo && (
                       <div className="bg-surface flex items-center gap-3 rounded-xl p-3">
                         <div className="bg-background text-text-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-                          <Shield size={18} />
+                          <UserCog size={18} />
                         </div>
 
                         <div className="min-w-0">
-                          <p className="text-text-secondary text-[11px]">
+                          <p className="text-text-secondary text-[10px]">
                             UCMO
                           </p>
 
-                          <p className="text-text text-sm font-medium capitalize">
+                          <p className="text-text truncate text-xs font-medium capitalize">
                             {user.ucmo.name}
                           </p>
                         </div>
@@ -719,15 +688,15 @@ export default function PageHeaderWithDesignation({
                     {user.unionCouncil && (
                       <div className="bg-surface flex items-center gap-3 rounded-xl p-3">
                         <div className="bg-background text-text-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-                          <Shield size={18} />
+                          <MapPinned size={18} />
                         </div>
 
                         <div className="min-w-0">
-                          <p className="text-text-secondary text-[11px]">
+                          <p className="text-text-secondary text-[10px]">
                             Union Council
                           </p>
 
-                          <p className="text-text text-sm font-medium capitalize">
+                          <p className="text-text truncate text-xs font-medium capitalize">
                             {user.unionCouncil.name}
                           </p>
                         </div>
@@ -739,15 +708,15 @@ export default function PageHeaderWithDesignation({
                     {user.town && (
                       <div className="bg-surface flex items-center gap-3 rounded-xl p-3">
                         <div className="bg-background text-text-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-                          <Shield size={18} />
+                          <Building2 size={18} />
                         </div>
 
                         <div className="min-w-0">
-                          <p className="text-text-secondary text-[11px]">
+                          <p className="text-text-secondary text-[10px]">
                             Town
                           </p>
 
-                          <p className="text-text text-sm font-medium capitalize">
+                          <p className="text-text truncate text-xs font-medium capitalize">
                             {user.town.name}
                           </p>
                         </div>
@@ -759,15 +728,15 @@ export default function PageHeaderWithDesignation({
                     {user.district && (
                       <div className="bg-surface flex items-center gap-3 rounded-xl p-3">
                         <div className="bg-background text-text-secondary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-                          <Shield size={18} />
+                          <Map size={18} />
                         </div>
 
                         <div className="min-w-0">
-                          <p className="text-text-secondary text-[11px]">
+                          <p className="text-text-secondary text-[10px]">
                             District
                           </p>
 
-                          <p className="text-text text-sm font-medium capitalize">
+                          <p className="text-text truncate text-xs font-medium capitalize">
                             {user.district.name}
                           </p>
                         </div>
@@ -783,11 +752,11 @@ export default function PageHeaderWithDesignation({
                         </div>
 
                         <div className="min-w-0">
-                          <p className="text-text-secondary text-[11px]">
+                          <p className="text-text-secondary text-[10px]">
                             Joined
                           </p>
 
-                          <p className="text-text text-sm font-medium">
+                          <p className="text-text text-xs font-medium">
                             {formatDate(user.createdAt)}
                             {/* {new Date(user.createdAt).toLocaleDateString()} */}
                           </p>

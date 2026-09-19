@@ -1,7 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronDown, Syringe, Eye, CheckCircle2 } from "lucide-react";
+import {
+  ChevronDown,
+  Syringe,
+  Eye,
+  CheckCircle2,
+  Baby,
+  UsersRound,
+} from "lucide-react";
 
 import ZerodoseDetailsTable from "./ZerodoseDetailsTable";
 import ZerodoseTeamSummarySkeleton from "./ZerodoseTeamSummarySkeleton";
@@ -354,10 +361,9 @@ export default function ZerodoseTeamSummary({
                   className="hover:bg-surface flex w-full items-center justify-between gap-4 p-4 text-left transition-colors duration-200"
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="bg-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white">
-                      {team.teamNumber}
+                    <div className="bg-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white">
+                      <UsersRound className="h-5 w-5" />
                     </div>
-
                     <div className="min-w-0">
                       <p className="text-text text-sm font-semibold">
                         Team {team.teamNumber}
@@ -419,9 +425,9 @@ export default function ZerodoseTeamSummary({
     ================================================== */}
 
                 <div
-                  className={`${designation === "worker" ? "hidden" : "flex sm:hidden"} w-full border-border border-t px-4 py-3`}
+                  className={`${designation === "worker" ? "hidden" : "flex sm:hidden"} border-border w-full border-t px-4 py-3`}
                 >
-                  <div className="grid grid-cols-3 gap-2  w-full">
+                  <div className="grid w-full grid-cols-3 gap-2">
                     <div className="bg-primary/5 rounded-lg px-2.5 py-2">
                       <p className="text-primary text-[10px] font-medium">
                         Recorded

@@ -7,7 +7,7 @@ import { getOtherStaffTotalSummary } from "@/api/dashboardApi";
 import VaccinatorSummaryCards from "@/components/vaccinator/VaccinatorSummaryCards";
 import { useTabLoader } from "@/context/TabLoaderContext";
 import OtherStaffActions from "@/components/otherstaff/OtherStaffActions";
-import OtherStaffCampaignSection from "@/components/otherstaff/OtherStaffCampaignSection";
+import VaccinatorCampaignSection from "@/components/vaccinator/VaccinatorCampaignSection";
 
 export default function OtherStaffPage() {
   const { showTabLoader, hideTabLoader } = useTabLoader();
@@ -111,7 +111,7 @@ export default function OtherStaffPage() {
 
       <OtherStaffActions />
 
-      <OtherStaffCampaignSection authUser={authUser} />
+     <VaccinatorCampaignSection authUser={authUser} />
     </div>
   );
 }

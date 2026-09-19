@@ -320,8 +320,17 @@ export const getDistrictSummary = async (districtId) => {
 // };
 
 export const getSupervisorSummary = async () => {
-  const response = await api.get("/dashboard/supervisor-summary");
+  const response = await api.get("/dashboard/supervisor/summary");
 
+  return response.data;
+};
+export const getSupervisorTeamSummary = async (campaignId) => {
+  const response = await api.get("/dashboard/supervisor/teams", {
+    params: {
+      campaignId,
+    },
+  });
+  
   return response.data;
 };
 
@@ -335,17 +344,17 @@ export const getVaccinatorTotalSummary = async () => {
 
   return response.data;
 };
-export const getOtherStaffTotalSummary = async () => {
-  const response = await api.get("/dashboard/otherstaff/summary");
-
-  return response.data;
-};
-export const getVaccinatorSupervisorSummary = async (campaignId) => {
+export const getUCSupervisorSummary = async (campaignId) => {
   const response = await api.get("/dashboard/vaccinator/supervisors", {
     params: {
       campaignId,
     },
   });
+  
+  return response.data;
+};
+export const getOtherStaffTotalSummary = async () => {
+  const response = await api.get("/dashboard/otherstaff/summary");
 
   return response.data;
 };

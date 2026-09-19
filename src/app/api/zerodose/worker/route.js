@@ -608,6 +608,23 @@ export async function GET(request) {
     // ============================================================
 
     const zerodose = await Zerodose.find(dataMatch)
+      .select(
+        "-createdAt " +
+          "-deleteApproved " +
+          "-deleteApprovedAt " +
+          "-deleteApprovedBy " +
+          "-deleteRequested " +
+          "-deleteRequestedAt " +
+          "-deleteRequestedBy " +
+          "-updateApproved " +
+          "-updateApprovedAt " +
+          "-updateApprovedBy " +
+          "-updateData " +
+          "-updateRequested " +
+          "-updateRequestedAt " +
+          "-updateRequestedBy " +
+          "-updatedAt",
+      )
       .sort({ createdAt: -1 })
       .populate("campaign", "name startDate endDate")
       .populate("district", "name")

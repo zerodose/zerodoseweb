@@ -211,7 +211,7 @@ export const getOtherStaffZerodose = async ({ campaignId, filter }) => {
 };
 
 
-export const getVaccinatorZerodose = async ({ campaignId, filter }) => {
+export const getUCZerodose = async ({ campaignId, filter }) => {
   const response = await api.get("/zerodose/vaccinator", {
     params: {
       campaignId,

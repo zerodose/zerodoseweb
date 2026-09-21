@@ -372,6 +372,7 @@ export async function GET(request) {
     );
   }
 }
+
 export async function POST(request) {
   try {
     await connectDB();
@@ -404,10 +405,10 @@ export async function POST(request) {
     // DATE PARSING
     // ==================================================
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const startInput = new Date(startDate);
+    const endInput = new Date(endDate);
 
-    if (Number.isNaN(start.getTime())) {
+    if (Number.isNaN(startInput.getTime())) {
       return NextResponse.json(
         {
           success: false,
@@ -419,7 +420,7 @@ export async function POST(request) {
       );
     }
 
-    if (Number.isNaN(end.getTime())) {
+    if (Number.isNaN(endInput.getTime())) {
       return NextResponse.json(
         {
           success: false,
@@ -430,6 +431,38 @@ export async function POST(request) {
         },
       );
     }
+
+    // ==================================================
+    // NORMALIZE TO DATE ONLY
+    // ==================================================
+    // Campaign dates are date-only.
+    //
+    // Example:
+    // 2026-09-19
+    // becomes:
+    // 2026-09-19T00:00:00.000Z
+    //
+    // Any time sent by the frontend is ignored.
+
+    const start = new Date(
+      Date.UTC(
+        startInput.getUTCFullYear(),
+        startInput.getUTCMonth(),
+        startInput.getUTCDate(),
+      ),
+    );
+
+    const end = new Date(
+      Date.UTC(
+        endInput.getUTCFullYear(),
+        endInput.getUTCMonth(),
+        endInput.getUTCDate(),
+      ),
+    );
+
+    // ==================================================
+    // VALIDATE DATE RANGE
+    // ==================================================
 
     if (start > end) {
       return NextResponse.json(
@@ -532,7 +565,8 @@ export async function POST(request) {
     return NextResponse.json(
       {
         success: false,
-        message: error.message || "Failed to create campaign.",
+        message:
+          error instanceof Error ? error.message : "Failed to create campaign.",
       },
       {
         status: 400,
@@ -599,193 +633,6 @@ export async function POST(request) {
 //         },
 //       );
 //     }
-
-//     // ==================================================
-//     // SET CAMPAIGN TIME RANGE
-//     // ==================================================
-
-//     // Start date: 00:00:01
-//     start.setHours(0, 0, 1, 0);
-
-//     // End date: 23:59:59
-//     end.setHours(23, 59, 59, 0);
-
-//     if (start > end) {
-//       return NextResponse.json(
-//         {
-//           success: false,
-//           message: "Campaign end date cannot be before start date.",
-//         },
-//         {
-//           status: 400,
-//         },
-//       );
-//     }
-
-//     // ==================================================
-//     // VALIDATE SCOPE
-//     // ==================================================
-
-//     const allowedScopes = [
-//       "nationwide",
-//       "high_risk_districts",
-//       "sindh_karachi",
-//       "karachi",
-//     ];
-
-//     if (!allowedScopes.includes(scope)) {
-//       return NextResponse.json(
-//         {
-//           success: false,
-//           message: "Invalid campaign scope.",
-//         },
-//         {
-//           status: 400,
-//         },
-//       );
-//     }
-
-//     // ==================================================
-//     // CHECK OVERLAPPING CAMPAIGN
-//     // ==================================================
-
-//     const existingCampaign = await Campaign.findOne({
-//       startDate: {
-//         $lte: end,
-//       },
-//       endDate: {
-//         $gte: start,
-//       },
-//     });
-
-//     if (existingCampaign) {
-//       return NextResponse.json(
-//         {
-//           success: false,
-//           message: "Another campaign already exists during these dates.",
-//         },
-//         {
-//           status: 409,
-//         },
-//       );
-//     }
-
-//     // ==================================================
-//     // CREATE CAMPAIGN
-//     // ==================================================
-
-//     const campaign = await Campaign.create({
-//       name,
-//       scope,
-//       year: Number(year),
-//       month: Number(month),
-//       startDate: start,
-//       endDate: end,
-//     });
-
-//     return NextResponse.json(
-//       {
-//         success: true,
-//         message: "Campaign created successfully.",
-//         data: campaign,
-//       },
-//       {
-//         status: 201,
-//       },
-//     );
-//   } catch (error) {
-//     console.error("Create campaign error:", error);
-
-//     if (error.code === 11000) {
-//       return NextResponse.json(
-//         {
-//           success: false,
-//           message: "A campaign already exists.",
-//         },
-//         {
-//           status: 409,
-//         },
-//       );
-//     }
-
-//     return NextResponse.json(
-//       {
-//         success: false,
-//         message: error.message || "Failed to create campaign.",
-//       },
-//       {
-//         status: 400,
-//       },
-//     );
-//   }
-// }
-
-// export async function POST(request) {
-//   try {
-//     await connectDB();
-
-//     const body = await request.json();
-
-//     const { name, scope, year, month, startDate, endDate } = body;
-
-//     if (
-//       !name ||
-//       !scope ||
-//       year === undefined ||
-//       month === undefined ||
-//       !startDate ||
-//       !endDate
-//     ) {
-//       return NextResponse.json(
-//         {
-//           success: false,
-//           message:
-//             "Name, scope, year, month, start date and end date are required.",
-//         },
-//         {
-//           status: 400,
-//         },
-//       );
-//     }
-
-//     // ==================================================
-//     // DATE PARSING
-//     // ==================================================
-
-//     const start = new Date(startDate);
-//     const end = new Date(endDate);
-
-//     if (Number.isNaN(start.getTime())) {
-//       return NextResponse.json(
-//         {
-//           success: false,
-//           message: "Invalid start date.",
-//         },
-//         {
-//           status: 400,
-//         },
-//       );
-//     }
-
-//     if (Number.isNaN(end.getTime())) {
-//       return NextResponse.json(
-//         {
-//           success: false,
-//           message: "Invalid end date.",
-//         },
-//         {
-//           status: 400,
-//         },
-//       );
-//     }
-
-//     // ==================================================
-//     // MAKE END DATE INCLUSIVE
-//     // Campaign runs until 23:59:59.999 of selected
-//     // end date.
-//     // ==================================================
-
-//     end.setHours(23, 59, 59, 999);
 
 //     if (start > end) {
 //       return NextResponse.json(

@@ -1,3 +1,1401 @@
+// "use client";
+
+// import { useEffect, useMemo, useRef, useState } from "react";
+// import {
+//   ArrowDown,
+//   ArrowUp,
+//   ChevronDown,
+//   Columns3,
+//   Download,
+//   FileSpreadsheet,
+//   FileText,
+//   Plus,
+//   Search,
+//   SlidersHorizontal,
+// } from "lucide-react";
+
+// import Pagination from "./Pagination";
+// import TableSkeleton from "./TableSkeleton";
+// import SearchInput from "./SearchInput";
+// import PageHeader from "../ui/PageHeader";
+// import { formatDate } from "@/lib/formatDate";
+
+// export default function Table({
+//   data = [],
+//   pageTitle,
+//   pageDescription,
+//   pageBreadcrumbs,
+//   hiddenColumns = [],
+//   columnTitles = {},
+//   columnOptions = [],
+//   dateColumns = [],
+//   onRowClick,
+//   rowKey = "_id",
+//   searchable = true,
+//   searchPlaceholder = "Search...",
+//   onSearchChange,
+//   loading = false,
+//   emptyMessage = "No data found",
+
+//   // ============================================================
+//   // Server Pagination
+//   // ============================================================
+
+//   pageSizeOptions = [10, 20, 30, 50],
+//   defaultPageSize = 10,
+//   serverPagination = false,
+//   currentPage: externalCurrentPage,
+//   totalItems: externalTotalItems,
+//   pageSize: externalPageSize,
+//   totalPages: externalTotalPages,
+//   onPageChange,
+//   onPageSizeChange,
+
+//   // ============================================================
+//   // Add Button
+//   // ============================================================
+
+//   addButton = false,
+//   addButtonText = "Add",
+//   onAdd,
+
+//   filterOptions = [],
+
+//   // ============================================================
+//   // Export
+//   // ============================================================
+
+//   exportButton = true,
+//   onExportPDF,
+//   onExportExcel,
+
+//   // ============================================================
+//   // Extra Actions
+//   // ============================================================
+
+//   serverFiltering = false,
+//   onFilterChange,
+//   filtersLoading = false,
+//   actions = [],
+// }) {
+//   // ============================================================
+//   // States
+//   // ============================================================
+
+//   const [search, setSearch] = useState("");
+//   const [searchQuery, setSearchQuery] = useState("");
+//   const [sortConfig, setSortConfig] = useState({
+//     key: null,
+//     direction: null,
+//   });
+
+//   const [page, setPage] = useState(1);
+
+//   const [pageSize, setPageSize] = useState(Math.min(defaultPageSize, 50));
+
+//   const [selectedRows, setSelectedRows] = useState([]);
+
+//   const [filterOpen, setFilterOpen] = useState(false);
+
+//   const [downloadOpen, setDownloadOpen] = useState(false);
+
+//   const [showColumnMenu, setShowColumnMenu] = useState(false);
+
+//   const [activeFilter, setActiveFilter] = useState(null);
+
+//   const [filterValues, setFilterValues] = useState({});
+
+//   // ============================================================
+//   // Refs
+//   // ============================================================
+
+//   const filterRef = useRef(null);
+
+//   const columnRef = useRef(null);
+
+//   const downloadRef = useRef(null);
+
+//   const formatText = (value) => {
+//     if (value === null || value === undefined) return "-";
+
+//     return String(value)
+//       .toLowerCase()
+//       .replace(/\b\w/g, (char) => char.toUpperCase());
+//   };
+
+//   const formatDesignation = (value) => {
+//     if (!value) return "-";
+
+//     const designationMap = {
+//       townfp: "Town FP",
+//       districtfp: "District FP",
+//       ucmo: "UCMO",
+//       otherstaff: "Other Staff",
+//       supervisor: "Supervisor",
+//       vaccinator: "Vaccinator",
+//     };
+
+//     return designationMap[String(value).toLowerCase()] || formatText(value);
+//   };
+
+//   // ============================================================
+//   // Outside Click
+//   // ============================================================
+
+//   useEffect(() => {
+//     const handleOutsideClick = (event) => {
+//       // Filter
+//       if (filterRef.current && !filterRef.current.contains(event.target)) {
+//         setFilterOpen(false);
+//         setActiveFilter(null);
+//       }
+
+//       // Columns
+//       if (columnRef.current && !columnRef.current.contains(event.target)) {
+//         setShowColumnMenu(false);
+//       }
+
+//       // Download
+//       if (downloadRef.current && !downloadRef.current.contains(event.target)) {
+//         setDownloadOpen(false);
+//       }
+//     };
+
+//     document.addEventListener("mousedown", handleOutsideClick);
+
+//     return () => {
+//       document.removeEventListener("mousedown", handleOutsideClick);
+//     };
+//   }, []);
+
+//   // ============================================================
+//   // Columns
+//   // ============================================================
+
+//   const columns = useMemo(() => {
+//     if (!data.length) {
+//       return [];
+//     }
+
+//     const keys = [...new Set(data.flatMap((item) => Object.keys(item)))];
+
+//     return keys.filter((key) => !hiddenColumns.includes(key));
+//   }, [data, hiddenColumns]);
+
+//   // ============================================================
+//   // Visible Columns
+//   //
+//   // columnOptions:
+//   // Jo columns parent page se diye jayenge,
+//   // woh page load par checked/show honge.
+//   // ============================================================
+
+//   const [visibleColumns, setVisibleColumns] = useState([]);
+
+//   useEffect(() => {
+//     if (columnOptions.length > 0) {
+//       setVisibleColumns(
+//         columnOptions.filter((column) => columns.includes(column)),
+//       );
+//     } else {
+//       setVisibleColumns(columns);
+//     }
+//   }, [columnOptions, columns]);
+
+//   // ============================================================
+//   // Toggle Column
+//   // ============================================================
+
+//   const toggleColumn = (column) => {
+//     setVisibleColumns((prev) => {
+//       if (prev.includes(column)) {
+//         return prev.filter((item) => item !== column);
+//       }
+
+//       return [...prev, column];
+//     });
+//   };
+
+//   // ============================================================
+//   // Reset Columns
+//   // ============================================================
+
+//   const resetColumns = () => {
+//     if (columnOptions.length > 0) {
+//       setVisibleColumns(
+//         columnOptions.filter((column) => columns.includes(column)),
+//       );
+//     } else {
+//       setVisibleColumns(columns);
+//     }
+//   };
+
+//   // ============================================================
+//   // Show All Columns
+//   // ============================================================
+
+//   const showAllColumns = () => {
+//     setVisibleColumns(columns);
+//   };
+
+//   // ============================================================
+//   // Column Title
+//   // ============================================================
+
+//   const getColumnTitle = (key) => {
+//     if (columnTitles[key]) {
+//       return columnTitles[key];
+//     }
+
+//     return key
+//       .replace(/([A-Z])/g, " $1")
+//       .replace(/[_-]/g, " ")
+//       .replace(/\b\w/g, (char) => char.toUpperCase())
+//       .trim();
+//   };
+
+//   // ============================================================
+//   // Format Value
+//   // ============================================================
+
+//   const formatValue = (value, column = "") => {
+//     if (value === null || value === undefined) {
+//       return "-";
+//     }
+
+//     if (typeof value === "boolean") {
+//       return value ? "Yes" : "No";
+//     }
+
+//     // Date
+//     if (
+//       value instanceof Date ||
+//       (typeof value === "string" &&
+//         !Number.isNaN(Date.parse(value)) &&
+//         value.includes("T"))
+//     ) {
+//       return formatDate(value);
+//     }
+
+//     if (typeof value === "object") {
+//       return JSON.stringify(value);
+//     }
+
+//     // Email ko original form mein rakhein
+//     if (column.toLowerCase() === "email") {
+//       return String(value);
+//     }
+
+//     // Designation ki special formatting
+//     if (column.toLowerCase() === "designation") {
+//       return formatDesignation(value);
+//     }
+
+//     // Baqi text Capitalize
+//     return formatText(value);
+//   };
+//   // ============================================================
+//   // Date Parser
+//   // ============================================================
+
+//   const parseDate = (value) => {
+//     if (!value) {
+//       return null;
+//     }
+
+//     const date = new Date(value);
+
+//     if (Number.isNaN(date.getTime())) {
+//       return null;
+//     }
+
+//     return date;
+//   };
+
+//   // ============================================================
+//   // Search
+//   // ============================================================
+
+//   const searchedData = useMemo(() => {
+//     if (serverPagination) {
+//       return data;
+//     }
+
+//     if (!searchQuery.trim()) {
+//       return data;
+//     }
+
+//     const query = searchQuery.toLowerCase().trim();
+
+//     return data.filter((row) =>
+//       columns.some((column) => {
+//         const value = formatValue(row[column], column).toLowerCase();
+
+//         return value.includes(query);
+//       }),
+//     );
+//   }, [data, searchQuery, columns, serverPagination]);
+
+//   // ============================================================
+//   // Filter Data
+//   // ============================================================
+
+//   // const filteredData = useMemo(() => {
+//   //   let result = [...searchedData];
+
+//   //   filterOptions.forEach((filter) => {
+//   //     const value = filterValues[filter.key];
+
+//   //     // --------------------------------------------------------
+//   //     // Select Filter
+//   //     // --------------------------------------------------------
+
+//   //     if (filter.type === "select") {
+//   //       if (!Array.isArray(value) || value.length === 0) {
+//   //         return;
+//   //       }
+
+//   //       result = result.filter((row) => {
+//   //         const rowValue = formatValue(row[filter.column], filter.column);
+
+//   //         return value.includes(rowValue);
+//   //       });
+//   //     }
+
+//   //     // --------------------------------------------------------
+//   //     // Date Range Filter
+//   //     // --------------------------------------------------------
+
+//   //     if (filter.type === "dateRange") {
+//   //       if (!value) {
+//   //         return;
+//   //       }
+
+//   //       const from = value.from ? new Date(`${value.from}T00:00:00`) : null;
+
+//   //       const to = value.to ? new Date(`${value.to}T23:59:59.999`) : null;
+
+//   //       if (!from && !to) {
+//   //         return;
+//   //       }
+
+//   //       result = result.filter((row) => {
+//   //         const rowDate = parseDate(row[filter.column]);
+
+//   //         if (!rowDate) {
+//   //           return false;
+//   //         }
+
+//   //         if (from && rowDate < from) {
+//   //           return false;
+//   //         }
+
+//   //         if (to && rowDate > to) {
+//   //           return false;
+//   //         }
+
+//   //         return true;
+//   //       });
+//   //     }
+//   //   });
+
+//   //   return result;
+//   // }, [searchedData, filterOptions, filterValues]);
+
+//   // ============================================================
+//   // Filter Data
+//   // ============================================================
+
+//   // ============================================================
+//   // Filter Data
+//   // ============================================================
+
+//   const filteredData = useMemo(() => {
+//     // Server filtering:
+//     // Backend already filtered the data.
+//     // Table ko dobara local filtering nahi karni.
+//     if (serverFiltering) {
+//       return searchedData;
+//     }
+
+//     // Client-side filtering
+//     let result = [...searchedData];
+
+//     filterOptions.forEach((filter) => {
+//       const value = filterValues[filter.key];
+
+//       // --------------------------------------------------------
+//       // Select Filter
+//       // --------------------------------------------------------
+
+//       if (filter.type === "select") {
+//         if (!Array.isArray(value) || value.length === 0) {
+//           return;
+//         }
+
+//         result = result.filter((row) => {
+//           const rowValue = formatValue(row[filter.column], filter.column);
+
+//           return value.includes(rowValue);
+//         });
+//       }
+
+//       // --------------------------------------------------------
+//       // Date Range Filter
+//       // --------------------------------------------------------
+
+//       if (filter.type === "dateRange") {
+//         if (!value) {
+//           return;
+//         }
+
+//         const from = value.from ? new Date(`${value.from}T00:00:00`) : null;
+
+//         const to = value.to ? new Date(`${value.to}T23:59:59.999`) : null;
+
+//         if (!from && !to) {
+//           return;
+//         }
+
+//         result = result.filter((row) => {
+//           const rowDate = parseDate(row[filter.column]);
+
+//           if (!rowDate) {
+//             return false;
+//           }
+
+//           if (from && rowDate < from) {
+//             return false;
+//           }
+
+//           if (to && rowDate > to) {
+//             return false;
+//           }
+
+//           return true;
+//         });
+//       }
+//     });
+
+//     return result;
+//   }, [searchedData, filterOptions, filterValues, serverFiltering]);
+
+//   // ============================================================
+//   // Sorting
+//   // ============================================================
+
+//   const sortedData = useMemo(() => {
+//     if (!sortConfig.key || !sortConfig.direction) {
+//       return filteredData;
+//     }
+
+//     const sorted = [...filteredData];
+
+//     sorted.sort((a, b) => {
+//       const first = a[sortConfig.key];
+
+//       const second = b[sortConfig.key];
+
+//       if (first === null || first === undefined) {
+//         return 1;
+//       }
+
+//       if (second === null || second === undefined) {
+//         return -1;
+//       }
+
+//       const firstNumber = Number(first);
+
+//       const secondNumber = Number(second);
+
+//       let comparison;
+
+//       if (
+//         !Number.isNaN(firstNumber) &&
+//         !Number.isNaN(secondNumber) &&
+//         first !== "" &&
+//         second !== ""
+//       ) {
+//         comparison = firstNumber - secondNumber;
+//       } else {
+//         comparison = String(first).localeCompare(String(second), undefined, {
+//           numeric: true,
+//           sensitivity: "base",
+//         });
+//       }
+
+//       return sortConfig.direction === "asc" ? comparison : -comparison;
+//     });
+
+//     return sorted;
+//   }, [filteredData, sortConfig]);
+
+//   // ============================================================
+//   // Pagination
+//   // ============================================================
+
+//   const totalPages = serverPagination
+//     ? externalTotalPages
+//     : Math.max(1, Math.ceil(sortedData.length / pageSize));
+
+//   const currentPage = serverPagination
+//     ? externalCurrentPage
+//     : Math.min(page, totalPages);
+
+//   const paginatedData = useMemo(() => {
+//     if (serverPagination) {
+//       return sortedData;
+//     }
+
+//     const start = (currentPage - 1) * pageSize;
+
+//     return sortedData.slice(start, start + pageSize);
+//   }, [serverPagination, sortedData, currentPage, pageSize]);
+
+//   // ============================================================
+//   // Sorting
+//   // ============================================================
+
+//   const handleSort = (column) => {
+//     setPage(1);
+
+//     setSortConfig((prev) => {
+//       if (prev.key !== column) {
+//         return {
+//           key: column,
+//           direction: "asc",
+//         };
+//       }
+
+//       if (prev.direction === "asc") {
+//         return {
+//           key: column,
+//           direction: "desc",
+//         };
+//       }
+
+//       return {
+//         key: null,
+//         direction: null,
+//       };
+//     });
+//   };
+
+//   // ============================================================
+//   // Row ID
+//   // ============================================================
+
+//   const getRowId = (row, index) => {
+//     return row[rowKey] ?? index;
+//   };
+
+//   // ============================================================
+//   // Select Row
+//   // ============================================================
+
+//   const toggleRow = (row, index) => {
+//     const id = getRowId(row, index);
+
+//     setSelectedRows((prev) => {
+//       if (prev.includes(id)) {
+//         return prev.filter((item) => item !== id);
+//       }
+
+//       return [...prev, id];
+//     });
+//   };
+
+//   // ============================================================
+//   // Current Page Selected
+//   // ============================================================
+
+//   const currentPageIds = paginatedData.map((row, index) =>
+//     getRowId(row, (currentPage - 1) * pageSize + index),
+//   );
+
+//   const allCurrentSelected =
+//     currentPageIds.length > 0 &&
+//     currentPageIds.every((id) => selectedRows.includes(id));
+
+//   // ============================================================
+//   // Select All Current Page
+//   // ============================================================
+
+//   const toggleSelectAll = () => {
+//     if (allCurrentSelected) {
+//       setSelectedRows((prev) =>
+//         prev.filter((id) => !currentPageIds.includes(id)),
+//       );
+
+//       return;
+//     }
+
+//     setSelectedRows((prev) => [...new Set([...prev, ...currentPageIds])]);
+//   };
+
+//   // ============================================================
+//   // Get Selected Rows
+//   // ============================================================
+
+//   const selectedData = useMemo(() => {
+//     if (!selectedRows.length) {
+//       return [];
+//     }
+
+//     return data.filter((row, index) => {
+//       const id = getRowId(row, index);
+
+//       return selectedRows.includes(id);
+//     });
+//   }, [data, selectedRows]);
+
+//   // ============================================================
+//   // Data To Download
+//   //
+//   // Selected rows have priority.
+//   //
+//   // If nothing is selected:
+//   // current filtered/sorted data is downloaded.
+//   // ============================================================
+
+//   const dataToDownload = selectedRows.length > 0 ? selectedData : sortedData;
+
+//   // ============================================================
+//   // Export Filters
+//   // ============================================================
+
+//   const exportFilters = useMemo(() => {
+//     return filterOptions
+//       .map((filter) => {
+//         const value = filterValues[filter.key];
+
+//         if (filter.type === "select") {
+//           if (!Array.isArray(value) || value.length === 0) {
+//             return null;
+//           }
+
+//           return {
+//             label: filter.label,
+//             value: value.join(", "),
+//           };
+//         }
+
+//         if (filter.type === "dateRange") {
+//           if (!value || (!value.from && !value.to)) {
+//             return null;
+//           }
+
+//           let dateValue = "";
+
+//           if (value.from && value.to) {
+//             dateValue = `${value.from} to ${value.to}`;
+//           } else if (value.from) {
+//             dateValue = `From ${value.from}`;
+//           } else if (value.to) {
+//             dateValue = `Until ${value.to}`;
+//           }
+
+//           return {
+//             label: filter.label,
+//             value: dateValue,
+//           };
+//         }
+
+//         return null;
+//       })
+//       .filter(Boolean);
+//   }, [filterOptions, filterValues]);
+
+//   // ============================================================
+//   // Filter Helpers
+//   // ============================================================
+
+//   const getUniqueFilterValues = (filter) => {
+//     const values = data
+//       .map((row) => formatValue(row[filter.column], filter.column))
+//       .filter((value) => value !== "-" && value.trim() !== "");
+
+//     return [...new Set(values)].sort((a, b) =>
+//       String(a).localeCompare(String(b), undefined, {
+//         numeric: true,
+//         sensitivity: "base",
+//       }),
+//     );
+//   };
+
+//   // ============================================================
+//   // Set Select Filter
+//   // ============================================================
+
+//   const toggleFilterValue = (filterKey, value) => {
+//     setFilterValues((prev) => {
+//       const current = prev[filterKey] || [];
+
+//       const exists = current.includes(value);
+
+//       const next = exists
+//         ? current.filter((item) => item !== value)
+//         : [...current, value];
+
+//       return {
+//         ...prev,
+//         [filterKey]: next,
+//       };
+//     });
+
+//     setPage(1);
+//   };
+
+//   // ============================================================
+//   // Set Date Range
+//   // ============================================================
+
+//   const setDateRange = (filterKey, field, value) => {
+//     setFilterValues((prev) => ({
+//       ...prev,
+//       [filterKey]: {
+//         ...(prev[filterKey] || {}),
+//         [field]: value,
+//       },
+//     }));
+
+//     setPage(1);
+//   };
+
+//   // ============================================================
+//   // Remove Filter
+//   // ============================================================
+
+//   const removeFilter = (filter) => {
+//     setFilterValues((prev) => {
+//       const next = {
+//         ...prev,
+//       };
+
+//       delete next[filter.key];
+
+//       return next;
+//     });
+
+//     setPage(1);
+//   };
+
+//   // ============================================================
+//   // Clear All Filters
+//   // ============================================================
+
+//   const clearFilters = () => {
+//     setFilterValues({});
+
+//     setActiveFilter(null);
+
+//     setPage(1);
+//   };
+
+//   // ============================================================
+//   // Active Filter Count
+//   // ============================================================
+
+//   const activeFilterCount = useMemo(() => {
+//     return filterOptions.reduce((count, filter) => {
+//       const value = filterValues[filter.key];
+
+//       if (
+//         filter.type === "select" &&
+//         Array.isArray(value) &&
+//         value.length > 0
+//       ) {
+//         return count + 1;
+//       }
+
+//       if (filter.type === "dateRange" && value && (value.from || value.to)) {
+//         return count + 1;
+//       }
+
+//       return count;
+//     }, 0);
+//   }, [filterOptions, filterValues]);
+
+//   // ============================================================
+//   // Render
+//   // ============================================================
+
+//   return (
+//     <div className="bg-background border-border min-h-[calc(100vh-100px)] overflow-hidden rounded-lg border shadow-sm">
+//       {/* ======================================================
+//           Toolbar
+//       ====================================================== */}
+
+//       <div className="border-border flex flex-col gap-3 border-b p-4 md:flex-row md:items-end md:justify-between">
+//         <PageHeader
+//           title={pageTitle}
+//           description={pageDescription}
+//           breadcrumbs={pageBreadcrumbs}
+//         />
+
+//         {/* Search + Actions */}
+//         <div className="flex w-full min-w-0 flex-col gap-3 md:flex-1 md:flex-row md:items-end md:justify-end">
+//           {/* Search */}
+//           <div className="w-full min-w-0 md:max-w-xs">
+//             {searchable ? (
+//               <SearchInput
+//                 value={search}
+//                 placeholder={searchPlaceholder}
+//                 onChange={(value) => {
+//                   setSearch(value);
+//                 }}
+//                 onSearch={(value) => {
+//                   setSearch(value);
+
+//                   if (serverPagination) {
+//                     onSearchChange?.(value);
+//                     return;
+//                   }
+
+//                   setPage(1);
+//                 }}
+//               />
+//             ) : (
+//               <div />
+//             )}
+//           </div>
+
+//           {/* Actions */}
+//           <div className="grid w-full grid-cols-2 gap-3 md:flex md:w-auto md:flex-nowrap md:items-center">
+//             {/* Add */}
+//             {addButton && (
+//               <button
+//                 type="button"
+//                 onClick={onAdd}
+//                 className="bg-primary text-primary-foreground hover:bg-primary-dark flex h-10 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition md:w-auto"
+//               >
+//                 <Plus size={16} />
+
+//                 <span className="min-w-0 truncate">{addButtonText}</span>
+//               </button>
+//             )}
+
+//             {/* Columns */}
+//             <div ref={columnRef} className="relative">
+//               <button
+//                 type="button"
+//                 onClick={() => {
+//                   setShowColumnMenu((prev) => !prev);
+//                   setFilterOpen(false);
+//                   setActiveFilter(null);
+//                   setDownloadOpen(false);
+//                 }}
+//                 className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition md:w-auto"
+//               >
+//                 <Columns3 size={16} />
+
+//                 <span>Columns</span>
+
+//                 <ChevronDown
+//                   size={15}
+//                   className={`transition-transform ${
+//                     showColumnMenu ? "rotate-180" : ""
+//                   }`}
+//                 />
+//               </button>
+
+//               {showColumnMenu && (
+//                 <div
+//                   className={`border-border bg-background absolute top-12 ${addButton ? "right-0" : "left-0"} z-50 w-72 rounded-xl border p-2 shadow-xl`}
+//                 >
+//                   {/* Header */}
+
+//                   <div className="flex items-center justify-between px-2 py-2">
+//                     <p className="text-text text-sm font-semibold">
+//                       Show Columns
+//                     </p>
+
+//                     <div className="flex items-center gap-3">
+//                       <button
+//                         type="button"
+//                         onClick={showAllColumns}
+//                         className="text-primary text-xs font-medium hover:underline"
+//                       >
+//                         All
+//                       </button>
+
+//                       <button
+//                         type="button"
+//                         onClick={resetColumns}
+//                         className="text-text-secondary hover:text-text text-xs font-medium hover:underline"
+//                       >
+//                         Reset
+//                       </button>
+//                     </div>
+//                   </div>
+
+//                   {/* Columns */}
+
+//                   <div className="max-h-72 space-y-1 overflow-y-auto">
+//                     {(columnOptions.length > 0 ? columnOptions : columns)
+//                       .filter((column) => columns.includes(column))
+//                       .map((column) => {
+//                         const checked = visibleColumns.includes(column);
+
+//                         return (
+//                           <label
+//                             key={column}
+//                             className="hover:bg-surface flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
+//                           >
+//                             <input
+//                               type="checkbox"
+//                               checked={checked}
+//                               onChange={() => toggleColumn(column)}
+//                               className="accent-primary h-4 w-4 cursor-pointer"
+//                             />
+
+//                             <span className="text-text">
+//                               {getColumnTitle(column)}
+//                             </span>
+//                           </label>
+//                         );
+//                       })}
+//                   </div>
+//                 </div>
+//               )}
+//             </div>
+
+//             {/* =================================================
+//               Extra Actions
+//           ================================================= */}
+
+//             {/* {actions.map((action, index) => (
+//               <button
+//                 key={action.id || index}
+//                 type="button"
+//                 onClick={action.onClick}
+//                 disabled={action.disabled}
+//                 className="text-text hover:bg-surface border-border flex h-10 min-w-28 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
+//               >
+//                 {action.icon}
+
+//                 <span>{action.label}</span>
+//               </button>
+//             ))} */}
+
+//             <div ref={filterRef} className="relative">
+//               <button
+//                 type="button"
+//                 onClick={() => {
+//                   setFilterOpen((prev) => !prev);
+
+//                   setShowColumnMenu(false);
+
+//                   setDownloadOpen(false);
+//                 }}
+//                 className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition lg:w-auto lg:min-w-28"
+//               >
+//                 <SlidersHorizontal size={16} />
+
+//                 <span>Filter</span>
+
+//                 {activeFilterCount > 0 && (
+//                   <span className="bg-primary flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] text-white">
+//                     {activeFilterCount}
+//                   </span>
+//                 )}
+
+//                 <ChevronDown
+//                   size={15}
+//                   className={`transition-transform ${
+//                     filterOpen ? "rotate-180" : ""
+//                   }`}
+//                 />
+//               </button>
+
+//               {filterOpen && (
+//                 <div
+//                   className={`border-border bg-background absolute top-12 ${addButton ? "left-0" : "right-0"} z-50 w-[min(18rem,calc(100vw-2rem))] rounded-xl border p-2 shadow-xl`}
+//                 >
+//                   <div className="flex items-center justify-between px-2 py-2">
+//                     <p className="text-text text-sm font-semibold">
+//                       Filter Data
+//                     </p>
+
+//                     {activeFilterCount > 0 && (
+//                       <button
+//                         type="button"
+//                         onClick={clearFilters}
+//                         className="text-primary text-xs font-medium hover:underline"
+//                       >
+//                         Clear All
+//                       </button>
+//                     )}
+//                   </div>
+
+//                   <div className="max-h-[420px] space-y-2 overflow-y-auto">
+//                     {filterOptions.map((filter) => {
+//                       const isActive = activeFilter === filter.key;
+
+//                       return (
+//                         <div key={filter.key}>
+//                           <button
+//                             type="button"
+//                             onClick={() =>
+//                               setActiveFilter(isActive ? null : filter.key)
+//                             }
+//                             className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-between rounded-lg border px-3 text-sm font-medium transition"
+//                           >
+//                             <span className="truncate">{filter.label}</span>
+
+//                             <ChevronDown
+//                               size={15}
+//                               className={`shrink-0 transition-transform ${
+//                                 isActive ? "rotate-180" : ""
+//                               }`}
+//                             />
+//                           </button>
+
+//                           {/* Select Options */}
+//                           {isActive && filter.type === "select" && (
+//                             <div className="bg-surface mt-1 max-h-52 space-y-2 overflow-y-auto rounded-lg p-3">
+//                               {getUniqueFilterValues(filter).map((option) => {
+//                                 const selected =
+//                                   filterValues[filter.key]?.includes(option);
+
+//                                 return (
+//                                   <label
+//                                     key={option}
+//                                     className="text-text flex cursor-pointer items-center gap-2 text-sm"
+//                                   >
+//                                     <input
+//                                       type="checkbox"
+//                                       checked={Boolean(selected)}
+//                                       onChange={() =>
+//                                         toggleFilterValue(filter.key, option)
+//                                       }
+//                                       className="accent-primary h-4 w-4"
+//                                     />
+
+//                                     <span className="truncate">{option}</span>
+//                                   </label>
+//                                 );
+//                               })}
+//                             </div>
+//                           )}
+
+//                           {/* Date Range */}
+//                           {isActive && filter.type === "dateRange" && (
+//                             <div className="bg-surface mt-1 space-y-3 rounded-lg p-3">
+//                               <div>
+//                                 <label className="text-text-secondary mb-1 block text-xs">
+//                                   Start Date
+//                                 </label>
+
+//                                 <input
+//                                   type="date"
+//                                   value={filterValues[filter.key]?.from || ""}
+//                                   onChange={(event) =>
+//                                     setDateRange(
+//                                       filter.key,
+//                                       "from",
+//                                       event.target.value,
+//                                     )
+//                                   }
+//                                   className="border-border bg-background text-text h-10 w-full rounded-lg border px-3 text-sm outline-none"
+//                                 />
+//                               </div>
+
+//                               <div>
+//                                 <label className="text-text-secondary mb-1 block text-xs">
+//                                   End Date
+//                                 </label>
+
+//                                 <input
+//                                   type="date"
+//                                   value={filterValues[filter.key]?.to || ""}
+//                                   onChange={(event) =>
+//                                     setDateRange(
+//                                       filter.key,
+//                                       "to",
+//                                       event.target.value,
+//                                     )
+//                                   }
+//                                   className="border-border bg-background text-text h-10 w-full rounded-lg border px-3 text-sm outline-none"
+//                                 />
+//                               </div>
+//                             </div>
+//                           )}
+//                         </div>
+//                       );
+//                     })}
+//                   </div>
+//                 </div>
+//               )}
+//             </div>
+
+//             {/* =================================================
+//               Download
+//           ================================================= */}
+
+//             {exportButton && (
+//               <div ref={downloadRef} className="relative">
+//                 <button
+//                   type="button"
+//                   onClick={() => {
+//                     setDownloadOpen((prev) => !prev);
+
+//                     setFilterOpen(false);
+//                     setActiveFilter(null);
+
+//                     setShowColumnMenu(false);
+//                   }}
+//                   className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition md:w-auto md:min-w-28"
+//                 >
+//                   <Download size={16} />
+
+//                   <span>Download</span>
+
+//                   <ChevronDown
+//                     size={15}
+//                     className={`transition-transform ${
+//                       downloadOpen ? "rotate-180" : ""
+//                     }`}
+//                   />
+//                 </button>
+
+//                 {downloadOpen && (
+//                   <div
+//                     className={`border-border bg-background absolute top-12 ${addButton ? "right-0" : "left-0"} z-50 w-[min(13rem,calc(100vw-2rem))] rounded-xl border p-2 shadow-xl`}
+//                   >
+//                     <div className="text-text-secondary border-border mb-2 border-b px-3 pb-2 text-xs">
+//                       {selectedRows.length > 0
+//                         ? `${selectedRows.length} selected records`
+//                         : `${sortedData.length} filtered records`}
+//                     </div>
+
+//                     {/* PDF */}
+
+//                     <button
+//                       type="button"
+//                       onClick={() => {
+//                         setDownloadOpen(false);
+
+//                         onExportPDF?.({
+//                           data: dataToDownload,
+
+//                           // Only visible columns
+//                           columns: visibleColumns,
+
+//                           columnTitles,
+
+//                           filters: exportFilters,
+//                         });
+//                       }}
+//                       className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
+//                     >
+//                       <FileText size={17} className="text-red-500" />
+
+//                       <span>Download PDF</span>
+//                     </button>
+
+//                     {/* Excel */}
+
+//                     <button
+//                       type="button"
+//                       onClick={() => {
+//                         setDownloadOpen(false);
+
+//                         onExportExcel?.({
+//                           data: dataToDownload,
+
+//                           // Only visible columns
+//                           columns: visibleColumns,
+
+//                           columnTitles,
+
+//                           filters: exportFilters,
+//                         });
+//                       }}
+//                       className="text-text hover:bg-surface flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition"
+//                     >
+//                       <FileSpreadsheet size={17} className="text-green-600" />
+
+//                       <span>Download Excel</span>
+//                     </button>
+//                   </div>
+//                 )}
+//               </div>
+//             )}
+
+//             {selectedRows.length > 0 && (
+//               <div className="bg-primary-light text-primary col-span-2 flex h-10 w-full items-center justify-center rounded-lg px-3 text-xs font-medium md:hidden lg:col-span-1 lg:w-auto lg:min-w-28">
+//                 {selectedRows.length} selected
+//               </div>
+//             )}
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* ======================================================
+//           Table
+//       ====================================================== */}
+
+//       <div className="overflow-x-auto">
+//         <table className="w-full min-w-max border-collapse">
+//           <thead>
+//             <tr className="bg-surface border-border border-b">
+//               <th className="w-12 px-4 py-3 text-left">
+//                 <input
+//                   type="checkbox"
+//                   checked={allCurrentSelected}
+//                   onChange={toggleSelectAll}
+//                   className="accent-primary h-4 w-4 cursor-pointer"
+//                   aria-label="Select all"
+//                 />
+//               </th>
+
+//               {visibleColumns.map((column) => {
+//                 const isSorted = sortConfig.key === column;
+
+//                 return (
+//                   <th
+//                     key={column}
+//                     className="text-text-secondary px-4 py-3 text-left text-xs font-semibold whitespace-nowrap uppercase"
+//                   >
+//                     <button
+//                       type="button"
+//                       onClick={() => handleSort(column)}
+//                       className="hover:text-text flex items-center gap-2 transition"
+//                     >
+//                       <span>{getColumnTitle(column)}</span>
+
+//                       <span className="flex flex-col">
+//                         <ArrowUp
+//                           size={11}
+//                           strokeWidth={2.5}
+//                           className={
+//                             isSorted && sortConfig.direction === "asc"
+//                               ? "text-primary"
+//                               : "text-text-secondary opacity-70"
+//                           }
+//                         />
+
+//                         <ArrowDown
+//                           size={11}
+//                           strokeWidth={2.5}
+//                           className={
+//                             isSorted && sortConfig.direction === "desc"
+//                               ? "text-primary"
+//                               : "text-text-secondary opacity-70"
+//                           }
+//                         />
+//                       </span>
+//                     </button>
+//                   </th>
+//                 );
+//               })}
+//             </tr>
+//           </thead>
+
+//           <tbody>
+//             {loading ? (
+//               <TableSkeleton columns={visibleColumns.length || 8} rows={8} />
+//             ) : paginatedData.length > 0 ? (
+//               paginatedData.map((row, index) => {
+//                 const absoluteIndex = (currentPage - 1) * pageSize + index;
+
+//                 const id = getRowId(row, absoluteIndex);
+
+//                 const selected = selectedRows.includes(id);
+
+//                 return (
+//                   <tr
+//                     key={id}
+//                     onClick={() => onRowClick?.(row)}
+//                     className={`border-border border-b transition last:border-b-0 ${
+//                       onRowClick
+//                         ? "hover:bg-surface cursor-pointer"
+//                         : "hover:bg-surface"
+//                     } ${selected ? "bg-primary-light/40" : ""}`}
+//                   >
+//                     {/* Checkbox */}
+
+//                     <td
+//                       className="px-4 py-3"
+//                       onClick={(event) => event.stopPropagation()}
+//                     >
+//                       <input
+//                         type="checkbox"
+//                         checked={selected}
+//                         onChange={() => toggleRow(row, absoluteIndex)}
+//                         className="accent-primary h-4 w-4 cursor-pointer"
+//                         aria-label={`Select row ${absoluteIndex + 1}`}
+//                       />
+//                     </td>
+
+//                     {/* Visible Columns */}
+
+//                     {visibleColumns.map((column) => (
+//                       <td
+//                         key={column}
+//                         className="text-text max-w-xs px-4 py-3 text-sm"
+//                       >
+//                         <div className="truncate">
+//                           {dateColumns.includes(column)
+//                             ? formatDate(row[column])
+//                             : formatValue(row[column], column)}
+//                         </div>
+//                       </td>
+//                     ))}
+//                   </tr>
+//                 );
+//               })
+//             ) : (
+//               <tr>
+//                 <td
+//                   colSpan={visibleColumns.length + 1}
+//                   className="text-text-secondary px-4 py-16 text-center"
+//                 >
+//                   <div className="flex flex-col items-center gap-2">
+//                     <div className="bg-surface flex h-12 w-12 items-center justify-center rounded-full">
+//                       <Search size={20} />
+//                     </div>
+
+//                     <p className="text-text text-sm font-medium">
+//                       {emptyMessage}
+//                     </p>
+
+//                     {search && (
+//                       <p className="text-xs">Try changing your search.</p>
+//                     )}
+//                   </div>
+//                 </td>
+//               </tr>
+//             )}
+//           </tbody>
+//         </table>
+//       </div>
+
+//       {/* ======================================================
+//           Pagination
+//       ====================================================== */}
+
+//       <Pagination
+//         currentPage={currentPage}
+//         totalItems={serverPagination ? externalTotalItems : sortedData.length}
+//         pageSize={serverPagination ? externalPageSize : pageSize}
+//         onPageChange={serverPagination ? onPageChange : setPage}
+//         onPageSizeChange={
+//           serverPagination
+//             ? onPageSizeChange
+//             : (newSize) => {
+//                 setPageSize(Math.min(newSize, 50));
+//                 setPage(1);
+//               }
+//         }
+//         pageSizeOptions={pageSizeOptions}
+//         maxPageSize={50}
+//       />
+//     </div>
+//   );
+// }
+
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -59,6 +1457,10 @@ export default function Table({
   addButtonText = "Add",
   onAdd,
 
+  // ============================================================
+  // Filters
+  // ============================================================
+
   filterOptions = [],
 
   // ============================================================
@@ -73,6 +1475,9 @@ export default function Table({
   // Extra Actions
   // ============================================================
 
+  serverFiltering = false,
+  onFilterChange,
+  filtersLoading = false,
   actions = [],
 }) {
   // ============================================================
@@ -81,6 +1486,7 @@ export default function Table({
 
   const [search, setSearch] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: null,
@@ -93,13 +1499,10 @@ export default function Table({
   const [selectedRows, setSelectedRows] = useState([]);
 
   const [filterOpen, setFilterOpen] = useState(false);
-
   const [downloadOpen, setDownloadOpen] = useState(false);
-
   const [showColumnMenu, setShowColumnMenu] = useState(false);
 
   const [activeFilter, setActiveFilter] = useState(null);
-
   const [filterValues, setFilterValues] = useState({});
 
   // ============================================================
@@ -107,13 +1510,17 @@ export default function Table({
   // ============================================================
 
   const filterRef = useRef(null);
-
   const columnRef = useRef(null);
-
   const downloadRef = useRef(null);
 
+  // ============================================================
+  // Format Helpers
+  // ============================================================
+
   const formatText = (value) => {
-    if (value === null || value === undefined) return "-";
+    if (value === null || value === undefined) {
+      return "-";
+    }
 
     return String(value)
       .toLowerCase()
@@ -121,7 +1528,9 @@ export default function Table({
   };
 
   const formatDesignation = (value) => {
-    if (!value) return "-";
+    if (!value) {
+      return "-";
+    }
 
     const designationMap = {
       townfp: "Town FP",
@@ -136,23 +1545,75 @@ export default function Table({
   };
 
   // ============================================================
+  // Format Value
+  // ============================================================
+
+  const formatValue = (value, column = "") => {
+    if (value === null || value === undefined) {
+      return "-";
+    }
+
+    if (typeof value === "boolean") {
+      return value ? "Yes" : "No";
+    }
+
+    if (
+      value instanceof Date ||
+      (typeof value === "string" &&
+        !Number.isNaN(Date.parse(value)) &&
+        value.includes("T"))
+    ) {
+      return formatDate(value);
+    }
+
+    if (typeof value === "object") {
+      return JSON.stringify(value);
+    }
+
+    if (column.toLowerCase() === "email") {
+      return String(value);
+    }
+
+    if (column.toLowerCase() === "designation") {
+      return formatDesignation(value);
+    }
+
+    return formatText(value);
+  };
+
+  // ============================================================
+  // Date Parser
+  // ============================================================
+
+  const parseDate = (value) => {
+    if (!value) {
+      return null;
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return null;
+    }
+
+    return date;
+  };
+
+  // ============================================================
   // Outside Click
   // ============================================================
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
-      // Filter
       if (filterRef.current && !filterRef.current.contains(event.target)) {
         setFilterOpen(false);
         setActiveFilter(null);
       }
 
-      // Columns
       if (columnRef.current && !columnRef.current.contains(event.target)) {
         setShowColumnMenu(false);
       }
 
-      // Download
       if (downloadRef.current && !downloadRef.current.contains(event.target)) {
         setDownloadOpen(false);
       }
@@ -181,10 +1642,6 @@ export default function Table({
 
   // ============================================================
   // Visible Columns
-  //
-  // columnOptions:
-  // Jo columns parent page se diye jayenge,
-  // woh page load par checked/show honge.
   // ============================================================
 
   const [visibleColumns, setVisibleColumns] = useState([]);
@@ -252,64 +1709,6 @@ export default function Table({
   };
 
   // ============================================================
-  // Format Value
-  // ============================================================
-
-  const formatValue = (value, column = "") => {
-    if (value === null || value === undefined) {
-      return "-";
-    }
-
-    if (typeof value === "boolean") {
-      return value ? "Yes" : "No";
-    }
-
-    // Date
-    if (
-      value instanceof Date ||
-      (typeof value === "string" &&
-        !Number.isNaN(Date.parse(value)) &&
-        value.includes("T"))
-    ) {
-      return formatDate(value);
-    }
-
-    if (typeof value === "object") {
-      return JSON.stringify(value);
-    }
-
-    // Email ko original form mein rakhein
-    if (column.toLowerCase() === "email") {
-      return String(value);
-    }
-
-    // Designation ki special formatting
-    if (column.toLowerCase() === "designation") {
-      return formatDesignation(value);
-    }
-
-    // Baqi text Capitalize
-    return formatText(value);
-  };
-  // ============================================================
-  // Date Parser
-  // ============================================================
-
-  const parseDate = (value) => {
-    if (!value) {
-      return null;
-    }
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-      return null;
-    }
-
-    return date;
-  };
-
-  // ============================================================
   // Search
   // ============================================================
 
@@ -334,17 +1733,46 @@ export default function Table({
   }, [data, searchQuery, columns, serverPagination]);
 
   // ============================================================
-  // Filter Data
+  // Get Filter Options
+  // ============================================================
+
+  const getUniqueFilterValues = (filter) => {
+    const values = data
+      .map((row) => formatValue(row[filter.column], filter.column))
+      .filter((value) => value !== "-" && String(value).trim() !== "");
+
+    return [...new Set(values)].sort((a, b) =>
+      String(a).localeCompare(String(b), undefined, {
+        numeric: true,
+        sensitivity: "base",
+      }),
+    );
+  };
+
+  // ============================================================
+  // Client Filter
   // ============================================================
 
   const filteredData = useMemo(() => {
+    // ----------------------------------------------------------
+    // Server Filtering
+    // ----------------------------------------------------------
+
+    if (serverFiltering) {
+      return searchedData;
+    }
+
+    // ----------------------------------------------------------
+    // Client Filtering
+    // ----------------------------------------------------------
+
     let result = [...searchedData];
 
     filterOptions.forEach((filter) => {
       const value = filterValues[filter.key];
 
       // --------------------------------------------------------
-      // Select Filter
+      // Select
       // --------------------------------------------------------
 
       if (filter.type === "select") {
@@ -360,7 +1788,7 @@ export default function Table({
       }
 
       // --------------------------------------------------------
-      // Date Range Filter
+      // Date Range
       // --------------------------------------------------------
 
       if (filter.type === "dateRange") {
@@ -397,7 +1825,7 @@ export default function Table({
     });
 
     return result;
-  }, [searchedData, filterOptions, filterValues]);
+  }, [searchedData, filterOptions, filterValues, serverFiltering]);
 
   // ============================================================
   // Sorting
@@ -412,7 +1840,6 @@ export default function Table({
 
     sorted.sort((a, b) => {
       const first = a[sortConfig.key];
-
       const second = b[sortConfig.key];
 
       if (first === null || first === undefined) {
@@ -424,7 +1851,6 @@ export default function Table({
       }
 
       const firstNumber = Number(first);
-
       const secondNumber = Number(second);
 
       let comparison;
@@ -454,11 +1880,11 @@ export default function Table({
   // ============================================================
 
   const totalPages = serverPagination
-    ? externalTotalPages
+    ? Math.max(1, externalTotalPages || 1)
     : Math.max(1, Math.ceil(sortedData.length / pageSize));
 
   const currentPage = serverPagination
-    ? externalCurrentPage
+    ? externalCurrentPage || 1
     : Math.min(page, totalPages);
 
   const paginatedData = useMemo(() => {
@@ -537,7 +1963,7 @@ export default function Table({
     currentPageIds.every((id) => selectedRows.includes(id));
 
   // ============================================================
-  // Select All Current Page
+  // Select All
   // ============================================================
 
   const toggleSelectAll = () => {
@@ -553,7 +1979,7 @@ export default function Table({
   };
 
   // ============================================================
-  // Get Selected Rows
+  // Selected Rows
   // ============================================================
 
   const selectedData = useMemo(() => {
@@ -570,11 +1996,6 @@ export default function Table({
 
   // ============================================================
   // Data To Download
-  //
-  // Selected rows have priority.
-  //
-  // If nothing is selected:
-  // current filtered/sorted data is downloaded.
   // ============================================================
 
   const dataToDownload = selectedRows.length > 0 ? selectedData : sortedData;
@@ -626,29 +2047,24 @@ export default function Table({
   }, [filterOptions, filterValues]);
 
   // ============================================================
-  // Filter Helpers
+  // Notify Server
   // ============================================================
 
-  const getUniqueFilterValues = (filter) => {
-    const values = data
-      .map((row) => formatValue(row[filter.column], filter.column))
-      .filter((value) => value !== "-" && value.trim() !== "");
+  const notifyServerFilterChange = (nextFilters) => {
+    if (!serverFiltering) {
+      return;
+    }
 
-    return [...new Set(values)].sort((a, b) =>
-      String(a).localeCompare(String(b), undefined, {
-        numeric: true,
-        sensitivity: "base",
-      }),
-    );
+    onFilterChange?.(nextFilters);
   };
 
   // ============================================================
-  // Set Select Filter
+  // Select Filter
   // ============================================================
 
   const toggleFilterValue = (filterKey, value) => {
     setFilterValues((prev) => {
-      const current = prev[filterKey] || [];
+      const current = Array.isArray(prev[filterKey]) ? prev[filterKey] : [];
 
       const exists = current.includes(value);
 
@@ -656,29 +2072,61 @@ export default function Table({
         ? current.filter((item) => item !== value)
         : [...current, value];
 
-      return {
+      const nextFilters = {
         ...prev,
         [filterKey]: next,
       };
+
+      // Remove empty filter
+      if (next.length === 0) {
+        delete nextFilters[filterKey];
+      }
+
+      notifyServerFilterChange(nextFilters);
+
+      return nextFilters;
     });
 
     setPage(1);
+
+    if (serverPagination) {
+      onPageChange?.(1);
+    }
   };
 
   // ============================================================
-  // Set Date Range
+  // Date Range
   // ============================================================
 
   const setDateRange = (filterKey, field, value) => {
-    setFilterValues((prev) => ({
-      ...prev,
-      [filterKey]: {
-        ...(prev[filterKey] || {}),
+    setFilterValues((prev) => {
+      const current = prev[filterKey] || {};
+
+      const nextRange = {
+        ...current,
         [field]: value,
-      },
-    }));
+      };
+
+      const nextFilters = {
+        ...prev,
+        [filterKey]: nextRange,
+      };
+
+      // Remove date filter if both values empty
+      if (!nextRange.from && !nextRange.to) {
+        delete nextFilters[filterKey];
+      }
+
+      notifyServerFilterChange(nextFilters);
+
+      return nextFilters;
+    });
 
     setPage(1);
+
+    if (serverPagination) {
+      onPageChange?.(1);
+    }
   };
 
   // ============================================================
@@ -693,10 +2141,16 @@ export default function Table({
 
       delete next[filter.key];
 
+      notifyServerFilterChange(next);
+
       return next;
     });
 
     setPage(1);
+
+    if (serverPagination) {
+      onPageChange?.(1);
+    }
   };
 
   // ============================================================
@@ -705,10 +2159,16 @@ export default function Table({
 
   const clearFilters = () => {
     setFilterValues({});
-
     setActiveFilter(null);
-
     setPage(1);
+
+    if (serverFiltering) {
+      onFilterChange?.({});
+
+      if (serverPagination) {
+        onPageChange?.(1);
+      }
+    }
   };
 
   // ============================================================
@@ -742,8 +2202,8 @@ export default function Table({
   return (
     <div className="bg-background border-border min-h-[calc(100vh-100px)] overflow-hidden rounded-lg border shadow-sm">
       {/* ======================================================
-          Toolbar
-      ====================================================== */}
+Toolbar
+====================================================== */}
 
       <div className="border-border flex flex-col gap-3 border-b p-4 md:flex-row md:items-end md:justify-between">
         <PageHeader
@@ -753,8 +2213,10 @@ export default function Table({
         />
 
         {/* Search + Actions */}
+
         <div className="flex w-full min-w-0 flex-col gap-3 md:flex-1 md:flex-row md:items-end md:justify-end">
           {/* Search */}
+
           <div className="w-full min-w-0 md:max-w-xs">
             {searchable ? (
               <SearchInput
@@ -765,13 +2227,14 @@ export default function Table({
                 }}
                 onSearch={(value) => {
                   setSearch(value);
+                  setSearchQuery(value);
+
+                  setPage(1);
 
                   if (serverPagination) {
                     onSearchChange?.(value);
-                    return;
+                    onPageChange?.(1);
                   }
-
-                  setPage(1);
                 }}
               />
             ) : (
@@ -780,8 +2243,10 @@ export default function Table({
           </div>
 
           {/* Actions */}
+
           <div className="grid w-full grid-cols-2 gap-3 md:flex md:w-auto md:flex-nowrap md:items-center">
             {/* Add */}
+
             {addButton && (
               <button
                 type="button"
@@ -795,6 +2260,7 @@ export default function Table({
             )}
 
             {/* Columns */}
+
             <div ref={columnRef} className="relative">
               <button
                 type="button"
@@ -819,9 +2285,11 @@ export default function Table({
               </button>
 
               {showColumnMenu && (
-                <div className={`border-border bg-background absolute top-12 ${addButton ? "right-0" : "left-0" } z-50 w-72 rounded-xl border p-2 shadow-xl`}>
-                  {/* Header */}
-
+                <div
+                  className={`border-border bg-background absolute top-12 ${
+                    addButton ? "right-0" : "left-0"
+                  } z-50 w-72 rounded-xl border p-2 shadow-xl`}
+                >
                   <div className="flex items-center justify-between px-2 py-2">
                     <p className="text-text text-sm font-semibold">
                       Show Columns
@@ -845,8 +2313,6 @@ export default function Table({
                       </button>
                     </div>
                   </div>
-
-                  {/* Columns */}
 
                   <div className="max-h-72 space-y-1 overflow-y-auto">
                     {(columnOptions.length > 0 ? columnOptions : columns)
@@ -877,75 +2343,89 @@ export default function Table({
               )}
             </div>
 
-            {/* =================================================
-              Extra Actions
-          ================================================= */}
+            {/* Filter */}
 
-            {/* {actions.map((action, index) => (
+            <div ref={filterRef} className="relative">
               <button
-                key={action.id || index}
                 type="button"
-                onClick={action.onClick}
-                disabled={action.disabled}
-                className="text-text hover:bg-surface border-border flex h-10 min-w-28 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => {
+                  setFilterOpen((prev) => !prev);
+
+                  setShowColumnMenu(false);
+                  setDownloadOpen(false);
+                }}
+                className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition lg:w-auto lg:min-w-28"
               >
-                {action.icon}
+                <SlidersHorizontal size={16} />
 
-                <span>{action.label}</span>
+                <span>Filter</span>
+
+                {activeFilterCount > 0 && (
+                  <span className="bg-primary flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] text-white">
+                    {activeFilterCount}
+                  </span>
+                )}
+
+                <ChevronDown
+                  size={15}
+                  className={`transition-transform ${
+                    filterOpen ? "rotate-180" : ""
+                  }`}
+                />
               </button>
-            ))} */}
 
-              <div ref={filterRef} className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFilterOpen((prev) => !prev);
-
-                    setShowColumnMenu(false);
-
-                    setDownloadOpen(false);
-                  }}
-                  className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition lg:w-auto lg:min-w-28"
+              {filterOpen && (
+                <div
+                  className={`border-border bg-background absolute top-12 ${
+                    addButton ? "left-0" : "right-0"
+                  } z-50 w-[min(18rem,calc(100vw-2rem))] rounded-xl border p-2 shadow-xl`}
                 >
-                  <SlidersHorizontal size={16} />
+                  {/* Filter Header */}
 
-                  <span>Filter</span>
+                  <div className="flex items-center justify-between px-2 py-2">
+                    <p className="text-text text-sm font-semibold">
+                      Filter Data
+                    </p>
 
-                  {activeFilterCount > 0 && (
-                    <span className="bg-primary flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] text-white">
-                      {activeFilterCount}
-                    </span>
+                    {activeFilterCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        disabled={filtersLoading}
+                        className="text-primary text-xs font-medium hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Clear All
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Loading */}
+
+                  {filtersLoading && (
+                    <div className="text-text-secondary flex items-center gap-2 px-3 py-2 text-xs">
+                      <span className="border-primary h-3.5 w-3.5 animate-spin rounded-full border-2 border-t-transparent" />
+                      Updating filters...
+                    </div>
                   )}
 
-                  <ChevronDown
-                    size={15}
-                    className={`transition-transform ${
-                      filterOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
+                  {/* Filters */}
 
-                {filterOpen && (
-                  <div className={`border-border bg-background absolute top-12 ${addButton ? "left-0" : "right-0" } z-50 w-[min(18rem,calc(100vw-2rem))] rounded-xl border p-2 shadow-xl`}>
-                    <div className="flex items-center justify-between px-2 py-2">
-                      <p className="text-text text-sm font-semibold">
-                        Filter Data
-                      </p>
-
-                      {activeFilterCount > 0 && (
-                        <button
-                          type="button"
-                          onClick={clearFilters}
-                          className="text-primary text-xs font-medium hover:underline"
-                        >
-                          Clear All
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="max-h-[420px] space-y-2 overflow-y-auto">
-                      {filterOptions.map((filter) => {
+                  <div className="max-h-[420px] space-y-2 overflow-y-auto">
+                    {filterOptions.length === 0 ? (
+                      <div className="text-text-secondary px-3 py-6 text-center text-sm">
+                        No filters available.
+                      </div>
+                    ) : (
+                      filterOptions.map((filter) => {
                         const isActive = activeFilter === filter.key;
+
+                        const selectedValues = Array.isArray(
+                          filterValues[filter.key],
+                        )
+                          ? filterValues[filter.key]
+                          : [];
+
+                        const dateValue = filterValues[filter.key] || {};
 
                         return (
                           <div key={filter.key}>
@@ -956,7 +2436,23 @@ export default function Table({
                               }
                               className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-between rounded-lg border px-3 text-sm font-medium transition"
                             >
-                              <span className="truncate">{filter.label}</span>
+                              <div className="flex min-w-0 items-center gap-2">
+                                <span className="truncate">{filter.label}</span>
+
+                                {filter.type === "select" &&
+                                  selectedValues.length > 0 && (
+                                    <span className="bg-primary-light text-primary flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold">
+                                      {selectedValues.length}
+                                    </span>
+                                  )}
+
+                                {filter.type === "dateRange" &&
+                                  (dateValue.from || dateValue.to) && (
+                                    <span className="bg-primary-light text-primary h-5 min-w-5 shrink-0 rounded-full px-1.5 text-[10px] font-semibold">
+                                      ✓
+                                    </span>
+                                  )}
+                              </div>
 
                               <ChevronDown
                                 size={15}
@@ -966,35 +2462,51 @@ export default function Table({
                               />
                             </button>
 
-                            {/* Select Options */}
+                            {/* Select */}
+
                             {isActive && filter.type === "select" && (
                               <div className="bg-surface mt-1 max-h-52 space-y-2 overflow-y-auto rounded-lg p-3">
-                                {getUniqueFilterValues(filter).map((option) => {
-                                  const selected =
-                                    filterValues[filter.key]?.includes(option);
+                                {getUniqueFilterValues(filter).length === 0 ? (
+                                  <p className="text-text-secondary py-2 text-center text-xs">
+                                    No options available.
+                                  </p>
+                                ) : (
+                                  getUniqueFilterValues(filter).map(
+                                    (option) => {
+                                      const selected =
+                                        selectedValues.includes(option);
 
-                                  return (
-                                    <label
-                                      key={option}
-                                      className="text-text flex cursor-pointer items-center gap-2 text-sm"
-                                    >
-                                      <input
-                                        type="checkbox"
-                                        checked={Boolean(selected)}
-                                        onChange={() =>
-                                          toggleFilterValue(filter.key, option)
-                                        }
-                                        className="accent-primary h-4 w-4"
-                                      />
+                                      return (
+                                        <label
+                                          key={option}
+                                          className="text-text flex cursor-pointer items-center gap-2 text-sm"
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            checked={selected}
+                                            onChange={() =>
+                                              toggleFilterValue(
+                                                filter.key,
+                                                option,
+                                              )
+                                            }
+                                            disabled={filtersLoading}
+                                            className="accent-primary h-4 w-4 cursor-pointer"
+                                          />
 
-                                      <span className="truncate">{option}</span>
-                                    </label>
-                                  );
-                                })}
+                                          <span className="truncate">
+                                            {option}
+                                          </span>
+                                        </label>
+                                      );
+                                    },
+                                  )
+                                )}
                               </div>
                             )}
 
                             {/* Date Range */}
+
                             {isActive && filter.type === "dateRange" && (
                               <div className="bg-surface mt-1 space-y-3 rounded-lg p-3">
                                 <div>
@@ -1004,7 +2516,8 @@ export default function Table({
 
                                   <input
                                     type="date"
-                                    value={filterValues[filter.key]?.from || ""}
+                                    value={dateValue.from || ""}
+                                    max={dateValue.to || undefined}
                                     onChange={(event) =>
                                       setDateRange(
                                         filter.key,
@@ -1012,7 +2525,8 @@ export default function Table({
                                         event.target.value,
                                       )
                                     }
-                                    className="border-border bg-background text-text h-10 w-full rounded-lg border px-3 text-sm outline-none"
+                                    disabled={filtersLoading}
+                                    className="border-border bg-background text-text h-10 w-full rounded-lg border px-3 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-60"
                                   />
                                 </div>
 
@@ -1023,7 +2537,8 @@ export default function Table({
 
                                   <input
                                     type="date"
-                                    value={filterValues[filter.key]?.to || ""}
+                                    value={dateValue.to || ""}
+                                    min={dateValue.from || undefined}
                                     onChange={(event) =>
                                       setDateRange(
                                         filter.key,
@@ -1031,22 +2546,33 @@ export default function Table({
                                         event.target.value,
                                       )
                                     }
-                                    className="border-border bg-background text-text h-10 w-full rounded-lg border px-3 text-sm outline-none"
+                                    disabled={filtersLoading}
+                                    className="border-border bg-background text-text h-10 w-full rounded-lg border px-3 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-60"
                                   />
                                 </div>
+
+                                {(dateValue.from || dateValue.to) && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeFilter(filter)}
+                                    disabled={filtersLoading}
+                                    className="text-primary w-full text-xs font-medium hover:underline disabled:opacity-50"
+                                  >
+                                    Clear Date
+                                  </button>
+                                )}
                               </div>
                             )}
                           </div>
                         );
-                      })}
-                    </div>
+                      })
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
 
-            {/* =================================================
-              Download
-          ================================================= */}
+            {/* Download */}
 
             {exportButton && (
               <div ref={downloadRef} className="relative">
@@ -1057,7 +2583,6 @@ export default function Table({
 
                     setFilterOpen(false);
                     setActiveFilter(null);
-
                     setShowColumnMenu(false);
                   }}
                   className="text-text hover:bg-surface border-border flex h-10 w-full items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition md:w-auto md:min-w-28"
@@ -1075,14 +2600,16 @@ export default function Table({
                 </button>
 
                 {downloadOpen && (
-                  <div className={`border-border bg-background absolute top-12 ${addButton ? "right-0" : "left-0" } z-50 w-[min(13rem,calc(100vw-2rem))] rounded-xl border p-2 shadow-xl`}>
+                  <div
+                    className={`border-border bg-background absolute top-12 ${
+                      addButton ? "right-0" : "left-0"
+                    } z-50 w-[min(13rem,calc(100vw-2rem))] rounded-xl border p-2 shadow-xl`}
+                  >
                     <div className="text-text-secondary border-border mb-2 border-b px-3 pb-2 text-xs">
                       {selectedRows.length > 0
                         ? `${selectedRows.length} selected records`
                         : `${sortedData.length} filtered records`}
                     </div>
-
-                    {/* PDF */}
 
                     <button
                       type="button"
@@ -1091,12 +2618,8 @@ export default function Table({
 
                         onExportPDF?.({
                           data: dataToDownload,
-
-                          // Only visible columns
                           columns: visibleColumns,
-
                           columnTitles,
-
                           filters: exportFilters,
                         });
                       }}
@@ -1107,8 +2630,6 @@ export default function Table({
                       <span>Download PDF</span>
                     </button>
 
-                    {/* Excel */}
-
                     <button
                       type="button"
                       onClick={() => {
@@ -1116,12 +2637,8 @@ export default function Table({
 
                         onExportExcel?.({
                           data: dataToDownload,
-
-                          // Only visible columns
                           columns: visibleColumns,
-
                           columnTitles,
-
                           filters: exportFilters,
                         });
                       }}
@@ -1146,8 +2663,8 @@ export default function Table({
       </div>
 
       {/* ======================================================
-          Table
-      ====================================================== */}
+      Table
+  ====================================================== */}
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-max border-collapse">
@@ -1227,8 +2744,6 @@ export default function Table({
                         : "hover:bg-surface"
                     } ${selected ? "bg-primary-light/40" : ""}`}
                   >
-                    {/* Checkbox */}
-
                     <td
                       className="px-4 py-3"
                       onClick={(event) => event.stopPropagation()}
@@ -1241,8 +2756,6 @@ export default function Table({
                         aria-label={`Select row ${absoluteIndex + 1}`}
                       />
                     </td>
-
-                    {/* Visible Columns */}
 
                     {visibleColumns.map((column) => (
                       <td
@@ -1286,8 +2799,8 @@ export default function Table({
       </div>
 
       {/* ======================================================
-          Pagination
-      ====================================================== */}
+      Pagination
+  ====================================================== */}
 
       <Pagination
         currentPage={currentPage}

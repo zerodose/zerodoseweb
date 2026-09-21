@@ -298,13 +298,13 @@ export const getUCMOSummary = async (ucmoId) => {
   return response.data;
 };
 
-export const getTownSummary = async (townId) => {
-  const response = await api.get("/dashboard/town-summary", {
-    params: { townId },
-  });
+// export const getTownSummary = async (townId) => {
+//   const response = await api.get("/dashboard/town-summary", {
+//     params: { townId },
+//   });
 
-  return response.data;
-};
+//   return response.data;
+// };
 
 export const getDistrictSummary = async (districtId) => {
   const response = await api.get("/dashboard/district-summary", {
@@ -381,5 +381,20 @@ export const getUCMOSupervisorSummary = async (campaignId) => {
 
 export const getWorkerSummary = async () => {
   const response = await api.get("/dashboard/worker-summary");
+  return response.data;
+};
+
+
+
+
+
+
+// ===============================================================
+//                      TOWN
+// ===============================================================
+
+
+export const getTownSummary = async () => {
+  const response = await api.get("/dashboard/townfp/summary");
   return response.data;
 };

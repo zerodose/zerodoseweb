@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 import { connectDB } from "@/lib/db";
-
+import { getAuthenticatedUser } from "@/lib/auth";
 import User from "@/models/User";
 import District from "@/models/District";
 import Town from "@/models/Town";
@@ -25,8 +25,26 @@ export async function GET(request) {
   try {
     await connectDB();
 
+    // ============================================================
+    // Authentication
+    // ============================================================
+
+    const authResult = await getAuthenticatedUser(request);
+
+    if (authResult?.error) {
+      return authResult.error;
+    }
+
+    const authUser = authResult.user;
+
+    // ============================================================
+    // Search Params
+    // ============================================================
+
     const { searchParams } = new URL(request.url);
+
     console.log("Search Params:", searchParams.toString());
+
     const page = Math.max(
       Number.parseInt(searchParams.get("page") || "1", 10),
       1,
@@ -40,15 +58,184 @@ export async function GET(request) {
     const search = searchParams.get("search")?.trim() || "";
 
     const designation = searchParams.get("designation")?.trim() || "";
+
     const district = searchParams.get("district")?.trim() || "";
+
     const town = searchParams.get("town")?.trim() || "";
+
     const unionCouncil = searchParams.get("unionCouncil")?.trim() || "";
+
     const ucmo = searchParams.get("ucmo")?.trim() || "";
+
     const supervisor = searchParams.get("supervisor")?.trim() || "";
+
     const isActiveParam = searchParams.get("isActive");
+
     const countOnly = searchParams.get("countOnly") === "true";
 
+    const teamCount = searchParams.get("teamCount") === "true";
+
+    // ============================================================
+    // Base Filter
+    // ============================================================
+
     const filter = {};
+
+    // ============================================================
+    // IMPORTANT:
+    // Apply authenticated user's scope FIRST.
+    //
+    // Frontend query params can narrow the result,
+    // but can NEVER expand the authenticated user's scope.
+    // ============================================================
+
+    const authDesignation = String(authUser.designation || "").toLowerCase();
+
+    // ------------------------------------------------------------
+    // Admin
+    // ------------------------------------------------------------
+
+    if (authDesignation === "admin") {
+      // Admin has no location restriction.
+    }
+
+    // ------------------------------------------------------------
+    // District FP
+    // ------------------------------------------------------------
+    else if (authDesignation === "districtfp") {
+      if (!authUser.district) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Authenticated District FP has no district assigned",
+          },
+          { status: 403 },
+        );
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(authUser.district)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid authenticated district",
+          },
+          { status: 403 },
+        );
+      }
+
+      filter.district = authUser.district;
+    }
+
+    // ------------------------------------------------------------
+    // Town FP
+    // ------------------------------------------------------------
+    else if (authDesignation === "townfp") {
+      if (!authUser.district || !authUser.town) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Authenticated Town FP has no district or town assigned",
+          },
+          { status: 403 },
+        );
+      }
+
+      if (
+        !mongoose.Types.ObjectId.isValid(authUser.district) ||
+        !mongoose.Types.ObjectId.isValid(authUser.town)
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid authenticated district or town",
+          },
+          { status: 403 },
+        );
+      }
+
+      filter.district = authUser.district;
+      filter.town = authUser.town;
+    }
+
+    // ------------------------------------------------------------
+    // UCMO
+    // ------------------------------------------------------------
+    else if (authDesignation === "ucmo") {
+      if (!authUser.district || !authUser.town || !authUser.unionCouncil) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Authenticated UCMO has incomplete location assignment",
+          },
+          { status: 403 },
+        );
+      }
+
+      if (
+        !mongoose.Types.ObjectId.isValid(authUser.district) ||
+        !mongoose.Types.ObjectId.isValid(authUser.town) ||
+        !mongoose.Types.ObjectId.isValid(authUser.unionCouncil)
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Invalid authenticated UCMO location",
+          },
+          { status: 403 },
+        );
+      }
+
+      filter.district = authUser.district;
+      filter.town = authUser.town;
+      filter.unionCouncil = authUser.unionCouncil;
+    }
+
+    // ------------------------------------------------------------
+    // Other Roles
+    // ------------------------------------------------------------
+    //
+    // Do NOT give unrestricted access to other roles.
+    //
+    // They can only see records belonging to their
+    // authenticated location.
+    //
+    // ------------------------------------------------------------
+    else {
+      if (authUser.district) {
+        filter.district = authUser.district;
+      }
+
+      if (authUser.town) {
+        filter.town = authUser.town;
+      }
+
+      if (authUser.unionCouncil) {
+        filter.unionCouncil = authUser.unionCouncil;
+      }
+
+      // If a role has no location assigned, deny access
+      // instead of accidentally returning all users.
+      if (!filter.district && !filter.town && !filter.unionCouncil) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Authenticated user has no valid data scope",
+          },
+          { status: 403 },
+        );
+      }
+    }
+
+    // ============================================================
+    // User Supplied Filters
+    //
+    // These are ONLY additional/narrowing filters.
+    // They cannot override the auth scope.
+    // ============================================================
+
+    // ------------------------------------------------------------
+    // Search
+    // ------------------------------------------------------------
 
     if (search) {
       filter.$or = [
@@ -73,9 +260,17 @@ export async function GET(request) {
       ];
     }
 
+    // ------------------------------------------------------------
+    // Designation
+    // ------------------------------------------------------------
+
     if (designation) {
       filter.designation = designation;
     }
+
+    // ------------------------------------------------------------
+    // District
+    // ------------------------------------------------------------
 
     if (district) {
       if (!mongoose.Types.ObjectId.isValid(district)) {
@@ -88,8 +283,23 @@ export async function GET(request) {
         );
       }
 
+      // Auth scope cannot be overridden.
+      if (filter.district && String(filter.district) !== String(district)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "You are not authorized to access this district",
+          },
+          { status: 403 },
+        );
+      }
+
       filter.district = district;
     }
+
+    // ------------------------------------------------------------
+    // Town
+    // ------------------------------------------------------------
 
     if (town) {
       if (!mongoose.Types.ObjectId.isValid(town)) {
@@ -102,8 +312,23 @@ export async function GET(request) {
         );
       }
 
+      // Auth scope cannot be overridden.
+      if (filter.town && String(filter.town) !== String(town)) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "You are not authorized to access this town",
+          },
+          { status: 403 },
+        );
+      }
+
       filter.town = town;
     }
+
+    // ------------------------------------------------------------
+    // Union Council
+    // ------------------------------------------------------------
 
     if (unionCouncil) {
       if (!mongoose.Types.ObjectId.isValid(unionCouncil)) {
@@ -116,8 +341,26 @@ export async function GET(request) {
         );
       }
 
+      // Auth scope cannot be overridden.
+      if (
+        filter.unionCouncil &&
+        String(filter.unionCouncil) !== String(unionCouncil)
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "You are not authorized to access this Union Council",
+          },
+          { status: 403 },
+        );
+      }
+
       filter.unionCouncil = unionCouncil;
     }
+
+    // ------------------------------------------------------------
+    // UCMO
+    // ------------------------------------------------------------
 
     if (ucmo) {
       if (!mongoose.Types.ObjectId.isValid(ucmo)) {
@@ -133,6 +376,10 @@ export async function GET(request) {
       filter.ucmo = ucmo;
     }
 
+    // ------------------------------------------------------------
+    // Supervisor
+    // ------------------------------------------------------------
+
     if (supervisor) {
       if (!mongoose.Types.ObjectId.isValid(supervisor)) {
         return NextResponse.json(
@@ -147,6 +394,10 @@ export async function GET(request) {
       filter.supervisor = supervisor;
     }
 
+    // ------------------------------------------------------------
+    // Active Status
+    // ------------------------------------------------------------
+
     if (isActiveParam === "true") {
       filter.isActive = true;
     }
@@ -155,25 +406,38 @@ export async function GET(request) {
       filter.isActive = false;
     }
 
-  if (countOnly && searchParams.get("teamCount") === "true") {
-  const teams = await User.distinct("teamNumber", filter);
+    // ============================================================
+    // Team Count
+    // ============================================================
 
-  const totalTeams = teams.filter(
-    (teamNumber) =>
-      teamNumber !== null &&
-      teamNumber !== undefined &&
-      String(teamNumber).trim() !== "",
-  ).length;
+    if (countOnly && teamCount) {
+      const teams = await User.distinct("teamNumber", filter);
 
-  return NextResponse.json(
-    {
-      success: true,
-      count: totalTeams,
-    },
-    { status: 200 },
-  );
-}
+      const totalTeams = teams.filter(
+        (teamNumber) =>
+          teamNumber !== null &&
+          teamNumber !== undefined &&
+          String(teamNumber).trim() !== "",
+      ).length;
+
+      return NextResponse.json(
+        {
+          success: true,
+          count: totalTeams,
+        },
+        { status: 200 },
+      );
+    }
+
+    // ============================================================
+    // Pagination
+    // ============================================================
+
     const skip = (page - 1) * limit;
+
+    // ============================================================
+    // Query
+    // ============================================================
 
     const [users, total] = await Promise.all([
       User.find(filter)
@@ -184,7 +448,9 @@ export async function GET(request) {
         .populate("supervisor", "_id name contactNumber")
         .populate("ucmo", "_id name contactNumber")
         .populate("approvedBy", "_id name designation")
-        .sort({ createdAt: -1 })
+        .sort({
+          createdAt: -1,
+        })
         .skip(skip)
         .limit(limit)
         .lean(),
@@ -194,10 +460,15 @@ export async function GET(request) {
 
     const totalPages = Math.ceil(total / limit);
 
+    // ============================================================
+    // Response
+    // ============================================================
+
     return NextResponse.json(
       {
         success: true,
         data: users,
+
         pagination: {
           page,
           limit,
@@ -206,12 +477,13 @@ export async function GET(request) {
           hasNextPage: page < totalPages,
           hasPreviousPage: page > 1,
         },
+
         filters: {
           search,
           designation,
-          district,
-          town,
-          unionCouncil,
+          district: filter.district || null,
+          town: filter.town || null,
+          unionCouncil: filter.unionCouncil || null,
           ucmo,
           supervisor,
           isActive:
@@ -220,6 +492,13 @@ export async function GET(request) {
               : isActiveParam === "false"
                 ? false
                 : null,
+        },
+
+        scope: {
+          designation: authDesignation,
+          district: authUser.district || null,
+          town: authUser.town || null,
+          unionCouncil: authUser.unionCouncil || null,
         },
       },
       { status: 200 },
@@ -236,6 +515,222 @@ export async function GET(request) {
     );
   }
 }
+
+// export async function GET(request) {
+//   try {
+//     await connectDB();
+
+//     const { searchParams } = new URL(request.url);
+//     console.log("Search Params:", searchParams.toString());
+//     const page = Math.max(
+//       Number.parseInt(searchParams.get("page") || "1", 10),
+//       1,
+//     );
+
+//     const limit = Math.min(
+//       Math.max(Number.parseInt(searchParams.get("limit") || "10", 10), 1),
+//       100,
+//     );
+
+//     const search = searchParams.get("search")?.trim() || "";
+
+//     const designation = searchParams.get("designation")?.trim() || "";
+//     const district = searchParams.get("district")?.trim() || "";
+//     const town = searchParams.get("town")?.trim() || "";
+//     const unionCouncil = searchParams.get("unionCouncil")?.trim() || "";
+//     const ucmo = searchParams.get("ucmo")?.trim() || "";
+//     const supervisor = searchParams.get("supervisor")?.trim() || "";
+//     const isActiveParam = searchParams.get("isActive");
+//     const countOnly = searchParams.get("countOnly") === "true";
+
+//     const filter = {};
+
+//     if (search) {
+//       filter.$or = [
+//         {
+//           name: {
+//             $regex: search,
+//             $options: "i",
+//           },
+//         },
+//         {
+//           email: {
+//             $regex: search,
+//             $options: "i",
+//           },
+//         },
+//         {
+//           contactNumber: {
+//             $regex: search,
+//             $options: "i",
+//           },
+//         },
+//       ];
+//     }
+
+//     if (designation) {
+//       filter.designation = designation;
+//     }
+
+//     if (district) {
+//       if (!mongoose.Types.ObjectId.isValid(district)) {
+//         return NextResponse.json(
+//           {
+//             success: false,
+//             message: "Invalid district ID",
+//           },
+//           { status: 400 },
+//         );
+//       }
+
+//       filter.district = district;
+//     }
+
+//     if (town) {
+//       if (!mongoose.Types.ObjectId.isValid(town)) {
+//         return NextResponse.json(
+//           {
+//             success: false,
+//             message: "Invalid town ID",
+//           },
+//           { status: 400 },
+//         );
+//       }
+
+//       filter.town = town;
+//     }
+
+//     if (unionCouncil) {
+//       if (!mongoose.Types.ObjectId.isValid(unionCouncil)) {
+//         return NextResponse.json(
+//           {
+//             success: false,
+//             message: "Invalid Union Council ID",
+//           },
+//           { status: 400 },
+//         );
+//       }
+
+//       filter.unionCouncil = unionCouncil;
+//     }
+
+//     if (ucmo) {
+//       if (!mongoose.Types.ObjectId.isValid(ucmo)) {
+//         return NextResponse.json(
+//           {
+//             success: false,
+//             message: "Invalid UCMO ID",
+//           },
+//           { status: 400 },
+//         );
+//       }
+
+//       filter.ucmo = ucmo;
+//     }
+
+//     if (supervisor) {
+//       if (!mongoose.Types.ObjectId.isValid(supervisor)) {
+//         return NextResponse.json(
+//           {
+//             success: false,
+//             message: "Invalid supervisor ID",
+//           },
+//           { status: 400 },
+//         );
+//       }
+
+//       filter.supervisor = supervisor;
+//     }
+
+//     if (isActiveParam === "true") {
+//       filter.isActive = true;
+//     }
+
+//     if (isActiveParam === "false") {
+//       filter.isActive = false;
+//     }
+
+//   if (countOnly && searchParams.get("teamCount") === "true") {
+//   const teams = await User.distinct("teamNumber", filter);
+
+//   const totalTeams = teams.filter(
+//     (teamNumber) =>
+//       teamNumber !== null &&
+//       teamNumber !== undefined &&
+//       String(teamNumber).trim() !== "",
+//   ).length;
+
+//   return NextResponse.json(
+//     {
+//       success: true,
+//       count: totalTeams,
+//     },
+//     { status: 200 },
+//   );
+// }
+//     const skip = (page - 1) * limit;
+
+//     const [users, total] = await Promise.all([
+//       User.find(filter)
+//         .select("-password")
+//         .populate("district", "_id name code")
+//         .populate("town", "_id name code")
+//         .populate("unionCouncil", "_id name code")
+//         .populate("supervisor", "_id name contactNumber")
+//         .populate("ucmo", "_id name contactNumber")
+//         .populate("approvedBy", "_id name designation")
+//         .sort({ createdAt: -1 })
+//         .skip(skip)
+//         .limit(limit)
+//         .lean(),
+
+//       User.countDocuments(filter),
+//     ]);
+
+//     const totalPages = Math.ceil(total / limit);
+
+//     return NextResponse.json(
+//       {
+//         success: true,
+//         data: users,
+//         pagination: {
+//           page,
+//           limit,
+//           total,
+//           totalPages,
+//           hasNextPage: page < totalPages,
+//           hasPreviousPage: page > 1,
+//         },
+//         filters: {
+//           search,
+//           designation,
+//           district,
+//           town,
+//           unionCouncil,
+//           ucmo,
+//           supervisor,
+//           isActive:
+//             isActiveParam === "true"
+//               ? true
+//               : isActiveParam === "false"
+//                 ? false
+//                 : null,
+//         },
+//       },
+//       { status: 200 },
+//     );
+//   } catch (error) {
+//     console.error("Get users error:", error);
+
+//     return NextResponse.json(
+//       {
+//         success: false,
+//         message: "Failed to fetch users",
+//       },
+//       { status: 500 },
+//     );
+//   }
+// }
 
 export async function POST(request) {
   try {

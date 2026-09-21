@@ -251,12 +251,6 @@ export default function ZerodosePage() {
 
       filterOptions={[
         {
-          key: "status",
-          label: "Status",
-          type: "select",
-          column: "status",
-        },
-        {
           key: "districtName",
           label: "District",
           type: "select",
@@ -279,6 +273,12 @@ export default function ZerodosePage() {
           label: "Campaign Name",
           type: "select",
           column: "campaignName",
+        },
+        {
+          key: "status",
+          label: "Status",
+          type: "select",
+          column: "status",
         },
         {
           key: "recordDate",

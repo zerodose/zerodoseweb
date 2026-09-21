@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import Table from "@/components/admin/table/Table";
-
+import { getUnionCouncils } from "@/api/unionCouncilApi";
 import exportPDF from "@/utils/export/exportPDF";
 import exportExcel from "@/utils/export/exportExcel";
 
-export default function SupervisorsPage() {
+export default function UnionCouncilsPage() {
   const router = useRouter();
 
-  const [users, setUsers] = useState([]);
+  const [unionCouncils, setUnionCouncils] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -45,18 +45,13 @@ export default function SupervisorsPage() {
 
       const authUser = JSON.parse(storedUser);
 
-      if (
-        String(authUser?.designation || "").toLowerCase() !== "townfp"
-      ) {
+      if (String(authUser?.designation || "").toLowerCase() !== "townfp") {
         router.replace("/dashboard");
         return;
       }
 
       const currentTownId =
-        authUser?.town?._id ||
-        authUser?.town?.id ||
-        authUser?.town ||
-        "";
+        authUser?.town?._id || authUser?.town?.id || authUser?.town || "";
 
       if (!currentTownId) {
         console.error("Town focal person town ID not found.");
@@ -73,10 +68,10 @@ export default function SupervisorsPage() {
   }, [router]);
 
   // ============================================================
-  // Get Supervisors
+  // Get Union Councils
   // ============================================================
 
-  const getSupervisorsData = async () => {
+  const getUnionCouncilsData = async () => {
     if (!townId) {
       return;
     }
@@ -84,67 +79,39 @@ export default function SupervisorsPage() {
     try {
       setLoading(true);
 
-      const params = new URLSearchParams({
-        designation: "supervisor",
-        town: townId,
-        page: String(pagination.page),
-        limit: String(pagination.limit),
+      const response = await getUnionCouncils({
+        page: pagination.page,
+        limit: pagination.limit,
         search,
-        isActive: "true",
+
+        // Only Union Councils belonging to
+        // logged-in TownFP's town
+        town: townId,
+
+        // Only active Union Councils
+        isActive: true,
       });
 
-      const response = await fetch(
-        `/api/users?${params.toString()}`,
-        {
-          method: "GET",
-          credentials: "include",
-        },
+      const formattedUnionCouncils = (response?.data || []).map(
+        (unionCouncil) => ({
+          ...unionCouncil,
+
+          districtName: unionCouncil?.district?.name || "-",
+
+          townName: unionCouncil?.town?.name || "-",
+        }),
       );
 
-      const result = await response.json();
-
-      if (!response.ok || !result?.success) {
-        throw new Error(
-          result?.message || "Failed to fetch supervisors.",
-        );
-      }
-
-      // ========================================================
-      // Format Supervisor Data
-      // ========================================================
-
-      const formattedData = (result?.data || []).map((supervisor) => ({
-        ...supervisor,
-
-        districtName:
-          supervisor?.district?.name || "-",
-
-        townName:
-          supervisor?.town?.name || "-",
-
-        unionCouncilName:
-          supervisor?.unionCouncil?.name || "-",
-
-        unionCouncilCode:
-          supervisor?.unionCouncil?.code || "-",
-
-        ucmoName:
-          supervisor?.ucmo?.name || "-",
-
-        supervisorCode:
-          supervisor?.supervisorCode || "-",
-      }));
-
-      setUsers(formattedData);
+      setUnionCouncils(formattedUnionCouncils);
 
       setPagination((previous) => ({
         ...previous,
-        ...(result?.pagination || {}),
+        ...(response?.pagination || {}),
       }));
     } catch (error) {
-      console.error("Get town supervisors error:", error);
+      console.error("Get Union Councils error:", error);
 
-      setUsers([]);
+      setUnionCouncils([]);
 
       setPagination((previous) => ({
         ...previous,
@@ -168,16 +135,11 @@ export default function SupervisorsPage() {
     }
 
     const timer = setTimeout(() => {
-      getSupervisorsData();
+      getUnionCouncilsData();
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [
-    townId,
-    pagination.page,
-    pagination.limit,
-    search,
-  ]);
+  }, [townId, pagination.page, pagination.limit, search]);
 
   // ============================================================
   // Search
@@ -221,13 +183,13 @@ export default function SupervisorsPage() {
 
   return (
     <Table
-      data={users}
+      data={unionCouncils}
       loading={loading}
-      pageTitle="Supervisors"
-      pageDescription="View all active supervisors in your town."
+      pageTitle="Union Councils"
+      pageDescription="View and manage active Union Councils in your town."
       pageBreadcrumbs={[
         {
-          label: "Supervisors",
+          label: "Union Councils",
         },
       ]}
 
@@ -251,18 +213,11 @@ export default function SupervisorsPage() {
       hiddenColumns={[
         "_id",
         "__v",
-        "password",
         "district",
         "town",
-        "unionCouncil",
-        "ucmo",
-        "approvedBy",
         "isActive",
-        "approvalStatus",
-        "designation",
         "createdAt",
         "updatedAt",
-        "expiresAt",
       ]}
 
       // ========================================================
@@ -270,52 +225,33 @@ export default function SupervisorsPage() {
       // ========================================================
 
       columnTitles={{
-        name: "Supervisor Name",
-        email: "Email",
-        contactNumber: "Contact Number",
-        supervisorCode: "Supervisor Code",
+        name: "Union Council",
         districtName: "District",
         townName: "Town",
-        unionCouncilName: "Union Council",
-        unionCouncilCode: "UC Code",
-        ucmoName: "UCMO",
+        code: "UC Code",
       }}
 
       // ========================================================
       // Columns
       // ========================================================
 
-      columnOptions={[
-        "name",
-        "email",
-        "contactNumber",
-        "supervisorCode",
-        "districtName",
-        "townName",
-        "unionCouncilName",
-        "unionCouncilCode",
-        "ucmoName",
-      ]}
-
-      // ========================================================
-      // Filters
-      // ========================================================
+      columnOptions={[ "code","name", "townName" , "districtName" ]}
 
       filterOptions={[
         {
-          key: "unioncouncil",
-          label: "Union Councils",
+          key: "town",
+          label: "Towns",
           type: "select",
-          column: "unionCouncilName",
+          column: "townName",
         },
       ]}
 
       // ========================================================
-      // Supervisor Detail
+      // Row
       // ========================================================
 
-      onRowClick={(supervisor) => {
-        router.push(`/townfp/supervisors/${supervisor._id}`);
+      onRowClick={(unionCouncil) => {
+        router.push(`/townfp/unioncouncils/${unionCouncil._id}`);
       }}
 
       // ========================================================

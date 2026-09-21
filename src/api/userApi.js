@@ -40,7 +40,7 @@ export async function getUsers({
   district = "",
   town = "",
   unionCouncil = "",
-   ucmo = "",
+  ucmo = "",
   supervisor = "",
   isActive,
 } = {}) {
@@ -56,12 +56,17 @@ export async function getUsers({
       district,
       town,
       unionCouncil,
-       ucmo,
+      ucmo,
       supervisor,
       isActive,
     },
   });
 
+  return response.data;
+}
+
+export async function getUserFilterOptions() {
+  const response = await api.get("/users/filter-options");
   return response.data;
 }
 
@@ -160,8 +165,7 @@ export async function getStaffByScope({
   return response.data;
 }
 
-
-  export const getActiveUCMOSupervisorCount = async (ucmoId) => {
+export const getActiveUCMOSupervisorCount = async (ucmoId) => {
   const response = await api.get("/users", {
     params: {
       supervisor: ucmoId,
@@ -175,9 +179,7 @@ export async function getStaffByScope({
   return response.data;
 };
 
-
-
-  export const getActiveSupervisorTeamCount = async (supervisorId) => {
+export const getActiveSupervisorTeamCount = async (supervisorId) => {
   const response = await api.get("/users", {
     params: {
       supervisor: supervisorId,
@@ -191,9 +193,8 @@ export async function getStaffByScope({
   return response.data;
 };
 
-
 export const updateUserStatus = async (id, data) => {
-const response = await api.put(`/users/${id}/status`, data);
+  const response = await api.put(`/users/${id}/status`, data);
 
-return response.data;
+  return response.data;
 };

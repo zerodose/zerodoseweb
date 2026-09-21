@@ -91,7 +91,7 @@ export const districtSidebarData = [
   },
   {
     title: "Union Councils",
-    href: "/districtfp/union-councils",
+    href: "/districtfp/unioncouncils",
     icon: Network,
   },
   {
@@ -127,14 +127,14 @@ export const townfpSidebarData = [
     href: "/townfp",
     icon: LayoutDashboard,
   },
-  {
-    title: "Campaigns",
-    href: "/townfp/campaigns",
-    icon: CalendarDays,
-  },
+  // {
+  //   title: "Campaigns",
+  //   href: "/townfp/campaigns",
+  //   icon: CalendarDays,
+  // },
   {
     title: "Union Councils",
-    href: "/townfp/union-councils",
+    href: "/townfp/unioncouncils",
     icon: Network,
   },
   {
@@ -221,7 +221,7 @@ export const supervisorSidebar = [
     href: "/supervisor/zerodose",
     icon: Syringe,
   },
-   {
+  {
     title: "Pending Approvals",
     href: "/supervisor/pendingapprovals",
     icon: ShieldAlert,

@@ -584,8 +584,8 @@ export default function LoginForm() {
                 Signup
             ================================================= */}
 
-            <div className="text-text-secondary mt-6 text-center text-sm">
-              Don't have an account?
+            <div className="text-text-secondary mt-6 text-center text-sm flex gap-2 justify-center items-start">
+              <span>Don't have an account?</span>
               <Link
                 href="/auth/signup"
                 aria-disabled={loading}

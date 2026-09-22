@@ -116,8 +116,6 @@ export default function Page() {
             );
           }
 
-          console.log("Vaccinator Zerodose response:", response);
-
           const currentData = Array.isArray(response.data) ? response.data : [];
 
           if (!cancelled) {
@@ -173,11 +171,6 @@ export default function Page() {
         if (!cancelled) {
           setPreviousCampaigns(campaigns);
         }
-
-        console.log("Vaccinator Zerodose data fetched successfully:", {
-          currentCampaignId: campaign?._id || null,
-          previousCampaigns: campaigns.length,
-        });
       } catch (error) {
         if (cancelled) {
           return;

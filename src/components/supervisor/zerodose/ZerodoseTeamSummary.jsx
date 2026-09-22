@@ -12,6 +12,7 @@ import {
 
 import ZerodoseDetailsTable from "./ZerodoseDetailsTable";
 import ZerodoseTeamSummarySkeleton from "./ZerodoseTeamSummarySkeleton";
+import { useTabLoader } from "@/context/TabLoaderContext";
 
 export default function ZerodoseTeamSummary({
   data = [],
@@ -25,6 +26,7 @@ export default function ZerodoseTeamSummary({
   loading,
   designation,
 }) {
+  const { showTabLoader, hideTabLoader } = useTabLoader();
   const [openTeams, setOpenTeams] = useState({});
   const [statusFilter, setStatusFilter] = useState("recorded");
 
@@ -36,7 +38,6 @@ export default function ZerodoseTeamSummary({
     if (!Array.isArray(data)) {
       return [];
     }
-
     const teamsMap = new Map();
 
     data.forEach((item) => {
@@ -152,11 +153,17 @@ export default function ZerodoseTeamSummary({
   // FILTER CHANGE
   // ============================================================
 
-  const handleStatusFilterChange = (filter) => {
+  const handleStatusFilterChange = async (filter) => {
     setStatusFilter(filter);
 
     if (typeof onFilterChange === "function") {
-      onFilterChange(filter);
+      showTabLoader();
+
+      try {
+        await onFilterChange(filter);
+      } finally {
+        hideTabLoader();
+      }
     }
   };
 

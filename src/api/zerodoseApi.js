@@ -3,7 +3,6 @@ import { api } from "./client";
 // =====================================================
 // Get Zerodoses
 // =====================================================
-
 export const getZerodoses = async ({
   page = 1,
   limit = 10,
@@ -17,7 +16,24 @@ export const getZerodoses = async ({
 
   ucmo,
   supervisor,
+  supervisorCode,
+  user,
   teamNumber,
+  teamLeader,
+  teamMember,
+
+  houseNumber,
+  childName,
+  fatherName,
+  gender,
+  age,
+  address,
+  contactNo,
+  day,
+
+  location,
+  qrCode,
+  vaccinator,
 
   vaccinationStatus,
   clientStatus,
@@ -39,7 +55,9 @@ export const getZerodoses = async ({
       page,
       limit,
       search,
+
       ...(campaign && { campaign }),
+
       ...(district && { district }),
       ...(town && { town }),
       ...(unionCouncil && {
@@ -48,7 +66,25 @@ export const getZerodoses = async ({
 
       ...(ucmo && { ucmo }),
       ...(supervisor && { supervisor }),
+      ...(supervisorCode && { supervisorCode }),
+      ...(user && { user }),
+
       ...(teamNumber && { teamNumber }),
+      ...(teamLeader && { teamLeader }),
+      ...(teamMember && { teamMember }),
+
+      ...(houseNumber && { houseNumber }),
+      ...(childName && { childName }),
+      ...(fatherName && { fatherName }),
+      ...(gender && { gender }),
+      ...(age !== undefined && age !== null && { age }),
+      ...(address && { address }),
+      ...(contactNo && { contactNo }),
+      ...(day !== undefined && day !== null && { day }),
+
+      ...(location && { location }),
+      ...(qrCode && { qrCode }),
+      ...(vaccinator && { vaccinator }),
 
       ...(vaccinationStatus && {
         vaccinationStatus,
@@ -183,9 +219,6 @@ export const getSupervisorZerodose = async ({ campaignId, filter }) => {
 
   return response.data;
 };
-
-
-
 
 export const getUCMOZerodose = async ({ campaignId, filter }) => {
   const response = await api.get("/zerodose/ucmo", {

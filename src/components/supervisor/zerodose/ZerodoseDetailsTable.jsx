@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo, useState } from "react";
@@ -192,7 +191,7 @@ export default function ZerodoseDetailsTable({ data = [] }) {
             <thead>
               <tr className="bg-surface border-border border-b">
                 <th className="text-text-secondary px-4 py-3 text-left text-xs font-semibold">
-                  #
+                  S no
                 </th>
 
                 <th className="text-text-secondary px-4 py-3 text-left text-xs font-semibold">
@@ -216,6 +215,12 @@ export default function ZerodoseDetailsTable({ data = [] }) {
                 </th>
 
                 <th className="text-text-secondary px-4 py-3 text-left text-xs font-semibold">
+                  House No
+                </th>
+                <th className="text-text-secondary px-4 py-3 text-left text-xs font-semibold">
+                  Address
+                </th>
+                <th className="text-text-secondary px-4 py-3 text-left text-xs font-semibold">
                   Record Date
                 </th>
 
@@ -225,10 +230,6 @@ export default function ZerodoseDetailsTable({ data = [] }) {
 
                 <th className="text-text-secondary px-4 py-3 text-left text-xs font-semibold">
                   Covered Date
-                </th>
-
-                <th className="text-text-secondary px-4 py-3 text-left text-xs font-semibold">
-                  Address
                 </th>
 
                 <th className="text-text-secondary px-4 py-3 text-left text-xs font-semibold">
@@ -266,17 +267,21 @@ export default function ZerodoseDetailsTable({ data = [] }) {
                     <td className="text-text px-4 py-3 text-sm">
                       {item?.contactNo || "-"}
                     </td>
+                    <td className="text-text px-4 py-3 text-sm">
+                      <StatusBadge status={status} />
+                    </td>
+                    <td className="text-text px-4 py-3 text-sm">
+                      {item?.houseNumber && (
+                        <span className="text-text-secondary text-xs font-medium">
+                          House no. {item.houseNumber}
+                        </span>
+                      )}
+                    </td>
 
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <StatusBadge status={status} />
-
-                        {item?.houseNumber && (
-                          <span className="text-text-secondary text-xs font-medium">
-                            House No. {item.houseNumber}
-                          </span>
-                        )}
-                      </div>
+                    <td className="text-text-secondary max-w-[220px] px-4 py-3 text-sm">
+                      <span className="block truncate">
+                        {item?.address || "-"}
+                      </span>
                     </td>
 
                     <td className="text-text px-4 py-3 text-sm">
@@ -291,19 +296,28 @@ export default function ZerodoseDetailsTable({ data = [] }) {
                       {formatDate(item?.coveredDate)}
                     </td>
 
-                    <td className="text-text-secondary max-w-[220px] px-4 py-3 text-sm">
-                      <span className="block truncate">
-                        {item?.address || "-"}
-                      </span>
-                    </td>
-
-                    <td className="text-text-secondary max-w-[220px] px-4 py-3 text-sm">
+                    {/* <td className="text-text-secondary max-w-[220px] px-4 py-3 text-sm">
                       <span className="block truncate">
                         {item?.location?.latitude != null &&
                         item?.location?.longitude != null
                           ? `${item.location.latitude}, ${item.location.longitude}`
                           : "-"}
                       </span>
+                    </td> */}
+
+                    <td className="px-4 py-3 text-sm">
+                      {item?.location?.latitude != null &&
+                      item?.location?.longitude != null ? (
+                        <button
+                          type="button"
+                          title={`${item.location.latitude}, ${item.location.longitude}`}
+                          className="text-primary hover:bg-primary/10 flex h-8 w-8 items-center justify-center rounded-lg transition"
+                        >
+                          <MapPin size={18} />
+                        </button>
+                      ) : (
+                        <span className="text-text-secondary">-</span>
+                      )}
                     </td>
                   </tr>
                 );

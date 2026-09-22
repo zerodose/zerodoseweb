@@ -11,57 +11,9 @@ import Campaign from "@/models/Campaign";
 import District from "@/models/District";
 import Town from "@/models/Town";
 import UnionCouncil from "@/models/UnionCouncil";
+import { getAuthenticatedUser } from "@/lib/auth";
 
-// ============================================================
-// JWT SECRET
-// ============================================================
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET is not configured");
-}
-
-// ============================================================
-// GET AUTHENTICATED USER
-// ============================================================
-
-async function getAuthUser(request) {
-  try {
-    const token = request.cookies.get("auth_token")?.value;
-
-    if (!token) {
-      return null;
-    }
-
-    const { payload } = await jwtVerify(
-      token,
-      new TextEncoder().encode(JWT_SECRET),
-    );
-
-    if (!payload?.userId) {
-      return null;
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(payload.userId)) {
-      return null;
-    }
-
-    const user = await User.findOne({
-      _id: payload.userId,
-      isActive: true,
-    }).lean();
-
-    return user || null;
-  } catch (error) {
-    console.error("GET AUTH USER ERROR:", error);
-    return null;
-  }
-}
-
-// ============================================================
-// GET
-// ============================================================
 
 export async function GET(request) {
   try {
@@ -74,8 +26,7 @@ export async function GET(request) {
     // ========================================================
     // AUTHENTICATED USER
     // ========================================================
-
-    const authUser = await getAuthUser(request);
+    const authUser = await getAuthenticatedUser(request);
 
     if (!authUser) {
       return NextResponse.json(

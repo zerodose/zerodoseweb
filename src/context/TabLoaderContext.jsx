@@ -25,7 +25,7 @@ export function TabLoaderProvider({ children }) {
     >
       {children}
 
-      {loading && <TabLoader loading={loading} />}
+      {loading && <TabLoader />}
     </TabLoaderContext.Provider>
   );
 }
@@ -40,53 +40,43 @@ export function useTabLoader() {
   return context;
 }
 
-function TabLoader({ loading }) {
-  if (!loading) return null;
-
+function TabLoader() {
   return (
     <div
       className="pointer-events-none fixed inset-0 z-[99999] flex items-center justify-center"
       aria-label="Loading"
     >
       <div className="flex items-center gap-2">
-        <span className="loader-dot" />
-        <span className="loader-dot" />
-        <span className="loader-dot" />
+        <div
+          className="bg-primary h-2.5 w-2.5 rounded-full"
+          style={{
+            animation: "tabLoaderBounce 1s ease-in-out infinite",
+          }}
+        />
+
+        <div
+          className="bg-primary h-2.5 w-2.5 rounded-full"
+          style={{
+            animation: "tabLoaderBounce 1s ease-in-out -0.16s infinite",
+          }}
+        />
+
+        <div
+          className="bg-primary h-2.5 w-2.5 rounded-full"
+          style={{
+            animation: "tabLoaderBounce 1s ease-in-out -0.32s infinite",
+          }}
+        />
       </div>
-
       <style jsx>{`
-        .loader-dot {
-          display: block;
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background: #40a5fe;
-          animation: dotPulse 1.2s ease-in-out infinite;
-        }
-
-        .loader-dot:nth-child(1) {
-          animation-delay: 0s;
-        }
-
-        .loader-dot:nth-child(2) {
-          animation-delay: 0.15s;
-        }
-
-        .loader-dot:nth-child(3) {
-          animation-delay: 0.3s;
-        }
-
-        @keyframes dotPulse {
+        @keyframes tabLoaderBounce {
           0%,
-          60%,
           100% {
-            transform: translateY(0);
-            opacity: 0.35;
+            transform: translateY(8px);
           }
 
-          30% {
-            transform: translateY(-6px);
-            opacity: 1;
+          50% {
+            transform: translateY(-8px);
           }
         }
       `}</style>

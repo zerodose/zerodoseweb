@@ -18,8 +18,6 @@ export async function POST(request) {
 
     const authResult = await getAuthenticatedUser(request);
 
-    console.log("AUTH RESULT:", authResult);
-
     if (authResult?.error) {
       return authResult.error;
     }
@@ -719,15 +717,9 @@ export async function POST(request) {
 
 export async function GET(request) {
   try {
-    // ========================================================
-    // DATABASE
-    // ========================================================
 
     await connectDB();
 
-    // ========================================================
-    // AUTHENTICATED USER
-    // ========================================================
     const authUser = await getAuthenticatedUser(request);
 
     if (!authUser) {

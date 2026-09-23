@@ -1,4 +1,64 @@
+// "use client";
 
+// import Link from "next/link";
+// import { ArrowUpRight, UsersRound } from "lucide-react";
+
+// export default function ActionLinkButton({
+//   href,
+//   label,
+//   description,
+//   icon: Icon = UsersRound,
+// }) {
+//   return (
+//     <Link
+//       href={href}
+//       className="group relative flex h-[108px] w-full max-w-[500px] overflow-hidden rounded-2xl border border-border bg-background p-4 shadow-[0_3px_12px_rgba(0,0,0,0.06)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] active:translate-y-0 md:w-full md:max-w-[500px]"
+//     >
+//       {/* Decorative Background */}
+//       <div className="bg-primary/5 absolute -top-10 -left-10 h-24 w-24 rounded-full transition-transform duration-500 group-hover:scale-125" />
+
+//       {/* Content */}
+//       <div className="relative flex min-w-0 flex-1 flex-col">
+//         {/* Top Row */}
+//         <div className="flex items-center gap-3">
+//           {/* Icon */}
+//           <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-[0_3px_10px_rgba(64,165,254,0.18)] ring-1 ring-primary/5 transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:shadow-[0_5px_14px_rgba(64,165,254,0.25)]">
+//             <Icon
+//               size={20}
+//               strokeWidth={2}
+//               className="transition-transform duration-300 group-hover:scale-110"
+//             />
+//           </div>
+
+//           {/* Title */}
+//           <p className="text-text text-sm font-semibold leading-5">
+//             {label}
+//           </p>
+//         </div>
+
+//         {/* Bottom Row */}
+//         <div className="mt-auto flex items-center justify-between gap-3 pt-3">
+//           {/* Description */}
+//           <p className="text-text-secondary text-[11px] font-medium">
+//             {description}
+//           </p>
+
+//           {/* Arrow */}
+//           <span className="bg-surface text-text-secondary flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border transition-all duration-300 group-hover:border-primary group-hover:bg-primary group-hover:text-white">
+//             <ArrowUpRight
+//               size={15}
+//               strokeWidth={2.2}
+//               className="transition-transform duration-300 group-hover:rotate-6"
+//             />
+//           </span>
+//         </div>
+//       </div>
+
+//       {/* Bottom Accent */}
+//       <div className="bg-primary absolute right-0 bottom-0 left-0 h-0.5 opacity-60 transition-opacity duration-300 group-hover:opacity-100" />
+//     </Link>
+//   );
+// }
 "use client";
 
 import Link from "next/link";
@@ -13,17 +73,21 @@ export default function ActionLinkButton({
   return (
     <Link
       href={href}
-      className="group relative flex h-[108px] w-full max-w-[240px] overflow-hidden rounded-2xl border border-border bg-background p-4 shadow-[0_3px_12px_rgba(0,0,0,0.06)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] active:translate-y-0 md:w-full md:max-w-[500px]"
+      className="group border-border bg-background relative flex h-[108px] w-full max-w-[500px] overflow-hidden rounded-2xl border p-4 shadow-[0_3px_12px_rgba(0,0,0,0.06)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.10)] active:translate-y-0 md:w-full md:max-w-[500px]"
     >
       {/* Decorative Background */}
-      <div className="bg-primary/5 absolute -top-10 -left-10 h-24 w-24 rounded-full transition-transform duration-500 group-hover:scale-125" />
+
+      <div className="bg-primary/5 absolute -top-10 -right-10 h-24 w-24 rounded-full transition-transform duration-500 group-hover:scale-125" />
 
       {/* Content */}
-      <div className="relative flex min-w-0 flex-1 flex-col">
+
+      <div className="relative z-20 flex min-w-0 flex-1 flex-col">
         {/* Top Row */}
-        <div className="flex items-center gap-3">
+
+        <div className="flex min-w-0 items-center gap-3">
           {/* Icon */}
-          <div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-[0_3px_10px_rgba(64,165,254,0.18)] ring-1 ring-primary/5 transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:shadow-[0_5px_14px_rgba(64,165,254,0.25)]">
+
+          <div className="bg-primary/10 text-primary ring-primary/5 group-hover:bg-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-[0_3px_10px_rgba(64,165,254,0.18)] ring-1 transition-all duration-300 group-hover:text-white group-hover:shadow-[0_5px_14px_rgba(64,165,254,0.25)]">
             <Icon
               size={20}
               strokeWidth={2}
@@ -32,31 +96,34 @@ export default function ActionLinkButton({
           </div>
 
           {/* Title */}
-          <p className="text-text text-sm font-semibold leading-5">
+
+          <p className="text-text min-w-0 flex-1 text-sm leading-5 font-semibold">
             {label}
           </p>
         </div>
 
-        {/* Bottom Row */}
-        <div className="mt-auto flex items-center justify-between gap-3 pt-3">
-          {/* Description */}
-          <p className="text-text-secondary text-[11px] font-medium">
+        {/* Description */}
+
+        <div className="relative z-20 mt-auto min-w-0 pr-1">
+          <p className="text-text-secondary text-[11px] leading-4 font-medium">
             {description}
           </p>
-
-          {/* Arrow */}
-          <span className="bg-surface text-text-secondary flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border transition-all duration-300 group-hover:border-primary group-hover:bg-primary group-hover:text-white">
-            <ArrowUpRight
-              size={15}
-              strokeWidth={2.2}
-              className="transition-transform duration-300 group-hover:rotate-6"
-            />
-          </span>
         </div>
       </div>
 
+      {/* Arrow Background */}
+
+      <span className="bg-surface text-text-secondary border-border group-hover:border-primary group-hover:bg-primary absolute right-3 bottom-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border shadow-sm transition-all duration-300 group-hover:text-white">
+        <ArrowUpRight
+          size={15}
+          strokeWidth={2.2}
+          className="transition-transform duration-300 group-hover:rotate-6"
+        />
+      </span>
+
       {/* Bottom Accent */}
-      <div className="bg-primary absolute right-0 bottom-0 left-0 h-0.5 opacity-60 transition-opacity duration-300 group-hover:opacity-100" />
+
+      <div className="bg-primary absolute right-0 bottom-0 left-0 z-30 h-0.5 opacity-60 transition-opacity duration-300 group-hover:opacity-100" />
     </Link>
   );
 }

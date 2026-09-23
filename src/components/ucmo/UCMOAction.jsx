@@ -23,7 +23,7 @@ export default function UCMOActions() {
       description: "View your staff details",
       icon: UsersRound,
     },
-        {
+    {
       href: "/ucmo/zerodose",
       label: "Zerodose List",
       description: "View and manage zerodose records",
@@ -31,8 +31,9 @@ export default function UCMOActions() {
     },
   ];
 
+  // <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
   return (
-    <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
       {actions.map((action) => (
         <ActionLinkButton
           key={action.href}

@@ -1,12 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useEffect, useState } from "react";
 import {
   ChevronDown,
   Syringe,
   Eye,
   CheckCircle2,
-  Baby,
   UsersRound,
 } from "lucide-react";
 
@@ -154,15 +153,17 @@ export default function ZerodoseTeamSummary({
   // ============================================================
 
   const handleStatusFilterChange = async (filter) => {
+    // Already active filter hai to API call na karein
+    if (filter === statusFilter) {
+      return;
+    }
+
     setStatusFilter(filter);
 
     if (typeof onFilterChange === "function") {
-      showTabLoader();
-
       try {
         await onFilterChange(filter);
       } finally {
-        hideTabLoader();
       }
     }
   };
@@ -197,6 +198,13 @@ export default function ZerodoseTeamSummary({
   // ============================================================
   // RENDER
   // ============================================================
+  useEffect(() => {
+    if (loading) {
+      showTabLoader();
+    } else {
+      hideTabLoader();
+    }
+  }, [loading, showTabLoader, hideTabLoader]);
 
   return (
     <>
@@ -236,10 +244,11 @@ export default function ZerodoseTeamSummary({
 
               <button
                 type="button"
+                disabled={statusFilter === "recorded"}
                 onClick={() => handleStatusFilterChange("recorded")}
                 className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all duration-200 sm:text-sm ${
                   statusFilter === "recorded"
-                    ? "bg-primary text-white shadow-sm"
+                    ? "bg-primary cursor-not-allowed text-white shadow-sm"
                     : "text-text-secondary hover:bg-primary/10 hover:text-primary"
                 }`}
               >
@@ -264,10 +273,11 @@ export default function ZerodoseTeamSummary({
 
               <button
                 type="button"
+                disabled={statusFilter === "visited"}
                 onClick={() => handleStatusFilterChange("visited")}
                 className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all duration-200 sm:text-sm ${
                   statusFilter === "visited"
-                    ? "bg-primary text-white shadow-sm"
+                    ? "bg-primary cursor-not-allowed text-white shadow-sm"
                     : "text-text-secondary hover:bg-primary/10 hover:text-primary"
                 }`}
               >
@@ -292,10 +302,11 @@ export default function ZerodoseTeamSummary({
 
               <button
                 type="button"
+                disabled={statusFilter === "covered"}
                 onClick={() => handleStatusFilterChange("covered")}
                 className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold transition-all duration-200 sm:text-sm ${
                   statusFilter === "covered"
-                    ? "bg-primary text-white shadow-sm"
+                    ? "bg-primary cursor-not-allowed text-white shadow-sm"
                     : "text-text-secondary hover:bg-primary/10 hover:text-primary"
                 }`}
               >

@@ -399,8 +399,11 @@ import PendingApprovalButton from "@/components/ucmo/PendingApprovalButton";
 import UCMOActions from "@/components/ucmo/UCMOAction";
 import UCMOCampaignSection from "@/components/ucmo/UCMOCampaignSection";
 import VaccinatorCampaignSection from "@/components/vaccinator/VaccinatorCampaignSection";
+import { useTabLoader } from "@/context/TabLoaderContext";
 
 export default function Page() {
+  const { showTabLoader, hideTabLoader } = useTabLoader();
+
   const [campaigns, setCampaigns] = useState([]);
   const [authUser, setAuthUser] = useState(null);
   const [pendingApprovals, setPendingApprovals] = useState(0);
@@ -525,6 +528,14 @@ export default function Page() {
     fetchUCMOData();
   }, []);
 
+  useEffect(() => {
+    if (loading) {
+      showTabLoader();
+    } else {
+      hideTabLoader();
+    }
+  }, [loading, showTabLoader, hideTabLoader]);
+
   // ============================================================
   // RENDER
   // ============================================================
@@ -537,7 +548,7 @@ export default function Page() {
           ====================================================== */}
 
         <div className="mb-4 flex flex-col md:mb-6">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-nowrap items-center justify-between gap-2 max-[399px]:flex-wrap min-[400px]:flex-nowrap">
             <h1 className="text-text text-2xl font-bold md:text-3xl">UCMO</h1>
 
             <PendingApprovalButton

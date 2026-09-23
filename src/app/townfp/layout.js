@@ -110,10 +110,9 @@ export default function TownFPLayout({ children }) {
       {/* Main Area */}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <TownFPHeader onMenuClick={handleMobileOpen} />
-
-        <main className="bg-surface min-h-0 flex-1 overflow-y-auto">
-          <div className="p-4">{children}</div>
+        <main className="bg-background flex-1 p-4 sm:px-4 sm:py-5 md:px-10 md:py-6">
+          <TownFPHeader onMenuClick={handleMobileOpen} />
+          {children}
         </main>
       </div>
     </div>

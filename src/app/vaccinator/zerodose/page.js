@@ -10,19 +10,16 @@ import ZerodoseTabs from "@/components/supervisor/zerodose/ZerodoseTabs";
 import ApprovalPageHeader from "@/components/ui/ApprovalPageHeader";
 import CurrentCampaignZerodose from "@/components/supervisor/zerodose/CurrentCampaignZerodose";
 import PreviousCampaignsZerodose from "@/components/supervisor/zerodose/PreviousCampaignsZerodose";
+import { useTabLoader } from "@/context/TabLoaderContext";
 
 export default function Page() {
+  const { showTabLoader, hideTabLoader } = useTabLoader();
   const [activeTab, setActiveTab] = useState("current");
-
   const [currentCampaign, setCurrentCampaign] = useState(null);
-
   const [previousCampaigns, setPreviousCampaigns] = useState([]);
-
   const [zerodoses, setZerodoses] = useState([]);
   const [previousZerodoses, setPreviousZerodoses] = useState([]);
-
   const [unionCouncilName, setUnionCouncilName] = useState("-");
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedPreviousCampaign, setSelectedPreviousCampaign] =
@@ -60,7 +57,6 @@ export default function Page() {
       try {
         setLoading(true);
         setError("");
-
         // --------------------------------------------------------
         // AUTH USER
         // --------------------------------------------------------
@@ -159,13 +155,6 @@ export default function Page() {
           });
         }
 
-        // --------------------------------------------------------
-        // PREVIOUS CAMPAIGNS
-        //
-        // getCampaignFilter() already returns previous
-        // campaigns, so no client-side status filtering needed.
-        // --------------------------------------------------------
-
         const campaigns = await getCampaignFilter();
 
         if (!cancelled) {
@@ -226,7 +215,6 @@ export default function Page() {
     try {
       setLoading(true);
       setError("");
-
       const response = await getUCZerodose({
         campaignId: currentCampaign._id,
         filter,
@@ -307,7 +295,6 @@ export default function Page() {
     try {
       setLoading(true);
       setError("");
-
       const selectedCampaign = previousCampaigns.find(
         (campaign) => String(campaign?._id) === String(campaignId),
       );
@@ -407,6 +394,14 @@ export default function Page() {
   // ============================================================
   // RENDER
   // ============================================================
+
+  useEffect(() => {
+    if (loading) {
+      showTabLoader();
+    } else {
+      hideTabLoader();
+    }
+  }, [loading, showTabLoader, hideTabLoader]);
 
   return (
     <div className="relative min-h-full">

@@ -65,7 +65,7 @@ export default function DashboardStats({ items = [], loading = false }) {
   });
 
   return (
-    <div className="grid grid-cols-2 gap-3 pb-4 sm:grid-cols-2 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 pb-4 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-4">
       {items.map((item, index) => {
         const Icon = ICONS[item.icon];
 

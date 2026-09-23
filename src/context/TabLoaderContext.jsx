@@ -1,3 +1,5 @@
+
+
 "use client";
 
 import { createContext, useContext, useState } from "react";
@@ -43,26 +45,28 @@ export function useTabLoader() {
 function TabLoader() {
   return (
     <div
-      className="pointer-events-none fixed inset-0 z-[99999] flex items-center justify-center"
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/5 backdrop-blur-[0.3px]"
       aria-label="Loading"
+      aria-busy="true"
     >
-      <div className="flex items-center gap-2">
+     
+      <div className="flex items-center gap-2 rounded-full  bg-white/20 px-4 py-3 shadow-lg">
         <div
-          className="bg-primary h-2.5 w-2.5 rounded-full"
+          className="bg-primary h-2.5 w-2.5 rounded-full border-2 border-white"
           style={{
             animation: "tabLoaderBounce 1s ease-in-out infinite",
           }}
         />
 
         <div
-          className="bg-primary h-2.5 w-2.5 rounded-full"
+          className="bg-primary h-2.5 w-2.5 rounded-full border-2 border-white"
           style={{
             animation: "tabLoaderBounce 1s ease-in-out -0.16s infinite",
           }}
         />
 
         <div
-          className="bg-primary h-2.5 w-2.5 rounded-full"
+          className="bg-primary h-2.5 w-2.5 rounded-full border-2 border-white"
           style={{
             animation: "tabLoaderBounce 1s ease-in-out -0.32s infinite",
           }}

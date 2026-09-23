@@ -5,12 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import { getOtherStaffTotalSummary } from "@/api/dashboardApi";
 
 import VaccinatorSummaryCards from "@/components/vaccinator/VaccinatorSummaryCards";
-import { useTabLoader } from "@/context/TabLoaderContext";
 import OtherStaffActions from "@/components/otherstaff/OtherStaffActions";
 import VaccinatorCampaignSection from "@/components/vaccinator/VaccinatorCampaignSection";
 
 export default function OtherStaffPage() {
-  const { showTabLoader, hideTabLoader } = useTabLoader();
   const authUser = useMemo(() => {
     if (typeof window === "undefined") {
       return null;
@@ -45,7 +43,6 @@ export default function OtherStaffPage() {
     const loadOtherStaffSummary = async () => {
       try {
         setLoading(true);
-        showTabLoader();
         const response = await getOtherStaffTotalSummary();
 
         if (cancelled) {
@@ -88,7 +85,6 @@ export default function OtherStaffPage() {
       } finally {
         if (!cancelled) {
           setLoading(false);
-          hideTabLoader();
         }
       }
     };
@@ -99,6 +95,8 @@ export default function OtherStaffPage() {
       cancelled = true;
     };
   }, []);
+
+
 
   return (
     <div className="w-full space-y-6">
@@ -111,7 +109,7 @@ export default function OtherStaffPage() {
 
       <OtherStaffActions />
 
-     <VaccinatorCampaignSection authUser={authUser} />
+      <VaccinatorCampaignSection authUser={authUser} />
     </div>
   );
 }

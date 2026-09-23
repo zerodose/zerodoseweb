@@ -1,7 +1,6 @@
-
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import { jwtVerify } from "jose";
+// import { jwtVerify } from "jose";
 
 import { connectDB } from "@/lib/db";
 
@@ -13,14 +12,12 @@ import Town from "@/models/Town";
 import UnionCouncil from "@/models/UnionCouncil";
 import { getAuthenticatedUser } from "@/lib/auth";
 
-
-
 export async function POST(request) {
   try {
     await connectDB();
 
     const authUser = await getAuthenticatedUser(request);
-
+    console.log("AUTH USER:", authUser);
     if (!authUser) {
       return NextResponse.json(
         {
@@ -422,7 +419,6 @@ export async function POST(request) {
       );
     }
 
-
     const latitude = Number(location.latitude);
     const longitude = Number(location.longitude);
 
@@ -710,8 +706,6 @@ export async function POST(request) {
     );
   }
 }
-
-
 
 export async function GET(request) {
   try {

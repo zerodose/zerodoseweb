@@ -16,8 +16,18 @@ export async function POST(request) {
   try {
     await connectDB();
 
-    const authUser = await getAuthenticatedUser(request);
+    const authResult = await getAuthenticatedUser(request);
+
+    console.log("AUTH RESULT:", authResult);
+
+    if (authResult?.error) {
+      return authResult.error;
+    }
+
+    const authUser = authResult?.user;
+
     console.log("AUTH USER:", authUser);
+
     if (!authUser) {
       return NextResponse.json(
         {

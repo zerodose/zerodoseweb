@@ -17,9 +17,10 @@ import { getTownDropdown } from "@/api/townApi";
 import { getUnionCouncilDropdown } from "@/api/unionCouncilApi";
 import { createUser, getUcmoDropdown } from "@/api/userApi";
 import { verifyEmail, resendVerification } from "@/api/authApi";
-import { designationRoutes } from "@/content/data";
+// import { designationRoutes } from "@/content/data";
 
 export default function SignupForm() {
+  const { showTabLoader, hideTabLoader } = useTabLoader();
   const router = useRouter();
 
   // =====================================================
@@ -184,6 +185,7 @@ export default function SignupForm() {
     const loadDistricts = async () => {
       try {
         setDistrictLoading(true);
+        showTabLoader();
 
         const response = await getDistrictDropdown();
 
@@ -201,6 +203,7 @@ export default function SignupForm() {
         });
       } finally {
         setDistrictLoading(false);
+        hideTabLoader();
       }
     };
 
@@ -221,7 +224,7 @@ export default function SignupForm() {
 
       try {
         setTownLoading(true);
-
+        showTabLoader();
         const response = await getTownDropdown(selectedDistrict);
 
         setTowns(response?.data || []);
@@ -238,6 +241,7 @@ export default function SignupForm() {
         });
       } finally {
         setTownLoading(false);
+        hideTabLoader();
       }
     };
 
@@ -257,7 +261,7 @@ export default function SignupForm() {
 
       try {
         setUcLoading(true);
-
+        showTabLoader();
         const response = await getUnionCouncilDropdown(selectedTown);
 
         console.log("UC RESPONSE:", response);
@@ -276,6 +280,7 @@ export default function SignupForm() {
         });
       } finally {
         setUcLoading(false);
+        hideTabLoader();
       }
     };
 
@@ -300,7 +305,7 @@ export default function SignupForm() {
 
       try {
         setUcmoLoading(true);
-
+        showTabLoader();
         const response = await getUcmoDropdown(selectedUnionCouncil);
 
         setUcmos(response?.data || []);
@@ -317,6 +322,7 @@ export default function SignupForm() {
         });
       } finally {
         setUcmoLoading(false);
+        hideTabLoader();
       }
     };
 
@@ -392,26 +398,17 @@ export default function SignupForm() {
 
       const payload = {
         name: data.name.trim(),
-
         email: data.email.trim().toLowerCase(),
-
         contactNumber: data.contactNumber,
-
         district: requiresDistrict ? data.district : null,
-
         town: requiresTown ? data.town : null,
-
         unionCouncil: requiresUnionCouncil ? data.unionCouncil : null,
-
         ucmo:
           requiresUnionCouncil && selectedDesignation !== "ucmo"
             ? data.ucmo
             : null,
-
         designation: data.designation,
-
         supervisorCode: isSupervisor ? data.supervisorCode.trim() : null,
-
         password: data.password,
       };
 
@@ -446,10 +443,6 @@ export default function SignupForm() {
       setLoading(false);
     }
   };
-
-  // =====================================================
-  // Submit Validation Error
-  // =====================================================
 
   const onInvalid = (formErrors) => {
     const message = getFirstError(formErrors);

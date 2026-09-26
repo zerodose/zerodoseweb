@@ -11,8 +11,10 @@ import { useRouter } from "next/navigation";
 import Loader from "@/components/ui/Loader";
 import { requestLocationPermission } from "@/utils/locationPermission";
 import { designationRoutes } from "@/content/data";
+import { useTabLoader } from "@/context/TabLoaderContext";
 
 export default function LoginForm() {
+  const { showTabLoader, hideTabLoader } = useTabLoader();
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -23,7 +25,7 @@ export default function LoginForm() {
   const {
     register,
     handleSubmit,
-    setError,
+    // setError,
     setValue,
     formState: { errors },
   } = useForm({
@@ -35,12 +37,9 @@ export default function LoginForm() {
     reValidateMode: "onChange",
   });
 
-  // =====================================================
-  // LOAD REMEMBERED LOGIN
-  // =====================================================
-
   useEffect(() => {
     try {
+      showTabLoader();
       const savedRememberMe =
         localStorage.getItem("zerodoseRememberMe") === "true";
 
@@ -59,6 +58,7 @@ export default function LoginForm() {
     } catch (error) {
       console.error("Failed to load remembered login:", error);
     }
+    hideTabLoader();
   }, [setValue]);
 
   const normalizeReference = (value, extraFields = []) => {
@@ -77,7 +77,6 @@ export default function LoginForm() {
         _id: value._id || value.id || null,
       };
 
-      // Save name when available
       if (
         value.name !== undefined &&
         value.name !== null &&
@@ -86,7 +85,6 @@ export default function LoginForm() {
         normalized.name = value.name;
       }
 
-      // Save requested additional fields
       extraFields.forEach((field) => {
         if (
           value[field] !== undefined &&
@@ -126,108 +124,46 @@ export default function LoginForm() {
     const authUser = {
       ...safeUser,
 
-      // ---------------------------------------------------
-      // User ID
-      // ---------------------------------------------------
-
       id: user._id || user.id || null,
-
-      // ---------------------------------------------------
-      // Common User Fields
-      // ---------------------------------------------------
 
       name: user.name || "",
       email: user.email || "",
       contactNumber: user.contactNumber || "",
       designation: user.designation || "",
 
-      // ---------------------------------------------------
-      // Active Status
-      // ---------------------------------------------------
-
       isActive: user.isActive !== undefined ? user.isActive : true,
     };
-
-    // =====================================================
-    // DISTRICT
-    // =====================================================
 
     authUser.district = user.district
       ? normalizeReference(user.district, ["code"])
       : null;
 
-    // =====================================================
-    // TOWN
-    // =====================================================
-
     authUser.town = user.town ? normalizeReference(user.town) : null;
-
-    // =====================================================
-    // UNION COUNCIL
-    // =====================================================
 
     authUser.unionCouncil = user.unionCouncil
       ? normalizeReference(user.unionCouncil, ["code"])
       : null;
 
-    // =====================================================
-    // UCMO
-    // =====================================================
-
     authUser.ucmo = user.ucmo ? normalizeReference(user.ucmo) : null;
-
-    // =====================================================
-    // SUPERVISOR
-    // =====================================================
 
     authUser.supervisor = user.supervisor
       ? normalizeReference(user.supervisor)
       : null;
 
-    // =====================================================
-    // WORKER
-    // =====================================================
-
     if (user.designation === "worker") {
-      // ---------------------------------------------------
-      // Team Number
-      // ---------------------------------------------------
-
       authUser.teamNumber =
         user.teamNumber !== undefined && user.teamNumber !== null
           ? user.teamNumber
           : null;
 
-      // ---------------------------------------------------
-      // Worker Role
-      // ---------------------------------------------------
-
       authUser.workerRole = user.workerRole || null;
     }
 
-    // =====================================================
-    // SUPERVISOR
-    // =====================================================
-
     if (user.designation === "supervisor") {
-      // ---------------------------------------------------
-      // Supervisor Code
-      // ---------------------------------------------------
-
       authUser.supervisorCode = user.supervisorCode || null;
-
-      // approvalStatus intentionally NOT saved
     }
 
-    // =====================================================
-    // SESSION
-    // =====================================================
-
     authUser.expiresAt = Date.now() + 6 * 60 * 60 * 1000;
-
-    // =====================================================
-    // LOCATION PERMISSION
-    // =====================================================
 
     authUser.locationPermission =
       user.designation === "worker"
@@ -236,10 +172,6 @@ export default function LoginForm() {
 
     return authUser;
   };
-
-  // =====================================================
-  // Submit
-  // =====================================================
 
   const onSubmit = async (data) => {
     if (loading) {
@@ -250,60 +182,27 @@ export default function LoginForm() {
     const password = data.password;
 
     try {
-      // =================================================
-      // Start Loading
-      // =================================================
-
       setLoading(true);
-
-      // Give browser time to render loader
+      showTabLoader();
       await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // =================================================
-      // Login API
-      // =================================================
 
       const response = await loginUser({
         mobile,
         password,
       });
 
-      // =================================================
-      // Get User
-      // =================================================
-
       const user = response?.data?.user;
 
       if (!user) {
         throw new Error("User information was not returned.");
       }
-
-      // console.log("LOGIN USER FROM API:", user);
-
-      // =================================================
-      // Designation
-      // =================================================
-
       const designation = user?.designation;
 
-      // =================================================
-      // Worker Location Permission
-      // =================================================
-
       if (designation === "worker") {
-        // console.log("LOCATION: user is worker");
-
         await requestLocationPermission();
-
-        // console.log("LOCATION: permission check completed");
       }
 
-      // =================================================
-      // Dashboard Route
-      // =================================================
-      // console.log("Desgination Route", designation)
       const route = designationRoutes[designation];
-      // console.log("Desgination Route", route)
 
       if (!route) {
         throw new Error(
@@ -313,21 +212,9 @@ export default function LoginForm() {
         );
       }
 
-      // =================================================
-      // Prepare Auth User
-      // =================================================
-
       const authUser = prepareAuthUser(user);
 
-      // =================================================
-      // Save Auth User
-      // =================================================
-
       localStorage.setItem("authUser", JSON.stringify(authUser));
-
-      // =================================================
-      // REMEMBER LOGIN
-      // =================================================
 
       if (rememberMe) {
         localStorage.setItem("zerodoseRememberMe", "true");
@@ -339,21 +226,10 @@ export default function LoginForm() {
         localStorage.removeItem("zerodoseLoginPassword");
       }
 
-      // =================================================
-      // Debug
-      // =================================================
-
-      // console.log("AUTH USER SAVED:", authUser);
-
-      // =================================================
-      // Success
-      // =================================================
-
       toast.success("Login successful!", {
         description: "Welcome back.",
       });
 
-      // Keep loader active while navigating
       router.replace(route);
     } catch (error) {
       const message =
@@ -371,40 +247,20 @@ export default function LoginForm() {
         toast.error("Login failed", {
           description: message,
         });
-
-        // setError("password", {
-        //   type: "server",
-        //   message,
-        // });
       }
 
       setLoading(false);
+      hideTabLoader();
     }
   };
 
-  // =====================================================
-  // Render
-  // =====================================================
-
   return (
     <>
-      {/* =================================================
-          Loading Overlay
-      ================================================= */}
-
       {loading && <Loader text="Signing in..." />}
 
       <main className="bg-surface flex min-h-screen items-center justify-center px-4 py-10">
         <div className="w-full max-w-md">
-          {/* =================================================
-              Card
-          ================================================= */}
-
           <div className="border-border bg-background rounded-2xl border p-6 shadow-sm sm:p-8">
-            {/* =================================================
-                Logo
-            ================================================= */}
-
             <div className="mb-8 flex flex-col items-center justify-center gap-2 text-center">
               <Image
                 src="/images/logo.png"
@@ -420,19 +276,11 @@ export default function LoginForm() {
               </p>
             </div>
 
-            {/* =================================================
-                Form
-            ================================================= */}
-
             <form
               onSubmit={handleSubmit(onSubmit)}
               className="space-y-5"
               noValidate
             >
-              {/* =================================================
-                  Mobile Number
-              ================================================= */}
-
               <div>
                 <label
                   htmlFor="mobile"
@@ -472,10 +320,6 @@ export default function LoginForm() {
                   </p>
                 )}
               </div>
-
-              {/* =================================================
-                  Password
-              ================================================= */}
 
               <div>
                 <label
@@ -527,10 +371,6 @@ export default function LoginForm() {
                   </p>
                 )}
 
-                {/* =================================================
-                    Remember Me + Forgot Password
-                ================================================= */}
-
                 <div className="mt-4 flex items-center justify-between">
                   <label
                     htmlFor="rememberMe"
@@ -548,10 +388,6 @@ export default function LoginForm() {
                     <span>Remember Me</span>
                   </label>
 
-                  {/* =================================================
-                      Forgot Password
-                  ================================================= */}
-
                   <Link
                     href="/auth/forgot-password"
                     aria-disabled={loading}
@@ -567,10 +403,6 @@ export default function LoginForm() {
                 </div>
               </div>
 
-              {/* =================================================
-                  Submit
-              ================================================= */}
-
               <button
                 type="submit"
                 disabled={loading}
@@ -580,11 +412,7 @@ export default function LoginForm() {
               </button>
             </form>
 
-            {/* =================================================
-                Signup
-            ================================================= */}
-
-            <div className="text-text-secondary mt-6 text-center text-sm flex gap-2 justify-center items-start">
+            <div className="text-text-secondary mt-6 flex items-start justify-center gap-2 text-center text-sm">
               <span>Don't have an account?</span>
               <Link
                 href="/auth/signup"
@@ -602,10 +430,6 @@ export default function LoginForm() {
           </div>
         </div>
       </main>
-
-      {/* =================================================
-          Approval Message Modal
-      ================================================= */}
 
       {approvalMessage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
@@ -746,108 +570,108 @@ export default function LoginForm() {
 //     const authUser = {
 //       ...safeUser,
 
-//       // ---------------------------------------------------
+//
 //       // User ID
-//       // ---------------------------------------------------
+//
 
 //       id: user._id || user.id || null,
 
-//       // ---------------------------------------------------
+//
 //       // Common User Fields
-//       // ---------------------------------------------------
+//
 
 //       name: user.name || "",
 //       email: user.email || "",
 //       contactNumber: user.contactNumber || "",
 //       designation: user.designation || "",
 
-//       // ---------------------------------------------------
+//
 //       // Active Status
-//       // ---------------------------------------------------
+//
 
 //       isActive: user.isActive !== undefined ? user.isActive : true,
 //     };
 
-//     // =====================================================
+//     ====
 //     // DISTRICT
-//     // =====================================================
+//     ====
 
 //     authUser.district = user.district
 //       ? normalizeReference(user.district, ["code"])
 //       : null;
 
-//     // =====================================================
+//     ====
 //     // TOWN
-//     // =====================================================
+//     ====
 
 //     authUser.town = user.town ? normalizeReference(user.town) : null;
 
-//     // =====================================================
+//     ====
 //     // UNION COUNCIL
-//     // =====================================================
+//     ====
 
 //     authUser.unionCouncil = user.unionCouncil
 //       ? normalizeReference(user.unionCouncil, ["code"])
 //       : null;
 
-//     // =====================================================
+//     ====
 //     // UCMO
-//     // =====================================================
+//     ====
 
 //     authUser.ucmo = user.ucmo ? normalizeReference(user.ucmo) : null;
 
-//     // =====================================================
+//     ====
 //     // SUPERVISOR
-//     // =====================================================
+//     ====
 
 //     authUser.supervisor = user.supervisor
 //       ? normalizeReference(user.supervisor)
 //       : null;
 
-//     // =====================================================
+//     ====
 //     // WORKER
-//     // =====================================================
+//     ====
 
 //     if (user.designation === "worker") {
-//       // ---------------------------------------------------
+//
 //       // Team Number
-//       // ---------------------------------------------------
+//
 
 //       authUser.teamNumber =
 //         user.teamNumber !== undefined && user.teamNumber !== null
 //           ? user.teamNumber
 //           : null;
 
-//       // ---------------------------------------------------
+//
 //       // Worker Role
-//       // ---------------------------------------------------
+//
 
 //       authUser.workerRole = user.workerRole || null;
 //     }
 
-//     // =====================================================
+//     ====
 //     // SUPERVISOR
-//     // =====================================================
+//     ====
 
 //     if (user.designation === "supervisor") {
-//       // ---------------------------------------------------
+//
 //       // Supervisor Code
-//       // ---------------------------------------------------
+//
 
 //       authUser.supervisorCode = user.supervisorCode || null;
 
 //       // approvalStatus intentionally NOT saved
 //     }
 
-//     // =====================================================
+//     ====
 //     // SESSION
-//     // =====================================================
+//     ====
 
 //     authUser.expiresAt = Date.now() + 6 * 60 * 60 * 1000;
 
-//     // =====================================================
+//     ====
 //     // LOCATION PERMISSION
-//     // =====================================================
+//     ====
 
 //     authUser.locationPermission =
 //       user.designation === "worker"
@@ -857,9 +681,9 @@ export default function LoginForm() {
 //     return authUser;
 //   };
 
-//   // =====================================================
+//   ====
 //   // Submit
-//   // =====================================================
+//   ====
 
 //   const onSubmit = async (data) => {
 //     if (loading) {
@@ -870,27 +694,27 @@ export default function LoginForm() {
 //     const password = data.password;
 
 //     try {
-//       // =================================================
+//
 //       // Start Loading
-//       // =================================================
+//
 
 //       setLoading(true);
 
 //       // Give browser time to render loader
 //       await new Promise((resolve) => setTimeout(resolve, 100));
 
-//       // =================================================
+//
 //       // Login API
-//       // =================================================
+//
 
 //       const response = await loginUser({
 //         mobile,
 //         password,
 //       });
 
-//       // =================================================
+//
 //       // Get User
-//       // =================================================
+//
 
 //       const user = response?.data?.user;
 
@@ -900,15 +724,15 @@ export default function LoginForm() {
 
 //       // console.log("LOGIN USER FROM API:", user);
 
-//       // =================================================
+//
 //       // Designation
-//       // =================================================
+//
 
 //       const designation = user?.designation;
 
-//       // =================================================
+//
 //       // Worker Location Permission
-//       // =================================================
+//
 
 //       if (designation === "worker") {
 //         // console.log("LOCATION: user is worker");
@@ -918,9 +742,9 @@ export default function LoginForm() {
 //         // console.log("LOCATION: permission check completed");
 //       }
 
-//       // =================================================
+//
 //       // Dashboard Route
-//       // =================================================
+//
 
 //       const route = designationRoutes[designation];
 
@@ -932,27 +756,27 @@ export default function LoginForm() {
 //         );
 //       }
 
-//       // =================================================
+//
 //       // Prepare Auth User
-//       // =================================================
+//
 
 //       const authUser = prepareAuthUser(user);
 
-//       // =================================================
+//
 //       // Save Auth User
-//       // =================================================
+//
 
 //       localStorage.setItem("authUser", JSON.stringify(authUser));
 
-//       // =================================================
+//
 //       // Debug
-//       // =================================================
+//
 
 //       // console.log("AUTH USER SAVED:", authUser);
 
-//       // =================================================
+//
 //       // Success
-//       // =================================================
+//
 
 //       toast.success("Login successful!", {
 //         description: "Welcome back.",
@@ -987,9 +811,9 @@ export default function LoginForm() {
 //     }
 //   };
 
-//   // =====================================================
+//   ====
 //   // Render
-//   // =====================================================
+//   ====
 
 //   return (
 //     <>

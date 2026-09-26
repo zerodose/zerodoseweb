@@ -183,7 +183,6 @@ export default function LoginForm() {
 
     try {
       setLoading(true);
-      showTabLoader();
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       const response = await loginUser({
@@ -250,7 +249,6 @@ export default function LoginForm() {
       }
 
       setLoading(false);
-      hideTabLoader();
     }
   };
 

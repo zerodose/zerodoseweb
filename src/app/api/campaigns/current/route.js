@@ -8,6 +8,7 @@ export async function GET() {
     await connectDB();
 
     const now = new Date();
+    today.setHours(0, 0, 0, 0);
 
     const currentCampaign = await Campaign.findOne({
       startDate: {

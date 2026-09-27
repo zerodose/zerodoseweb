@@ -154,21 +154,28 @@ export default function Page() {
 
     const loadCurrentCampaign = async () => {
       try {
+        console.log("1. Campaign request START");
+
         setLoading(true);
         setError("");
 
         const response = await getCurrentCampaign();
 
-        console.log("Current Campaign ==>", response);
+        console.log("2. Campaign response:", response);
 
         if (cancelled) {
+          console.log("3. Request cancelled");
           return;
         }
 
         const currentCampaign = response?.data?.currentCampaign || null;
 
+        console.log("4. Current campaign:", currentCampaign);
+
         setCampaign(currentCampaign);
       } catch (error) {
+        console.error("5. Campaign ERROR:", error);
+
         if (cancelled) {
           return;
         }
@@ -182,7 +189,10 @@ export default function Page() {
             "Failed to load current campaign.",
         );
       } finally {
+        console.log("6. Campaign FINALLY");
+
         if (!cancelled) {
+          console.log("7. Setting loading FALSE");
           setLoading(false);
         }
       }
